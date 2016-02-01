@@ -54,7 +54,7 @@ I know this is frustrating for developers but web extensions mark a major
 turning point. It would be an arduous task to wedge its feature set and
 simplified development process into jpm.
 
-Detailed reasons:
+Pros of creating a new tool:
 
 * By creating a new tool that focuses on the [emerging] web extension standard,
   we have a better chance of interoperating with other platforms, such as
@@ -76,3 +76,11 @@ Detailed reasons:
 * jpm's code was written in ES5 which is cumbersome after coming from the ES6
   Firefox code base or from most other languages with modern conveniences
   (Python, Ruby, etc).
+* Some core functionality of jpm can be extracted and re-used in the new tool.
+
+Cons of creating a new tool:
+
+* Firefox extension developers will have to interrupt and re-arrange their work flows.
+* Developers of existing add-ons will need to port to web extensions sooner rather than later.
+* The web-ext tool will require some ramp-up time for scaffolding.
+* The community of jpm contributors will need to shift focus to web-ext.
