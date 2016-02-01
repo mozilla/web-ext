@@ -34,7 +34,9 @@ Here is a partial list of examples:
   * When you edit a file, you may need to trigger certain commands (tests,
     installation, etc).
 * Integrating with services.
-  * Mozilla offers some useful web services such as validating and signing
+  * Mozilla offers some useful services such as
+    [linting](https://github.com/mozilla/addons-linter) and
+    [signing](http://olympia.readthedocs.org/en/latest/topics/api/signing.html)
     extensions.
 
 ### Why not patch jpm for web extension support?
