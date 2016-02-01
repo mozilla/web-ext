@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "index.js",
-  "homepage": "https://github.com/mozilla-jetpack/web-ext",
+  "homepage": "https://github.com/mozilla/web-ext",
   "repository": {
     "type": "git",
-    "url": "git://github.com/mozilla-jetpack/web-ext.git"
+    "url": "git://github.com/mozilla/web-ext.git"
   },
   "bugs": {
-    "url": "http://github.com/mozilla-jetpack/web-ext/issues"
+    "url": "http://github.com/mozilla/web-ext/issues"
   },
   "keywords": [
     "web",
