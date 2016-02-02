@@ -9,6 +9,7 @@
   "scripts": {
     "build": "node -e \"require('grunt').cli()\" null build",
     "watch-build": "node -e \"require('grunt').cli()\" null watch-build",
+    "lint": "node -e \"require('grunt').cli()\" null lint",
     "test": "node -e \"require('grunt').cli()\" null test"
   },
   "homepage": "https://github.com/mozilla/web-ext",
