@@ -1,5 +1,3 @@
-var fs = require('fs');
-
 module.exports = function(grunt) {
 
   // load all grunt tasks matching the ['grunt-*', '@*/grunt-*'] patterns
@@ -21,11 +19,15 @@ module.exports = function(grunt) {
     'webpack:watchBuild',
   ]);
 
+  grunt.registerTask('lint', [
+    'newer:eslint',
+    'newer:jscs',
+  ]);
+
   grunt.registerTask('test', [
     'webpack:build',
     'mochaTest',
-    'newer:eslint',
-    'newer:jscs',
+    'lint',
   ]);
 
 };

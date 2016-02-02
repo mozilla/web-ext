@@ -1,0 +1,64 @@
+{
+  "esnext": true,
+  "disallowEmptyBlocks": true,
+  "disallowImplicitTypeConversion": [
+    "numeric",
+    "boolean",
+    "binary",
+    "string"
+  ],
+  "disallowKeywordsOnNewLine": [ "else" ],
+  "disallowMixedSpacesAndTabs": true,
+  "disallowMultipleSpaces": true,
+  "disallowMultipleVarDecl": { "strict": true },
+  "disallowNewlineBeforeBlockStatements": true,
+  "disallowSpaceBeforeComma": true,
+  "disallowSpaceBeforePostfixUnaryOperators": true,
+  "disallowSpaceBeforeSemicolon": true,
+  "disallowSpacesInAnonymousFunctionExpression": {
+    "beforeOpeningRoundBrace": true
+  },
+  "disallowTrailingWhitespace": true,
+  "esnext": true,
+  "maximumLineLength": {
+    "value": 80,
+    "allExcept": [ "regex", "urlComments", "functionSignature", "require" ]
+  },
+  "requireBlocksOnNewline": true,
+  "requireCapitalizedConstructors": true,
+  "requireCommaBeforeLineBreak": true,
+  "requireFunctionDeclarations": true,
+  "requireLineBreakAfterVariableAssignment": true,
+  "requireLineFeedAtFileEnd": true,
+  "requireNumericLiterals": true,
+  "requirePaddingNewLinesBeforeExport": true,
+  "requireParenthesesAroundArrowParam": true,
+  "requireSemicolons": true,
+  "requireSpaceAfterLineComment": { "allExcept": [ "#", "=" ] },
+  "requireSpaceAfterKeywords": [
+    "if",
+    "else",
+    "for",
+    "while",
+    "do",
+    "switch",
+    "return",
+    "try",
+    "catch"
+  ],
+  "requireSpaceBeforeBlockStatements": true,
+  "requireSpacesInConditionalExpression": true,
+  "requireSpacesInFunctionExpression": {
+    "beforeOpeningCurlyBrace": true
+  },
+  "requireTemplateStrings": { "allExcept": [ "stringConcatenation" ] },
+  "requireTrailingComma": {
+    "ignoreSingleLine": true,
+    "ignoreSingleValue": true
+  },
+  "validateQuoteMarks": {
+    "escape": true,
+    "mark": "'"
+  },
+  "validateIndentation": 2
+}

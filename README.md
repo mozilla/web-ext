@@ -26,7 +26,7 @@ file issues, create pull requests, or ask a question on
 [dev-addons](https://mail.mozilla.org/listinfo/dev-addons).
 Read on for how to develop new features.
 
-## Development
+## Development of web-ext
 
 You'll need:
 * [Node.js](https://nodejs.org/en/), 0.12 or higher
@@ -36,8 +36,14 @@ To get started, clone the source and run `npm install`.
 
 ### Build web-ext
 
-Run `npm build` to build a new version of the `./bin/web-ext` command. You can
-continously rebuild the package as you edit files by running `npm watch-build`.
+Type `npm run build` to build a new version of the `./bin/web-ext` command.
+You can continously rebuild the package as you edit files by typing
+`npm run watch-build`.
+
+### Check for lint
+
+Type `npm run lint` to make sure there are no syntax errors or other house
+keeping problems in the source code.
 
 ## Some Questions and Answers
 
