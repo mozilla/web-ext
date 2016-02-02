@@ -38,12 +38,12 @@
   },
   "devDependencies": {
     "babel-core": "6.4.5",
-    "babel-eslint": "4.1.7",
+    "babel-eslint": "4.1.8",
     "babel-loader": "6.2.1",
     "babel-plugin-transform-class-properties": "6.4.0",
     "babel-plugin-transform-es2015-modules-commonjs": "6.4.5",
-    "babel-preset-es2015": "6.1.2",
-    "babel-preset-stage-2": "6.1.2",
+    "babel-preset-es2015": "6.3.13",
+    "babel-preset-stage-2": "6.3.13",
     "chai": "3.5.0",
     "eslint": "1.10.3",
     "grunt": "0.4.5",
@@ -55,11 +55,11 @@
     "grunt-newer": "1.1.1",
     "grunt-webpack": "1.0.11",
     "load-grunt-configs": "0.4.3",
-    "load-grunt-tasks": "3.3.0",
+    "load-grunt-tasks": "3.4.0",
     "mocha": "2.4.5",
     "sinon": "1.17.3",
     "webpack": "1.12.12",
-    "webpack-dev-server": "1.14.0"
+    "webpack-dev-server": "1.14.1"
   },
   "author": "Kumar McMillan",
   "license": "MPL-2.0"
