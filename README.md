@@ -7,6 +7,10 @@ Ultimately, it aims to support web extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
 [Firefox web extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
+## Installation
+
+This tool is not yet ready for installation. Stay tuned.
+
 ## Should I Use It?
 
 This tool may require using a
@@ -20,6 +24,20 @@ consider [jpm](https://github.com/mozilla-jetpack/jpm/).
 Hi! This tool is under active development. To get involved you can watch the repo,
 file issues, create pull requests, or ask a question on
 [dev-addons](https://mail.mozilla.org/listinfo/dev-addons).
+Read on for how to develop new features.
+
+## Development
+
+You'll need:
+* [Node.js](https://nodejs.org/en/), 0.12 or higher
+* [npm](https://www.npmjs.com/) installed globally
+
+To get started, clone the source and run `npm install`.
+
+### Build web-ext
+
+Run `npm build` to build a new version of the `./bin/web-ext` command. You can
+continously rebuild the package as you edit files by running `npm watch-build`.
 
 ## Some Questions and Answers
 
