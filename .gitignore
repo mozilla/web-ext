@@ -1,5 +1,10 @@
 # OSX
 .DS_Store
 
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Build artifacts.
 npm-debug.log
 node_modules
+dist/*
