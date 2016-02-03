@@ -16,11 +16,6 @@ module.exports = function(grunt) {
     'webpack:build',
   ]);
 
-  grunt.registerTask('watch-build', [
-    'clean',
-    'webpack:watchBuild',
-  ]);
-
   grunt.registerTask('lint', 'checks for syntax errors', function() {
     if (process.env.SKIP_LINT) {
       grunt.log.writeln('lint task skipped because of $SKIP_LINT');

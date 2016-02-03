@@ -37,7 +37,8 @@ To get started, clone the source and run `npm install`.
 ## Run the test suite
 
 Type `npm test` to run the test suite and check the code for syntax errors
-(lint).
+(lint). To run the tests continuously as you edit source code, type
+`npm run watch-test`.
 
 ### Build web-ext
 
