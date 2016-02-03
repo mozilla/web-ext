@@ -18,8 +18,12 @@ fs.readdirSync('node_modules')
 
 
 module.exports = {
-  entry: './src/main.js',
+  entry: './src/cli.js',
   target: 'node',
+  node: {
+    __dirname: true,
+    __filename: true,
+  },
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'web-ext.js',
@@ -43,6 +47,7 @@ module.exports = {
   resolve: {
     extensions: ['', '.js', '.json'],
     modulesDirectories: [
+      'src',
       'node_modules',
     ],
   },

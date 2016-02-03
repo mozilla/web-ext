@@ -34,6 +34,10 @@ You'll need:
 
 To get started, clone the source and run `npm install`.
 
+## Run the test suite
+
+Type `npm test` to run the test suite and check for lint.
+
 ### Build web-ext
 
 Type `npm run build` to build a new version of the `./bin/web-ext` command.

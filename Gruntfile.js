@@ -12,10 +12,12 @@ module.exports = function(grunt) {
   grunt.initConfig(configs);
 
   grunt.registerTask('build', [
+    'clean',
     'webpack:build',
   ]);
 
   grunt.registerTask('watch-build', [
+    'clean',
     'webpack:watchBuild',
   ]);
 
@@ -25,7 +27,9 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', [
+    'clean',
     'webpack:build',
+    'webpack:test',
     'mochaTest',
     'lint',
   ]);
