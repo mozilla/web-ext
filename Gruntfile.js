@@ -21,17 +21,23 @@ module.exports = function(grunt) {
     'webpack:watchBuild',
   ]);
 
-  grunt.registerTask('lint', [
-    'newer:eslint',
-    'newer:jscs',
-  ]);
+  grunt.registerTask('lint', 'checks for syntax errors', function() {
+    if (process.env.SKIP_LINT) {
+      grunt.log.writeln('lint task skipped because of $SKIP_LINT');
+    } else {
+      grunt.task.run([
+        'newer:eslint',
+        'newer:jscs',
+      ]);
+    }
+  });
 
   grunt.registerTask('test', [
     'clean',
     'webpack:build',
+    'lint',
     'webpack:test',
     'mochaTest',
-    'lint',
   ]);
 
 };

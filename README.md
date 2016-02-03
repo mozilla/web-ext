@@ -36,7 +36,8 @@ To get started, clone the source and run `npm install`.
 
 ## Run the test suite
 
-Type `npm test` to run the test suite and check for lint.
+Type `npm test` to run the test suite and check the code for syntax errors
+(lint).
 
 ### Build web-ext
 
@@ -48,6 +49,11 @@ You can continously rebuild the package as you edit files by typing
 
 Type `npm run lint` to make sure there are no syntax errors or other house
 keeping problems in the source code.
+
+If you are deep in the zone, you can skip lint checks temporarily
+by setting `$SKIP_LINT` in the environment like:
+
+    SKIP_LINT=1 npm test
 
 ## Some Questions and Answers
 
