@@ -60,7 +60,7 @@
     "load-grunt-configs": "0.4.3",
     "load-grunt-tasks": "3.4.0",
     "mocha": "2.4.5",
-    "shelljs": "0.5.3",
+    "shelljs": "0.6.0",
     "sinon": "1.17.3",
     "webpack": "1.12.13",
     "webpack-dev-server": "1.14.1"
