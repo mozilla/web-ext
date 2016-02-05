@@ -34,27 +34,54 @@ You'll need:
 
 To get started, clone the source and run `npm install`.
 
+## Develop all the things
+
+Your one stop command to continuously build, run tests, check for
+syntax errors, and check for flow errors is this:
+
+    npm run develop
+
+The other commands below are just variations on this.
+
+## Run all application tests
+
+To run the complete suite of tests just how the CI server would, type
+`npm run ci-test`.
+
 ## Run the test suite
 
 Type `npm test` to run the test suite and check the code for syntax errors
-(lint). To run the tests continuously as you edit source code, type
-`npm run watch-test`.
+(lint).
+
+If you are deep down some rabbit hole, you can skip lint checks temporarily
+by setting `$SKIP_LINT` in the environment like:
+
+    SKIP_LINT=1 npm test
 
 ### Build web-ext
 
 Type `npm run build` to build a new version of the `./bin/web-ext` command.
-You can continously rebuild the package as you edit files by typing
-`npm run watch-build`.
 
 ### Check for lint
 
 Type `npm run lint` to make sure there are no syntax errors or other house
 keeping problems in the source code.
 
-If you are deep in the zone, you can skip lint checks temporarily
-by setting `$SKIP_LINT` in the environment like:
+### Check for Flow errors
 
-    SKIP_LINT=1 npm test
+This project relies on [flow](http://flowtype.org/) to ensure functions and
+classes are used correctly. Run all flow checks with `npm run flow-check`.
+
+### Fix the Flow config
+
+Flow checks all dependencies in `node_modules` to catch usage errors. We made a
+hacky optimization where our config ignores unimported modules. This sped up the
+standalone Flow check by 2x. However, when you change package.json you may need
+to regenerate the ignore rules. Do so like this:
+
+    grunt fix-flow-config
+
+After that, commit and push the new `.flowconfig`.
 
 ## Some Questions and Answers
 

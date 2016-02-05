@@ -10,14 +10,10 @@ module.exports = {
     atBegin: true,
     interrupt: true,
   },
-  build: {
-    files: srcFiles,
-    tasks: ['build'],
-  },
-  test: {
+  develop: {
     files: srcFiles.concat([
       'tests/**/*.js*',
     ]),
-    tasks: ['test'],
+    tasks: ['test', 'flow:server:status'],
   },
 };
