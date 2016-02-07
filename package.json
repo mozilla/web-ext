@@ -35,7 +35,7 @@
     "opera"
   ],
   "dependencies": {
-    "babel-polyfill": "6.3.14",
+    "babel-polyfill": "6.5.0",
     "es6-promisify": "3.0.0",
     "yargs": "3.32.0"
   },
