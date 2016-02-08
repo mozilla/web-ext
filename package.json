@@ -11,8 +11,7 @@
     "develop": "node -e \"require('grunt').cli()\" null develop",
     "flow-check": "node -e \"require('grunt').cli()\" null flow:check",
     "lint": "node -e \"require('grunt').cli()\" null lint",
-    "test": "node -e \"require('grunt').cli()\" null test",
-    "ci-test": "node -e \"require('grunt').cli()\" null ci-test"
+    "test": "node -e \"require('grunt').cli()\" null test"
   },
   "homepage": "https://github.com/mozilla/web-ext",
   "repository": {

@@ -45,18 +45,12 @@ The other commands below are just variations on this.
 
 ## Run all application tests
 
-To run the complete suite of tests just how the CI server would, type
-`npm run ci-test`.
+To run the entire suite of tests once and exit, type:
 
-## Run the test suite
+    npm test
 
-Type `npm test` to run the test suite and check the code for syntax errors
-(lint).
-
-If you are deep down some rabbit hole, you can skip lint checks temporarily
-by setting `$SKIP_LINT` in the environment like:
-
-    SKIP_LINT=1 npm test
+This is the same as the `develop` command but it won't re-run automatically as
+you edit files. It's also a little slower because there's no caching.
 
 ### Build web-ext
 
@@ -66,6 +60,12 @@ Type `npm run build` to build a new version of the `./bin/web-ext` command.
 
 Type `npm run lint` to make sure there are no syntax errors or other house
 keeping problems in the source code.
+
+If you are deep down some rabbit hole, you can skip lint checks temporarily
+by setting `$SKIP_LINT` in the environment. Here is an example of running
+the test suite without lint checks:
+
+    SKIP_LINT=1 npm test
 
 ### Check for Flow errors
 
