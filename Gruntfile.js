@@ -4,10 +4,11 @@ var fs = require('fs');
 
 module.exports = function(grunt) {
 
+  // Looking for something?
   // The source of a grunt task or its configuration might be in:
-  // - this file :)
-  // - ./node_modules/grunt-*<task_name>/
-  // - ./tasks/<task_name>.js
+  // 1. this file :)
+  // 2. ./node_modules/grunt-*<task_name>/
+  // 3. ./tasks/<task_name>.js
 
 
   // This loads all grunt tasks matching the grunt-*, @*/grunt-* patterns.
@@ -25,15 +26,15 @@ module.exports = function(grunt) {
     'webpack:build',
   ]);
 
-  grunt.registerTask('test', [
+  grunt.registerTask('build-tests', [
     'build',
     'webpack:test',
-    'mochaTest',
-    'lint',
   ]);
 
-  grunt.registerTask('ci-test', [
-    'test',
+  grunt.registerTask('test', [
+    'build-tests',
+    'mochaTest',
+    'lint',
     'flow:check',
     'check-flow-config',
   ]);

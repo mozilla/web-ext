@@ -5,7 +5,7 @@ node_js:
 - '4'
 before_install:
 - npm install -g npm
-script: npm run ci-test
+script: npm test
 notifications:
   irc:
     channels:
