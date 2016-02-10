@@ -5,10 +5,12 @@ module.exports = {
   },
   develop: {
     files: [
-      'tasks/**/*.js*',
+      'package.json',
       'src/**/*.js',
-      'webpack.config.js',
+      'tasks/**/*.js*',
       'tests/**/*.js*',
+      'webpack.config.js',
+      '.flowconfig',
     ],
     tasks: [
       'build-tests',
