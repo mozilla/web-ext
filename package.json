@@ -39,7 +39,7 @@
     "yargs": "3.32.0"
   },
   "devDependencies": {
-    "babel-core": "6.5.1",
+    "babel-core": "6.5.2",
     "babel-eslint": "4.1.8",
     "babel-loader": "6.2.2",
     "babel-plugin-transform-class-properties": "6.5.0",
