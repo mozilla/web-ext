@@ -58,7 +58,7 @@
     "grunt-flow-type-check": "git+https://github.com/isuttell/grunt-flow-type-check.git#e174826856b215c65973d09186f6f0ec40fa163e",
     "grunt-jscs": "2.7.0",
     "grunt-mocha-test": "0.12.7",
-    "grunt-newer": "1.1.1",
+    "grunt-newer": "1.1.2",
     "grunt-webpack": "1.0.11",
     "load-grunt-configs": "0.4.3",
     "load-grunt-tasks": "3.4.0",
