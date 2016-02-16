@@ -12,7 +12,7 @@ import {assert} from 'chai';
 import shell from 'shelljs';
 
 
-describe('bin/web-ext', function() {
+describe('cli (as web-ext command)', () => {
 
   it('prints the current version number', (done) => {
     let pkg = JSON.parse(

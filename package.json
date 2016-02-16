@@ -36,7 +36,9 @@
   "dependencies": {
     "babel-polyfill": "6.5.0",
     "es6-promisify": "3.0.0",
-    "yargs": "3.32.0"
+    "stream-to-promise": "1.1.0",
+    "yargs": "3.32.0",
+    "zip-dir": "1.0.1"
   },
   "devDependencies": {
     "babel-core": "6.5.2",
@@ -65,8 +67,10 @@
     "mocha": "2.4.5",
     "shelljs": "0.6.0",
     "sinon": "1.17.3",
+    "tmp": "0.0.28",
     "webpack": "1.12.13",
-    "webpack-dev-server": "1.14.1"
+    "webpack-dev-server": "1.14.1",
+    "yauzl": "2.4.1"
   },
   "author": "Kumar McMillan",
   "license": "MPL-2.0"
