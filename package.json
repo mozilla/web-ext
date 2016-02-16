@@ -36,7 +36,7 @@
   "dependencies": {
     "babel-polyfill": "6.5.0",
     "es6-promisify": "3.0.0",
-    "yargs": "4.1.0"
+    "yargs": "3.32.0"
   },
   "devDependencies": {
     "babel-core": "6.5.2",
