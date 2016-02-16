@@ -1,0 +1,145 @@
+import path from 'path';
+import tmp from 'tmp';
+import promisify from 'es6-promisify';
+import yauzl from 'yauzl';
+
+
+/*
+ * A way to read zip files using promises for all the things.
+ */
+export class ZipFile {
+
+  constructor() {
+    this._zip = null;
+  }
+
+  /*
+   * Open a zip file and return a promise that resolves to a yauzl
+   * zipfile object.
+   */
+  open(...args) {
+    return promisify(yauzl.open)(...args)
+      .then((zip) => {
+        this._zip = zip;
+      });
+  }
+
+  /*
+   * After open(), readEach(onRead) will return a promise that resolves
+   * when all entries have been read.
+   *
+   * The onRead callback receives a single argument, a yauzl Entry object.
+   */
+  readEach(onRead) {
+    return new Promise((resolve, reject) => {
+
+      this._zip.on('entry', (entry) => {
+        onRead(entry);
+      });
+
+      this._zip.once('error', (error) => {
+        reject(error);
+      });
+
+      this._zip.once('end', () => {
+        resolve();
+      });
+    });
+  }
+}
+
+
+/*
+ * Returns a path to a test fixture file. Invoke it the same as path.join().
+ */
+export function fixturePath(...pathParts) {
+  return path.join(__dirname, 'fixtures', ...pathParts);
+}
+
+
+/*
+ * Work with a self-destructing temporary directory.
+ *
+ * Usage example:
+ *
+ * let tmpDir = new TmpDir();
+ * tmpDir.create()
+ *   .then(() => {
+ *     // work with tmpDir.path()
+ *   })
+ *   .catch(tmpDir.errorHandler())
+ *   .then(tmpDir.successHandler());
+ *
+ */
+export class TmpDir {
+
+  constructor() {
+    this._path = null;
+    this._removeTmpDir = null;
+  }
+
+  /*
+   * Returns a promise that is fulfilled when the temp directory has
+   * been created.
+   */
+  create() {
+    let createTmpDir = promisify(tmp.dir);
+    return createTmpDir({
+        prefix: 'tmp-web-ext-test-',
+        // This allows us to remove a non-empty tmp dir.
+        unsafeCleanup: true,
+      })
+      .then((args) => {
+        let [tmpPath, removeTmpDir] = args;
+        this._path = tmpPath;
+        this._removeTmpDir = removeTmpDir;
+        return this;
+      });
+  }
+
+  /*
+   * Get the absolute path of the temp directory.
+   */
+  path() {
+    if (!this._path) {
+      throw new Error('You cannot access path() before calling create()');
+    }
+    return this._path;
+  }
+
+  /*
+   * Returns a callback that will catch an error, remove
+   * the temporary directory, and throw the error.
+   *
+   * This is intended for use in a promise like
+   * Promise().catch(tmp.errorHandler())
+   */
+  errorHandler() {
+    return (error) => {
+      this.remove();
+      throw error;
+    };
+  }
+
+  /*
+   * Returns a callback that will remove the temporary direcotry.
+   *
+   * This is intended for use in a promise like
+   * Promise().then(tmp.successHandler())
+   */
+  successHandler() {
+    return () => this.remove();
+  }
+
+  /*
+   * Remove the temp directory.
+   */
+  remove() {
+    if (!this._removeTmpDir) {
+      // Nothing was created so there's nothing to remove.
+      return;
+    }
+    this._removeTmpDir();
+  }
+
+}

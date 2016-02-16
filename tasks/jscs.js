@@ -5,8 +5,8 @@ module.exports = {
     },
     files: [
       { src: [
-          'tasks/**/*.js*',
-          'tests/**/*.js*',
+          'tasks/**/*.js',
+          'tests/**/*.js',
           'src/**/*.js',
           'Gruntfile.js',
           'webpack.config.js',

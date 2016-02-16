@@ -36,25 +36,27 @@
   "dependencies": {
     "babel-polyfill": "6.5.0",
     "es6-promisify": "3.0.0",
-    "yargs": "3.32.0"
+    "stream-to-promise": "1.1.0",
+    "yargs": "3.32.0",
+    "zip-dir": "1.0.1"
   },
   "devDependencies": {
-    "babel-core": "6.5.1",
+    "babel-core": "6.5.2",
     "babel-eslint": "4.1.8",
     "babel-loader": "6.2.2",
-    "babel-plugin-transform-class-properties": "6.5.0",
+    "babel-plugin-transform-class-properties": "6.5.2",
     "babel-plugin-transform-es2015-modules-commonjs": "6.5.2",
     "babel-plugin-transform-flow-strip-types": "6.5.0",
     "babel-preset-es2015": "6.5.0",
     "babel-preset-stage-2": "6.5.0",
     "chai": "3.5.0",
-    "eslint": "1.10.3",
+    "eslint": "2.1.0",
     "flow-bin": "0.21.0",
     "grunt": "0.4.5",
-    "grunt-contrib-clean": "0.7.0",
+    "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "0.8.2",
     "grunt-contrib-watch": "0.6.1",
-    "grunt-eslint": "17.3.2",
+    "grunt-eslint": "18.0.0",
     "grunt-flow-type-check": "git+https://github.com/isuttell/grunt-flow-type-check.git#e174826856b215c65973d09186f6f0ec40fa163e",
     "grunt-jscs": "2.7.0",
     "grunt-mocha-test": "0.12.7",
@@ -65,8 +67,10 @@
     "mocha": "2.4.5",
     "shelljs": "0.6.0",
     "sinon": "1.17.3",
+    "tmp": "0.0.28",
     "webpack": "1.12.13",
-    "webpack-dev-server": "1.14.1"
+    "webpack-dev-server": "1.14.1",
+    "yauzl": "2.4.1"
   },
   "author": "Kumar McMillan",
   "license": "MPL-2.0"
