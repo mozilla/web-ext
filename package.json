@@ -36,8 +36,9 @@
   "dependencies": {
     "babel-polyfill": "6.5.0",
     "es6-promisify": "3.0.0",
+    "require-main-filename": "1.0.0",
     "stream-to-promise": "1.1.0",
-    "yargs": "3.32.0",
+    "yargs": "4.1.0",
     "zip-dir": "1.0.1"
   },
   "devDependencies": {
