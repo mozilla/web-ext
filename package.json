@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node -e \"require('grunt').cli()\" null build",
     "develop": "node -e \"require('grunt').cli()\" null develop",
-    "flow-check": "node -e \"require('grunt').cli()\" null flow:check",
+    "flow-check": "node -e \"require('grunt').cli()\" null flowbin:check",
     "lint": "node -e \"require('grunt').cli()\" null lint",
     "test": "node -e \"require('grunt').cli()\" null test"
   },
@@ -57,7 +57,7 @@
     "grunt-contrib-copy": "0.8.2",
     "grunt-contrib-watch": "0.6.1",
     "grunt-eslint": "18.0.0",
-    "grunt-flow-type-check": "git+https://github.com/isuttell/grunt-flow-type-check.git#e174826856b215c65973d09186f6f0ec40fa163e",
+    "grunt-flowbin": "0.0.2",
     "grunt-jscs": "2.7.0",
     "grunt-mocha-test": "0.12.7",
     "grunt-newer": "1.1.2",

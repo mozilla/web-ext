@@ -35,12 +35,12 @@ module.exports = function(grunt) {
     'build-tests',
     'mochaTest',
     'lint',
-    'flow:check',
+    'flowbin:check',
     'check-flow-config',
   ]);
 
   grunt.registerTask('develop', [
-    'flow:server:start',
+    'flowbin:start',
     'watch:develop',
   ]);
 

@@ -16,7 +16,7 @@ module.exports = {
       'build-tests',
       'mochaTest',
       'lint',
-      'flow:server:status',
+      'flowbin:status',
     ],
   },
 };
