@@ -18,7 +18,7 @@ fs.readdirSync('node_modules')
 
 
 module.exports = {
-  entry: './src/cli.js',
+  entry: './src/main.js',
   target: 'node',
   node: {
     __dirname: true,
