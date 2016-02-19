@@ -13,10 +13,10 @@ module.exports = {
       '.flowconfig',
     ],
     tasks: [
+      'flowbin:status',
       'build-tests',
       'mochaTest',
       'lint',
-      'flowbin:status',
     ],
   },
 };
