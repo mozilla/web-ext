@@ -2,6 +2,22 @@
 import yargs from 'yargs';
 
 
+/*
+ * Pseudo-class for all global program options.
+ *
+ * This is used to validate the definition of command handlers.
+ * Each class instance variable is a camel case expanded program
+ * option. Each option is defined in program.yargs.option(...).
+ */
+export class ProgramOptions {
+  sourceDir: string;
+  buildDir: string;
+}
+
+
+/*
+ * The command line program.
+ */
 export class Program {
   yargs: any;
   commands: { [key: string]: Function };

@@ -5,9 +5,10 @@ import streamToPromise from 'stream-to-promise';
 
 import * as fs from './util/promised-fs';
 import {zipDir} from './util/zip-dir';
+import {ProgramOptions} from './program';
 
 
-export default function build({sourceDir, buildDir}: Object) {
+export default function build({sourceDir, buildDir}: ProgramOptions) {
   console.log(`Building web extension from ${sourceDir}`);
   return prepareBuildDir(buildDir)
     .then(() => zipDir(sourceDir))

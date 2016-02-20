@@ -1,10 +1,11 @@
 import path from 'path';
 import {assert} from 'chai';
 
-import {fixturePath, withTempDir, ZipFile} from '../util';
+import {withTempDir, ZipFile} from '../util';
 import * as fs from '../../src/util/promised-fs';
-import build from '../../src/build';
 import {prepareBuildDir} from '../../src/build';
+
+import * as adapter from './adapter';
 
 
 describe('build', () => {
@@ -14,10 +15,7 @@ describe('build', () => {
 
     return withTempDir(
       (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          buildDir: tmpDir.path(),
-        })
+        adapter.buildMinimalExt(tmpDir)
         .then((buildResult) => zipFile.open(buildResult.xpiPath))
         .then(() => {
           var fileNames = [];
