@@ -1,10 +1,10 @@
 import {assert} from 'chai';
 import {spy} from 'sinon';
 
-import {Program} from '../../src/cli';
+import {Program} from '../../src/program';
 
 
-describe('cli.Program', () => {
+describe('program.Program', () => {
 
   it('executes a command callback', () => {
     let thing = spy(() => new Promise((resolve) => resolve()));
