@@ -58,11 +58,38 @@ export function fixturePath(...pathParts) {
 
 
 /*
- * Work with a self-destructing temporary directory.
+ * Work with a self-destructing temporary directory in a promise chain.
  *
- * Usage example:
+ * The directory will be destroyed when the promise chain is finished
+ * (whether there was an error or not).
  *
- * let tmpDir = new TmpDir();
+ * Usage:
+ *
+ * withTempDir(
+ *   (tmpDir) =>
+ *     doSomething(tmpDir.path())
+ *     .then(...)
+ * );
+ *
+ */
+export function withTempDir(makePromise) {
+  let tmpDir = new TempDir();
+  return tmpDir.create()
+    .then(() => {
+      return makePromise(tmpDir);
+    })
+    .catch(tmpDir.errorHandler())
+    .then(tmpDir.successHandler());
+}
+
+
+/*
+ * Work with a self-destructing temporary directory object.
+ *
+ * It is safer to use withTempDir() instead but if you know
+ * what you're doing you can use it directly like:
+ *
+ * let tmpDir = new TempDir();
  * tmpDir.create()
  *   .then(() => {
  *     // work with tmpDir.path()
@@ -71,11 +98,11 @@ export function fixturePath(...pathParts) {
  *   .then(tmpDir.successHandler());
  *
  */
-export class TmpDir {
+export class TempDir {
 
   constructor() {
     this._path = null;
-    this._removeTmpDir = null;
+    this._removeTempDir = null;
   }
 
   /*
@@ -83,16 +110,16 @@ export class TmpDir {
    * been created.
    */
   create() {
-    let createTmpDir = promisify(tmp.dir);
-    return createTmpDir({
+    let createTempDir = promisify(tmp.dir);
+    return createTempDir({
         prefix: 'tmp-web-ext-test-',
         // This allows us to remove a non-empty tmp dir.
         unsafeCleanup: true,
       })
       .then((args) => {
-        let [tmpPath, removeTmpDir] = args;
+        let [tmpPath, removeTempDir] = args;
         this._path = tmpPath;
-        this._removeTmpDir = removeTmpDir;
+        this._removeTempDir = removeTempDir;
         return this;
       });
   }
@@ -135,11 +162,11 @@ export class TmpDir {
    * Remove the temp directory.
    */
   remove() {
-    if (!this._removeTmpDir) {
+    if (!this._removeTempDir) {
       // Nothing was created so there's nothing to remove.
       return;
     }
-    this._removeTmpDir();
+    this._removeTempDir();
   }
 
 }
