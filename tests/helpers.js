@@ -170,3 +170,21 @@ export class TempDir {
   }
 
 }
+
+
+/*
+ * Test helper to make sure a promise chain really fails.
+ *
+ * Usage:
+ *
+ *  Promise.resolve()
+ *    .then(makeSureItFails())
+ *    .catch((error) => {
+ *      // Safely make assertions about the error...
+ *    });
+ */
+export function makeSureItFails() {
+  return () => {
+    throw new Error('This test unexpectedly succeeded without an error');
+  };
+}

@@ -2,7 +2,7 @@
 import path from 'path';
 import {readFileSync} from 'fs';
 
-import build from './build';
+import build from './cmd/build';
 import {Program} from './program';
 
 

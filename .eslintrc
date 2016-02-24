@@ -43,6 +43,7 @@
     "no-iterator": 2,
     "no-loop-func": 0,
     "no-multi-str": 2,
+    "no-multiple-empty-lines": [2, {"max": 2}],
     "no-new": 2,
     "no-plusplus": 0,
     "no-proto": 2,
