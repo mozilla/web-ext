@@ -3,6 +3,7 @@ import path from 'path';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
 
+import {onlyErrorsWithCode} from '../errors';
 import * as fs from '../util/promised-fs';
 import {zipDir} from '../util/zip-dir';
 import {ProgramOptions} from '../program';
@@ -10,39 +11,42 @@ import getValidatedManifest from '../util/manifest';
 
 
 export default function build(
-    {sourceDir, buildDir}: ProgramOptions): Promise {
+    {sourceDir, buildDir}: ProgramOptions,
+    {manifestData}: Object = {}): Promise {
 
   console.log(`Building web extension from ${sourceDir}`);
 
-  let initializations = [
-    prepareBuildDir(buildDir),
-    zipDir(sourceDir),
-    getPackageBasename(sourceDir),
-  ];
+  let resolveManifest;
+  if (manifestData) {
+    console.log(`Using manifest id=${manifestData.applications.gecko.id}`);
+    resolveManifest = Promise.resolve(manifestData);
+  } else {
+    resolveManifest = getValidatedManifest(sourceDir);
+  }
 
-  return Promise.all(initializations)
-    .then((results) => {
-      let [buildDir, buffer, packageName] = results;
-      let extensionPath = path.join(buildDir, packageName);
-      let stream = createWriteStream(extensionPath);
-      let promisedStream = streamToPromise(stream);
+  return resolveManifest
+    .then((manifestData) =>
+      Promise.all([
+        prepareBuildDir(buildDir),
+        zipDir(sourceDir),
+      ])
+      .then((results) => {
+        let [buildDir, buffer] = results;
+        let packageName = safeFileName(
+          `${manifestData.name}-${manifestData.version}.xpi`);
+        let extensionPath = path.join(buildDir, packageName);
+        let stream = createWriteStream(extensionPath);
+        let promisedStream = streamToPromise(stream);
 
-      stream.write(buffer, () => stream.end());
+        stream.write(buffer, () => stream.end());
 
-      return promisedStream
-        .then(() => {
-          console.log(`Your web extension is ready: ${extensionPath}`);
-          return {extensionPath};
-        });
-    });
-}
-
-
-export function getPackageBasename(sourceDir: string): Promise {
-  let manifestFile = path.join(sourceDir, 'manifest.json');
-  return getValidatedManifest(manifestFile)
-    .then((manifestData) => safeFileName(
-      `${manifestData.name}-${manifestData.version}.xpi`));
+        return promisedStream
+          .then(() => {
+            console.log(`Your web extension is ready: ${extensionPath}`);
+            return {extensionPath};
+          });
+      })
+    );
 }
 
 
@@ -53,12 +57,9 @@ export function safeFileName(name: string): string {
 
 export function prepareBuildDir(buildDir: string) {
   return fs.stat(buildDir)
-    .catch((error) => {
-      if (error.code !== 'ENOENT') {
-        throw error;
-      }
+    .catch(onlyErrorsWithCode('ENOENT', () => {
       console.log(`Creating build directory: ${buildDir}`);
       return fs.mkdir(buildDir);
-    })
+    }))
     .then(() => buildDir);
 }

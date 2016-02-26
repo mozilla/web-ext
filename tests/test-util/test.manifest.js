@@ -1,37 +1,47 @@
 import path from 'path';
 import {assert} from 'chai';
+import deepcopy from 'deepcopy';
 
 import {onlyInstancesOf, InvalidManifest} from '../../src/errors';
 import * as fs from '../../src/util/promised-fs';
 import getValidatedManifest from '../../src/util/manifest';
-import {makeSureItFails, withTempDir} from '../helpers';
+import {withTempDir} from '../../src/util/temp-dir';
+import {makeSureItFails} from '../helpers';
+
+
+export const basicManifest = {
+  name: 'the extension',
+  version: '0.0.1',
+  applications: {
+    gecko: {
+      id: 'basic-manifest@web-ext-test-suite',
+    },
+  },
+};
 
 
 describe('util/manifest', () => {
 
   describe('getValidatedManifest', () => {
 
-    it('returns a valid manifest', () => {
-      let expectedData = {name: 'the extension', version: '0.0.1'};
-      return withTempDir(
-        (tmpDir) =>
-          writeManifest(tmpDir.path(), expectedData)
-          .then((manifestFile) => getValidatedManifest(manifestFile))
-          .then((manifestData) => {
-            assert.deepEqual(manifestData, expectedData);
-          })
-      );
-    });
+    it('returns a valid manifest', () => withTempDir(
+      (tmpDir) =>
+        writeManifest(tmpDir.path(), basicManifest)
+        .then(() => getValidatedManifest(tmpDir.path()))
+        .then((manifestData) => {
+          assert.deepEqual(manifestData, basicManifest);
+        })
+    ));
 
     it('reports an error for a missing manifest file', () => {
-      let nonExistantFile = '/dev/null/nowhere/manifest.json';
-      return getValidatedManifest(nonExistantFile)
+      let nonExistentDir = '/dev/null/nowhere/';
+      return getValidatedManifest(nonExistentDir)
         .then(makeSureItFails())
         .catch(onlyInstancesOf(InvalidManifest, (error) => {
           assert.match(error.message, /Could not read manifest\.json/);
           // Make sure the filename is included in the exception message.
           // This is actually done by default in file system error messages.
-          assert.include(error.message, nonExistantFile);
+          assert.include(error.message, nonExistentDir);
         }));
     });
 
@@ -43,7 +53,7 @@ describe('util/manifest', () => {
         }`;
         let manifestFile = path.join(tmpDir.path(), 'manifest.json');
         return fs.writeFile(manifestFile, badManifest)
-          .then(() => getValidatedManifest(manifestFile))
+          .then(() => getValidatedManifest(tmpDir.path()))
           .then(makeSureItFails())
           .catch(onlyInstancesOf(InvalidManifest, (error) => {
             assert.match(error.message, /Error parsing manifest\.json/);
@@ -52,48 +62,118 @@ describe('util/manifest', () => {
       }
     ));
 
-    it('reports an error for a manifest without a name', () => withTempDir(
-      (tmpDir) =>
-        writeManifest(tmpDir.path(), {version: '0.0.1'})
-        .then((manifestFile) => {
-          return getValidatedManifest(manifestFile)
-            .then(makeSureItFails())
-            .catch(onlyInstancesOf(InvalidManifest, (error) => {
-              assert.match(
-                error.message,
-                /Manifest at .* is invalid: missing "name" property/);
-              assert.include(error.message, manifestFile);
-            }));
-        })
+    it('reports an error when missing a name', () => withTempDir(
+      (tmpDir) => {
+        let noNameManifest = deepcopy(basicManifest);
+        delete noNameManifest.name;
+
+        return writeManifest(tmpDir.path(), noNameManifest)
+          .then((manifestFile) => {
+            return getValidatedManifest(tmpDir.path())
+              .then(makeSureItFails())
+              .catch(onlyInstancesOf(InvalidManifest, (error) => {
+                assert.match(
+                  error.message,
+                  /Manifest at .* is invalid: missing "name" property/);
+                assert.include(error.message, manifestFile);
+              }));
+          });
+      }
     ));
 
-    it('reports an error for a manifest without a version', () => withTempDir(
-      (tmpDir) =>
-        writeManifest(tmpDir.path(), {name: 'the extension'})
-        .then((manifestFile) => {
-          return getValidatedManifest(manifestFile)
-            .then(makeSureItFails())
-            .catch(onlyInstancesOf(InvalidManifest, (error) => {
-              assert.match(
-                error.message,
-                /Manifest at .* is invalid: missing "version" property/);
-              assert.include(error.message, manifestFile);
-            }));
-        })
+    it('reports an error when missing version', () => withTempDir(
+      (tmpDir) => {
+        let noVersionManifest = deepcopy(basicManifest);
+        delete noVersionManifest.version;
+
+        return writeManifest(tmpDir.path(), noVersionManifest)
+          .then((manifestFile) => {
+            return getValidatedManifest(tmpDir.path())
+              .then(makeSureItFails())
+              .catch(onlyInstancesOf(InvalidManifest, (error) => {
+                assert.match(
+                  error.message,
+                  /Manifest at .* is invalid: missing "version" property/);
+                assert.include(error.message, manifestFile);
+              }));
+          });
+      }
     ));
 
-    it('reports all errors', () => withTempDir(
-      (tmpDir) =>
-        writeManifest(tmpDir.path(), {}) // empty manifest
-        .then((manifestFile) => {
-          return getValidatedManifest(manifestFile)
-            .then(makeSureItFails())
-            .catch(onlyInstancesOf(InvalidManifest, (error) => {
-              assert.match(
-                error.message,
-                /missing "name" property; missing "version" property/);
-            }));
-        })
+    it('reports an error when missing applications', () => withTempDir(
+      (tmpDir) => {
+        let incompleteManifest = deepcopy(basicManifest);
+        delete incompleteManifest.applications;
+
+        return writeManifest(tmpDir.path(), incompleteManifest)
+          .then((manifestFile) => {
+            return getValidatedManifest(tmpDir.path())
+              .then(makeSureItFails())
+              .catch(onlyInstancesOf(InvalidManifest, (error) => {
+                assert.match(
+                  error.message,
+                  /Manifest at .* is invalid: missing "applications" property/);
+                assert.include(error.message, manifestFile);
+              }));
+          });
+      }
+    ));
+
+    it('reports an error when missing applications.gecko', () => withTempDir(
+      (tmpDir) => {
+        let incompleteManifest = deepcopy(basicManifest);
+        delete incompleteManifest.applications.gecko;
+
+        return writeManifest(tmpDir.path(), incompleteManifest)
+          .then((manifestFile) => {
+            return getValidatedManifest(tmpDir.path())
+              .then(makeSureItFails())
+              .catch(onlyInstancesOf(InvalidManifest, (error) => {
+                assert.match(
+                  error.message,
+                  /Manifest at .* is invalid: missing "applications.gecko".*/);
+                assert.include(error.message, manifestFile);
+              }));
+          });
+      }
+    ));
+
+    it('reports an error when missing applications.gecko.id', () => withTempDir(
+      (tmpDir) => {
+        let incompleteManifest = deepcopy(basicManifest);
+        delete incompleteManifest.applications.gecko.id;
+
+        return writeManifest(tmpDir.path(), incompleteManifest)
+          .then((manifestFile) => {
+            return getValidatedManifest(tmpDir.path())
+              .then(makeSureItFails())
+              .catch(onlyInstancesOf(InvalidManifest, (error) => {
+                assert.match(
+                  error.message,
+                  /Manifest .* is invalid: missing "applications.gecko.id".*/);
+                assert.include(error.message, manifestFile);
+              }));
+          });
+      }
+    ));
+
+    it('concatenates errors in error message', () => withTempDir(
+      (tmpDir) => {
+        let manifestWithErrors = deepcopy(basicManifest);
+        delete manifestWithErrors.name;
+        delete manifestWithErrors.version;
+
+        return writeManifest(tmpDir.path(), manifestWithErrors)
+          .then(() => {
+            return getValidatedManifest(tmpDir.path())
+              .then(makeSureItFails())
+              .catch(onlyInstancesOf(InvalidManifest, (error) => {
+                assert.match(
+                  error.message,
+                  /missing "name" property; missing "version" property/);
+              }));
+          });
+      }
     ));
 
   });

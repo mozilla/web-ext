@@ -1,6 +1,7 @@
 /* @flow */
-import build, {getPackageBasename} from '../../../src/cmd/build';
-import {fixturePath, TempDir} from '../../helpers';
+import build from '../../../src/cmd/build';
+import {TempDir} from '../../../src/util/temp-dir';
+import {fixturePath} from '../../helpers';
 
 
 export function buildMinimalExt(tmpDir: TempDir): Promise {
@@ -11,7 +12,12 @@ export function buildMinimalExt(tmpDir: TempDir): Promise {
 }
 
 
-export function getMinimalExtBasename(): Promise {
-  let sourceDir = fixturePath('minimal-web-ext');
-  return getPackageBasename(sourceDir);
+export function buildMinimalExtWithManifest(
+    tmpDir: TempDir, manifestData: Object): Promise {
+  return build({
+    sourceDir: fixturePath('minimal-web-ext'),
+    buildDir: tmpDir.path(),
+  }, {
+    manifestData: manifestData,
+  });
 }

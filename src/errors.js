@@ -45,3 +45,27 @@ export function onlyInstancesOf(
     }
   };
 }
+
+
+/*
+ * Sugar-y way to catch only errors with a certain code.
+ *
+ * Usage:
+ *
+ *  Promise.resolve()
+ *    .catch(onlyErrorsWithCode('ENOENT', (error) => {
+ *      // error.code is guaranteed to be ENOENT
+ *    }))
+ *
+ * All other errors will be re-thrown.
+ *
+ */
+export function onlyErrorsWithCode(
+    codeWanted: string, errorHandler: Function): Function {
+  return (error) => {
+    if (error.code !== codeWanted) {
+      throw error;
+    }
+    return errorHandler(error);
+  };
+}

@@ -1,6 +1,5 @@
 import path from 'path';
-import tmp from 'tmp';
-import promisify from 'es6-promisify';
+import {promisify} from '../src/util/es6-modules';
 import yauzl from 'yauzl';
 
 
@@ -54,121 +53,6 @@ export class ZipFile {
  */
 export function fixturePath(...pathParts) {
   return path.join(__dirname, 'fixtures', ...pathParts);
-}
-
-
-/*
- * Work with a self-destructing temporary directory in a promise chain.
- *
- * The directory will be destroyed when the promise chain is finished
- * (whether there was an error or not).
- *
- * Usage:
- *
- * withTempDir(
- *   (tmpDir) =>
- *     doSomething(tmpDir.path())
- *     .then(...)
- * );
- *
- */
-export function withTempDir(makePromise) {
-  let tmpDir = new TempDir();
-  return tmpDir.create()
-    .then(() => {
-      return makePromise(tmpDir);
-    })
-    .catch(tmpDir.errorHandler())
-    .then(tmpDir.successHandler());
-}
-
-
-/*
- * Work with a self-destructing temporary directory object.
- *
- * It is safer to use withTempDir() instead but if you know
- * what you're doing you can use it directly like:
- *
- * let tmpDir = new TempDir();
- * tmpDir.create()
- *   .then(() => {
- *     // work with tmpDir.path()
- *   })
- *   .catch(tmpDir.errorHandler())
- *   .then(tmpDir.successHandler());
- *
- */
-export class TempDir {
-
-  constructor() {
-    this._path = null;
-    this._removeTempDir = null;
-  }
-
-  /*
-   * Returns a promise that is fulfilled when the temp directory has
-   * been created.
-   */
-  create() {
-    let createTempDir = promisify(tmp.dir);
-    return createTempDir({
-        prefix: 'tmp-web-ext-test-',
-        // This allows us to remove a non-empty tmp dir.
-        unsafeCleanup: true,
-      })
-      .then((args) => {
-        let [tmpPath, removeTempDir] = args;
-        this._path = tmpPath;
-        this._removeTempDir = removeTempDir;
-        return this;
-      });
-  }
-
-  /*
-   * Get the absolute path of the temp directory.
-   */
-  path() {
-    if (!this._path) {
-      throw new Error('You cannot access path() before calling create()');
-    }
-    return this._path;
-  }
-
-  /*
-   * Returns a callback that will catch an error, remove
-   * the temporary directory, and throw the error.
-   *
-   * This is intended for use in a promise like
-   * Promise().catch(tmp.errorHandler())
-   */
-  errorHandler() {
-    return (error) => {
-      this.remove();
-      throw error;
-    };
-  }
-
-  /*
-   * Returns a callback that will remove the temporary direcotry.
-   *
-   * This is intended for use in a promise like
-   * Promise().then(tmp.successHandler())
-   */
-  successHandler() {
-    return () => this.remove();
-  }
-
-  /*
-   * Remove the temp directory.
-   */
-  remove() {
-    if (!this._removeTempDir) {
-      // Nothing was created so there's nothing to remove.
-      return;
-    }
-    this._removeTempDir();
-  }
-
 }
 
 
