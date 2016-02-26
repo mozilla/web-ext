@@ -1,6 +1,8 @@
 /* @flow */
 import yargs from 'yargs';
 
+import {WebExtError} from './errors';
+
 
 /*
  * Pseudo-class for all global program options.
@@ -38,27 +40,32 @@ export class Program {
     return this;
   }
 
-  run(): Promise {
+  run({throwError=false, systemProcess=process}: Object = {}): Promise {
     let argv = this.yargs.argv;
     let cmd = argv._[0];
     return new Promise(
       (resolve) => {
         if (cmd === undefined) {
-          throw new Error('No sub-command was specified in the args');
+          throw new WebExtError('No sub-command was specified in the args');
         }
         if (!this.commands[cmd]) {
-          throw new Error(`unknown command: ${cmd}`);
+          throw new WebExtError(`unknown command: ${cmd}`);
         }
         resolve();
       })
       .then(() => this.commands[cmd](argv))
       .catch((error) => {
-        let prefix = 'error:';
+        let prefix = '';
         if (cmd) {
-          prefix = `${cmd} ${prefix}`;
+          prefix = `${cmd}: `;
         }
-        console.error(prefix, error);
-        throw error;
+        console.error(prefix + error.toString());
+
+        if (throwError) {
+          throw error;
+        } else {
+          systemProcess.exit(1);
+        }
       });
   }
 }
