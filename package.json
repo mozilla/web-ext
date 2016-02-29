@@ -34,7 +34,7 @@
     "opera"
   ],
   "dependencies": {
-    "babel-polyfill": "6.5.0",
+    "babel-polyfill": "6.6.0",
     "es6-error": "2.0.2",
     "es6-promisify": "3.0.0",
     "stream-to-promise": "1.1.0",
