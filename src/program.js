@@ -60,6 +60,9 @@ export class Program {
           prefix = `${cmd}: `;
         }
         console.error(prefix + error.toString());
+        if (error.code) {
+          console.error(`${prefix}Error code: ${error.code}`);
+        }
 
         if (throwError) {
           throw error;

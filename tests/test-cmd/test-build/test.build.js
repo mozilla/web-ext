@@ -2,10 +2,11 @@ import path from 'path';
 import {assert} from 'chai';
 
 import {safeFileName} from '../../../src/cmd/build';
-import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
-import {withTempDir, ZipFile} from '../../helpers';
+import {withTempDir} from '../../../src/util/temp-dir';
+import {ZipFile} from '../../helpers';
 import * as fs from '../../../src/util/promised-fs';
-import {getPackageBasename, prepareBuildDir} from '../../../src/cmd/build';
+import {prepareBuildDir} from '../../../src/cmd/build';
+import {basicManifest} from '../../test-util/test.manifest';
 
 import * as adapter from './adapter';
 
@@ -43,6 +44,16 @@ describe('build', () => {
       );
     });
 
+    it('lets you specify a manifest', () => withTempDir(
+      (tmpDir) =>
+        adapter.buildMinimalExtWithManifest(tmpDir, basicManifest)
+        .then((buildResult) => {
+          assert.match(buildResult.extensionPath,
+                       /the_extension-0\.0\.1\.xpi$/);
+          return buildResult.extensionPath;
+        })
+    ));
+
   });
 
 
@@ -66,26 +77,6 @@ describe('build', () => {
           // Make sure everything is still cool with this path.
           return fs.stat(tmpDir.path());
         })
-    ));
-
-  });
-
-
-  describe('getPackageBasename', () => {
-
-    it('returns a base filename derived from a manifest', () => {
-      return adapter.getMinimalExtBasename()
-        .then((baseName) => {
-          assert.equal(baseName, 'minimal_extension-1.0.xpi');
-        });
-    });
-
-    it('reports a missing manifest.json file', () => withTempDir(
-      (tmpDir) =>
-        getPackageBasename(tmpDir.path())
-        .catch(onlyInstancesOf(InvalidManifest, (error) => {
-          assert.match(error.message, /Could not read manifest\.json/);
-        }))
     ));
 
   });
