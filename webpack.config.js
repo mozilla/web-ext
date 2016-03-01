@@ -16,6 +16,17 @@ fs.readdirSync('node_modules')
     // jscs:enable requireTemplateStrings
   });
 
+var preLoaders = [];
+
+if (process.env.COVERAGE === 'y') {
+  preLoaders.push([
+    {
+      test: /\.js$/,
+      exclude: /(node_modules|bower_components|test)/,
+      loader: 'babel-istanbul',
+    },
+  ]);
+}
 
 module.exports = {
   entry: './src/main.js',
@@ -30,6 +41,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   module: {
+    preLoaders: preLoaders,
     loaders: [
       {
         exclude: /(node_modules|bower_components)/,

@@ -5,7 +5,8 @@ node_js:
 - '4'
 before_install:
 - npm install -g npm
-script: npm test
+script: COVERAGE=y npm test
+after_script: "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
 notifications:
   irc:
     channels:
