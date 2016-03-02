@@ -3,6 +3,7 @@ import path from 'path';
 import {readFileSync} from 'fs';
 
 import build from './cmd/build';
+import run from './cmd/run';
 import {Program} from './program';
 
 
@@ -39,7 +40,8 @@ export function main() {
     });
 
   program
-    .command('build', 'Create a web extension package from source', build);
+    .command('build', 'Create a web extension package from source', build)
+    .command('run', 'Run the web extension', run);
 
   program.run();
 }
