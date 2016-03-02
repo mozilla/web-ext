@@ -4,7 +4,7 @@ import {assert} from 'chai';
 import {safeFileName} from '../../../src/cmd/build';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {ZipFile} from '../../helpers';
-import * as fs from '../../../src/util/promised-fs';
+import fs from 'mz/fs';
 import {prepareBuildDir} from '../../../src/cmd/build';
 import {basicManifest} from '../../test-util/test.manifest';
 

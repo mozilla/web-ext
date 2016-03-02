@@ -4,7 +4,7 @@ import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
 
 import {onlyErrorsWithCode} from '../errors';
-import * as fs from '../util/promised-fs';
+import fs from 'mz/fs';
 import {zipDir} from '../util/zip-dir';
 import {ProgramOptions} from '../program';
 import getValidatedManifest from '../util/manifest';
@@ -55,7 +55,7 @@ export function safeFileName(name: string): string {
 }
 
 
-export function prepareBuildDir(buildDir: string) {
+export function prepareBuildDir(buildDir: string): Promise {
   return fs.stat(buildDir)
     .catch(onlyErrorsWithCode('ENOENT', () => {
       console.log(`Creating build directory: ${buildDir}`);

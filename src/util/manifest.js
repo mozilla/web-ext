@@ -1,7 +1,7 @@
 /* @flow */
 import path from 'path';
 
-import * as fs from './promised-fs';
+import fs from 'mz/fs';
 import {InvalidManifest} from '../errors';
 
 

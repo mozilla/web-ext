@@ -5,7 +5,7 @@ import sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
 
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
-import * as fs from '../../src/util/promised-fs';
+import fs from 'mz/fs';
 import {withTempDir} from '../../src/util/temp-dir';
 import {fixturePath, makeSureItFails} from '../helpers';
 import {basicManifest} from '../test-util/test.manifest';

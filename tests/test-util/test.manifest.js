@@ -3,7 +3,7 @@ import {assert} from 'chai';
 import deepcopy from 'deepcopy';
 
 import {onlyInstancesOf, InvalidManifest} from '../../src/errors';
-import * as fs from '../../src/util/promised-fs';
+import fs from 'mz/fs';
 import getValidatedManifest from '../../src/util/manifest';
 import {withTempDir} from '../../src/util/temp-dir';
 import {makeSureItFails} from '../helpers';
