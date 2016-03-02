@@ -5,7 +5,7 @@ import defaultFxRunner from 'fx-runner/lib/run';
 import FirefoxProfile from 'firefox-profile';
 import streamToPromise from 'stream-to-promise';
 
-import * as fs from '../util/promised-fs';
+import fs from 'mz/fs';
 import {onlyErrorsWithCode, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 
