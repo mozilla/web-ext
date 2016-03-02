@@ -76,17 +76,6 @@ the test suite without lint checks:
 This project relies on [flow](http://flowtype.org/) to ensure functions and
 classes are used correctly. Run all flow checks with `npm run flow-check`.
 
-### Fix the Flow config
-
-Flow checks all dependencies in `node_modules` to catch usage errors. We made a
-hacky optimization where our config ignores unimported modules. This sped up the
-standalone Flow check by 2x. However, when you change package.json you may need
-to regenerate the ignore rules. Do so like this:
-
-    grunt fix-flow-config
-
-After that, commit and push the new `.flowconfig`.
-
 ## Some Questions and Answers
 
 ### Why do we need a command line tool?
