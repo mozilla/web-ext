@@ -7,7 +7,7 @@ import run from './cmd/run';
 import {Program} from './program';
 
 
-export function main() {
+export function main(absolutePackageDir: string) {
   let program = new Program();
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'build-dir' option is available
@@ -35,7 +35,7 @@ export function main() {
     })
     .version(() => {
       let packageData: any = readFileSync(
-        path.join(__dirname, '..', 'package.json'));
+        path.join(absolutePackageDir, 'package.json'));
       return JSON.parse(packageData).version;
     });
 

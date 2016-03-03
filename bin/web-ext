@@ -1,3 +1,5 @@
 #!/usr/bin/env node
 
-require('../dist/web-ext').main();
+var path = require('path');
+var absolutePackageDir = path.join(path.resolve(__dirname), '..');
+require('../dist/web-ext').main(absolutePackageDir);
