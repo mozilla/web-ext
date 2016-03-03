@@ -106,7 +106,10 @@ export class TempDir {
    * Promise().then(tmp.successHandler())
    */
   successHandler(): Function {
-    return () => this.remove();
+    return (promiseResult) => {
+      this.remove();
+      return promiseResult;
+    };
   }
 
   /*

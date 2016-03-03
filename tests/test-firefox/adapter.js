@@ -4,7 +4,12 @@ import * as preferences from '../../src/firefox/preferences';
 
 
 export function run(profile: Object, fxRunner: Function): Promise {
-  return firefox.run(profile, {fxRunner: fxRunner});
+  return firefox.run(profile, {fxRunner});
+}
+
+export function runWithFirefox(profile: Object, fxRunner: Function,
+                               firefoxBinary: string): Promise {
+  return firefox.run(profile, {fxRunner, firefoxBinary});
 }
 
 

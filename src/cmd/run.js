@@ -1,13 +1,12 @@
 /* @flow */
 import buildExtension from './build';
-import {ProgramOptions} from '../program';
 import * as defaultFirefox from '../firefox';
 import {withTempDir} from '../util/temp-dir';
 import getValidatedManifest from '../util/manifest';
 
 
 export default function run(
-    {sourceDir}: ProgramOptions,
+    {sourceDir, firefoxBinary}: Object,
     {firefox=defaultFirefox}: Object = {}): Promise {
 
   console.log(`Running web extension from ${sourceDir}`);
@@ -30,6 +29,6 @@ export default function run(
             })
             .then(() => profile);
         })
-        .then((profile) => firefox.run(profile))
+        .then((profile) => firefox.run(profile, {firefoxBinary}))
     ));
 }
