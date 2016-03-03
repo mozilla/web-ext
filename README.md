@@ -76,6 +76,20 @@ the test suite without lint checks:
 This project relies on [flow](http://flowtype.org/) to ensure functions and
 classes are used correctly. Run all flow checks with `npm run flow-check`.
 
+### Code Coverage
+
+You can generate Code Coverage reports every time you run the test suite
+by setting `$CODE_COVERAGE` in the environment. Here is an example of running
+the test suite on the instrumented source code:
+
+    CODE_COVERAGE=y npm test
+
+or even when the test suite re-runs automatically as you edit files:
+
+    CODE_COVERAGE=y npm run develop
+
+Once the report has been generated, it can be found in the `./coverage` directory.
+
 ## Some Questions and Answers
 
 ### Why do we need a command line tool?
