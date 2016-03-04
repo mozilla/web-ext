@@ -1,12 +1,14 @@
+/* @flow */
+import {describe, it} from 'mocha';
 import path from 'path';
-import {readFileSync} from 'fs';
+import fs from 'mz/fs';
 import {assert} from 'chai';
 import {spy} from 'sinon';
 
-import {version, main, Program} from '../../src/program';
-import commands from '../../src/cmd';
-import {onlyInstancesOf, WebExtError} from '../../src/errors';
-import {fake, makeSureItFails} from '../helpers';
+import {version, main, Program} from '../src/program';
+import commands from '../src/cmd';
+import {onlyInstancesOf, WebExtError} from '../src/errors';
+import {fake, makeSureItFails} from './helpers';
 
 
 describe('program.Program', () => {
@@ -62,10 +64,18 @@ describe('program.Program', () => {
   });
 
   it('handles errors that have codes', () => {
+
+    class ErrorWithCode extends Error {
+      code: string;
+      constructor() {
+        super('pretend this is a system error');
+        this.code = 'SOME_CODE';
+      }
+    }
+
     let program = new Program(['cmd'])
       .command('cmd', 'some command', () => {
-        let error = new Error('pretend this is a system error');
-        error.code = 'SOME_CODE';
+        let error = new ErrorWithCode();
         throw error;
       });
     // This is just a smoke test to make sure the error code doesn't
@@ -147,9 +157,12 @@ describe('program.main', () => {
 describe('program.version', () => {
 
   it('returns the package version', () => {
-    let root = path.join(__dirname, '..', '..');
-    let pkg = JSON.parse(readFileSync(path.join(root, 'package.json')));
-    assert.equal(version(root), pkg.version);
+    let root = path.join(__dirname, '..');
+    let pkgFile = path.join(root, 'package.json');
+    return fs.readFile(pkgFile)
+      .then((pkgData) => {
+        assert.equal(version(root), JSON.parse(pkgData).version);
+      });
   });
 
 });

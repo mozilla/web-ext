@@ -1,3 +1,4 @@
+/* @flow */
 import path from 'path';
 import sinon from 'sinon';
 import {promisify} from '../src/util/es6-modules';
@@ -8,6 +9,7 @@ import yauzl from 'yauzl';
  * A way to read zip files using promises for all the things.
  */
 export class ZipFile {
+  _zip: any;
 
   constructor() {
     this._zip = null;
@@ -17,7 +19,7 @@ export class ZipFile {
    * Open a zip file and return a promise that resolves to a yauzl
    * zipfile object.
    */
-  open(...args) {
+  open(...args: Array<any>): Promise {
     return promisify(yauzl.open)(...args)
       .then((zip) => {
         this._zip = zip;
@@ -30,8 +32,13 @@ export class ZipFile {
    *
    * The onRead callback receives a single argument, a yauzl Entry object.
    */
-  readEach(onRead) {
+  readEach(onRead: Function): Promise {
     return new Promise((resolve, reject) => {
+
+      if (!this._zip) {
+        throw new Error(
+          'Cannot operate on a falsey zip file. Call open() first.');
+      }
 
       this._zip.on('entry', (entry) => {
         onRead(entry);
@@ -52,7 +59,7 @@ export class ZipFile {
 /*
  * Returns a path to a test fixture file. Invoke it the same as path.join().
  */
-export function fixturePath(...pathParts) {
+export function fixturePath(...pathParts: Array<string>): string {
   return path.join(__dirname, 'fixtures', ...pathParts);
 }
 
@@ -68,7 +75,7 @@ export function fixturePath(...pathParts) {
  *      // Safely make assertions about the error...
  *    });
  */
-export function makeSureItFails() {
+export function makeSureItFails(): Function {
   return () => {
     throw new Error('This test unexpectedly succeeded without an error');
   };
@@ -103,7 +110,7 @@ export function makeSureItFails() {
  * assert.equal(fakeProcess.exit.called, true);
  *
  */
-export function fake(original, methods={}) {
+export function fake(original: Object, methods: Object = {}): Object {
   var stub = {};
 
   // Provide stubs for all original members:

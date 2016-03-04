@@ -1,14 +1,13 @@
+/* @flow */
+import {it, describe} from 'mocha';
 import path from 'path';
 import {assert} from 'chai';
 
-import {safeFileName} from '../../../src/cmd/build';
-import {withTempDir} from '../../../src/util/temp-dir';
-import {ZipFile} from '../../helpers';
+import build, {prepareBuildDir, safeFileName} from '../../src/cmd/build';
+import {withTempDir} from '../../src/util/temp-dir';
+import {fixturePath, ZipFile} from '../helpers';
 import fs from 'mz/fs';
-import {prepareBuildDir} from '../../../src/cmd/build';
-import {basicManifest} from '../../test-util/test.manifest';
-
-import * as adapter from './adapter';
+import {basicManifest} from '../test-util/test.manifest';
 
 
 describe('build', () => {
@@ -20,7 +19,10 @@ describe('build', () => {
 
       return withTempDir(
         (tmpDir) =>
-          adapter.buildMinimalExt(tmpDir)
+          build({
+            sourceDir: fixturePath('minimal-web-ext'),
+            buildDir: tmpDir.path(),
+          })
           .then((buildResult) => {
             assert.match(buildResult.extensionPath,
                          /minimal_extension-1\.0\.xpi$/);
@@ -29,12 +31,15 @@ describe('build', () => {
           .then((extensionPath) => zipFile.open(extensionPath))
           .then(() => {
             var fileNames = [];
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
               zipFile.readEach((entry) => {
                 fileNames.push(entry.fileName);
               })
               .then(() => {
                 resolve(fileNames);
+              })
+              .catch((error) => {
+                reject(error);
               });
             });
           })
@@ -46,7 +51,12 @@ describe('build', () => {
 
     it('lets you specify a manifest', () => withTempDir(
       (tmpDir) =>
-        adapter.buildMinimalExtWithManifest(tmpDir, basicManifest)
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          buildDir: tmpDir.path(),
+        }, {
+          manifestData: basicManifest,
+        })
         .then((buildResult) => {
           assert.match(buildResult.extensionPath,
                        /the_extension-0\.0\.1\.xpi$/);

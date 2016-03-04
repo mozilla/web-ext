@@ -1,8 +1,9 @@
+/* @flow */
+import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
 import {WebExtError} from '../../src/errors';
 import {getPrefs} from '../../src/firefox/preferences';
-import * as adapter from './adapter';
 
 
 describe('firefox/preferences', () => {
@@ -10,7 +11,7 @@ describe('firefox/preferences', () => {
   describe('getPrefs', () => {
 
     it('gets Firefox prefs with some defaults', () => {
-      let prefs = adapter.getFirefoxPrefs();
+      let prefs = getPrefs();
       // This is a commonly shared pref.
       assert.equal(prefs['devtools.debugger.remote-enabled'], true);
       // This is a Firefox only pref.
@@ -18,7 +19,7 @@ describe('firefox/preferences', () => {
     });
 
     it('gets Fennec prefs with some defaults', () => {
-      let prefs = adapter.getFennecPrefs();
+      let prefs = getPrefs('fennec');
       // This is a commonly shared pref.
       assert.equal(prefs['devtools.debugger.remote-enabled'], true);
       // This is a Fennec only pref.

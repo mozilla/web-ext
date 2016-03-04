@@ -1,3 +1,4 @@
+/* @flow */
 /*
  * This tests the actual command line tool from a real process.
  *
@@ -5,9 +6,8 @@
  * Add a unit test instead.
  *
  */
-
 import path from 'path';
-import {readFileSync} from 'fs';
+import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import shell from 'shelljs';
 
@@ -17,15 +17,14 @@ describe('web-ext', () => {
   // This is a smoke test just to make sure the command line script
   // doesn't explode.
 
-  it('prints the current version number', (done) => {
-    let pkg = JSON.parse(
-      readFileSync(path.join(__dirname, '..', '..', 'package.json')));
-    let cmd = 'bin/web-ext --version';
-    shell.exec(cmd, {silent: true}, (code, output) => {
-      assert.equal(output.trim(), pkg.version);
-      assert.equal(code, 0, output);
-      done();
-    });
+  it('shows help', (done) => {
+    let webExt = path.join(path.resolve(__dirname), '..', 'bin', 'web-ext');
+    shell.exec(`${webExt} --help`, {silent: true},
+      (code, stdout, stderr) => {
+        assert.equal(code, 0, stdout + stderr);
+        assert.match(stdout, /Usage: .*web-ext.*/);
+        done();
+      });
   });
 
 });

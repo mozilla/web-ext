@@ -1,3 +1,5 @@
+/* @flow */
+import {describe, it} from 'mocha';
 import path from 'path';
 import {assert} from 'chai';
 import deepcopy from 'deepcopy';
