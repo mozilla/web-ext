@@ -1,8 +1,8 @@
 /*
- * Tests running the process via the CLI.
+ * This tests the actual command line tool from a real process.
  *
- * NOTE: Write these tests sparingly. Consider writing a unit test of the
- * cli module instead.
+ * DO NOT add tests to this unless you have a really good reason to.
+ * Add a unit test instead.
  *
  */
 
@@ -12,7 +12,10 @@ import {assert} from 'chai';
 import shell from 'shelljs';
 
 
-describe('cli (as web-ext command)', () => {
+describe('web-ext', () => {
+
+  // This is a smoke test just to make sure the command line script
+  // doesn't explode.
 
   it('prints the current version number', (done) => {
     let pkg = JSON.parse(

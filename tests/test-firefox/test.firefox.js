@@ -85,6 +85,17 @@ describe('firefox', () => {
         });
     });
 
+    it('passes a custom Firefox binary when specified', () => {
+      let runner = createFakeFxRunner();
+      let firefoxBinary = '/pretend/path/to/firefox-bin';
+      return adapter.runWithFirefox(fakeProfile, runner, firefoxBinary)
+        .then(() => {
+          assert.equal(runner.called, true);
+          assert.equal(runner.firstCall.args[0].binary,
+                       firefoxBinary);
+        });
+    });
+
   });
 
   describe('createProfile', () => {

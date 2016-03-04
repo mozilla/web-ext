@@ -5,10 +5,10 @@ import runCommand from '../../../src/cmd/run';
 
 
 export function run(sourceDir: string, firefox: FirefoxProfile): Promise {
-  return runCommand(
-    {
-      sourceDir,
-      buildDir: '/dev/null', // this should never be used.
-    },
-    {firefox});
+  return runCommand({sourceDir}, {firefox});
+}
+
+export function runWithFirefox(sourceDir: string, firefox: FirefoxProfile,
+                               firefoxBinary: string): Promise {
+  return runCommand({sourceDir, firefoxBinary}, {firefox});
 }

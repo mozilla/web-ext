@@ -6,12 +6,11 @@ import streamToPromise from 'stream-to-promise';
 import {onlyErrorsWithCode} from '../errors';
 import fs from 'mz/fs';
 import {zipDir} from '../util/zip-dir';
-import {ProgramOptions} from '../program';
 import getValidatedManifest from '../util/manifest';
 
 
 export default function build(
-    {sourceDir, buildDir}: ProgramOptions,
+    {sourceDir, buildDir}: Object,
     {manifestData}: Object = {}): Promise {
 
   console.log(`Building web extension from ${sourceDir}`);

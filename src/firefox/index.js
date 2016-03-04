@@ -16,12 +16,14 @@ export const defaultFirefoxEnv = {
 };
 
 export function run(
-    profile: FirefoxProfile, {fxRunner=defaultFxRunner}: Object = {}): Promise {
+    profile: FirefoxProfile,
+    {fxRunner=defaultFxRunner, firefoxBinary}: Object = {}): Promise {
 
   console.log(`Running Firefox with profile at ${profile.path()}`);
   return fxRunner(
     {
-      'binary': null,
+      // if this is falsey, fxRunner tries to find the default one.
+      'binary': firefoxBinary,
       'binary-args': null,
       'no-remote': true,
       'foreground': true,
@@ -50,7 +52,7 @@ export function run(
           console.error(`stderr: ${data.toString().trim()}`);
         });
 
-        firefox.stdout.on('data', function(data) {
+        firefox.stdout.on('data', (data) => {
           console.log(`stdout: ${data.toString().trim()}`);
         });
 

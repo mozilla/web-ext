@@ -1,20 +1,10 @@
 /* @flow */
+import path from 'path';
+import {readFileSync} from 'fs';
 import yargs from 'yargs';
 
+import defaultCommands from './cmd';
 import {WebExtError} from './errors';
-
-
-/*
- * Pseudo-class for all global program options.
- *
- * This is used to validate the definition of command handlers.
- * Each class instance variable is a camel case expanded program
- * option. Each option is defined in program.yargs.option(...).
- */
-export class ProgramOptions {
-  sourceDir: string;
-  buildDir: string;
-}
 
 
 /*
@@ -24,19 +14,36 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
 
-  constructor(argv: ?Array<string>) {
+  constructor(argv: ?Array<string>, {yargsInstance=yargs}: Object = {}) {
     if (argv !== undefined) {
-      this.yargs = yargs(argv);
-    } else {
-      this.yargs = yargs;
+      // This allows us to override the process argv which is useful for
+      // testing.
+      yargsInstance = yargs(argv);
     }
+    this.yargs = yargsInstance;
     this.commands = {};
   }
 
   command(name: string, description: string, executor: Function,
-          configureCommand: ?Function): Program {
-    this.yargs.command(name, description, configureCommand);
+          commandOptions: ?Object): Program {
+    this.yargs.command(name, description, (yargs) => {
+      if (!commandOptions) {
+        return;
+      }
+      return yargs.options(commandOptions);
+    });
     this.commands[name] = executor;
+    return this;
+  }
+
+  setGlobalOptions(options: Object): Program {
+    // This is a convenience for setting global options.
+    // An option is only global (i.e. available to all sub commands)
+    // with the `global` flag so this makes sure every option has it.
+    Object.keys(options).forEach((key) => {
+      options[key].global = true;
+    });
+    this.yargs.options(options);
     return this;
   }
 
@@ -48,12 +55,13 @@ export class Program {
         if (cmd === undefined) {
           throw new WebExtError('No sub-command was specified in the args');
         }
-        if (!this.commands[cmd]) {
+        let runCommand = this.commands[cmd];
+        if (!runCommand) {
           throw new WebExtError(`unknown command: ${cmd}`);
         }
-        resolve();
+        resolve(runCommand);
       })
-      .then(() => this.commands[cmd](argv))
+      .then((runCommand) => runCommand(argv))
       .catch((error) => {
         let prefix = '';
         if (cmd) {
@@ -71,4 +79,66 @@ export class Program {
         }
       });
   }
+}
+
+
+export function version(absolutePackageDir: string): string {
+  let packageData: any = readFileSync(
+    path.join(absolutePackageDir, 'package.json'));
+  return JSON.parse(packageData).version;
+}
+
+
+export function main(
+    absolutePackageDir: string,
+    {commands=defaultCommands, argv, runOptions={}}: Object = {}): Promise {
+  let program = new Program(argv);
+  // yargs uses magic camel case expansion to expose options on the
+  // final argv object. For example, the 'build-dir' option is alternatively
+  // available as argv.buildDir.
+  program.yargs
+    .usage(`Usage: $0 [options] command
+
+Option values can also be set by declaring an environment variable prefixed
+with \$WEB_EXT_. For example: $WEB_EXT_SOURCE_DIR=/path is the same as
+--source-dir=/path.
+`)
+    .help('help')
+    .alias('h', 'help')
+    .env('WEB_EXT')
+    .version(() => version(absolutePackageDir));
+
+  program.setGlobalOptions({
+    'source-dir': {
+      alias: 's',
+      describe: 'Web extension source directory.',
+      default: process.cwd(),
+      requiresArg: true,
+      demand: true,
+      type: 'string',
+    },
+  });
+
+  program
+    .command('build', 'Create a web extension package from source',
+             commands.build, {
+      'build-dir': {
+        alias: 'b',
+        describe: 'Directory where built artifacts will be saved.',
+        default: path.join(process.cwd(), 'web-ext-build'),
+        requiresArg: true,
+        demand: true,
+        type: 'string',
+      },
+    })
+    .command('run', 'Run the web extension', commands.run, {
+      'firefox-binary': {
+        describe: 'Path to a Firefox executable such as firefox-bin. ' +
+                  'If not specified, the default Firefox will be used.',
+        demand: false,
+        type: 'string',
+      },
+    });
+
+  return program.run(runOptions);
 }

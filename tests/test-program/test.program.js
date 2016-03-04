@@ -1,18 +1,30 @@
+import path from 'path';
+import {readFileSync} from 'fs';
 import {assert} from 'chai';
-import {mock, spy} from 'sinon';
+import {spy} from 'sinon';
 
-import {Program} from '../../src/program';
+import {version, main, Program} from '../../src/program';
+import commands from '../../src/cmd';
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
-import {makeSureItFails} from '../helpers';
+import {fake, makeSureItFails} from '../helpers';
 
 
 describe('program.Program', () => {
 
+  function run(program, options={}) {
+    let fakeProcess = fake(process);
+    return program.run({
+      systemProcess: fakeProcess,
+      throwError: true,
+      ...options,
+    });
+  }
+
   it('executes a command callback', () => {
-    let thing = spy(() => new Promise((resolve) => resolve()));
+    let thing = spy(() => Promise.resolve());
     let program = new Program(['thing'])
       .command('thing', 'does a thing', thing);
-    return program.run()
+    return run(program)
       .then(() => {
         assert.equal(thing.called, true);
       });
@@ -20,7 +32,7 @@ describe('program.Program', () => {
 
   it('reports unknown commands', () => {
     let program = new Program(['thing']);
-    return program.run({throwError: true})
+    return run(program, {throwError: true})
       .then(makeSureItFails())
       .catch(onlyInstancesOf(WebExtError, (error) => {
         assert.match(error.message, /unknown command: thing/);
@@ -29,7 +41,7 @@ describe('program.Program', () => {
 
   it('reports missing command', () => {
     let program = new Program([]);
-    return program.run({throwError: true})
+    return run(program)
       .then(makeSureItFails())
       .catch(onlyInstancesOf(WebExtError, (error) => {
         assert.match(error.message, /No sub-command was specified/);
@@ -37,16 +49,107 @@ describe('program.Program', () => {
   });
 
   it('exits 1 on a thrown error', () => {
-    let systemProcess = {exit: () => {}};
-    let mockProcess = mock(systemProcess);
-    mockProcess.expects('exit').withArgs(1);
-
+    let fakeProcess = fake(process);
     let program = new Program(['cmd'])
       .command('cmd', 'some command', () => {
         throw new Error('this is an error from a command handler');
       });
-    return program.run({systemProcess: systemProcess})
-      .then(() => mockProcess.verify());
+    return run(program, {systemProcess: fakeProcess, throwError: false})
+      .then(() => {
+        assert.equal(fakeProcess.exit.called, true);
+        assert.equal(fakeProcess.exit.firstCall.args[0], 1);
+      });
+  });
+
+  it('handles errors that have codes', () => {
+    let program = new Program(['cmd'])
+      .command('cmd', 'some command', () => {
+        let error = new Error('pretend this is a system error');
+        error.code = 'SOME_CODE';
+        throw error;
+      });
+    // This is just a smoke test to make sure the error code doesn't
+    // introduce an unexpected exception.
+    return run(program)
+      .then(makeSureItFails())
+      .catch((error) => {
+        assert.match(error.message, /pretend this is a system error/);
+      });
+  });
+
+  it('lets commands define options', () => {
+    let handler = spy(() => Promise.resolve());
+    let program = new Program(['cmd'])
+      .command('cmd', 'some command', handler, {
+        'some-option': {
+          default: 'default value',
+        },
+      });
+    return run(program)
+      .then(() => {
+        assert.equal(handler.called, true);
+        // This ensures that the default configuration for the option has
+        // been applied.
+        assert.equal(handler.firstCall.args[0].someOption, 'default value');
+      });
+  });
+
+  it('preserves global option configuration', () => {
+    let handler = spy(() => Promise.resolve());
+    let program = new Program(['cmd'])
+      .setGlobalOptions({
+        'global-option': {
+          type: 'string',
+          default: 'the default',
+        },
+      })
+      .command('cmd', 'some command', handler, {
+        'some-option': {
+          default: 'default value',
+        },
+      });
+    return run(program)
+      .then(() => {
+        assert.equal(handler.called, true);
+        // By checking the global default, it ensures that default configuration
+        // will be applied to sub commands.
+        assert.equal(handler.firstCall.args[0].globalOption, 'the default');
+        assert.equal(handler.firstCall.args[0].someOption, 'default value');
+      });
+  });
+
+});
+
+
+describe('program.main', () => {
+
+  function run(argv, {fakeCommands}) {
+    let runOptions = {throwError: true, systemProcess: fake(process)};
+    return main('', {commands: fakeCommands, argv, runOptions});
+  }
+
+  it('executes a command handler', () => {
+    let fakeCommands = fake(commands, {
+      build: () => Promise.resolve(),
+    });
+    return run(['build'], {fakeCommands})
+      .then(() => {
+        // This is a smoke test mainly to make sure main() configures
+        // options with handlers. It does not extensively test the
+        // configuration of all handlers.
+        assert.equal(fakeCommands.build.called, true);
+      });
+  });
+
+});
+
+
+describe('program.version', () => {
+
+  it('returns the package version', () => {
+    let root = path.join(__dirname, '..', '..');
+    let pkg = JSON.parse(readFileSync(path.join(root, 'package.json')));
+    assert.equal(version(root), pkg.version);
   });
 
 });

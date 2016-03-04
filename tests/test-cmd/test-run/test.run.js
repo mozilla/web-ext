@@ -9,13 +9,23 @@ import * as adapter from './adapter';
 
 describe('run', () => {
 
+  function getFakeFirefox(implementations={}) {
+    let allImplementations = {
+      createProfile: () => {
+        let profile = {}; // empty object just to avoid errors.
+        return Promise.resolve(profile);
+      },
+      installExtension: () => Promise.resolve(),
+      ...implementations,
+    };
+    return fake(firefox, allImplementations);
+  }
+
   it('installs and runs the extension', () => {
 
     let profile = {};
-
-    let fakeFirefox = fake(firefox, {
+    let fakeFirefox = getFakeFirefox({
       createProfile: () => Promise.resolve(profile),
-      installExtension: () => Promise.resolve(),
     });
 
     return adapter.run(fixturePath('minimal-web-ext'), fakeFirefox)
@@ -32,6 +42,18 @@ describe('run', () => {
 
         assert.equal(fakeFirefox.run.called, true);
         assert.deepEqual(fakeFirefox.run.firstCall.args[0], profile);
+      });
+  });
+
+  it('passes a custom Firefox binary when specified', () => {
+    let firefoxBinary = '/pretend/path/to/Firefox/firefox-bin';
+    let fakeFirefox = getFakeFirefox();
+    return adapter.runWithFirefox(
+        fixturePath('minimal-web-ext'), fakeFirefox, firefoxBinary)
+      .then(() => {
+        assert.equal(fakeFirefox.run.called, true);
+        assert.equal(fakeFirefox.run.firstCall.args[1].firefoxBinary,
+                     firefoxBinary);
       });
   });
 
