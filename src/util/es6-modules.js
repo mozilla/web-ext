@@ -4,8 +4,7 @@
  * It is a workaround for:
  * https://github.com/facebook/flow/issues/1448
  */
-import _ExtendableError from 'es6-error';
-import _promisify from 'es6-promisify';
+import ExtendableError from 'es6-error';
+import promisify from 'es6-promisify';
 
-export const ExtendableError = _ExtendableError;
-export const promisify = _promisify;
+export {promisify, ExtendableError};
