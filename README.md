@@ -12,9 +12,40 @@ Ultimately, it aims to support web extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
 [Firefox web extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
-## Installation
+## Installation from npm
 
-This tool is not yet ready for installation. Stay tuned.
+This tool has not yet been released on npm. Stay tuned.
+
+## Installation from source
+
+You'll need:
+* [Node.js](https://nodejs.org/en/), 0.12 or higher
+* [npm](https://www.npmjs.com/), 3.x or higher
+
+Optionally, you may like:
+* [nvm](https://github.com/creationix/nvm), which helps manage node versions
+
+Make sure `npm` is up to date:
+
+    npm install -g npm
+
+Change into the source and install everything:
+
+    git clone https://github.com/mozilla/web-ext.git
+    cd web-ext
+    npm install
+
+Build the command:
+
+    npm run build
+
+Link it to your node installation:
+
+    npm link
+
+You can now run it from any directory:
+
+    web-ext --help
 
 ## Should I Use It?
 
@@ -33,11 +64,7 @@ Read on for how to develop new features.
 
 ## Development of web-ext
 
-You'll need:
-* [Node.js](https://nodejs.org/en/), 0.12 or higher
-* [npm](https://www.npmjs.com/) installed globally
-
-To get started, clone the source and run `npm install`.
+To get started, first install it from source as documented above.
 
 ## Develop all the things
 
