@@ -35,7 +35,7 @@
   ],
   "dependencies": {
     "babel-polyfill": "6.6.1",
-    "es6-error": "2.0.2",
+    "es6-error": "2.1.0",
     "es6-promisify": "3.0.0",
     "firefox-profile": "0.3.11",
     "fx-runner": "1.0.1",
