@@ -1,16 +1,18 @@
+/* @flow */
 import path from 'path';
+import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
 
+import * as firefox from '../../src/firefox';
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import fs from 'mz/fs';
 import {withTempDir} from '../../src/util/temp-dir';
 import {fixturePath, makeSureItFails} from '../helpers';
 import {basicManifest} from '../test-util/test.manifest';
 import {defaultFirefoxEnv} from '../../src/firefox/';
-import * as adapter from './adapter';
 
 
 describe('firefox', () => {
@@ -45,7 +47,7 @@ describe('firefox', () => {
 
     it('executes the Firefox runner with a given profile', () => {
       let runner = createFakeFxRunner();
-      return adapter.run(fakeProfile, runner)
+      return firefox.run(fakeProfile, {fxRunner: runner})
         .then(() => {
           assert.equal(runner.called, true);
           assert.equal(runner.firstCall.args[0].profile,
@@ -57,7 +59,7 @@ describe('firefox', () => {
       let runner = createFakeFxRunner();
       // Make sure it passes through process environment variables.
       process.env._WEB_EXT_FIREFOX_ENV_TEST = 'thing';
-      return adapter.run(fakeProfile, runner)
+      return firefox.run(fakeProfile, {fxRunner: runner})
         .then(() => {
           let declaredEnv = runner.firstCall.args[0].env;
           for (let key in defaultFirefoxEnv) {
@@ -78,7 +80,7 @@ describe('firefox', () => {
         },
       });
 
-      return adapter.run(fakeProfile, runner)
+      return firefox.run(fakeProfile, {fxRunner: runner})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, someError.message);
@@ -88,7 +90,7 @@ describe('firefox', () => {
     it('passes a custom Firefox binary when specified', () => {
       let runner = createFakeFxRunner();
       let firefoxBinary = '/pretend/path/to/firefox-bin';
-      return adapter.runWithFirefox(fakeProfile, runner, firefoxBinary)
+      return firefox.run(fakeProfile, {fxRunner: runner, firefoxBinary})
         .then(() => {
           assert.equal(runner.called, true);
           assert.equal(runner.firstCall.args[0].binary,
@@ -101,7 +103,8 @@ describe('firefox', () => {
   describe('createProfile', () => {
 
     it('resolves with a profile object', () => {
-      return adapter.createDefaultProfile(sinon.stub().returns({}))
+      return firefox.createProfile(undefined,
+                                   {getPrefs: sinon.stub().returns({})})
         .then((profile) => {
           assert.instanceOf(profile, FirefoxProfile);
         });
@@ -110,7 +113,7 @@ describe('firefox', () => {
     it('writes a Firefox profile', () => {
       // This is a quick and paranoid sanity check that the FirefoxProfile
       // object is working as expected.
-      return adapter.createProfile()
+      return firefox.createProfile()
         .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
         .then((prefFile) => {
           assert.include(prefFile.toString(),
@@ -120,7 +123,7 @@ describe('firefox', () => {
 
     it('can create a Firefox profile with some defaults', () => {
       let fakePrefGetter = sinon.stub().returns({});
-      return adapter.createDefaultProfile(fakePrefGetter)
+      return firefox.createProfile(undefined, {getPrefs: fakePrefGetter})
         .then(() => {
           assert.equal(fakePrefGetter.firstCall.args[0], 'firefox');
         });
@@ -128,7 +131,7 @@ describe('firefox', () => {
 
     it('can create a Fennec profile with some defaults', () => {
       let fakePrefGetter = sinon.stub().returns({});
-      return adapter.createFennecProfile(fakePrefGetter)
+      return firefox.createProfile('fennec', {getPrefs: fakePrefGetter})
         .then(() => {
           assert.equal(fakePrefGetter.firstCall.args[0], 'fennec');
         });
@@ -138,7 +141,7 @@ describe('firefox', () => {
 
   describe('installExtension', () => {
 
-    function setUp(testPromise) {
+    function setUp(testPromise: Function) {
       return withTempDir(
         (tmpDir) => {
           let data = {
@@ -156,10 +159,18 @@ describe('firefox', () => {
         });
     }
 
+    function installBasicExt(data, config={}) {
+      return firefox.installExtension({
+        manifestData: basicManifest,
+        profile: data.profile,
+        extensionPath: data.extensionPath,
+        ...config,
+      });
+    }
+
     it('installs an extension file into a profile', () => setUp(
       (data) => {
-        return adapter.installExtension(basicManifest, data.profile,
-                                        data.extensionPath)
+        return installBasicExt(data)
           .then(() => fs.readdir(data.profile.extensionsDir))
           .then((files) => {
             assert.deepEqual(
@@ -171,9 +182,7 @@ describe('firefox', () => {
     it('re-uses an existing extension directory', () => setUp(
       (data) => {
         return fs.mkdir(path.join(data.profile.extensionsDir))
-          .then(() => adapter.installExtension(basicManifest,
-                                               data.profile,
-                                               data.extensionPath))
+          .then(() => installBasicExt(data))
           .then(() => fs.stat(data.profile.extensionsDir));
       }
     ));
@@ -181,9 +190,7 @@ describe('firefox', () => {
     it('checks for an empty extensionsDir', () => setUp(
       (data) => {
         data.profile.extensionsDir = undefined;
-        return adapter.installExtension(basicManifest,
-                                        data.profile,
-                                        data.extensionPath)
+        return installBasicExt(data)
           .then(makeSureItFails())
           .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.match(error.message, /unexpectedly empty/);

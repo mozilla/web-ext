@@ -1,13 +1,18 @@
+/* @flow */
+import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import * as firefox from '../../../src/firefox';
-import {fake} from '../../helpers';
-import {fixturePath} from '../../helpers';
-
-import * as adapter from './adapter';
+import run from '../../src/cmd/run';
+import * as firefox from '../../src/firefox';
+import {fake, fixturePath} from '../helpers';
 
 
 describe('run', () => {
+
+  function runMinimalExt(argv={}, ...optionalArgs) {
+    return run({sourceDir: fixturePath('minimal-web-ext'), ...argv},
+               ...optionalArgs);
+  }
 
   function getFakeFirefox(implementations={}) {
     let allImplementations = {
@@ -28,7 +33,7 @@ describe('run', () => {
       createProfile: () => Promise.resolve(profile),
     });
 
-    return adapter.run(fixturePath('minimal-web-ext'), fakeFirefox)
+    return runMinimalExt({}, {firefox: fakeFirefox})
       .then(() => {
 
         let install = fakeFirefox.installExtension;
@@ -48,8 +53,7 @@ describe('run', () => {
   it('passes a custom Firefox binary when specified', () => {
     let firefoxBinary = '/pretend/path/to/Firefox/firefox-bin';
     let fakeFirefox = getFakeFirefox();
-    return adapter.runWithFirefox(
-        fixturePath('minimal-web-ext'), fakeFirefox, firefoxBinary)
+    return runMinimalExt({firefoxBinary}, {firefox: fakeFirefox})
       .then(() => {
         assert.equal(fakeFirefox.run.called, true);
         assert.equal(fakeFirefox.run.firstCall.args[1].firefoxBinary,
