@@ -12,7 +12,7 @@
     "flow-check": "node -e \"require('grunt').cli()\" null flowbin:check",
     "lint": "node -e \"require('grunt').cli()\" null lint",
     "test": "node -e \"require('grunt').cli()\" null test",
-    "publish-coverage": "node -e \"require('grunt').cli()\" null publish-coverage"
+    "publish-coverage": "node -e \"require('grunt').cli()\" null coveralls"
   },
   "homepage": "https://github.com/mozilla/web-ext",
   "repository": {
@@ -66,6 +66,7 @@
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "1.0.0",
     "grunt-contrib-watch": "0.6.1",
+    "grunt-coveralls": "1.0.0",
     "grunt-eslint": "18.0.0",
     "grunt-flowbin": "0.0.4",
     "grunt-jscs": "2.8.0",

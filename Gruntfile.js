@@ -1,5 +1,4 @@
 // jscs:disable requireTemplateStrings
-var fs = require('fs');
 var path = require('path');
 var spawn = require('child_process').spawn;
 
@@ -74,31 +73,6 @@ module.exports = function(grunt) {
       var succeeded = code === 0;
       done(succeeded);
     });
-  });
-
-  grunt.registerTask('publish-coverage',
-                     'publish code coverage to coveralls',
-                     function() {
-    var done = this.async();
-    var root = path.join(path.resolve(__dirname));
-
-    var coveralls = spawn(
-      path.join(root, 'node_modules', '.bin', 'coveralls'));
-
-    coveralls.stderr.on('data', function(data) {
-      grunt.log.writeln('coveralls stderr:');
-      grunt.log.writeln(data);
-    });
-
-    coveralls.on('close', function(code) {
-      grunt.log.writeln('coveralls exited: ' + code);
-      var succeeded = code === 0;
-      done(succeeded);
-    });
-
-    var lcov = path.join(root, 'coverage', 'lcov.info');
-    coveralls.stdin.write(fs.readFileSync(lcov));
-    coveralls.stdin.end();
   });
 
 };
