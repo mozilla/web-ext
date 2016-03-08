@@ -6,7 +6,7 @@ import getValidatedManifest from '../util/manifest';
 
 
 export default function run(
-    {sourceDir, firefoxBinary}: Object,
+    {sourceDir, firefoxBinary, firefoxProfile}: Object,
     {firefox=defaultFirefox}: Object = {}): Promise {
 
   console.log(`Running web extension from ${sourceDir}`);
@@ -17,7 +17,15 @@ export default function run(
         Promise.all([
           buildExtension({sourceDir, buildDir: tmpDir.path()},
                          {manifestData}),
-          firefox.createProfile(),
+          new Promise((resolve) => {
+            if (firefoxProfile) {
+              console.log(`Copying Firefox profile from ${firefoxProfile}`);
+              resolve(firefox.copyProfile(firefoxProfile));
+            } else {
+              console.log('Creating new Firefox profile');
+              resolve(firefox.createProfile());
+            }
+          }),
         ])
         .then((result) => {
           let [buildResult, profile] = result;
