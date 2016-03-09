@@ -71,7 +71,7 @@ To get started, first install it from source as documented above.
 Your one stop command to continuously build, run tests, check for
 syntax errors, and check for flow errors is this:
 
-    npm run develop
+    npm start
 
 The other commands below are just variations on this.
 
@@ -114,7 +114,7 @@ the test suite on the instrumented source code:
 
 or even when the test suite re-runs automatically as you edit files:
 
-    CODE_COVERAGE=y npm run develop
+    CODE_COVERAGE=y npm start
 
 Once the report has been generated, it can be found in the `./coverage` directory.
 
