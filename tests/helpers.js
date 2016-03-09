@@ -53,6 +53,25 @@ export class ZipFile {
       });
     });
   }
+
+  /*
+   * Resolve a promise with an array of all file names in the zip archive.
+   */
+  extractFilenames(): Promise {
+    return new Promise((resolve, reject) => {
+      var fileNames = [];
+      this.readEach(
+        (entry) => {
+          fileNames.push(entry.fileName);
+        })
+        .then(() => {
+          resolve(fileNames);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
 }
 
 
