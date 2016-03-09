@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "node -e \"require('grunt').cli()\" null build",
-    "develop": "node -e \"require('grunt').cli()\" null develop",
+    "start": "node -e \"require('grunt').cli()\" null develop",
     "flow-check": "node -e \"require('grunt').cli()\" null flowbin:check",
     "lint": "node -e \"require('grunt').cli()\" null lint",
     "test": "node -e \"require('grunt').cli()\" null test",
