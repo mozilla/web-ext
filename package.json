@@ -35,7 +35,7 @@
     "opera"
   ],
   "dependencies": {
-    "babel-polyfill": "6.6.1",
+    "babel-polyfill": "6.7.2",
     "es6-error": "2.1.0",
     "es6-promisify": "3.0.0",
     "firefox-profile": "0.3.11",
