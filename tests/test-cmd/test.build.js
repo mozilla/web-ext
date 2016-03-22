@@ -3,7 +3,8 @@ import {it, describe} from 'mocha';
 import path from 'path';
 import {assert} from 'chai';
 
-import build, {prepareBuildDir, safeFileName} from '../../src/cmd/build';
+import build,
+  {prepareBuildDir, safeFileName, FileFilter} from '../../src/cmd/build';
 import {withTempDir} from '../../src/util/temp-dir';
 import {fixturePath, ZipFile} from '../helpers';
 import fs from 'mz/fs';
@@ -29,22 +30,11 @@ describe('build', () => {
             return buildResult.extensionPath;
           })
           .then((extensionPath) => zipFile.open(extensionPath))
-          .then(() => {
-            var fileNames = [];
-            return new Promise((resolve, reject) => {
-              zipFile.readEach((entry) => {
-                fileNames.push(entry.fileName);
-              })
-              .then(() => {
-                resolve(fileNames);
-              })
-              .catch((error) => {
-                reject(error);
-              });
-            });
-          })
+          .then(() => zipFile.extractFilenames())
           .then((fileNames) => {
-            assert.deepEqual(fileNames, ['manifest.json']);
+            fileNames.sort();
+            assert.deepEqual(fileNames,
+                             ['background-script.js', 'manifest.json']);
           })
       );
     });
@@ -63,6 +53,26 @@ describe('build', () => {
           return buildResult.extensionPath;
         })
     ));
+
+    it('asks FileFilter what files to include in the XPI', () => {
+      let zipFile = new ZipFile();
+      let fileFilter = new FileFilter({
+        filesToIgnore: ['**/background-script.js'],
+      });
+
+      return withTempDir(
+        (tmpDir) =>
+          build({
+            sourceDir: fixturePath('minimal-web-ext'),
+            buildDir: tmpDir.path(),
+          }, {fileFilter})
+          .then((buildResult) => zipFile.open(buildResult.extensionPath))
+          .then(() => zipFile.extractFilenames())
+          .then((fileNames) => {
+            assert.notInclude(fileNames, 'background-script.js');
+          })
+      );
+    });
 
   });
 
@@ -97,6 +107,47 @@ describe('build', () => {
     it('makes names safe for writing to a file system', () => {
       assert.equal(safeFileName('Bob Loblaw\'s 2005 law-blog.net'),
                    'bob_loblaw_s_2005_law-blog.net');
+    });
+
+  });
+
+  describe('FileFilter', () => {
+    const defaultFilter = new FileFilter();
+
+    it('ignores long XPI paths by default', () => {
+      assert.equal(defaultFilter.wantFile('path/to/some.xpi'), false);
+    });
+
+    it('ignores short XPI paths by default', () => {
+      assert.equal(defaultFilter.wantFile('some.xpi'), false);
+    });
+
+    it('ignores .git directories by default', () => {
+      assert.equal(defaultFilter.wantFile('.git'), false);
+    });
+
+    it('ignores nested .git directories by default', () => {
+      assert.equal(defaultFilter.wantFile('path/to/.git'), false);
+    });
+
+    it('ignores any hidden file by default', () => {
+      assert.equal(defaultFilter.wantFile('.whatever'), false);
+    });
+
+    it('ignores ZPI paths by default', () => {
+      assert.equal(defaultFilter.wantFile('path/to/some.zip'), false);
+    });
+
+    it('allows other files', () => {
+      assert.equal(defaultFilter.wantFile('manifest.json'), true);
+    });
+
+    it('allows you to override the defaults', () => {
+      const filter = new FileFilter({
+        filesToIgnore: ['manifest.json'],
+      });
+      assert.equal(filter.wantFile('some.xpi'), true);
+      assert.equal(filter.wantFile('manifest.json'), false);
     });
 
   });

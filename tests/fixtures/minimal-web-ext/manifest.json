@@ -11,5 +11,8 @@
   "browser_action": {},
   "permissions": [
     "tabs"
-  ]
+  ],
+  "background": {
+    "scripts": ["background-script.js"]
+  }
 }

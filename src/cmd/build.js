@@ -1,5 +1,6 @@
 /* @flow */
 import path from 'path';
+import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
 
@@ -11,7 +12,7 @@ import getValidatedManifest from '../util/manifest';
 
 export default function build(
     {sourceDir, buildDir}: Object,
-    {manifestData}: Object = {}): Promise {
+    {manifestData, fileFilter}: Object = {}): Promise {
 
   console.log(`Building web extension from ${sourceDir}`);
 
@@ -23,11 +24,17 @@ export default function build(
     resolveManifest = getValidatedManifest(sourceDir);
   }
 
+  if (!fileFilter) {
+    fileFilter = new FileFilter();
+  }
+
   return resolveManifest
     .then((manifestData) =>
       Promise.all([
         prepareBuildDir(buildDir),
-        zipDir(sourceDir),
+        zipDir(sourceDir, {
+          filter: (...args) => fileFilter.wantFile(...args),
+        }),
       ])
       .then((results) => {
         let [buildDir, buffer] = results;
@@ -61,4 +68,36 @@ export function prepareBuildDir(buildDir: string): Promise {
       return fs.mkdir(buildDir);
     }))
     .then(() => buildDir);
+}
+
+
+/*
+ * Allows or ignores files when creating a ZIP archive.
+ */
+export class FileFilter {
+  filesToIgnore: Array<string>;
+
+  constructor({filesToIgnore}: Object = {}) {
+    this.filesToIgnore = filesToIgnore || [
+      '**/*.xpi',
+      '**/*.zip',
+      '**/.*', // any hidden file
+    ];
+  }
+
+  /*
+   * Returns true if the file is wanted for the ZIP archive.
+   *
+   * This is called by zipdir as wantFile(path, stat) for each
+   * file in the folder that is being archived.
+   */
+  wantFile(path: string): boolean {
+    for (const test of this.filesToIgnore) {
+      if (minimatch(path, test)) {
+        console.log(`Not including file ${path} in ZIP archive`);
+        return false;
+      }
+    }
+    return true;
+  }
 }
