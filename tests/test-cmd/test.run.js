@@ -15,11 +15,10 @@ describe('run', () => {
   }
 
   function getFakeFirefox(implementations={}) {
+    let profile = {}; // empty object just to avoid errors.
     let allImplementations = {
-      createProfile: () => {
-        let profile = {}; // empty object just to avoid errors.
-        return Promise.resolve(profile);
-      },
+      createProfile: () => Promise.resolve(profile),
+      copyProfile: () => Promise.resolve(profile),
       installExtension: () => Promise.resolve(),
       ...implementations,
     };
@@ -58,6 +57,18 @@ describe('run', () => {
         assert.equal(fakeFirefox.run.called, true);
         assert.equal(fakeFirefox.run.firstCall.args[1].firefoxBinary,
                      firefoxBinary);
+      });
+  });
+
+  it('passes a custom Firefox profile when specified', () => {
+    let firefoxProfile = '/pretend/path/to/firefox/profile';
+    let fakeFirefox = getFakeFirefox();
+    return runMinimalExt({firefoxProfile}, {firefox: fakeFirefox})
+      .then(() => {
+        assert.equal(fakeFirefox.createProfile.called, false);
+        assert.equal(fakeFirefox.copyProfile.called, true);
+        assert.equal(fakeFirefox.copyProfile.firstCall.args[0],
+                     firefoxProfile);
       });
   });
 

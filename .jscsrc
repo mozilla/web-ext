@@ -52,10 +52,6 @@
     "beforeOpeningCurlyBrace": true
   },
   "requireTemplateStrings": { "allExcept": [ "stringConcatenation" ] },
-  "requireTrailingComma": {
-    "ignoreSingleLine": true,
-    "ignoreSingleValue": true
-  },
   "validateQuoteMarks": {
     "escape": true,
     "mark": "'"

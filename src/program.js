@@ -67,9 +67,10 @@ export class Program {
         if (cmd) {
           prefix = `${cmd}: `;
         }
-        console.error(prefix + error.toString());
+
+        console.error(`\n${prefix}${error.stack}\n`);
         if (error.code) {
-          console.error(`${prefix}Error code: ${error.code}`);
+          console.error(`${prefix}Error code: ${error.code}\n`);
         }
 
         if (throwError) {
@@ -102,6 +103,9 @@ export function main(
 Option values can also be set by declaring an environment variable prefixed
 with \$WEB_EXT_. For example: $WEB_EXT_SOURCE_DIR=/path is the same as
 --source-dir=/path.
+
+To view specific help for any given command, add the command name.
+Example: $0 --help run.
 `)
     .help('help')
     .alias('h', 'help')
@@ -135,6 +139,15 @@ with \$WEB_EXT_. For example: $WEB_EXT_SOURCE_DIR=/path is the same as
       'firefox-binary': {
         describe: 'Path to a Firefox executable such as firefox-bin. ' +
                   'If not specified, the default Firefox will be used.',
+        demand: false,
+        type: 'string',
+      },
+      'firefox-profile': {
+        alias: 'p',
+        describe: 'Run Firefox using a copy of this profile. The profile ' +
+                  'can be specified as a directory or a name, such as one ' +
+                  'you would see in the Profile Manager. If not specified, ' +
+                  'a new temporary profile will be created.',
         demand: false,
         type: 'string',
       },

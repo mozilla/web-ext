@@ -48,7 +48,7 @@ export function onlyInstancesOf(
 
 
 /*
- * Sugar-y way to catch only errors with a certain code.
+ * Sugar-y way to catch only errors having certain code(s).
  *
  * Usage:
  *
@@ -57,15 +57,31 @@ export function onlyInstancesOf(
  *      // error.code is guaranteed to be ENOENT
  *    }))
  *
+ *  or:
+ *
+ *  Promise.resolve()
+ *    .catch(onlyErrorsWithCode(['ENOENT', 'ENOTDIR'], (error) => {
+ *      // ...
+ *    }))
+ *
  * All other errors will be re-thrown.
  *
  */
 export function onlyErrorsWithCode(
-    codeWanted: string, errorHandler: Function): Function {
+    codeWanted: string | Array<string>, errorHandler: Function): Function {
   return (error) => {
-    if (error.code !== codeWanted) {
+    let throwError = true;
+
+    if (Array.isArray(codeWanted) && codeWanted.indexOf(error.code) !== -1) {
+      throwError = false;
+    } else if (error.code === codeWanted) {
+      throwError = false;
+    }
+
+    if (throwError) {
       throw error;
     }
+
     return errorHandler(error);
   };
 }

@@ -40,7 +40,7 @@ describe('errors', () => {
       }
     }
 
-    it('lets you catch errors with a code', () => {
+    it('catches errors having a code', () => {
       return Promise.reject(new ErrorWithCode())
         .catch(onlyErrorsWithCode('SOME_CODE', (error) => {
           assert.equal(error.code, 'SOME_CODE');
@@ -52,8 +52,27 @@ describe('errors', () => {
         .catch(onlyErrorsWithCode('SOME_CODE', () => {
           throw new Error('Unexpectedly caught the wrong error');
         }))
+        .then(makeSureItFails())
         .catch((error) => {
           assert.match(error.message, /simulated error/);
+        });
+    });
+
+    it('catches errors having one of many codes', () => {
+      return Promise.reject(new ErrorWithCode())
+        .catch(onlyErrorsWithCode(['OTHER_CODE', 'SOME_CODE'], (error) => {
+          assert.equal(error.code, 'SOME_CODE');
+        }));
+    });
+
+    it('throws errors that are not in an array of codes', () => {
+      return Promise.reject(new ErrorWithCode())
+        .catch(onlyErrorsWithCode(['OTHER_CODE', 'ANOTHER_CODE'], () => {
+          throw new Error('Unexpectedly caught the wrong error');
+        }))
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(error.code, 'SOME_CODE');
         });
     });
 
