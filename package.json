@@ -70,7 +70,6 @@
     "grunt-coveralls": "1.0.0",
     "grunt-eslint": "18.0.0",
     "grunt-flowbin": "0.0.4",
-    "grunt-jscs": "2.8.0",
     "grunt-mocha-test": "0.12.7",
     "grunt-newer": "1.1.2",
     "grunt-webpack": "1.0.11",

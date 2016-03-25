@@ -1,4 +1,4 @@
-// jscs:disable requireTemplateStrings
+/*eslint prefer-template: 0*/
 var path = require('path');
 var spawn = require('child_process').spawn;
 
@@ -50,7 +50,6 @@ module.exports = function(grunt) {
     } else {
       grunt.task.run([
         'newer:eslint',
-        'newer:jscs',
       ]);
     }
   });
