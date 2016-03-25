@@ -1,13 +1,12 @@
 /* @flow */
-import {it, describe} from 'mocha';
+import fs from 'mz/fs';
 import path from 'path';
+import {it, describe} from 'mocha';
 import {assert} from 'chai';
 
-import build,
-  {prepareBuildDir, safeFileName, FileFilter} from '../../src/cmd/build';
+import build, {safeFileName, FileFilter} from '../../src/cmd/build';
 import {withTempDir} from '../../src/util/temp-dir';
 import {fixturePath, ZipFile} from '../helpers';
-import fs from 'mz/fs';
 import {basicManifest} from '../test-util/test.manifest';
 
 
@@ -22,7 +21,7 @@ describe('build', () => {
         (tmpDir) =>
           build({
             sourceDir: fixturePath('minimal-web-ext'),
-            buildDir: tmpDir.path(),
+            artifactsDir: tmpDir.path(),
           })
           .then((buildResult) => {
             assert.match(buildResult.extensionPath,
@@ -39,11 +38,26 @@ describe('build', () => {
       );
     });
 
+    it('prepares the artifacts dir', () => withTempDir(
+      (tmpDir) => {
+        const artifactsDir = path.join(tmpDir.path(), 'artifacts');
+        return build(
+          {
+            sourceDir: fixturePath('minimal-web-ext'),
+            artifactsDir,
+          })
+          .then(() => fs.stat(artifactsDir))
+          .then((stats) => {
+            assert.equal(stats.isDirectory(), true);
+          });
+      }
+    ));
+
     it('lets you specify a manifest', () => withTempDir(
       (tmpDir) =>
         build({
           sourceDir: fixturePath('minimal-web-ext'),
-          buildDir: tmpDir.path(),
+          artifactsDir: tmpDir.path(),
         }, {
           manifestData: basicManifest,
         })
@@ -64,7 +78,7 @@ describe('build', () => {
         (tmpDir) =>
           build({
             sourceDir: fixturePath('minimal-web-ext'),
-            buildDir: tmpDir.path(),
+            artifactsDir: tmpDir.path(),
           }, {fileFilter})
           .then((buildResult) => zipFile.open(buildResult.extensionPath))
           .then(() => zipFile.extractFilenames())
@@ -75,32 +89,6 @@ describe('build', () => {
     });
 
   });
-
-
-  describe('prepareBuildDir', () => {
-
-    it('creates a build dir if needed', () => withTempDir(
-      (tmpDir) => {
-        let buildDir = path.join(tmpDir.path(), 'build');
-        return prepareBuildDir(buildDir)
-          .then(() => {
-            // This should not throw an error if created properly.
-            return fs.stat(buildDir);
-          });
-      }
-    ));
-
-    it('ignores existing build dir', () => withTempDir(
-      (tmpDir) =>
-        prepareBuildDir(tmpDir.path())
-        .then(() => {
-          // Make sure everything is still cool with this path.
-          return fs.stat(tmpDir.path());
-        })
-    ));
-
-  });
-
 
   describe('safeFileName', () => {
 

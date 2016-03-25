@@ -42,6 +42,7 @@
     "fx-runner": "1.0.1",
     "minimatch": "3.0.0",
     "mz": "2.4.0",
+    "sign-addon": "0.0.1",
     "stream-to-promise": "1.1.0",
     "tmp": "0.0.28",
     "yargs": "4.3.2",

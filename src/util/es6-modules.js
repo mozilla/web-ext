@@ -6,5 +6,6 @@
  */
 import ExtendableError from 'es6-error';
 import promisify from 'es6-promisify';
+import signAddon from 'sign-addon';
 
-export {promisify, ExtendableError};
+export {promisify, ExtendableError, signAddon};
