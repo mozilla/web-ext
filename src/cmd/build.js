@@ -4,14 +4,13 @@ import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
 
-import {onlyErrorsWithCode} from '../errors';
-import fs from 'mz/fs';
 import {zipDir} from '../util/zip-dir';
 import getValidatedManifest from '../util/manifest';
+import {prepareArtifactsDir} from '../util/artifacts';
 
 
 export default function build(
-    {sourceDir, buildDir}: Object,
+    {sourceDir, artifactsDir}: Object,
     {manifestData, fileFilter}: Object = {}): Promise {
 
   console.log(`Building web extension from ${sourceDir}`);
@@ -31,16 +30,16 @@ export default function build(
   return resolveManifest
     .then((manifestData) =>
       Promise.all([
-        prepareBuildDir(buildDir),
+        prepareArtifactsDir(artifactsDir),
         zipDir(sourceDir, {
           filter: (...args) => fileFilter.wantFile(...args),
         }),
       ])
       .then((results) => {
-        let [buildDir, buffer] = results;
+        let [artifactsDir, buffer] = results;
         let packageName = safeFileName(
           `${manifestData.name}-${manifestData.version}.xpi`);
-        let extensionPath = path.join(buildDir, packageName);
+        let extensionPath = path.join(artifactsDir, packageName);
         let stream = createWriteStream(extensionPath);
         let promisedStream = streamToPromise(stream);
 
@@ -58,16 +57,6 @@ export default function build(
 
 export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
-}
-
-
-export function prepareBuildDir(buildDir: string): Promise {
-  return fs.stat(buildDir)
-    .catch(onlyErrorsWithCode('ENOENT', () => {
-      console.log(`Creating build directory: ${buildDir}`);
-      return fs.mkdir(buildDir);
-    }))
-    .then(() => buildDir);
 }
 
 

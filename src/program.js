@@ -95,8 +95,8 @@ export function main(
     {commands=defaultCommands, argv, runOptions={}}: Object = {}): Promise {
   let program = new Program(argv);
   // yargs uses magic camel case expansion to expose options on the
-  // final argv object. For example, the 'build-dir' option is alternatively
-  // available as argv.buildDir.
+  // final argv object. For example, the 'artifacts-dir' option is alternatively
+  // available as argv.artifactsDir.
   program.yargs
     .usage(`Usage: $0 [options] command
 
@@ -121,16 +121,36 @@ Example: $0 --help run.
       demand: true,
       type: 'string',
     },
+    'artifacts-dir': {
+      alias: 'a',
+      describe: 'Directory where built artifacts will be saved.',
+      default: path.join(process.cwd(), 'web-ext-artifacts'),
+      requiresArg: true,
+      demand: true,
+      type: 'string',
+    },
   });
 
   program
-    .command('build', 'Create a web extension package from source',
-             commands.build, {
-      'build-dir': {
-        alias: 'b',
-        describe: 'Directory where built artifacts will be saved.',
-        default: path.join(process.cwd(), 'web-ext-build'),
-        requiresArg: true,
+    .command('build',
+             'Create a web extension package from source',
+             commands.build)
+    .command('sign',
+             'Sign the web extension so it can be installed in Firefox',
+             commands.sign, {
+      'api-key': {
+        describe: 'API key (JWT issuer) from addons.mozilla.org',
+        demand: true,
+        type: 'string',
+      },
+      'api-secret': {
+        describe: 'API secret (JWT secret) from addons.mozilla.org',
+        demand: true,
+        type: 'string',
+      },
+      'api-url-prefix': {
+        describe: 'Signing API URL prefix',
+        default: 'https://addons.mozilla.org/api/v3',
         demand: true,
         type: 'string',
       },

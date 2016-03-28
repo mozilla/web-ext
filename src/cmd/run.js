@@ -15,7 +15,7 @@ export default function run(
     .then((manifestData) => withTempDir(
       (tmpDir) =>
         Promise.all([
-          buildExtension({sourceDir, buildDir: tmpDir.path()},
+          buildExtension({sourceDir, artifactsDir: tmpDir.path()},
                          {manifestData}),
           new Promise((resolve) => {
             if (firefoxProfile) {
