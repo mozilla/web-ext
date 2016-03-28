@@ -3,11 +3,14 @@ import path from 'path';
 
 import fs from 'mz/fs';
 import {InvalidManifest} from '../errors';
+import {createLogger} from './logger';
+
+const log = createLogger(__filename);
 
 
 export default function getValidatedManifest(sourceDir: string): Promise {
   let manifestFile = path.join(sourceDir, 'manifest.json');
-  console.log(`Validating manifest at ${manifestFile}`);
+  log.debug(`Validating manifest at ${manifestFile}`);
   return fs.readFile(manifestFile)
     .catch((error) => {
       throw new InvalidManifest(

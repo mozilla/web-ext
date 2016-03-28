@@ -9,6 +9,7 @@ import {version, main, Program} from '../src/program';
 import commands from '../src/cmd';
 import {onlyInstancesOf, WebExtError} from '../src/errors';
 import {fake, makeSureItFails} from './helpers';
+import {ConsoleStream} from '../src/util/logger';
 
 
 describe('program.Program', () => {
@@ -125,6 +126,25 @@ describe('program.Program', () => {
         // will be applied to sub commands.
         assert.equal(handler.firstCall.args[0].globalOption, 'the default');
         assert.equal(handler.firstCall.args[0].someOption, 'default value');
+      });
+  });
+
+  it('configures the logger when verbose', () => {
+    const logStream = fake(new ConsoleStream());
+    let program = new Program(['thing', '--verbose'])
+      .command('thing', 'does a thing', () => {});
+    return run(program, {logStream})
+      .then(() => {
+        assert.equal(logStream.makeVerbose.called, true);
+      });
+  });
+
+  it('does not configure the logger unless verbose', () => {
+    const logStream = fake(new ConsoleStream());
+    let program = new Program(['thing']).command('thing', '', () => {});
+    return run(program, {logStream})
+      .then(() => {
+        assert.equal(logStream.makeVerbose.called, false);
       });
   });
 

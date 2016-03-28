@@ -1,6 +1,9 @@
 /* @flow */
 import fs from 'mz/fs';
 import {WebExtError, onlyErrorsWithCode} from '../errors';
+import {createLogger} from './logger';
+
+const log = createLogger(__filename);
 
 
 export function prepareArtifactsDir(artifactsDir: string): Promise {
@@ -11,7 +14,7 @@ export function prepareArtifactsDir(artifactsDir: string): Promise {
       }
     })
     .catch(onlyErrorsWithCode('ENOENT', () => {
-      console.log(`Creating artifacts directory: ${artifactsDir}`);
+      log.debug(`Creating artifacts directory: ${artifactsDir}`);
       return fs.mkdir(artifactsDir);
     }))
     .then(() => artifactsDir);

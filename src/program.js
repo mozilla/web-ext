@@ -5,6 +5,9 @@ import yargs from 'yargs';
 
 import defaultCommands from './cmd';
 import {WebExtError} from './errors';
+import {createLogger, consoleStream as defaultLogStream} from './util/logger';
+
+const log = createLogger(__filename);
 
 
 /*
@@ -47,7 +50,8 @@ export class Program {
     return this;
   }
 
-  run({throwError=false, systemProcess=process}: Object = {}): Promise {
+  run({throwError=false, systemProcess=process, logStream=defaultLogStream}
+      : Object = {}): Promise {
     let argv = this.yargs.argv;
     let cmd = argv._[0];
     return new Promise(
@@ -59,18 +63,17 @@ export class Program {
         if (!runCommand) {
           throw new WebExtError(`unknown command: ${cmd}`);
         }
+        if (argv.verbose) {
+          logStream.makeVerbose();
+        }
         resolve(runCommand);
       })
       .then((runCommand) => runCommand(argv))
       .catch((error) => {
-        let prefix = '';
-        if (cmd) {
-          prefix = `${cmd}: `;
-        }
-
-        console.error(`\n${prefix}${error.stack}\n`);
+        const prefix = cmd ? `${cmd}: ` : '';
+        log.error(`\n${prefix}${error.stack}\n`);
         if (error.code) {
-          console.error(`${prefix}Error code: ${error.code}\n`);
+          log.error(`${prefix}Error code: ${error.code}\n`);
         }
 
         if (throwError) {
@@ -123,11 +126,16 @@ Example: $0 --help run.
     },
     'artifacts-dir': {
       alias: 'a',
-      describe: 'Directory where built artifacts will be saved.',
+      describe: 'Directory where artifacts will be saved.',
       default: path.join(process.cwd(), 'web-ext-artifacts'),
       requiresArg: true,
       demand: true,
       type: 'string',
+    },
+    'verbose': {
+      alias: 'v',
+      describe: 'Show verbose output',
+      type: 'boolean',
     },
   });
 

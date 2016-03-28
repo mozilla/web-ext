@@ -2,6 +2,9 @@
 import tmp from 'tmp';
 
 import {promisify} from './es6-modules';
+import {createLogger} from './logger';
+
+const log = createLogger(__filename);
 
 
 /*
@@ -70,7 +73,7 @@ export class TempDir {
         let [tmpPath, removeTempDir] = args;
         this._path = tmpPath;
         this._removeTempDir = removeTempDir;
-        console.log(`Created temporary directory: ${this.path()}`);
+        log.debug(`Created temporary directory: ${this.path()}`);
         return this;
       });
   }
@@ -119,7 +122,7 @@ export class TempDir {
     if (!this._removeTempDir) {
       return;
     }
-    console.log(`Removing temporary directory: ${this.path()}`);
+    log.debug(`Removing temporary directory: ${this.path()}`);
     this._removeTempDir && this._removeTempDir();
   }
 
