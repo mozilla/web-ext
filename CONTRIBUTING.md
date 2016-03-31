@@ -53,3 +53,11 @@ or even when the test suite re-runs automatically as you edit files:
     CODE_COVERAGE=y npm start
 
 Once the report has been generated, it can be found in the `./coverage` directory.
+
+## Writing commit messages
+
+Please try adhering to the Angular style of
+[semantic messages](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit)
+when writing a commit message. We don't really use scopes so you can leave them
+blank. For example: `feat(): Adds support for a systematic dysfunctioner`.
+This will allow us to auto-generate a more useful changelog.
