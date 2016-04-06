@@ -1,6 +1,6 @@
 module.exports = {
   options: {
-    timeout: 1000,
+    timeout: 2000,
     reporter: 'mocha-multi',
     reporterOptions: {
       spec: '-',
