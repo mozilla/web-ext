@@ -56,8 +56,35 @@ Once the report has been generated, it can be found in the `./coverage` director
 
 ## Writing commit messages
 
-Please try adhering to the Angular style of
+First, try to follow the
+[standard git commit message style](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
+This includes limiting the summary to 50 chars (which integrates well with git
+tools) but favor readability over conciseness if you need to go over that limit.
+
+Next, try adhering to the Angular style of
 [semantic messages](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit)
-when writing a commit message. We don't really use scopes so you can leave them
-blank. For example: `feat(): Adds support for a systematic dysfunctioner`.
-This will allow us to auto-generate a more useful changelog.
+when writing a commit message.
+This should allow us to auto-generate a changelog without too much noise in it.
+Additionally, write the commit message in past tense so it will read
+naturally as a historic changelog.
+
+Examples:
+* `feat(): Added a systematic dysfunctioner`
+* `fix(): Fixed hang in systematic dysfunctioner`
+* `docs(): Improved contributor docs`
+* `style(): Added no-console linting, cleaned up code`
+* `refactor(): Split out dysfunctioner for testability`
+* `perf(): Systematic dysfunctioner is now 2x faster`
+* `test(): Added more tests for systematic dysfunctioner`
+* `chore(): Upgraded yargs to 3.x.x`
+
+If you want to use scopes then it would look more like:
+`feat(dysfunctioner): Added --quiet option`.
+
+## Squashing commits
+
+When fixing up a pull request based on code review comments,
+[squash all commits together](https://github.com/ginatrapani/todo.txt-android/wiki/Squash-All-Commits-Related-to-a-Single-Issue-into-a-Single-Commit)
+before merging. This will allow us to auto-generate a more concise
+changelog. If a pull request contains more than one feature or fix then
+it is okay to include each as a separate commit.
