@@ -1,8 +1,12 @@
 /* @flow */
 import path from 'path';
 import sinon from 'sinon';
-import {promisify} from '../src/util/es6-modules';
 import yauzl from 'yauzl';
+
+import {promisify} from '../src/util/es6-modules';
+import {createLogger} from '../src/util/logger';
+
+const log = createLogger(__filename);
 
 
 /*
@@ -133,14 +137,28 @@ export function fake(original: Object, methods: Object = {}): Object {
   var stub = {};
 
   // Provide stubs for all original members:
-  Object.keys(original).forEach((key) => {
-    if (typeof original[key] === 'function') {
+  var props = [];
+  var obj = original;
+  while (true) {
+    props = props.concat(Object.getOwnPropertyNames(obj));
+    obj = Object.getPrototypeOf(obj);
+    if (!obj) {
+      break;
+    }
+  }
+
+  var proto = Object.getPrototypeOf(original);
+  for (let key of props) {
+    if (!original.hasOwnProperty(key) && !proto.hasOwnProperty(key)) {
+      continue;
+    }
+    let definition = original[key] || proto[key];
+    if (typeof definition === 'function') {
       stub[key] = () => {
-        console.warn(
-          `Running stubbed function ${key} (default implementation)`);
+        log.warn(`Running stubbed function ${key} (default implementation)`);
       };
     }
-  });
+  }
 
   // Provide custom implementations, if necessary.
   Object.keys(methods).forEach((key) => {

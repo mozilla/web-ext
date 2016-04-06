@@ -98,6 +98,31 @@ describe('firefox', () => {
         });
     });
 
+    it('logs stdout and stderr without errors', () => {
+      // Store a registry of handlers that we can execute directly.
+      const firefoxApp = {};
+      const runner = createFakeFxRunner({
+        stdout: {
+          on: (event, handler) => {
+            firefoxApp.writeStdout = handler;
+          },
+        },
+        stderr: {
+          on: (event, handler) => {
+            firefoxApp.writeStderr = handler;
+          },
+        },
+      });
+
+      return firefox.run(fakeProfile, {fxRunner: runner})
+        .then(() => {
+          // This makes sure that when each handler writes to the
+          // logger they don't raise any exceptions.
+          firefoxApp.writeStdout('example of stdout');
+          firefoxApp.writeStderr('example of stderr');
+        });
+    });
+
   });
 
   describe('copyProfile', () => {

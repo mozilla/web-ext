@@ -11,6 +11,9 @@ import isDirectory from '../util/is-directory';
 import {promisify} from '../util/es6-modules';
 import {onlyErrorsWithCode, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
+import {createLogger} from '../util/logger';
+
+const log = createLogger(__filename);
 
 
 export const defaultFirefoxEnv = {
@@ -25,7 +28,7 @@ export function run(
     profile: FirefoxProfile,
     {fxRunner=defaultFxRunner, firefoxBinary}: Object = {}): Promise {
 
-  console.log(`Running Firefox with profile at ${profile.path()}`);
+  log.info(`Running Firefox with profile at ${profile.path()}`);
   return fxRunner(
     {
       // if this is falsey, fxRunner tries to find the default one.
@@ -44,26 +47,26 @@ export function run(
       return new Promise((resolve) => {
         let firefox = results.process;
 
-        console.log(`Executing Firefox binary: ${results.binary}`);
-        console.log(`Executing Firefox with args: ${results.args.join(' ')}`);
+        log.debug(`Executing Firefox binary: ${results.binary}`);
+        log.debug(`Executing Firefox with args: ${results.args.join(' ')}`);
 
         firefox.on('error', (error) => {
           // TODO: show a nice error when it can't find Firefox.
           // if (/No such file/.test(err) || err.code === 'ENOENT') {
-          console.log(`Firefox error: ${error}`);
+          log.error(`Firefox error: ${error}`);
           throw error;
         });
 
         firefox.stderr.on('data', (data) => {
-          console.error(`stderr: ${data.toString().trim()}`);
+          log.error(`Firefox stderr: ${data.toString().trim()}`);
         });
 
         firefox.stdout.on('data', (data) => {
-          console.log(`stdout: ${data.toString().trim()}`);
+          log.debug(`Firefox stdout: ${data.toString().trim()}`);
         });
 
         firefox.on('close', () => {
-          console.log('Firefox closed');
+          log.debug('Firefox closed');
           resolve();
         });
       });
@@ -136,10 +139,10 @@ export function copyProfile(
   return isDirectory(profileDirectory)
     .then((dirExists) => {
       if (dirExists) {
-        console.log(`Copying profile directory from "${profileDirectory}"`);
+        log.debug(`Copying profile directory from "${profileDirectory}"`);
         return copy({profileDirectory});
       } else {
-        console.log(`Assuming ${profileDirectory} is a named profile`);
+        log.debug(`Assuming ${profileDirectory} is a named profile`);
         return copyByName({name: profileDirectory});
       }
     })
@@ -181,7 +184,7 @@ export function installExtension(
       resolve(fs.stat(profile.extensionsDir));
     })
     .catch(onlyErrorsWithCode('ENOENT', () => {
-      console.log(`Creating extensions directory: ${profile.extensionsDir}`);
+      log.debug(`Creating extensions directory: ${profile.extensionsDir}`);
       return fs.mkdir(profile.extensionsDir);
     }))
     .then(() => {
@@ -194,7 +197,7 @@ export function installExtension(
       let destPath = path.join(profile.extensionsDir, `${id}.xpi`);
       let writeStream = nodeFs.createWriteStream(destPath);
 
-      console.log(`Copying ${extensionPath} to ${destPath}`);
+      log.debug(`Copying ${extensionPath} to ${destPath}`);
       readStream.pipe(writeStream);
 
       return Promise.all([

@@ -2,14 +2,17 @@
 import buildExtension from './build';
 import * as defaultFirefox from '../firefox';
 import {withTempDir} from '../util/temp-dir';
+import {createLogger} from '../util/logger';
 import getValidatedManifest from '../util/manifest';
+
+const log = createLogger(__filename);
 
 
 export default function run(
     {sourceDir, firefoxBinary, firefoxProfile}: Object,
     {firefox=defaultFirefox}: Object = {}): Promise {
 
-  console.log(`Running web extension from ${sourceDir}`);
+  log.info(`Running web extension from ${sourceDir}`);
 
   return getValidatedManifest(sourceDir)
     .then((manifestData) => withTempDir(
@@ -19,10 +22,10 @@ export default function run(
                          {manifestData}),
           new Promise((resolve) => {
             if (firefoxProfile) {
-              console.log(`Copying Firefox profile from ${firefoxProfile}`);
+              log.debug(`Copying Firefox profile from ${firefoxProfile}`);
               resolve(firefox.copyProfile(firefoxProfile));
             } else {
-              console.log('Creating new Firefox profile');
+              log.debug('Creating new Firefox profile');
               resolve(firefox.createProfile());
             }
           }),

@@ -36,6 +36,7 @@
     "no-bitwise": 2,
     "no-caller": 2,
     "no-cond-assign": [2, "except-parens"],
+    "no-console": 2,
     "no-debugger": 2,
     "no-empty": 2,
     "no-eval": 2,

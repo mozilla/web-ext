@@ -5,10 +5,14 @@ import defaultBuilder from './build';
 import {withTempDir} from '../util/temp-dir';
 import getValidatedManifest from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
+import {createLogger} from '../util/logger';
+
+const log = createLogger(__filename);
 
 
 export default function sign(
-    {sourceDir, artifactsDir, apiKey, apiSecret, apiUrlPrefix}: Object,
+    {verbose, sourceDir, artifactsDir, apiKey, apiSecret,
+     apiUrlPrefix}: Object,
     {build=defaultBuilder, signAddon=defaultAddonSigner,
      preValidatedManifest=null}: Object = {}): Promise {
 
@@ -34,6 +38,7 @@ export default function sign(
           apiKey,
           apiSecret,
           apiUrlPrefix,
+          verbose,
           xpiPath: buildResult.extensionPath,
           id: manifestData.applications.gecko.id,
           version: manifestData.version,
@@ -42,7 +47,7 @@ export default function sign(
         .then((signingResult) => {
           // All information about the downloaded files would have
           // already been logged by signAddon().
-          console.log(signingResult.success ? 'SUCCESS' : 'FAIL');
+          log.info(signingResult.success ? 'SUCCESS' : 'FAIL');
           return signingResult;
         });
     }

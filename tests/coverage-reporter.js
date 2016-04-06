@@ -10,6 +10,7 @@ module.exports = function CoverageReporter(runner) {
 
     reporter.addAll([ 'text', 'text-summary', 'lcov' ]);
     reporter.write(collector, sync, function() {
+      // eslint-disable-next-line no-console
       console.log('All coverage reports generated');
     });
   });

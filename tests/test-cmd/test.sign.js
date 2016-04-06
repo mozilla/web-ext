@@ -43,11 +43,13 @@ describe('sign', () => {
   /*
    * Run the sign command with stubs for all dependencies.
    */
-  function sign(artifactsDir, stubs) {
+  function sign(artifactsDir, stubs, extraArgs={}) {
     return completeSignCommand({
       sourceDir: '/fake/path/to/local/extension',
+      verbose: false,
       artifactsDir,
       ...stubs.signingConfig,
+      ...extraArgs,
     }, {
       ...stubs,
     });
@@ -108,6 +110,17 @@ describe('sign', () => {
                        stubs.preValidatedManifest.version);
           assert.equal(signedAddonCall.downloadDir,
                        tmpDir.path());
+        });
+    }
+  ));
+
+  it('passes the verbose flag to the signer', () => withTempDir(
+    (tmpDir) => {
+      let stubs = getStubs();
+      return sign(tmpDir.path(), stubs, {verbose: true})
+        .then(() => {
+          assert.equal(stubs.signAddon.called, true);
+          assert.equal(stubs.signAddon.firstCall.args[0].verbose, true);
         });
     }
   ));

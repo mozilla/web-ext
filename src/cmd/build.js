@@ -7,17 +7,20 @@ import streamToPromise from 'stream-to-promise';
 import {zipDir} from '../util/zip-dir';
 import getValidatedManifest from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
+import {createLogger} from '../util/logger';
+
+const log = createLogger(__filename);
 
 
 export default function build(
     {sourceDir, artifactsDir}: Object,
     {manifestData, fileFilter}: Object = {}): Promise {
 
-  console.log(`Building web extension from ${sourceDir}`);
+  log.info(`Building web extension from ${sourceDir}`);
 
   let resolveManifest;
   if (manifestData) {
-    console.log(`Using manifest id=${manifestData.applications.gecko.id}`);
+    log.debug(`Using manifest id=${manifestData.applications.gecko.id}`);
     resolveManifest = Promise.resolve(manifestData);
   } else {
     resolveManifest = getValidatedManifest(sourceDir);
@@ -47,7 +50,7 @@ export default function build(
 
         return promisedStream
           .then(() => {
-            console.log(`Your web extension is ready: ${extensionPath}`);
+            log.info(`Your web extension is ready: ${extensionPath}`);
             return {extensionPath};
           });
       })
@@ -83,7 +86,7 @@ export class FileFilter {
   wantFile(path: string): boolean {
     for (const test of this.filesToIgnore) {
       if (minimatch(path, test)) {
-        console.log(`Not including file ${path} in ZIP archive`);
+        log.debug(`Not including file ${path} in ZIP archive`);
         return false;
       }
     }
