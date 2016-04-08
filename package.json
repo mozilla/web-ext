@@ -50,7 +50,7 @@
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
-    "babel-core": "6.7.4",
+    "babel-core": "6.7.6",
     "babel-eslint": "6.0.2",
     "babel-istanbul": "0.7.0",
     "babel-istanbul-loader": "0.1.0",
