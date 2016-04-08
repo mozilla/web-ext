@@ -97,4 +97,6 @@ To release a new version of `web-ext`, follow these steps:
 * Bump the version in `package.json`.
 * Commit and push the version change.
 * Tag master (example: `git tag 0.0.1`) and run `git push --tags upstream`.
-* Run `npm publish`.
+* When TravisCI builds the tag,
+  it will automatically publish the package to
+  [npm](https://www.npmjs.com/package/web-ext):
