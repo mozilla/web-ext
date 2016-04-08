@@ -88,3 +88,13 @@ When fixing up a pull request based on code review comments,
 before merging. This will allow us to auto-generate a more concise
 changelog. If a pull request contains more than one feature or fix then
 it is okay to include each as a separate commit.
+
+## Creating a release
+
+To release a new version of `web-ext`, follow these steps:
+
+* Pull from master to make sure you're up to date.
+* Bump the version in `package.json`.
+* Commit and push the version change.
+* Tag master (example: `git tag 0.0.1`) and run `git push --tags upstream`.
+* Run `npm publish`.

@@ -14,7 +14,7 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Installation from npm
 
-This tool has not yet been released on npm. Stay tuned.
+    npm install --global web-ext
 
 ## Installation from source
 
@@ -46,6 +46,16 @@ Link it to your node installation:
 You can now run it from any directory:
 
     web-ext --help
+
+## Usage
+
+To see all available commands and options, type:
+
+    web-ext --help
+
+Complete user documentation is in progress ([issue #19](https://github.com/mozilla/web-ext/issues/19))
+and will be available here:
+https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext
 
 ## Should I Use It?
 
