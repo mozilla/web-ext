@@ -47,6 +47,13 @@ You can now run it from any directory:
 
     web-ext --help
 
+To get updates, just pull changes and rebuild the executable. You don't
+need to relink it.
+
+    cd /path/to/web-ext
+    git pull
+    npm run build
+
 ## Usage
 
 To see all available commands and options, type:
