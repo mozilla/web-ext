@@ -1,6 +1,7 @@
 module.exports = {
   options: {
-    timeout: 2000,
+    // On TravisCI, sometimes the tests that require I/O need extra time.
+    timeout: 5000,
     reporter: 'mocha-multi',
     reporterOptions: {
       spec: '-',
