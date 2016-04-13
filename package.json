@@ -64,7 +64,7 @@
     "chai": "3.5.0",
     "coveralls": "2.11.9",
     "deepcopy": "0.6.1",
-    "eslint": "2.6.0",
+    "eslint": "2.7.0",
     "flow-bin": "0.22.1",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
