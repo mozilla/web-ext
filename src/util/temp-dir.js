@@ -62,7 +62,7 @@ export class TempDir {
    * been created.
    */
   create(): Promise {
-    let createTempDir = promisify(tmp.dir);
+    let createTempDir = promisify(tmp.dir, {multiArgs: true});
     return createTempDir(
       {
         prefix: 'tmp-web-ext-',
