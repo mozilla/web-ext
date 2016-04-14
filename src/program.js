@@ -28,7 +28,7 @@ export class Program {
   }
 
   command(name: string, description: string, executor: Function,
-          commandOptions: ?Object): Program {
+          commandOptions: Object = {}): Program {
     this.yargs.command(name, description, (yargs) => {
       if (!commandOptions) {
         return;
@@ -183,6 +183,10 @@ Example: $0 --help run.
                   'a new temporary profile will be created.',
         demand: false,
         type: 'string',
+      },
+      'no-reload': {
+        describe: 'Do not reload the extension as the source changes',
+        type: 'boolean',
       },
     });
 

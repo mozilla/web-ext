@@ -81,7 +81,7 @@ describe('watcher', () => {
     it('provides a callback for ignoring files', () => {
 
       function shouldWatchFile(filePath) {
-        if (filePath === '/somewhere/.git') {
+        if (filePath === '/somewhere/freaky') {
           return false;
         } else {
           return true;
@@ -93,12 +93,21 @@ describe('watcher', () => {
         onChange: sinon.spy(() => {}),
       };
 
-      proxyFileChanges({...conf, filePath: '/somewhere/.git'});
+      proxyFileChanges({...conf, filePath: '/somewhere/freaky'});
       assert.equal(conf.onChange.called, false);
 
       proxyFileChanges({...conf, filePath: '/any/file/'});
       assert.equal(conf.onChange.called, true);
 
+    });
+
+    it('filters out commonly unwanted files by default', () => {
+      const conf = {
+        ...defaults, shouldWatchFile: undefined,
+        onChange: sinon.spy(() => {}),
+      };
+      proxyFileChanges({...conf, filePath: '/somewhere/.git'});
+      assert.equal(conf.onChange.called, false);
     });
 
   });

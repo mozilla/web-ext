@@ -26,15 +26,17 @@ export const defaultFirefoxEnv = {
  */
 export function run(
     profile: FirefoxProfile,
-    {fxRunner=defaultFxRunner, firefoxBinary}: Object = {}): Promise {
+    {fxRunner=defaultFxRunner, firefoxBinary, binaryArgs}
+    : Object = {}): Promise {
 
   log.info(`Running Firefox with profile at ${profile.path()}`);
   return fxRunner(
     {
       // if this is falsey, fxRunner tries to find the default one.
       'binary': firefoxBinary,
-      'binary-args': null,
-      'no-remote': true,
+      'binary-args': binaryArgs,
+      'no-remote': false,
+      'listen': '6000',
       'foreground': true,
       'profile': profile.path(),
       'env': {
@@ -48,7 +50,7 @@ export function run(
         let firefox = results.process;
 
         log.debug(`Executing Firefox binary: ${results.binary}`);
-        log.debug(`Executing Firefox with args: ${results.args.join(' ')}`);
+        log.debug(`Firefox args: ${results.args.join(' ')}`);
 
         firefox.on('error', (error) => {
           // TODO: show a nice error when it can't find Firefox.
@@ -67,8 +69,9 @@ export function run(
 
         firefox.on('close', () => {
           log.debug('Firefox closed');
-          resolve();
         });
+
+        resolve(firefox);
       });
     });
 }

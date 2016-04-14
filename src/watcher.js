@@ -3,6 +3,7 @@ import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
 import {createLogger} from './util/logger';
+import {FileFilter} from './cmd/build';
 
 const log = createLogger(__filename);
 
@@ -21,16 +22,19 @@ export default function onSourceChange(
   log.debug(`Watching for file changes in ${sourceDir}`);
   watcher.watch([], [sourceDir], Date.now());
 
-  // TODO: support windows See:
-  // http://stackoverflow.com/questions/10021373/what-is-the-windows-equivalent-of-process-onsigint-in-node-js
+  // TODO: support interrupting the watcher on Windows.
+  // https://github.com/mozilla/web-ext/issues/225
   process.on('SIGINT', () => watcher.close());
   return watcher;
 }
 
 
 export function proxyFileChanges(
-    {artifactsDir, onChange, filePath, shouldWatchFile=() => true}
-    : Object) {
+    {artifactsDir, onChange, filePath, shouldWatchFile}: Object) {
+  if (!shouldWatchFile) {
+    const fileFilter = new FileFilter();
+    shouldWatchFile = (...args) => fileFilter.wantFile(...args);
+  }
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
     log.debug(`Ignoring change to: ${filePath}`);
   } else {
