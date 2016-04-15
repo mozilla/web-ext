@@ -4,6 +4,7 @@ import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
 
+import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
 import getValidatedManifest from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
@@ -12,49 +13,74 @@ import {createLogger} from '../util/logger';
 const log = createLogger(__filename);
 
 
-export default function build(
-    {sourceDir, artifactsDir}: Object,
-    {manifestData, fileFilter}: Object = {}): Promise {
+function defaultPackageCreator(
+    {manifestData, sourceDir, fileFilter, artifactsDir}) {
 
+  return new Promise(
+    (resolve) => {
+      if (manifestData) {
+        log.debug(`Using manifest id=${manifestData.applications.gecko.id}`);
+        resolve(manifestData);
+      } else {
+        resolve(getValidatedManifest(sourceDir));
+      }
+    })
+    .then((manifestData) => {
+      return zipDir(
+        sourceDir, {
+          filter: (...args) => fileFilter.wantFile(...args),
+        })
+        .then((buffer) => {
+          let packageName = safeFileName(
+            `${manifestData.name}-${manifestData.version}.xpi`);
+          let extensionPath = path.join(artifactsDir, packageName);
+          let stream = createWriteStream(extensionPath);
+          let promisedStream = streamToPromise(stream);
+
+          stream.write(buffer, () => stream.end());
+
+          return promisedStream
+            .then(() => {
+              log.info(`Your web extension is ready: ${extensionPath}`);
+              return {extensionPath};
+            });
+        });
+    });
+}
+
+
+export default function build(
+    {sourceDir, artifactsDir, asNeeded}: Object,
+    {manifestData, fileFilter=new FileFilter(),
+     onSourceChange=defaultSourceWatcher,
+     packageCreator=defaultPackageCreator}
+    : Object = {}): Promise {
+
+  const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
-  let resolveManifest;
-  if (manifestData) {
-    log.debug(`Using manifest id=${manifestData.applications.gecko.id}`);
-    resolveManifest = Promise.resolve(manifestData);
-  } else {
-    resolveManifest = getValidatedManifest(sourceDir);
-  }
+  const createPackage = () => packageCreator({
+    manifestData, sourceDir, fileFilter, artifactsDir,
+  });
 
-  if (!fileFilter) {
-    fileFilter = new FileFilter();
-  }
-
-  return resolveManifest
-    .then((manifestData) =>
-      Promise.all([
-        prepareArtifactsDir(artifactsDir),
-        zipDir(sourceDir, {
-          filter: (...args) => fileFilter.wantFile(...args),
-        }),
-      ])
-      .then((results) => {
-        let [artifactsDir, buffer] = results;
-        let packageName = safeFileName(
-          `${manifestData.name}-${manifestData.version}.xpi`);
-        let extensionPath = path.join(artifactsDir, packageName);
-        let stream = createWriteStream(extensionPath);
-        let promisedStream = streamToPromise(stream);
-
-        stream.write(buffer, () => stream.end());
-
-        return promisedStream
-          .then(() => {
-            log.info(`Your web extension is ready: ${extensionPath}`);
-            return {extensionPath};
-          });
-      })
-    );
+  return prepareArtifactsDir(artifactsDir)
+    .then(() => createPackage())
+    .then((result) => {
+      if (rebuildAsNeeded) {
+        log.info('Rebuilding when files change...');
+        onSourceChange({
+          sourceDir, artifactsDir,
+          onChange: () => {
+            return createPackage().catch((error) => {
+              log.error(error.stack);
+              throw error;
+            });
+          },
+          shouldWatchFile: (...args) => fileFilter.wantFile(...args),
+        });
+      }
+      return result;
+    });
 }
 
 
@@ -86,7 +112,7 @@ export class FileFilter {
   wantFile(path: string): boolean {
     for (const test of this.filesToIgnore) {
       if (minimatch(path, test)) {
-        log.debug(`Not including file ${path} in ZIP archive`);
+        log.debug(`FileFilter: ignoring file ${path}`);
         return false;
       }
     }
