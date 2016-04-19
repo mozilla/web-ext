@@ -14,6 +14,12 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Installation from npm
 
+First, make sure your `npm` is up to date:
+
+    npm update --global
+
+Install `web-ext`:
+
     npm install --global web-ext
 
 ## Installation from source
@@ -27,7 +33,7 @@ Optionally, you may like:
 
 Make sure `npm` is up to date:
 
-    npm install -g npm
+    npm update --global
 
 Change into the source and install everything:
 
