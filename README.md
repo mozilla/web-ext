@@ -12,6 +12,11 @@ Ultimately, it aims to support web extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
 [Firefox web extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
+## Documentation
+
+* [Getting started with web-ext](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
+* [Command reference](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference)
+
 ## Installation from npm
 
 First, make sure your `npm` is up to date:
@@ -59,16 +64,6 @@ need to relink it.
     cd /path/to/web-ext
     git pull
     npm run build
-
-## Usage
-
-To see all available commands and options, type:
-
-    web-ext --help
-
-Complete user documentation is in progress ([issue #19](https://github.com/mozilla/web-ext/issues/19))
-and will be available here:
-https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext
 
 ## Should I Use It?
 
