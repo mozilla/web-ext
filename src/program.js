@@ -142,7 +142,7 @@ Example: $0 --help run.
   program
     .command('build',
              'Create a web extension package from source',
-             commands.build)
+             commands.build, {})
     .command('sign',
              'Sign the web extension so it can be installed in Firefox',
              commands.sign, {
