@@ -37,6 +37,7 @@
   "dependencies": {
     "babel-polyfill": "6.7.4",
     "bunyan": "1.8.0",
+    "debounce": "1.0.0",
     "es6-error": "2.1.0",
     "es6-promisify": "4.0.0",
     "firefox-profile": "0.3.12",
@@ -47,6 +48,7 @@
     "source-map-support": "0.4.0",
     "stream-to-promise": "1.1.0",
     "tmp": "0.0.28",
+    "watchpack": "1.0.1",
     "yargs": "4.6.0",
     "zip-dir": "1.0.2"
   },
