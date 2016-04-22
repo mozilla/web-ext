@@ -36,7 +36,7 @@
   ],
   "dependencies": {
     "babel-polyfill": "6.7.4",
-    "bunyan": "1.8.0",
+    "bunyan": "1.8.1",
     "debounce": "1.0.0",
     "es6-error": "2.1.0",
     "es6-promisify": "4.0.0",
