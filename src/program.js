@@ -24,6 +24,7 @@ export class Program {
       yargsInstance = yargs(argv);
     }
     this.yargs = yargsInstance;
+    this.yargs.strict();
     this.commands = {};
   }
 
