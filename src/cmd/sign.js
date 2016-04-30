@@ -12,7 +12,7 @@ const log = createLogger(__filename);
 
 export default function sign(
     {verbose, sourceDir, artifactsDir, apiKey, apiSecret,
-     apiUrlPrefix}: Object,
+     apiUrlPrefix, timeout}: Object,
     {build=defaultBuilder, signAddon=defaultAddonSigner,
      preValidatedManifest=null}: Object = {}): Promise {
 
@@ -38,6 +38,7 @@ export default function sign(
           apiKey,
           apiSecret,
           apiUrlPrefix,
+          timeout,
           verbose,
           xpiPath: buildResult.extensionPath,
           id: manifestData.applications.gecko.id,

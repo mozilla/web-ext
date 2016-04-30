@@ -17,6 +17,7 @@ describe('sign', () => {
       apiKey: 'AMO JWT issuer',
       apiSecret: 'AMO JWT secret',
       apiUrlPrefix: 'http://not-the-real-amo.com/api/v3',
+      timeout: 999,
     };
 
     const buildResult = {
@@ -102,6 +103,8 @@ describe('sign', () => {
                        stubs.signingConfig.apiSecret);
           assert.equal(signedAddonCall.apiUrlPrefix,
                        stubs.signingConfig.apiUrlPrefix);
+          assert.equal(signedAddonCall.timeout,
+                       stubs.signingConfig.timeout);
           assert.equal(signedAddonCall.xpiPath,
                        stubs.buildResult.extensionPath);
           assert.equal(signedAddonCall.id,

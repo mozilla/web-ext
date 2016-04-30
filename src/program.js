@@ -168,6 +168,10 @@ Example: $0 --help run.
         demand: true,
         type: 'string',
       },
+      'timeout' : {
+        describe: 'Number of milleseconds to wait before giving up',
+        type: 'number',
+      },
     })
     .command('run', 'Run the web extension', commands.run, {
       'firefox-binary': {
