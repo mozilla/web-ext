@@ -25,6 +25,8 @@ prefs.common = {
 
   // Allow remote connections to the debugger.
   'devtools.debugger.remote-enabled' : true,
+  // Disable the prompt for allowing connections.
+  'devtools.debugger.prompt-connection' : false,
 
   // Turn off platform logging because it is a lot of info.
   'extensions.logging.enabled': false,

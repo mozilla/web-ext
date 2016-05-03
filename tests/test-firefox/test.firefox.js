@@ -55,6 +55,17 @@ describe('firefox', () => {
         });
     });
 
+    it('passes binary args to Firefox', () => {
+      const fxRunner = createFakeFxRunner();
+      const binaryArgs = '--safe-mode';
+      return firefox.run(fakeProfile, {fxRunner, binaryArgs})
+        .then(() => {
+          assert.equal(fxRunner.called, true);
+          assert.equal(fxRunner.firstCall.args[0]['binary-args'],
+                       binaryArgs);
+        });
+    });
+
     it('sets up a Firefox process environment', () => {
       let runner = createFakeFxRunner();
       // Make sure it passes through process environment variables.
