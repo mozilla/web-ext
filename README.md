@@ -38,7 +38,7 @@ Optionally, you may like:
 
 Make sure `npm` is up to date:
 
-    npm update --global
+    npm install --global npm
 
 Change into the source and install everything:
 
