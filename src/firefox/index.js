@@ -157,12 +157,6 @@ export function copyProfile(
 }
 
 
-class InstallationConfig {
-  manifestData: Object;
-  profile: FirefoxProfile;
-  extensionPath: string;
-}
-
 /*
  * Installs an extension into the given Firefox profile object.
  * Resolves when complete.
@@ -172,7 +166,7 @@ class InstallationConfig {
  * ./preferences.js.
  */
 export function installExtension(
-    {manifestData, profile, extensionPath}: InstallationConfig): Promise {
+    {manifestData, profile, extensionPath}: Object): Promise {
 
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
