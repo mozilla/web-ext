@@ -50,7 +50,7 @@
     "stream-to-promise": "1.1.0",
     "tmp": "0.0.28",
     "watchpack": "1.0.1",
-    "yargs": "4.6.0",
+    "yargs": "4.7.0",
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
