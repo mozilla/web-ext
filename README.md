@@ -36,6 +36,11 @@ You'll need:
 Optionally, you may like:
 * [nvm](https://github.com/creationix/nvm), which helps manage node versions
 
+If you had already installed `web-ext` from npm,
+you need to uninstall it first:
+
+    npm uninstall web-ext
+
 Make sure `npm` is up to date:
 
     npm install --global npm
