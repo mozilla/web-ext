@@ -21,7 +21,7 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 First, make sure your `npm` is up to date:
 
-    npm update --global
+    npm install --global npm
 
 Install `web-ext`:
 
