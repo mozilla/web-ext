@@ -347,12 +347,11 @@ describe('firefox', () => {
         });
     }
 
-    function installBasicExt(data, config={}) {
+    function installBasicExt(data) {
       return firefox.installExtension({
         manifestData: basicManifest,
         profile: data.profile,
         extensionPath: data.extensionPath,
-        ...config,
       });
     }
 
