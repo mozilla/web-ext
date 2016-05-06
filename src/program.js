@@ -51,7 +51,9 @@ export class Program {
     return this;
   }
 
-  run({throwError=false, systemProcess=process, logStream=defaultLogStream}
+  run(absolutePackageDir: string,
+      {throwError=false, systemProcess=process, logStream=defaultLogStream,
+       getVersion=version}
       : Object = {}): Promise {
     let argv = this.yargs.argv;
     let cmd = argv._[0];
@@ -65,6 +67,7 @@ export class Program {
           throw new WebExtError(`unknown command: ${cmd}`);
         }
         if (argv.verbose) {
+          log.info('Version:', getVersion(absolutePackageDir));
           logStream.makeVerbose();
         }
         resolve(runCommand);
@@ -195,5 +198,5 @@ Example: $0 --help run.
       },
     });
 
-  return program.run(runOptions);
+  return program.run(absolutePackageDir, runOptions);
 }

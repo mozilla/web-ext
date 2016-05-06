@@ -16,11 +16,13 @@ describe('program.Program', () => {
 
   function run(program, options={}) {
     let fakeProcess = fake(process);
-    return program.run({
-      systemProcess: fakeProcess,
-      throwError: true,
-      ...options,
-    });
+    let absolutePackageDir = path.join(__dirname, '..');
+    return program.run(
+      absolutePackageDir, {
+        systemProcess: fakeProcess,
+        throwError: true,
+        ...options,
+      });
   }
 
   it('executes a command callback', () => {
@@ -136,6 +138,16 @@ describe('program.Program', () => {
     return run(program, {logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
+      });
+  });
+
+  it('checks the version when verbose', () => {
+    let version = spy();
+    let program = new Program(['thing', '--verbose'])
+      .command('thing', 'does a thing', () => {});
+    return run(program, {getVersion: version})
+      .then(() => {
+        assert.equal(version.firstCall.args[0], path.join(__dirname, '..'));
       });
   });
 
