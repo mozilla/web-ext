@@ -72,11 +72,13 @@ need to relink it.
 
 ## Should I Use It?
 
-This tool may require using a
-[nightly build](https://nightly.mozilla.org/) of Firefox and is initially
-intended to develop web extensions, a platform which is not yet stable in Firefox.
-If you are looking to develop an add-on that runs in older versions of Firefox,
-consider [jpm](https://github.com/mozilla-jetpack/jpm/).
+The web-ext tool enables you to build and ship web extensions for Firefox.
+This platform stabilized in
+[Firefox 48](https://blog.mozilla.org/addons/2016/04/29/webextensions-in-firefox-48/)
+but you may need to develop with a
+[nightly build](https://nightly.mozilla.org/) of Firefox for some newer web-ext
+features. If you are looking to ship an add-on that runs in older versions of
+Firefox, consider [jpm](https://github.com/mozilla-jetpack/jpm/).
 
 ## Get Involved
 
