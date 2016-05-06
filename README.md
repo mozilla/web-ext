@@ -37,15 +37,15 @@ Optionally, you may like:
 * [nvm](https://github.com/creationix/nvm), which helps manage node versions
 
 If you had already installed `web-ext` from npm,
-you need to uninstall it first:
+you may need to uninstall it first:
 
-    npm uninstall web-ext
+    npm uninstall --global web-ext
 
 Make sure `npm` is up to date:
 
     npm install --global npm
 
-Change into the source and install everything:
+Change into the source and install all dependencies:
 
     git clone https://github.com/mozilla/web-ext.git
     cd web-ext
