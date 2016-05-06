@@ -169,7 +169,7 @@ Example: $0 --help run.
         type: 'string',
       },
       'timeout' : {
-        describe: 'Number of milleseconds to wait before giving up',
+        describe: 'Number of milliseconds to wait before giving up',
         type: 'number',
       },
     })
