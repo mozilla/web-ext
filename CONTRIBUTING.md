@@ -22,7 +22,9 @@ you edit files. It's also a little slower because there's no caching.
 
 ### Build web-ext
 
-Type `npm run build` to build a new version of the `./bin/web-ext` command.
+Type `npm run build` to build a new version of the libraries used by the
+`./bin/web-ext` command. When successful, you will see newly built files in
+the `./dist/` directory.
 
 ### Check for lint
 
