@@ -35,7 +35,7 @@
     "opera"
   ],
   "dependencies": {
-    "babel-polyfill": "6.9.0",
+    "babel-polyfill": "6.9.1",
     "bunyan": "1.8.1",
     "debounce": "1.0.0",
     "es6-error": "3.0.0",
