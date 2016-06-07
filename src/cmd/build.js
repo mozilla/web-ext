@@ -99,15 +99,16 @@ export class FileFilter {
   constructor({filesToIgnore,filePathsToIgnore}: Object = {}) {
 
   constructor(artifactsDir,{filesToIgnore}: Object = {}) {
-    var eliminateArtifactDir = '';
-    if(artifactsDir !== null && artifactsDir !== 'undefined' && artifactsDir.indexOf('web-ext-artifacts') != -1){
-        eliminateArtifactDir = artifactsDir.slice(artifactsDir.indexOf('web-ext-artifacts'));
+    var eliminateArtifactDir ;
+    var buf = artifactsDir;
+    if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
+        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
     }
-    else if(artifactsDir !== null && artifactsDir !== 'undefined' && artifactsDir.slice(-1) === '/'){
-	eliminateArtifactDir = path.join(artifactsDir.slice(0,-1));
+    else if(typeof buf !== 'undefined' && buf.slice(-1) === '/'){
+	eliminateArtifactDir = path.join(buf.slice(0,-1));
     }
     else{
-	eliminateArtifactDir = path.join(artifactsDir);
+	eliminateArtifactDir =  path.join(buf);
     }
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
