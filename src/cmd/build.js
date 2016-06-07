@@ -102,7 +102,7 @@ export class FileFilter {
     if(artifactsDir.indexOf('web-ext-artifacts') != -1){
         eliminateArtifactDir = artifactsDir.slice(artifactsDir.indexOf('web-ext-artifacts'));
     var eliminateArtifactDir =  new String();
-    var buf = artifactsDir.toString();
+    var buf = artifactsDir;
     if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
         eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
     }
