@@ -104,7 +104,7 @@ export class FileFilter {
     else if(typeof buf !== 'undefined' && buf.slice(-1) === '/'){
 	eliminateArtifactDir = path.join(buf.slice(0,-1).toString());
     }
-    else{
+    else if(typeof buf !== 'undefined'){
 	eliminateArtifactDir =  path.join(buf.toString());
     }
     this.filesToIgnore = filesToIgnore || [
