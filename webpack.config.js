@@ -54,6 +54,9 @@ module.exports = {
   plugins: [
     new webpack.BannerPlugin('require("source-map-support").install();',
                              { raw: true, entryOnly: false }),
+    // This seems necessary to work with the 'when' module, which is
+    // required by some things such as fx-runner.
+    new webpack.IgnorePlugin(/vertx/),
   ],
   resolve: {
     extensions: ['', '.js', '.json'],
