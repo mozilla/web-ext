@@ -96,7 +96,7 @@ export class FileFilter {
   filesToIgnore: Array<string>;
 
   constructor(artifactsDir,{filesToIgnore}: Object = {}) {
-    var eliminateArtifactDir ;
+    var eliminateArtifactDir =  new String();
     var buf = artifactsDir.toString();
     if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
         eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
@@ -111,7 +111,7 @@ export class FileFilter {
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
-      '**/*'+eliminateArtifactDir.toString(),
+      '**/*'+eliminateArtifactDir,
     ];
   }
 
