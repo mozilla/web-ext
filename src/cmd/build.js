@@ -101,6 +101,10 @@ export class FileFilter {
     var eliminateArtifactDir = '';
     if(artifactsDir.indexOf('web-ext-artifacts') != -1){
         eliminateArtifactDir = artifactsDir.slice(artifactsDir.indexOf('web-ext-artifacts'));
+    var eliminateArtifactDir =  new String();
+    var buf = artifactsDir.toString();
+    if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
+        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
     }
     else if(artifactsDir.slice(-1) === '/'){
 	eliminateArtifactDir = path.join(artifactsDir.slice(0,-1));
