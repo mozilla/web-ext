@@ -50,8 +50,10 @@ function defaultPackageCreator(
 
 
 export default function build(
+    {sourceDir, artifactsDir, asNeeded=false}: Object,
+    {manifestData, fileFilter=new FileFilter(),
     {sourceDir, artifactsDir, asNeeded}: Object,
-    {manifestData, fileFilter=new FileFilter({filePathsToIgnore: [path.resolve(artifactsDir)]}),
+    {manifestData, fileFilter=new FileFilter(artifactsDir),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
     : Object = {}): Promise {
@@ -94,29 +96,25 @@ export function safeFileName(name: string): string {
  */
 export class FileFilter {
   filesToIgnore: Array<string>;
-  dirToIgnore : Array<string>;
-  
-  constructor({filesToIgnore,filePathsToIgnore}: Object = {}) {
 
   constructor(artifactsDir,{filesToIgnore}: Object = {}) {
-    var eliminateArtifactDir ;
-    var buf = artifactsDir.toString();
-    if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
-        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts')).toString();
+    var eliminateArtifactDir = '';
+    if(artifactsDir.indexOf('web-ext-artifacts') != -1){
+        eliminateArtifactDir = artifactsDir.slice(artifactsDir.indexOf('web-ext-artifacts'));
     }
-    else if(typeof buf !== 'undefined' && buf.slice(-1) === '/'){
-	eliminateArtifactDir = path.join(buf.slice(0,-1).toString());
+    else if(artifactsDir.slice(-1) === '/'){
+	eliminateArtifactDir = path.join(artifactsDir.slice(0,-1));
     }
-    else if(typeof buf !== 'undefined'){
-	eliminateArtifactDir =  path.join(buf.toString());
+    else{
+	eliminateArtifactDir = path.join(artifactsDir);
     }
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
+      '**/node_modules',
+      '**/*'+eliminateArtifactDir,
     ];
-    
-    this.filePathsToIgnore = filePathsToIgnore;
   }
 
   /*
@@ -127,18 +125,11 @@ export class FileFilter {
    */
   wantFile(path: string): boolean {
     for (const test of this.filesToIgnore) {
-      if (minimatch(path, test)) {
+       if (minimatch(path, test)) {
         log.debug(`FileFilter: ignoring file ${path}`);
         return false;
       }
     }
-    for (const filePath of this.filePathsToIgnore) {
-      if (filePath === path){
-        log.debug(`FileFilter: ignoring file ${path}`);
-        return false; 
-      }
-    }
     return true;
-  }    
-  
+  }
 }
