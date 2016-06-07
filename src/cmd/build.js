@@ -100,7 +100,7 @@ export class FileFilter {
 
   constructor(artifactsDir,{filesToIgnore}: Object = {}) {
     var eliminateArtifactDir ;
-    var buf = artifactsDir;
+    var buf = artifactsDir.toString();
     if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
         eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts').toString());
     }
