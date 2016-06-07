@@ -97,10 +97,10 @@ export class FileFilter {
 
   constructor(artifactsDir,{filesToIgnore}: Object = {}) {
     var eliminateArtifactDir = '';
-    if(artifactsDir.indexOf('web-ext-artifacts') != -1){
+    if(artifactsDir !== null && artifactsDir.indexOf('web-ext-artifacts') != -1){
         eliminateArtifactDir = artifactsDir.slice(artifactsDir.indexOf('web-ext-artifacts'));
     }
-    else if(artifactsDir.slice(-1) === '/'){
+    else if(artifactsDir !== null && artifactsDir.slice(-1) === '/'){
 	eliminateArtifactDir = path.join(artifactsDir.slice(0,-1));
     }
     else{
