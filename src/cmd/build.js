@@ -99,19 +99,19 @@ export class FileFilter {
     var eliminateArtifactDir ;
     var buf = artifactsDir.toString();
     if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
-        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts')).toString();
+        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
     }
     else if(typeof buf !== 'undefined' && buf.slice(-1) === '/'){
-	eliminateArtifactDir = path.join(buf.slice(0,-1).toString());
+	eliminateArtifactDir = path.join(buf.slice(0,-1));
     }
     else if(typeof buf !== 'undefined'){
-	eliminateArtifactDir =  path.join(buf.toString());
+	eliminateArtifactDir =  path.join(buf);
     }
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
-      '**/*'+eliminateArtifactDir,
+      '**/*'+eliminateArtifactDir.toString(),
     ];
   }
 
