@@ -102,13 +102,13 @@ export class FileFilter {
     var eliminateArtifactDir ;
     var buf = artifactsDir;
     if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
-        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
+        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts').toString());
     }
     else if(typeof buf !== 'undefined' && buf.slice(-1) === '/'){
-	eliminateArtifactDir = path.join(buf.slice(0,-1));
+	eliminateArtifactDir = path.join(buf.slice(0,-1).toString());
     }
     else{
-	eliminateArtifactDir =  path.join(buf);
+	eliminateArtifactDir =  path.join(buf.toString());
     }
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
