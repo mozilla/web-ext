@@ -131,6 +131,25 @@ describe('program.Program', () => {
       });
   });
 
+  it('reads option values from env vars in sub commands', () => {
+  // Set an env var that mimics web-ext cmd --some-opt=value
+  process.env.WEB_EXT_SOME_OPT = 'value';
+  let valueReceived;
+  const program = new Program(['cmd'])
+    .command('cmd', 'some command', ({someOpt}) => {
+      valueReceived = someOpt;
+    }, {
+      'some-opt': {
+        describe: 'example option',
+      },
+    });
+  return run(program, {throwError: false})
+    .then(() => {
+      assert.equal(valueReceived, 'value');
+      delete process.env.WEB_EXT_SOME_OPT;
+    });
+  });
+
   it('configures the logger when verbose', () => {
     const logStream = fake(new ConsoleStream());
     let program = new Program(['thing', '--verbose'])
