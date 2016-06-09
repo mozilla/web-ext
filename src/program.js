@@ -8,6 +8,7 @@ import {WebExtError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 
 const log = createLogger(__filename);
+const envPrefix = 'WEB_EXT';
 
 
 /*
@@ -34,7 +35,9 @@ export class Program {
       if (!commandOptions) {
         return;
       }
-      return yargs.options(commandOptions);
+      // Calling env will be unnecessary after
+      // https://github.com/yargs/yargs/issues/486 is fixed
+      return yargs.env(envPrefix).options(commandOptions);
     });
     this.commands[name] = executor;
     return this;
@@ -108,7 +111,7 @@ export function main(
     .usage(`Usage: $0 [options] command
 
 Option values can also be set by declaring an environment variable prefixed
-with \$WEB_EXT_. For example: $WEB_EXT_SOURCE_DIR=/path is the same as
+with $${envPrefix}_. For example: $${envPrefix}_SOURCE_DIR=/path is the same as
 --source-dir=/path.
 
 To view specific help for any given command, add the command name.
@@ -116,7 +119,7 @@ Example: $0 --help run.
 `)
     .help('help')
     .alias('h', 'help')
-    .env('WEB_EXT')
+    .env(envPrefix)
     .version(() => version(absolutePackageDir));
 
   program.setGlobalOptions({
