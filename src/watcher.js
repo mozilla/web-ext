@@ -13,11 +13,12 @@ export default function onSourceChange(
   // TODO: For network disks, we would need to add {poll: true}.
   const watcher = new Watchpack();
 
-  const onFileChange = (filePath) => {
-    proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
-  };
   const executeImmediately = true;
-  watcher.on('change', debounce(onFileChange, 1000, executeImmediately));
+  onChange = debounce(onChange, 1000, executeImmediately);
+
+  watcher.on('change', (filePath) => {
+    proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
+  });
 
   log.debug(`Watching for file changes in ${sourceDir}`);
   watcher.watch([], [sourceDir], Date.now());

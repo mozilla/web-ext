@@ -1,9 +1,7 @@
 /* @flow */
-import buildExtension from './build';
 import * as defaultFirefox from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
 import {onlyErrorsWithCode} from '../errors';
-import {withTempDir} from '../util/temp-dir';
 import {createLogger} from '../util/logger';
 import getValidatedManifest from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
@@ -12,13 +10,12 @@ const log = createLogger(__filename);
 
 
 export function defaultWatcherCreator(
-    {profile, client, sourceDir, artifactsDir, createRunner,
+    {client, sourceDir, artifactsDir, createRunner,
      onSourceChange=defaultSourceWatcher}: Object): Object {
   return onSourceChange({
-    sourceDir, artifactsDir, onChange: () => createRunner(
-      (runner) => runner.buildExtension()
-        .then((buildResult) => runner.install(buildResult, {profile}))
-        .then(() => {
+    sourceDir, artifactsDir, onChange: () => {
+      return createRunner()
+        .then((runner) => {
           log.debug('Attempting to reload extension');
           const addonId = runner.manifestData.applications.gecko.id;
           log.debug(`Reloading add-on ID ${addonId}`);
@@ -27,40 +24,39 @@ export function defaultWatcherCreator(
         .catch((error) => {
           log.error(error.stack);
           throw error;
-        })
-    ),
+        });
+    },
   });
 }
 
 
 export function defaultReloadStrategy(
-    {firefox, profile, sourceDir, artifactsDir, createRunner}: Object,
-    {connectToFirefox=defaultFirefoxConnector,
-     maxRetries=25, retryInterval=120,
-     createWatcher=defaultWatcherCreator}: Object = {}): Promise {
-  var watcher;
-  var client;
-  var retries = 0;
+    {firefox, client, profile, sourceDir, artifactsDir, createRunner}: Object,
+    {createWatcher=defaultWatcherCreator}: Object = {}) {
+  let watcher;
 
   firefox.on('close', () => {
-    if (client) {
-      client.disconnect();
-    }
-    if (watcher) {
-      watcher.close();
-    }
+    client.disconnect();
+    watcher.close();
   });
+
+  watcher = createWatcher({
+    client, sourceDir, artifactsDir, createRunner,
+  });
+}
+
+
+export function defaultFirefoxClient(
+    {connectToFirefox=defaultFirefoxConnector,
+     maxRetries=25, retryInterval=120}: Object = {}) {
+  var retries = 0;
 
   function establishConnection() {
     return new Promise((resolve, reject) => {
       connectToFirefox()
         .then((connectedClient) => {
           log.debug('Connected to the Firefox debugger');
-          client = connectedClient;
-          watcher = createWatcher({
-            profile, client, sourceDir, artifactsDir, createRunner,
-          });
-          resolve();
+          resolve(connectedClient);
         })
         .catch(onlyErrorsWithCode('ECONNREFUSED', (error) => {
           if (retries >= maxRetries) {
@@ -88,70 +84,74 @@ export function defaultReloadStrategy(
 
 export default function run(
     {sourceDir, artifactsDir, firefoxBinary, firefoxProfile, noReload}: Object,
-    {firefox=defaultFirefox, reloadStrategy=defaultReloadStrategy}
+    {firefoxClient=defaultFirefoxClient, firefox=defaultFirefox,
+     reloadStrategy=defaultReloadStrategy}
     : Object = {}): Promise {
 
   log.info(`Running web extension from ${sourceDir}`);
 
-  function createRunner(callback) {
+  function createRunner() {
     return getValidatedManifest(sourceDir)
-      .then((manifestData) => withTempDir(
-        (tmpDir) => {
-          const runner = new ExtensionRunner({
-            sourceDir,
-            firefox,
-            firefoxBinary,
-            tmpDirPath: tmpDir.path(),
-            manifestData,
-            firefoxProfile,
-          });
-          return callback(runner);
-        }
-      ));
+      .then((manifestData) => {
+        return new ExtensionRunner({
+          sourceDir,
+          firefox,
+          firefoxBinary,
+          manifestData,
+          firefoxProfile,
+        });
+      });
   }
 
-  return createRunner(
-    (runner) => runner.buildExtension()
-      .then((buildResult) => runner.install(buildResult))
-      .then((profile) => runner.run(profile).then((firefox) => {
-        return {firefox, profile};
-      }))
-      .then(({firefox, profile}) => {
-        if (noReload) {
-          log.debug('Extension auto-reloading has been disabled');
-        } else {
-          log.debug('Reloading extension when the source changes');
-          reloadStrategy(
-            {firefox, profile, sourceDir, artifactsDir, createRunner});
-        }
-        return firefox;
-      })
-  );
+  return createRunner()
+    .then((runner) => {
+      return runner.getProfile().then((profile) => {
+        return {runner, profile};
+      });
+    })
+    .then(({runner, profile}) => {
+      return runner.run(profile).then((firefox) => {
+        return {runner, profile, firefox};
+      });
+    })
+    .then((config) => {
+      return firefoxClient().then((client) => {
+        return {client, ...config};
+      });
+    })
+    .then((config) => {
+      const {runner, client} = config;
+      return runner.install(client).then(() => {
+        return config;
+      });
+    })
+    .then(({firefox, profile, client}) => {
+      if (noReload) {
+        log.debug('Extension auto-reloading has been disabled');
+      } else {
+        log.debug('Reloading extension when the source changes');
+        reloadStrategy({firefox, profile, client, sourceDir,
+                        artifactsDir, createRunner});
+      }
+      return firefox;
+    });
 }
 
 
 export class ExtensionRunner {
   sourceDir: string;
-  tmpDirPath: string;
   manifestData: Object;
   firefoxProfile: Object;
   firefox: Object;
   firefoxBinary: string;
 
-  constructor({firefox, sourceDir, tmpDirPath, manifestData,
+  constructor({firefox, sourceDir, manifestData,
                firefoxProfile, firefoxBinary}: Object) {
     this.sourceDir = sourceDir;
-    this.tmpDirPath = tmpDirPath;
     this.manifestData = manifestData;
     this.firefoxProfile = firefoxProfile;
     this.firefox = firefox;
     this.firefoxBinary = firefoxBinary;
-  }
-
-  buildExtension(): Promise {
-    const {sourceDir, tmpDirPath, manifestData} = this;
-    return buildExtension({sourceDir, artifactsDir: tmpDirPath},
-                          {manifestData});
   }
 
   getProfile(): Promise {
@@ -167,16 +167,8 @@ export class ExtensionRunner {
     });
   }
 
-  install(buildResult: Object, {profile}: Object = {}): Promise {
-    const {firefox, manifestData} = this;
-    return Promise.resolve(profile ? profile : this.getProfile())
-      .then((profile) => firefox.installExtension(
-        {
-          manifestData,
-          extensionPath: buildResult.extensionPath,
-          profile,
-        })
-        .then(() => profile));
+  install(client: Object): Promise {
+    return client.installTemporaryAddon(this.sourceDir);
   }
 
   run(profile: Object): Promise {

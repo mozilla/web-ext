@@ -6,12 +6,14 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import {ExtendableError} from '../../src/util/es6-modules';
-import run, {defaultWatcherCreator, defaultReloadStrategy, ExtensionRunner}
-  from '../../src/cmd/run';
+import run, {
+  defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
+  ExtensionRunner,
+} from '../../src/cmd/run';
 import * as firefox from '../../src/firefox';
 import {RemoteFirefox} from '../../src/firefox/remote';
-import {makeSureItFails, fake, fixturePath} from '../helpers';
+import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
+  from '../helpers';
 import {createLogger} from '../../src/util/logger';
 import {basicManifest} from '../test-util/test.manifest';
 
@@ -29,6 +31,11 @@ describe('run', () => {
     };
     let options = {
       firefox: getFakeFirefox(),
+      firefoxClient: sinon.spy(() => {
+        return Promise.resolve(fake(RemoteFirefox.prototype, {
+          installTemporaryAddon: () => Promise.resolve(),
+        }));
+      }),
       reloadStrategy: sinon.spy(() => {
         log.debug('fake: reloadStrategy()');
       }),
@@ -61,16 +68,18 @@ describe('run', () => {
 
     const cmd = prepareRun();
     const {firefox} = cmd.options;
+    const firefoxClient = fake(RemoteFirefox.prototype, {
+      installTemporaryAddon: () => Promise.resolve(),
+    });
 
-    return cmd.run().then(() => {
-      let install = cmd.options.firefox.installExtension;
+    return cmd.run({}, {
+      firefoxClient: sinon.spy(() => {
+        return Promise.resolve(firefoxClient);
+      }),
+    }).then(() => {
+      const install = firefoxClient.installTemporaryAddon;
       assert.equal(install.called, true);
-      assert.equal(
-          install.firstCall.args[0].manifestData.applications.gecko.id,
-          'minimal-example@web-ext-test-suite');
-      assert.deepEqual(install.firstCall.args[0].profile, profile);
-      assert.match(install.firstCall.args[0].extensionPath,
-                   /minimal_extension-1\.0\.xpi/);
+      assert.equal(install.firstCall.args[0], cmd.argv.sourceDir);
 
       assert.equal(firefox.run.called, true);
       assert.deepEqual(firefox.run.firstCall.args[0], profile);
@@ -130,10 +139,13 @@ describe('run', () => {
     function prepare() {
       const config = {
         profile: {},
-        client: fake(RemoteFirefox.prototype),
+        client: fake(RemoteFirefox.prototype, {
+          reloadAddon: () => Promise.resolve(),
+        }),
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
-        createRunner: (cb) => cb(fake(ExtensionRunner.prototype)),
+        createRunner:
+          () => Promise.resolve(fake(ExtensionRunner.prototype)),
         onSourceChange: sinon.spy(() => {}),
       };
       return {
@@ -161,24 +173,18 @@ describe('run', () => {
       assert.equal(createdWatcher, watcher);
     });
 
-    it('builds, installs, and reloads the extension', () => {
+    it('reloads the extension', () => {
       const {config, createWatcher} = prepare();
 
-      const runner = fake(ExtensionRunner.prototype, {
-        install: sinon.spy(() => Promise.resolve()),
-        buildExtension: sinon.spy(() => Promise.resolve({})),
-      });
+      const runner = fake(ExtensionRunner.prototype);
       runner.manifestData = deepcopy(basicManifest);
-      createWatcher({createRunner: (cb) => cb(runner)});
+      createWatcher({createRunner: () => Promise.resolve(runner)});
 
       const callArgs = config.onSourceChange.firstCall.args[0];
       assert.typeOf(callArgs.onChange, 'function');
       // Simulate executing the handler when a source file changes.
       return callArgs.onChange()
         .then(() => {
-          assert.equal(runner.buildExtension.called, true);
-          assert.equal(runner.install.called, true);
-
           assert.equal(config.client.reloadAddon.called, true);
           const reloadArgs = config.client.reloadAddon.firstCall.args;
           assert.equal(reloadArgs[0], 'basic-manifest@web-ext-test-suite');
@@ -186,19 +192,19 @@ describe('run', () => {
     });
 
     it('throws errors from source change handler', () => {
-      const createRunner = (cb) => cb(fake(ExtensionRunner.prototype, {
-        buildExtension: () => Promise.resolve({}),
-        install: () => Promise.reject(new Error('fake installation error')),
-      }));
+      const runner = fake(ExtensionRunner.prototype);
+      runner.manifestData = deepcopy(basicManifest);
+
       const {createWatcher, config} = prepare();
-      createWatcher({createRunner});
+      config.client.reloadAddon = () => Promise.reject(new Error('an error'));
+      createWatcher({createRunner: () => Promise.resolve(runner)});
 
       assert.equal(config.onSourceChange.called, true);
-      // Simulate an error triggered from the source change handler.
+      // Simulate executing the handler when a source file changes.
       return config.onSourceChange.firstCall.args[0].onChange()
         .then(makeSureItFails())
         .catch((error) => {
-          assert.equal(error.message, 'fake installation error');
+          assert.equal(error.message, 'an error');
         });
     });
 
@@ -207,24 +213,21 @@ describe('run', () => {
   describe('defaultReloadStrategy', () => {
 
     function prepare() {
-      const client = {
-        disconnect: sinon.spy(() => {}),
-      };
+      const client = new RemoteFirefox(fakeFirefoxClient());
       const watcher = {
         close: sinon.spy(() => {}),
       };
       const args = {
+        client,
         firefox: new EventEmitter(),
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
-        createRunner: sinon.spy((cb) => cb(fake(ExtensionRunner.prototype))),
+        createRunner: sinon.spy(
+          () => Promise.resolve(fake(ExtensionRunner.prototype))),
       };
       const options = {
-        connectToFirefox: sinon.spy(() => Promise.resolve(client)),
         createWatcher: sinon.spy(() => watcher),
-        maxRetries: 0,
-        retryInterval: 1,
       };
       return {
         ...args,
@@ -239,78 +242,58 @@ describe('run', () => {
       };
     }
 
-    class ConnError extends ExtendableError {
-      code: string;
-      constructor(msg) {
-        super(msg);
-        this.code = 'ECONNREFUSED';
-      }
-    }
-
     it('cleans up connections when firefox closes', () => {
       const {firefox, client, watcher, reloadStrategy} = prepare();
-      return reloadStrategy()
-        .then(() => {
-          firefox.emit('close');
-          assert.equal(client.disconnect.called, true);
-          assert.equal(watcher.close.called, true);
-        });
-    });
-
-    it('ignores uninitialized objects when firefox closes', () => {
-      const {firefox, client, watcher, reloadStrategy} = prepare();
-      return reloadStrategy(
-        {}, {
-          connectToFirefox: () => Promise.reject(
-            new ConnError('connect error')),
-        })
-        .then(makeSureItFails())
-        .catch(() => {
-          firefox.emit('close');
-          assert.equal(client.disconnect.called, false);
-          assert.equal(watcher.close.called, false);
-        });
+      reloadStrategy();
+      firefox.emit('close');
+      assert.equal(client.client.disconnect.called, true);
+      assert.equal(watcher.close.called, true);
     });
 
     it('configures a watcher', () => {
       const {createWatcher, reloadStrategy, ...sentArgs} = prepare();
-      return reloadStrategy().then(() => {
-        assert.equal(createWatcher.called, true);
-        const receivedArgs = createWatcher.firstCall.args[0];
-        assert.equal(receivedArgs.profile, sentArgs.profile);
-        assert.equal(receivedArgs.client, sentArgs.client);
-        assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
-        assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
-        assert.equal(receivedArgs.createRunner, sentArgs.createRunner);
-      });
+      reloadStrategy();
+      assert.equal(createWatcher.called, true);
+      const receivedArgs = createWatcher.firstCall.args[0];
+      assert.equal(receivedArgs.client, sentArgs.client);
+      assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
+      assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
+      assert.equal(receivedArgs.createRunner, sentArgs.createRunner);
     });
 
+  });
+
+  describe('firefoxClient', () => {
+
+    function firefoxClient(opt = {}) {
+      return defaultFirefoxClient({maxRetries: 0, retryInterval: 1, ...opt});
+    }
+
     it('retries after a connection error', () => {
-      const {reloadStrategy} = prepare();
+      const client = new RemoteFirefox(fakeFirefoxClient());
       var tryCount = 0;
       const connectToFirefox = sinon.spy(() => new Promise(
         (resolve, reject) => {
           tryCount ++;
           if (tryCount === 1) {
-            reject(new ConnError('first connection fails'));
+            reject(new TCPConnectError('first connection fails'));
           } else {
             // The second connection succeeds.
-            resolve();
+            resolve(client);
           }
         }));
 
-      return reloadStrategy({}, {connectToFirefox, maxRetries: 3})
+      return firefoxClient({connectToFirefox, maxRetries: 3})
         .then(() => {
           assert.equal(connectToFirefox.callCount, 2);
         });
     });
 
     it('only retries connection errors', () => {
-      const {reloadStrategy} = prepare();
       const connectToFirefox = sinon.spy(
         () => Promise.reject(new Error('not a connection error')));
 
-      return reloadStrategy({}, {connectToFirefox, maxRetries: 2})
+      return firefoxClient({connectToFirefox, maxRetries: 2})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(connectToFirefox.callCount, 1);
@@ -319,11 +302,10 @@ describe('run', () => {
     });
 
     it('gives up connecting after too many retries', () => {
-      const {reloadStrategy} = prepare();
       const connectToFirefox = sinon.spy(
-        () => Promise.reject(new ConnError('failure')));
+        () => Promise.reject(new TCPConnectError('failure')));
 
-      return reloadStrategy({}, {connectToFirefox, maxRetries: 2})
+      return firefoxClient({connectToFirefox, maxRetries: 2})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(connectToFirefox.callCount, 3);
