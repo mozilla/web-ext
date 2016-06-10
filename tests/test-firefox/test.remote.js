@@ -101,7 +101,10 @@ describe('firefox.remote', () => {
       it('throws when add-on actor requests fail', () => {
         const addon = fakeAddon();
         const client = fakeFirefoxClient({
-          makeRequestError: 'some actor request failure',
+          makeRequestError: {
+            error: 'unknownError',
+            message: 'some actor failure',
+          },
         });
 
         const conn = makeInstance(client);
@@ -110,7 +113,7 @@ describe('firefox.remote', () => {
           .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.equal(
               error.message,
-              'requestTypes response error: some actor request failure');
+              'requestTypes response error: unknownError: some actor failure');
           }));
       });
     });
