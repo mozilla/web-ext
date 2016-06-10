@@ -12,6 +12,7 @@ import {promisify} from '../util/es6-modules';
 import {onlyErrorsWithCode, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 import {createLogger} from '../util/logger';
+import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 
 const log = createLogger(__filename);
 
@@ -21,22 +22,48 @@ export const defaultFirefoxEnv = {
   NS_TRACE_MALLOC_DISABLE_STACKS: '1',
 };
 
+
+export function defaultRemotePortFinder(
+    {portToTry=REMOTE_PORT, connectToFirefox=defaultFirefoxConnector}
+    : Object = {}) {
+  log.debug(`Checking if remote Firefox port ${portToTry} is available`);
+
+  return connectToFirefox(portToTry)
+    .then((client) => {
+      log.debug(`Remote Firefox port ${portToTry} is in use`);
+      client.disconnect();
+      // TODO: instead of throw an error, pick a new random port until
+      // one of them is available.
+      // https://github.com/mozilla/web-ext/issues/283
+      throw new WebExtError(
+        `Cannot listen on port ${portToTry} because it's in use`);
+    })
+    .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
+      // The connection was refused so this port is good to use.
+      return portToTry;
+    }));
+}
+
+
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
  */
 export function run(
     profile: FirefoxProfile,
-    {fxRunner=defaultFxRunner, firefoxBinary, binaryArgs}
+    {fxRunner=defaultFxRunner, findRemotePort=defaultRemotePortFinder,
+     firefoxBinary, binaryArgs}
     : Object = {}): Promise {
 
   log.info(`Running Firefox with profile at ${profile.path()}`);
-  return fxRunner(
-    {
+  return findRemotePort()
+    .then((remotePort) => fxRunner({
       // if this is falsey, fxRunner tries to find the default one.
       'binary': firefoxBinary,
       'binary-args': binaryArgs,
-      'no-remote': false,
-      'listen': '6000',
+      // This ensures a new instance of Firefox is created. It has nothing
+      // to do with the devtools remote debugger.
+      'no-remote': true,
+      'listen': remotePort,
       'foreground': true,
       'profile': profile.path(),
       'env': {
@@ -44,7 +71,7 @@ export function run(
         ...defaultFirefoxEnv,
       },
       'verbose': true,
-    })
+    }))
     .then((results) => {
       return new Promise((resolve) => {
         let firefox = results.process;
@@ -59,8 +86,12 @@ export function run(
           throw error;
         });
 
+        log.info(
+          'Use --verbose or open Tools > Web Developer > Browser Console ' +
+          'to see logging');
+
         firefox.stderr.on('data', (data) => {
-          log.error(`Firefox stderr: ${data.toString().trim()}`);
+          log.debug(`Firefox stderr: ${data.toString().trim()}`);
         });
 
         firefox.stdout.on('data', (data) => {

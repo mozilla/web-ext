@@ -4,7 +4,7 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {WebExtError, onlyInstancesOf} from '../../src/errors';
-import {makeSureItFails} from '../helpers';
+import {fakeFirefoxClient, makeSureItFails} from '../helpers';
 import {default as defaultConnector, RemoteFirefox}
   from '../../src/firefox/remote';
 
@@ -15,7 +15,8 @@ describe('firefox.remote', () => {
 
     function prepareConnection(port=undefined, options={}) {
       options = {
-        connectToFirefox: sinon.spy(() => Promise.resolve({})),
+        connectToFirefox:
+          sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
         ...options,
       };
       const connect = defaultConnector(port, options);
@@ -31,7 +32,7 @@ describe('firefox.remote', () => {
     it('connects on the default port', () => {
       const {connect, options} = prepareConnection();
       return connect.then(() => {
-        assert.equal(options.connectToFirefox.firstCall.args[0], 6000);
+        assert.equal(options.connectToFirefox.firstCall.args[0], 6005);
       });
     });
 
@@ -46,46 +47,29 @@ describe('firefox.remote', () => {
 
   describe('RemoteFirefox', () => {
 
-    function fakeClient(
-        {requestResult={}, requestError=null,
-         makeRequestResult={}, makeRequestError=null}: Object = {}) {
-      return {
-        disconnect: sinon.spy(() => {}),
-        request: sinon.spy(
-          (request, callback) => callback(requestError, requestResult)),
-        // This is client.client, the actual underlying connection.
-        client: {
-          makeRequest: sinon.spy((request, callback) => {
-            //
-            // The real function returns a response object that you
-            // use like this:
-            // if (response.error) {
-            //   ...
-            // } else {
-            //   response.something; // ...
-            // }
-            //
-            if (makeRequestError) {
-              callback({error: makeRequestError});
-            } else {
-              callback(makeRequestResult);
-            }
-          }),
-        },
-      };
-    }
-
     function fakeAddon() {
       return {id: 'some-id', actor: 'serv1.localhost'};
     }
 
-    function makeInstance(client=fakeClient()) {
+    function makeInstance(client=fakeFirefoxClient()) {
       return new RemoteFirefox(client);
     }
 
+    it('listens to client events', () => {
+      const client = fakeFirefoxClient();
+      const listener = sinon.spy(() => {});
+      client.client.on = listener;
+      makeInstance(client); // this will register listeners
+      // Make sure no errors are thrown when the client emits
+      // events and calls each handler.
+      listener.firstCall.args[1](); // disconnect
+      listener.secondCall.args[1](); // end
+      listener.thirdCall.args[1]({}); // message
+    });
+
     describe('disconnect', () => {
       it('lets you disconnect', () => {
-        const client = fakeClient();
+        const client = fakeFirefoxClient();
         const conn = makeInstance(client);
         conn.disconnect();
         assert.equal(client.disconnect.called, true);
@@ -97,7 +81,7 @@ describe('firefox.remote', () => {
       it('makes requests to an add-on actor', () => {
         const addon = fakeAddon();
         const stubResponse = {requestTypes: ['reload']};
-        const client = fakeClient({
+        const client = fakeFirefoxClient({
           makeRequestResult: stubResponse,
         });
 
@@ -116,8 +100,8 @@ describe('firefox.remote', () => {
 
       it('throws when add-on actor requests fail', () => {
         const addon = fakeAddon();
-        const client = fakeClient({
-          makeRequestError: new Error('some actor request failure'),
+        const client = fakeFirefoxClient({
+          makeRequestError: 'some actor request failure',
         });
 
         const conn = makeInstance(client);
@@ -126,7 +110,7 @@ describe('firefox.remote', () => {
           .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.equal(
               error.message,
-              'requestTypes response error: Error: some actor request failure');
+              'requestTypes response error: some actor request failure');
           }));
       });
     });
@@ -135,7 +119,7 @@ describe('firefox.remote', () => {
 
       it('gets an installed add-on by ID', () => {
         const someAddonId = 'some-id';
-        const client = fakeClient({
+        const client = fakeFirefoxClient({
           requestResult: {
             addons: [{id: 'another-id'}, {id: someAddonId}, {id: 'bazinga'}],
           },
@@ -148,7 +132,7 @@ describe('firefox.remote', () => {
       });
 
       it('throws an error when the add-on is not installed', () => {
-        const client = fakeClient({
+        const client = fakeFirefoxClient({
           requestResult: {
             addons: [{id: 'one-id'}, {id: 'other-id'}],
           },
@@ -163,7 +147,7 @@ describe('firefox.remote', () => {
       });
 
       it('throws an error when listAddons() fails', () => {
-        const client = fakeClient({
+        const client = fakeFirefoxClient({
           requestError: new Error('some internal error'),
         });
         const conn = makeInstance(client);
@@ -224,6 +208,68 @@ describe('firefox.remote', () => {
             assert.deepEqual(returnedAddon, addon);
           });
       });
+    });
+
+    describe('installTemporaryAddon', () => {
+
+      it('throws listTabs errors', () => {
+        const client = fakeFirefoxClient({
+          // listTabs response:
+          requestError: new Error('some listTabs error'),
+        });
+        const conn = makeInstance(client);
+        return conn.installTemporaryAddon('/path/to/addon')
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(WebExtError, (error) => {
+            assert.match(error.message, /some listTabs error/);
+          }));
+      });
+
+      it('fails when there is no add-ons actor', () => {
+        const client = fakeFirefoxClient({
+          // A listTabs response that does not contain addonsActor.
+          requestResult: {},
+        });
+        const conn = makeInstance(client);
+        return conn.installTemporaryAddon('/path/to/addon')
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(WebExtError, (error) => {
+            assert.match(error.message, /does not provide an add-ons actor/);
+          }));
+      });
+
+      it('lets you install an add-on temporarily', () => {
+        const client = fakeFirefoxClient({
+          // listTabs response:
+          requestResult: {
+            addonsActor: 'addons1.actor.conn',
+          },
+          // installTemporaryAddon response:
+          makeRequestResult: {},
+        });
+        const conn = makeInstance(client);
+        // Make sure this resolves Okay.
+        return conn.installTemporaryAddon('/path/to/addon');
+      });
+
+      it('throws install errors', () => {
+        const client = fakeFirefoxClient({
+          // listTabs response:
+          requestResult: {
+            addonsActor: 'addons1.actor.conn',
+          },
+          // installTemporaryAddon response:
+          makeRequestError: {error: 'install error',
+                             message: 'error message'},
+        });
+        const conn = makeInstance(client);
+        return conn.installTemporaryAddon('/path/to/addon')
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(WebExtError, (error) => {
+            assert.match(error.message, /install error: error message/);
+          }));
+      });
+
     });
 
     describe('reloadAddon', () => {
