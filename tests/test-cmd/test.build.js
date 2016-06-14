@@ -209,6 +209,10 @@ describe('build', () => {
       assert.equal(filter.wantFile('some.xpi'), true);
       assert.equal(filter.wantFile('manifest.json'), false);
     });
+    
+    it('ignores node_modules by default', () => {
+      assert.equal(defaultFilter.wantFile('path/to/node_modules'), false);
+    });
 
   });
 

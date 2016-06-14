@@ -100,6 +100,7 @@ export class FileFilter {
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
+      '**/node_modules',
     ];
   }
 
