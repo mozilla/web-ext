@@ -47,7 +47,7 @@
     "node-firefox-connect": "1.2.0",
     "sign-addon": "0.0.3",
     "source-map-support": "0.4.0",
-    "stream-to-promise": "1.1.1",
+    "stream-to-promise": "2.1.0",
     "tmp": "0.0.28",
     "watchpack": "1.1.0",
     "yargs": "4.7.1",
