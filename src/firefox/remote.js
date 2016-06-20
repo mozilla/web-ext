@@ -75,7 +75,7 @@ export class RemoteFirefox {
             `listTabs returned a falsey addonsActor: ${response.addonsActor}`);
           throw new WebExtError(
             'This is an older version of Firefox that does not provide an ' +
-            'add-ons actor for remote control');
+            'add-ons actor for remote installation. Try Firefox 49 or higher.');
         }
         this.client.client.makeRequest(
           {to: response.addonsActor, type: 'installTemporaryAddon', addonPath},
