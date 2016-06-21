@@ -387,6 +387,47 @@ describe('firefox', () => {
       }
     ));
 
+    it('can install the extension as a proxy', () => setUp(
+      (data) => {
+        const sourceDir = fixturePath('minimal-web-ext');
+        return firefox.installExtension(
+          {
+            manifestData: basicManifest,
+            profile: data.profile,
+            extensionPath: sourceDir,
+            asProxy: true,
+          })
+          .then(() => {
+            const proxyFile = path.join(data.profile.extensionsDir,
+                                        'basic-manifest@web-ext-test-suite');
+            return fs.readFile(proxyFile);
+          })
+          .then((proxyData) => {
+            // The proxy file should contain the path to the extension.
+            assert.equal(proxyData.toString(), sourceDir);
+          });
+      }
+    ));
+
+    it('requires a directory path for proxy installs', () => setUp(
+      (data) => {
+        const xpiPath = fixturePath('minimal_extension-1.0.xpi');
+        return firefox.installExtension(
+          {
+            manifestData: basicManifest,
+            profile: data.profile,
+            extensionPath: xpiPath,
+            asProxy: true,
+          })
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(WebExtError, (error) => {
+            assert.match(error.message,
+                         /must be the extension source directory/);
+            assert.include(error.message, xpiPath);
+          }));
+      }
+    ));
+
     it('re-uses an existing extension directory', () => setUp(
       (data) => {
         return fs.mkdir(path.join(data.profile.extensionsDir))

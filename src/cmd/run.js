@@ -1,7 +1,10 @@
 /* @flow */
 import * as defaultFirefox from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
-import {onlyErrorsWithCode} from '../errors';
+import {
+  onlyInstancesOf, onlyErrorsWithCode, RemoteTempInstallNotSupported,
+  WebExtError,
+} from '../errors';
 import {createLogger} from '../util/logger';
 import getValidatedManifest from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
@@ -83,12 +86,18 @@ export function defaultFirefoxClient(
 
 
 export default function run(
-    {sourceDir, artifactsDir, firefoxBinary, firefoxProfile, noReload}: Object,
+    {sourceDir, artifactsDir, firefoxBinary, firefoxProfile,
+     preInstall=false, noReload=false}: Object,
     {firefoxClient=defaultFirefoxClient, firefox=defaultFirefox,
      reloadStrategy=defaultReloadStrategy}
     : Object = {}): Promise {
 
   log.info(`Running web extension from ${sourceDir}`);
+  if (preInstall) {
+    log.info('Disabled auto-reloading because it\'s not possible with ' +
+             '--pre-install');
+    noReload = true;
+  }
 
   function createRunner() {
     return getValidatedManifest(sourceDir)
@@ -103,11 +112,29 @@ export default function run(
       });
   }
 
+  let installed = false;
   return createRunner()
     .then((runner) => {
       return runner.getProfile().then((profile) => {
         return {runner, profile};
       });
+    })
+    .then((config) => {
+      const {runner, profile} = config;
+      return new Promise(
+        (resolve) => {
+          if (!preInstall) {
+            log.debug('Deferring extension installation until after ' +
+                      'connecting to the remote debugger');
+            resolve();
+          } else {
+            log.debug('Pre-installing extension as a proxy file');
+            resolve(runner.installAsProxy(profile).then(() => {
+              installed = true;
+            }));
+          }
+        })
+        .then(() => config);
     })
     .then(({runner, profile}) => {
       return runner.run(profile).then((firefox) => {
@@ -120,11 +147,26 @@ export default function run(
       });
     })
     .then((config) => {
-      const {runner, client} = config;
-      return runner.install(client).then(() => {
-        return config;
-      });
+      return new Promise(
+        (resolve) => {
+          const {runner, client} = config;
+          if (installed) {
+            log.debug('Not installing as temporary add-on because the ' +
+                      'add-on was already installed');
+            resolve();
+          } else {
+            resolve(runner.installAsTemporaryAddon(client));
+          }
+        })
+        .then(() => config);
     })
+    .catch(onlyInstancesOf(RemoteTempInstallNotSupported, (error) => {
+      log.debug(`Caught: ${error}`);
+      throw new WebExtError(
+        'Temporary add-on installation is not supported in this version ' +
+        'of Firefox (you need Firefox 49 or higher). For older Firefox ' +
+        'versions, use --pre-install');
+    }))
     .then(({firefox, profile, client}) => {
       if (noReload) {
         log.debug('Extension auto-reloading has been disabled');
@@ -167,8 +209,18 @@ export class ExtensionRunner {
     });
   }
 
-  install(client: Object): Promise {
+  installAsTemporaryAddon(client: Object): Promise {
     return client.installTemporaryAddon(this.sourceDir);
+  }
+
+  installAsProxy(profile: Object): Promise {
+    const {firefox, sourceDir, manifestData} = this;
+    return firefox.installExtension({
+      manifestData,
+      asProxy: true,
+      extensionPath: sourceDir,
+      profile,
+    });
   }
 
   run(profile: Object): Promise {
