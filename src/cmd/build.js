@@ -94,24 +94,15 @@ export function safeFileName(name: string): string {
  */
 export class FileFilter {
   filesToIgnore: Array<string>;
-
-  constructor(artifactsDir,{filesToIgnore}: Object = {}) {
-    var eliminateArtifactDir =  new String();
-    var buf = artifactsDir;
-    if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
-        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
-    }
-    else if(typeof buf !== 'undefined' && buf.slice(-1) === '/'){
-	eliminateArtifactDir = path.join(buf.slice(0,-1));
-    }
-    else if(typeof buf !== 'undefined'){
-	eliminateArtifactDir =  path.join(buf);
-    }
+  dirToIgnore : Array<string>;
+  constructor(artifactsDir,{filesToIgnore,dirToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
-      '**/*'+eliminateArtifactDir,
+    ];    
+    this.dirToIgnore = dirToIgnore || [
+      path.resolve(artifactsDir),
     ];
   }
 
@@ -123,11 +114,18 @@ export class FileFilter {
    */
   wantFile(path: string): boolean {
     for (const test of this.filesToIgnore) {
-       if (minimatch(path, test)) {
+      if (minimatch(path, test)) {
         log.debug(`FileFilter: ignoring file ${path}`);
         return false;
       }
     }
+    for (const dirPath of this.dirToIgnore) {
+      if (dirPath === path){
+        log.debug(`FileFilter: ignoring file ${path}`);
+        return false; 
+      }
+    }
     return true;
-  }
+  }    
+  
 }
