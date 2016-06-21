@@ -95,14 +95,22 @@ export function safeFileName(name: string): string {
 export class FileFilter {
   filesToIgnore: Array<string>;
   dirToIgnore : Array<string>;
+  
   constructor(artifactsDir,{filesToIgnore,dirToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
-    ];    
+    ];
+    
+    var eliminateArtifactDir = new String();
+  
+    if(typeof artifactsDir !== undefined){
+     eliminateArtifactDir = path.resolve(artifactsDir);
+    }
+    
     this.dirToIgnore = dirToIgnore || [
-      path.resolve(artifactsDir),
+      eliminateArtifactDir,
     ];
   }
 
