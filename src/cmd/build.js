@@ -112,12 +112,17 @@ export class FileFilter {
     else{
 	eliminateArtifactDir = path.join(artifactsDir);
     }
+  dirToIgnore : Array<string>;
+  constructor(artifactsDir,{filesToIgnore,dirToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
       '**/node_modules',
       '**/*'+eliminateArtifactDir,
+    ];    
+    this.dirToIgnore = dirToIgnore || [
+      path.resolve(artifactsDir),
     ];
   }
 
@@ -129,11 +134,18 @@ export class FileFilter {
    */
   wantFile(path: string): boolean {
     for (const test of this.filesToIgnore) {
-       if (minimatch(path, test)) {
+      if (minimatch(path, test)) {
         log.debug(`FileFilter: ignoring file ${path}`);
         return false;
       }
     }
+    for (const dirPath of this.dirToIgnore) {
+      if (dirPath === path){
+        log.debug(`FileFilter: ignoring file ${path}`);
+        return false; 
+      }
+    }
     return true;
-  }
+  }    
+  
 }
