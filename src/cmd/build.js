@@ -113,6 +113,7 @@ export class FileFilter {
 	eliminateArtifactDir = path.join(artifactsDir);
     }
   dirToIgnore : Array<string>;
+  
   constructor(artifactsDir,{filesToIgnore,dirToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
@@ -121,8 +122,16 @@ export class FileFilter {
       '**/node_modules',
       '**/*'+eliminateArtifactDir,
     ];    
+    ];
+    
+    var eliminateArtifactDir = new String();
+  
+    if(typeof artifactsDir !== undefined){
+     eliminateArtifactDir = path.resolve(artifactsDir);
+    }
+    
     this.dirToIgnore = dirToIgnore || [
-      path.resolve(artifactsDir),
+      eliminateArtifactDir,
     ];
   }
 
