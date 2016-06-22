@@ -120,7 +120,9 @@ Example: $0 --help run.
     .help('help')
     .alias('h', 'help')
     .env(envPrefix)
-    .version(() => version(absolutePackageDir));
+    .version(() => version(absolutePackageDir))
+    .demand(1)
+    .strict();
 
   program.setGlobalOptions({
     'source-dir': {
