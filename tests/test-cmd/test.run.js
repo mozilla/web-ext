@@ -6,6 +6,8 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
+import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
+  from '../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
   ExtensionRunner,
@@ -86,6 +88,23 @@ describe('run', () => {
     });
   });
 
+  it('suggests --pre-install when remote install not supported', () => {
+    const cmd = prepareRun();
+    const firefoxClient = fake(RemoteFirefox.prototype, {
+      // Simulate an older Firefox that will throw this error.
+      installTemporaryAddon:
+        () => Promise.reject(new RemoteTempInstallNotSupported('')),
+    });
+
+    return cmd.run(
+      {}, {firefoxClient: () => Promise.resolve(firefoxClient)})
+      .then(makeSureItFails())
+      .catch(onlyInstancesOf(WebExtError, (error) => {
+        assert.equal(firefoxClient.installTemporaryAddon.called, true);
+        assert.match(error.message, /use --pre-install/);
+      }));
+  });
+
   it('passes a custom Firefox binary when specified', () => {
     const firefoxBinary = '/pretend/path/to/Firefox/firefox-bin';
     const cmd = prepareRun();
@@ -111,6 +130,34 @@ describe('run', () => {
     });
   });
 
+  it('can pre-install into the profile before startup', () => {
+    const cmd = prepareRun();
+    const firefoxClient = fake(RemoteFirefox.prototype, {
+      installTemporaryAddon: () => Promise.resolve(),
+    });
+    const fakeProfile = {};
+    const firefox = getFakeFirefox({
+      copyProfile: () => fakeProfile,
+    });
+    const {sourceDir} = cmd.argv;
+
+    return cmd.run({preInstall: true}, {
+      firefox,
+      firefoxClient: sinon.spy(() => Promise.resolve(firefoxClient)),
+    }).then(() => {
+      assert.equal(firefox.installExtension.called, true);
+      assert.equal(firefoxClient.installTemporaryAddon.called, false);
+
+      const install = firefox.installExtension.firstCall.args[0];
+      assert.equal(install.asProxy, true);
+      assert.equal(install.manifestData.applications.gecko.id,
+                   'minimal-example@web-ext-test-suite');
+      assert.deepEqual(install.profile, fakeProfile);
+      // This needs to be the source of the extension.
+      assert.equal(install.extensionPath, sourceDir);
+    });
+  });
+
   it('can watch and reload the extension', () => {
     const cmd = prepareRun();
     const {sourceDir, artifactsDir} = cmd.argv;
@@ -122,6 +169,16 @@ describe('run', () => {
       assert.equal(args.sourceDir, sourceDir);
       assert.equal(args.artifactsDir, artifactsDir);
       assert.typeOf(args.createRunner, 'function');
+    });
+  });
+
+  it('will not reload when using --pre-install', () => {
+    const cmd = prepareRun();
+    const {reloadStrategy} = cmd.options;
+
+    // --pre-install should imply --no-reload
+    return cmd.run({noReload: false, preInstall: true}).then(() => {
+      assert.equal(reloadStrategy.called, false);
     });
   });
 

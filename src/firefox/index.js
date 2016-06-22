@@ -195,9 +195,12 @@ export function copyProfile(
  * The extension is copied into a special location and you need to turn
  * on some preferences to allow this. See extensions.autoDisableScopes in
  * ./preferences.js.
+ *
+ * When asProxy is true, a special proxy file will be installed. This is a
+ * text file that contains the path to the extension source.
  */
 export function installExtension(
-    {manifestData, profile, extensionPath}: Object): Promise {
+    {asProxy=false, manifestData, profile, extensionPath}: Object): Promise {
 
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
@@ -216,21 +219,40 @@ export function installExtension(
       return fs.mkdir(profile.extensionsDir);
     }))
     .then(() => {
-      let readStream = nodeFs.createReadStream(extensionPath);
-      let id = manifestData.applications.gecko.id;
+      const id = manifestData.applications.gecko.id;
 
-      // TODO: also support copying a directory of code to this
-      // destination. That is, to name the directory ${id}.
-      // https://github.com/mozilla/web-ext/issues/70
-      let destPath = path.join(profile.extensionsDir, `${id}.xpi`);
-      let writeStream = nodeFs.createWriteStream(destPath);
+      if (asProxy) {
+        log.debug(`Installing as an extension proxy; source: ${extensionPath}`);
+        return isDirectory(extensionPath)
+          .then((isDir) => {
+            if (!isDir) {
+              throw new WebExtError(
+                'proxy install: extensionPath must be the extension source ' +
+                `directory; got: ${extensionPath}`);
+            }
+          })
+          .then(() => {
+            // Write a special extension proxy file containing the source
+            // directory. See:
+            // https://developer.mozilla.org/en-US/Add-ons/Setting_up_extension_development_environment#Firefox_extension_proxy_file
+            const destPath = path.join(profile.extensionsDir, `${id}`);
+            const writeStream = nodeFs.createWriteStream(destPath);
+            writeStream.write(extensionPath);
+            writeStream.end();
+            return streamToPromise(writeStream);
+          });
+      } else {
+        const readStream = nodeFs.createReadStream(extensionPath);
+        const destPath = path.join(profile.extensionsDir, `${id}.xpi`);
+        const writeStream = nodeFs.createWriteStream(destPath);
 
-      log.debug(`Copying ${extensionPath} to ${destPath}`);
-      readStream.pipe(writeStream);
+        log.debug(`Installing extension from ${extensionPath} to ${destPath}`);
+        readStream.pipe(writeStream);
 
-      return Promise.all([
-        streamToPromise(readStream),
-        streamToPromise(writeStream),
-      ]);
+        return Promise.all([
+          streamToPromise(readStream),
+          streamToPromise(writeStream),
+        ]);
+      }
     });
 }

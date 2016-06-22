@@ -1,6 +1,6 @@
 /* @flow */
 import {createLogger} from '../util/logger';
-import {WebExtError} from '../errors';
+import {RemoteTempInstallNotSupported, WebExtError} from '../errors';
 import defaultFirefoxConnector from 'node-firefox-connect';
 
 const log = createLogger(__filename);
@@ -73,9 +73,10 @@ export class RemoteFirefox {
         if (!response.addonsActor) {
           log.debug(
             `listTabs returned a falsey addonsActor: ${response.addonsActor}`);
-          throw new WebExtError(
+          return reject(new RemoteTempInstallNotSupported(
             'This is an older version of Firefox that does not provide an ' +
-            'add-ons actor for remote installation. Try Firefox 49 or higher.');
+            'add-ons actor for remote installation. Try Firefox 49 or ' +
+            'higher.'));
         }
         this.client.client.makeRequest(
           {to: response.addonsActor, type: 'installTemporaryAddon', addonPath},
@@ -129,7 +130,8 @@ export class RemoteFirefox {
             log.debug(
               `Remote Firefox only supports: ${response.requestTypes}`);
             throw new WebExtError(
-              'This Firefox version does not support addon.reload() yet');
+              'This Firefox version does not support add-on reloading. ' +
+              'Re-run with --no-reload');
           } else {
             this.checkedForAddonReloading = true;
             return addon;

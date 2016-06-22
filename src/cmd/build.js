@@ -50,7 +50,7 @@ function defaultPackageCreator(
 
 
 export default function build(
-    {sourceDir, artifactsDir, asNeeded}: Object,
+    {sourceDir, artifactsDir, asNeeded=false}: Object,
     {manifestData, fileFilter=new FileFilter(),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
