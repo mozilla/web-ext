@@ -45,7 +45,7 @@
     "minimatch": "3.0.2",
     "mz": "2.4.0",
     "node-firefox-connect": "1.2.0",
-    "sign-addon": "0.0.3",
+    "sign-addon": "0.0.4",
     "source-map-support": "0.4.0",
     "stream-to-promise": "2.1.1",
     "tmp": "0.0.28",
