@@ -2,10 +2,11 @@
 import {describe, it} from 'mocha';
 import path from 'path';
 import fs from 'mz/fs';
+import sinon from 'sinon';
 import {assert} from 'chai';
 import {spy} from 'sinon';
 
-import {version, main, Program} from '../src/program';
+import {defaultVersionGetter, main, Program} from '../src/program';
 import commands from '../src/cmd';
 import {onlyInstancesOf, WebExtError} from '../src/errors';
 import {fake, makeSureItFails} from './helpers';
@@ -20,7 +21,7 @@ describe('program.Program', () => {
     return program.run(
       absolutePackageDir, {
         systemProcess: fakeProcess,
-        throwError: true,
+        shouldExitProgram: false,
         ...options,
       });
   }
@@ -37,7 +38,7 @@ describe('program.Program', () => {
 
   it('reports unknown commands', () => {
     let program = new Program(['thing']);
-    return run(program, {throwError: true})
+    return run(program)
       .then(makeSureItFails())
       .catch(onlyInstancesOf(WebExtError, (error) => {
         assert.match(error.message, /unknown command: thing/);
@@ -59,7 +60,7 @@ describe('program.Program', () => {
       .command('cmd', 'some command', () => {
         throw new Error('this is an error from a command handler');
       });
-    return run(program, {systemProcess: fakeProcess, throwError: false})
+    return run(program, {systemProcess: fakeProcess, shouldExitProgram: true})
       .then(() => {
         assert.equal(fakeProcess.exit.called, true);
         assert.equal(fakeProcess.exit.firstCall.args[0], 1);
@@ -132,28 +133,35 @@ describe('program.Program', () => {
   });
 
   it('reads option values from env vars in sub commands', () => {
-  // Set an env var that mimics web-ext cmd --some-opt=value
-  process.env.WEB_EXT_SOME_OPT = 'value';
-  let valueReceived;
-  const program = new Program(['cmd'])
-    .command('cmd', 'some command', ({someOpt}) => {
-      valueReceived = someOpt;
-    }, {
-      'some-opt': {
-        describe: 'example option',
-      },
-    });
-  return run(program, {throwError: false})
-    .then(() => {
-      assert.equal(valueReceived, 'value');
-      delete process.env.WEB_EXT_SOME_OPT;
-    });
+    // Set an env var that mimics web-ext cmd --some-opt=value
+    process.env.WEB_EXT_SOME_OPT = 'value';
+    let valueReceived;
+    const program = new Program(['cmd'])
+      .command('cmd', 'some command', ({someOpt}) => {
+        valueReceived = someOpt;
+      }, {
+        'some-opt': {
+          describe: 'example option',
+        },
+      });
+    return run(program, {shouldExitProgram: true})
+      .then(() => {
+        assert.equal(valueReceived, 'value');
+        delete process.env.WEB_EXT_SOME_OPT;
+      });
   });
 
   it('configures the logger when verbose', () => {
     const logStream = fake(new ConsoleStream());
-    let program = new Program(['thing', '--verbose'])
-      .command('thing', 'does a thing', () => {});
+
+    let program = new Program(['--verbose', 'thing']);
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+      },
+    });
+    program.command('thing', 'does a thing', () => {});
+
     return run(program, {logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
@@ -162,8 +170,13 @@ describe('program.Program', () => {
 
   it('checks the version when verbose', () => {
     let version = spy();
-    let program = new Program(['thing', '--verbose'])
-      .command('thing', 'does a thing', () => {});
+    let program = new Program(['--verbose', 'thing']);
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+      },
+    });
+    program.command('thing', 'does a thing', () => {});
     return run(program, {getVersion: version})
       .then(() => {
         assert.equal(version.firstCall.args[0], path.join(__dirname, '..'));
@@ -173,9 +186,43 @@ describe('program.Program', () => {
   it('does not configure the logger unless verbose', () => {
     const logStream = fake(new ConsoleStream());
     let program = new Program(['thing']).command('thing', '', () => {});
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+      },
+    });
     return run(program, {logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, false);
+      });
+  });
+
+  it('throws an error about unknown commands', () => {
+    return run(new Program(['nope']))
+      .then(makeSureItFails())
+      .catch((error) => {
+        assert.match(error.message, /unknown command: nope/);
+      });
+  });
+
+  it('throws an error about unknown options', () => {
+    return run(new Program(['--nope']))
+      .then(makeSureItFails())
+      .catch((error) => {
+        // It's a bit weird that yargs calls this an argument rather
+        // than an option but, hey, it's an error.
+        assert.match(error.message, /Unknown argument: nope/);
+      });
+  });
+
+  it('throws an error about unknown sub-command options', () => {
+    const program = new Program(['thing --nope'])
+      .command('thing', '', () => {});
+    return run(program)
+      .then(makeSureItFails())
+      .catch((error) => {
+        // Again, yargs calls this an argument not an option for some reason.
+        assert.match(error.message, /Unknown argument: thing --nope/);
       });
   });
 
@@ -184,16 +231,16 @@ describe('program.Program', () => {
 
 describe('program.main', () => {
 
-  function run(argv, {fakeCommands}) {
-    let runOptions = {throwError: true, systemProcess: fake(process)};
-    return main('', {commands: fakeCommands, argv, runOptions});
+  function run(argv, {projectRoot='', ...mainOptions}: Object = {}) {
+    const runOptions = {shouldExitProgram: false, systemProcess: fake(process)};
+    return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
 
   it('executes a command handler', () => {
     let fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
     });
-    return run(['build'], {fakeCommands})
+    return run(['build'], {commands: fakeCommands})
       .then(() => {
         // This is a smoke test mainly to make sure main() configures
         // options with handlers. It does not extensively test the
@@ -202,17 +249,38 @@ describe('program.main', () => {
       });
   });
 
+  it('can get the program version', () => {
+    const fakeVersionGetter = sinon.spy(() => '<version>');
+    const fakeCommands = fake(commands, {
+      build: () => Promise.resolve(),
+    });
+    const projectRoot = '/pretend/project/root';
+    // For some reason, executing --version like this
+    // requires a command. In the real CLI, it does not.
+    return run(['--version', 'build'],
+      {
+        projectRoot,
+        commands: fakeCommands,
+        getVersion: fakeVersionGetter,
+      })
+      .then(() => {
+        assert.equal(fakeVersionGetter.called, true);
+        assert.equal(fakeVersionGetter.firstCall.args[0], projectRoot);
+      });
+  });
+
 });
 
 
-describe('program.version', () => {
+describe('program.defaultVersionGetter', () => {
 
   it('returns the package version', () => {
     let root = path.join(__dirname, '..');
     let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
-        assert.equal(version(root), JSON.parse(pkgData).version);
+        assert.equal(defaultVersionGetter(root),
+                     JSON.parse(pkgData).version);
       });
   });
 

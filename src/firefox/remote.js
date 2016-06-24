@@ -51,15 +51,15 @@ export class RemoteFirefox {
   addonRequest(addon: Object, request: string): Promise {
     return new Promise((resolve, reject) => {
       this.client.client.makeRequest(
-          {to: addon.actor, type: request}, (response) => {
-        if (response.error) {
-          reject(
-            new WebExtError(`${request} response error: ` +
-                            `${response.error}: ${response.message}`));
-        } else {
-          resolve(response);
-        }
-      });
+        {to: addon.actor, type: request}, (response) => {
+          if (response.error) {
+            reject(
+              new WebExtError(`${request} response error: ` +
+                              `${response.error}: ${response.message}`));
+          } else {
+            resolve(response);
+          }
+        });
     });
   }
 
