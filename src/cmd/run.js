@@ -51,7 +51,8 @@ export function defaultReloadStrategy(
 
 export function defaultFirefoxClient(
     {connectToFirefox=defaultFirefoxConnector,
-     maxRetries=25, retryInterval=120}: Object = {}) {
+     // A max of 250 will try connecting for 30 seconds.
+     maxRetries=250, retryInterval=120}: Object = {}) {
   var retries = 0;
 
   function establishConnection() {
@@ -81,6 +82,7 @@ export function defaultFirefoxClient(
     });
   }
 
+  log.info('Connecting to the remote Firefox debugger');
   return establishConnection();
 }
 

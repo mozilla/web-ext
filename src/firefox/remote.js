@@ -15,7 +15,7 @@ export default function connect(
   log.debug(`Connecting to Firefox on port ${port}`);
   return connectToFirefox(port)
     .then((client) => {
-      log.info('Connected to the Firefox remote debugger');
+      log.debug('Connected to the remote Firefox debugger');
       return new RemoteFirefox(client);
     });
 }
