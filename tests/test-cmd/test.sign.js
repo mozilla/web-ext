@@ -5,8 +5,9 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {withTempDir} from '../../src/util/temp-dir';
-import {basicManifest} from '../test-util/test.manifest';
+import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import completeSignCommand from '../../src/cmd/sign';
+import {onlyInstancesOf, InvalidManifest} from '../../src/errors';
 import {makeSureItFails, fixturePath} from '../helpers';
 
 
@@ -44,7 +45,9 @@ describe('sign', () => {
   /*
    * Run the sign command with stubs for all dependencies.
    */
-  function sign(artifactsDir, stubs, extraArgs={}) {
+  function sign(
+      artifactsDir, stubs,
+      {extraArgs={}, extraOptions={}}: Object = {}) {
     return completeSignCommand({
       sourceDir: '/fake/path/to/local/extension',
       verbose: false,
@@ -53,6 +56,7 @@ describe('sign', () => {
       ...extraArgs,
     }, {
       ...stubs,
+      ...extraOptions,
     });
   }
 
@@ -77,6 +81,24 @@ describe('sign', () => {
           assert.include(stubs.signAddon.firstCall.args[0].xpiPath,
                          'minimal_extension-1.0.xpi');
         });
+    }
+  ));
+
+  it('requires an application ID when signing', () => withTempDir(
+    (tmpDir) => {
+      const stubs = getStubs();
+      return sign(
+        path.join(tmpDir.path(), 'artifacts-dir'), stubs, {
+          extraOptions: {
+            preValidatedManifest: manifestWithoutApps,
+          },
+        })
+        .then(makeSureItFails())
+        .catch(onlyInstancesOf(InvalidManifest, (error) => {
+          assert.equal(
+            error.message,
+            'applications.gecko.id in manifest.json is required for signing');
+        }));
     }
   ));
 
@@ -120,7 +142,7 @@ describe('sign', () => {
   it('passes the verbose flag to the signer', () => withTempDir(
     (tmpDir) => {
       let stubs = getStubs();
-      return sign(tmpDir.path(), stubs, {verbose: true})
+      return sign(tmpDir.path(), stubs, {extraArgs: {verbose: true}})
         .then(() => {
           assert.equal(stubs.signAddon.called, true);
           assert.equal(stubs.signAddon.firstCall.args[0].verbose, true);

@@ -6,7 +6,7 @@ import streamToPromise from 'stream-to-promise';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
-import getValidatedManifest from '../util/manifest';
+import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 
@@ -19,7 +19,8 @@ function defaultPackageCreator(
   return new Promise(
     (resolve) => {
       if (manifestData) {
-        log.debug(`Using manifest id=${manifestData.applications.gecko.id}`);
+        const id = getManifestId(manifestData);
+        log.debug(`Using manifest id=${id || '[not specified]'}`);
         resolve(manifestData);
       } else {
         resolve(getValidatedManifest(sourceDir));

@@ -33,18 +33,11 @@ export default function getValidatedManifest(sourceDir: string): Promise {
         errors.push('missing "version" property');
       }
 
-      // Make sure the manifest defines a gecko id.
-      let idProps = ['applications', 'gecko', 'id'];
-      var propPath = '';
-      var objectToCheck = manifestData;
-
-      for (let nextProp of idProps) {
-        propPath = propPath ? `${propPath}.${nextProp}` : nextProp;
-        objectToCheck = objectToCheck[nextProp];
-        if (!objectToCheck) {
-          errors.push(`missing "${propPath}" property`);
-          break;
-        }
+      if (manifestData.applications && !manifestData.applications.gecko) {
+        // Since the applications property only applies to gecko, make
+        // sure 'gecko' exists when 'applications' is defined. This should
+        // make introspection of gecko properties easier.
+        errors.push('missing "applications.gecko" property');
       }
 
       if (errors.length) {
@@ -53,4 +46,10 @@ export default function getValidatedManifest(sourceDir: string): Promise {
       }
       return manifestData;
     });
+}
+
+
+export function getManifestId(manifestData: Object): string|void {
+  return manifestData.applications ?
+    manifestData.applications.gecko.id : undefined;
 }

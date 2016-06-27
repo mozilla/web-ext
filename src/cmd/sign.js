@@ -2,6 +2,7 @@
 import {signAddon as defaultAddonSigner} from '../util/es6-modules';
 
 import defaultBuilder from './build';
+import {InvalidManifest} from '../errors';
 import {withTempDir} from '../util/temp-dir';
 import getValidatedManifest from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
@@ -25,6 +26,15 @@ export default function sign(
           } else {
             return getValidatedManifest(sourceDir);
           }
+        })
+        .then((manifestData) => {
+          if (!manifestData.applications) {
+            // TODO: remove this when signing supports manifests
+            // without IDs: https://github.com/mozilla/web-ext/issues/178
+            throw new InvalidManifest(
+              'applications.gecko.id in manifest.json is required for signing');
+          }
+          return manifestData;
         })
         .then((manifestData) => {
           return build(
