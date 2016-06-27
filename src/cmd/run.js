@@ -98,6 +98,9 @@ export default function run(
              '--pre-install');
     noReload = true;
   }
+  // When not pre-installing the extension, we require a remote
+  // connection to Firefox.
+  const requiresRemote = !preInstall;
 
   function createRunner() {
     return getValidatedManifest(sourceDir)
@@ -142,19 +145,24 @@ export default function run(
       });
     })
     .then((config) => {
-      return firefoxClient().then((client) => {
-        return {client, ...config};
-      });
+      if (requiresRemote) {
+        return firefoxClient().then((client) => {
+          return {client, ...config};
+        });
+      } else {
+        return config;
+      }
     })
     .then((config) => {
       return new Promise(
         (resolve) => {
-          const {runner, client} = config;
+          const {runner} = config;
           if (installed) {
             log.debug('Not installing as temporary add-on because the ' +
                       'add-on was already installed');
             resolve();
           } else {
+            const {client} = config;
             resolve(runner.installAsTemporaryAddon(client));
           }
         })

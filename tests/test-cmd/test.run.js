@@ -182,6 +182,15 @@ describe('run', () => {
     });
   });
 
+  it('will not connect to the debugger when using --pre-install', () => {
+    const cmd = prepareRun();
+    const {firefoxClient} = cmd.options;
+
+    return cmd.run({preInstall: true}).then(() => {
+      assert.equal(firefoxClient.called, false);
+    });
+  });
+
   it('allows you to opt out of extension reloading', () => {
     const cmd = prepareRun();
     const {reloadStrategy} = cmd.options;
