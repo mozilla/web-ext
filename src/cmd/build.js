@@ -97,6 +97,18 @@ export class FileFilter {
   dirToIgnore : Array<string>;
   
   constructor({filesToIgnore,filePathsToIgnore}: Object = {}) {
+
+  constructor(artifactsDir,{filesToIgnore}: Object = {}) {
+    var eliminateArtifactDir = '';
+    if(artifactsDir !== null && artifactsDir !== 'undefined' && artifactsDir.indexOf('web-ext-artifacts') != -1){
+        eliminateArtifactDir = artifactsDir.slice(artifactsDir.indexOf('web-ext-artifacts'));
+    }
+    else if(artifactsDir !== null && artifactsDir !== 'undefined' && artifactsDir.slice(-1) === '/'){
+	eliminateArtifactDir = path.join(artifactsDir.slice(0,-1));
+    }
+    else{
+	eliminateArtifactDir = path.join(artifactsDir);
+    }
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
