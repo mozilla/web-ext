@@ -53,7 +53,7 @@ export default function build(
     {sourceDir, artifactsDir, asNeeded=false}: Object,
     {manifestData, fileFilter=new FileFilter(),
     {sourceDir, artifactsDir, asNeeded}: Object,
-    {manifestData, fileFilter=new FileFilter(artifactsDir),
+    {manifestData, fileFilter=new FileFilter({filePathsToIgnore: [path.resolve(artifactsDir)]}),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
     : Object = {}): Promise {
@@ -114,7 +114,7 @@ export class FileFilter {
     }
   dirToIgnore : Array<string>;
   
-  constructor(artifactsDir,{filesToIgnore,dirToIgnore}: Object = {}) {
+  constructor({filesToIgnore,filePathsToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
@@ -124,15 +124,7 @@ export class FileFilter {
     ];    
     ];
     
-    var eliminateArtifactDir = new String();
-  
-    if(typeof artifactsDir !== undefined){
-     eliminateArtifactDir = path.resolve(artifactsDir);
-    }
-    
-    this.dirToIgnore = dirToIgnore || [
-      eliminateArtifactDir,
-    ];
+    this.filePathsToIgnore = filePathsToIgnore;
   }
 
   /*
@@ -148,8 +140,8 @@ export class FileFilter {
         return false;
       }
     }
-    for (const dirPath of this.dirToIgnore) {
-      if (dirPath === path){
+    for (const filePath of this.filePathsToIgnore) {
+      if (filePath === path){
         log.debug(`FileFilter: ignoring file ${path}`);
         return false; 
       }
