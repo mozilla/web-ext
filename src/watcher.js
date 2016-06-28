@@ -32,7 +32,7 @@ export default function onSourceChange(
 export function proxyFileChanges(
     {artifactsDir, onChange, filePath, shouldWatchFile}: Object) {
   if (!shouldWatchFile) {
-    const fileFilter = new FileFilter();
+    const fileFilter = new FileFilter({filePathsToIgnore: [path.resolve(artifactsDir)]});
     shouldWatchFile = (...args) => fileFilter.wantFile(...args);
   }
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
