@@ -3,6 +3,11 @@
   "version": "1.1.0",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
+  "engines": {
+    "node": ">=0.12",
+    "npm": ">=3.0.0"
+  },
+  "engine-strict": true,
   "bin": {
     "web-ext": "bin/web-ext"
   },
