@@ -269,6 +269,34 @@ describe('program.main', () => {
       });
   });
 
+  it('turns sourceDir into an absolute path', () => {
+    const fakeCommands = fake(commands, {
+      build: () => Promise.resolve(),
+    });
+    return run(
+      ['build', '--source-dir', '..'], {commands: fakeCommands})
+      .then(() => {
+        assert.equal(fakeCommands.build.called, true);
+        assert.equal(fakeCommands.build.firstCall.args[0].sourceDir,
+                     path.resolve(path.join(process.cwd(), '..')));
+      });
+  });
+
+  it('normalizes the artifactsDir path', () => {
+    const fakeCommands = fake(commands, {
+      build: () => Promise.resolve(),
+    });
+    return run(
+      // Add a double slash to the path, which will be fixed by normalization.
+      ['build', '--artifacts-dir', process.cwd() + path.sep + path.sep],
+      {commands: fakeCommands})
+      .then(() => {
+        assert.equal(fakeCommands.build.called, true);
+        assert.equal(fakeCommands.build.firstCall.args[0].artifactsDir,
+                     process.cwd() + path.sep);
+      });
+  });
+
 });
 
 
