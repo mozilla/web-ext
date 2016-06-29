@@ -31,8 +31,9 @@ function defaultPackageCreator(
           filter: (...args) => fileFilter.wantFile(...args),
         })
         .then((buffer) => {
+          let extension = 'zip';
           let packageName = safeFileName(
-            `${manifestData.name}-${manifestData.version}.xpi`);
+            `${manifestData.name}-${manifestData.version}.${extension}`);
           let extensionPath = path.join(artifactsDir, packageName);
           let stream = createWriteStream(extensionPath);
           let promisedStream = streamToPromise(stream);

@@ -75,7 +75,7 @@ describe('sign', () => {
           // Do a sanity check that a built extension was passed to the
           // signer.
           assert.include(stubs.signAddon.firstCall.args[0].xpiPath,
-                         'minimal_extension-1.0.xpi');
+                         'minimal_extension-1.0.zip');
         });
     }
   ));

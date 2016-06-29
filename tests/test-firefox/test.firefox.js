@@ -354,7 +354,7 @@ describe('firefox', () => {
       return withTempDir(
         (tmpDir) => {
           let data = {
-            extensionPath: fixturePath('minimal_extension-1.0.xpi'),
+            extensionPath: fixturePath('minimal_extension-1.0.zip'),
             profile: undefined,
             profileDir: path.join(tmpDir.path(), 'profile'),
           };
@@ -411,19 +411,19 @@ describe('firefox', () => {
 
     it('requires a directory path for proxy installs', () => setUp(
       (data) => {
-        const xpiPath = fixturePath('minimal_extension-1.0.xpi');
+        const extensionPath = fixturePath('minimal_extension-1.0.zip');
         return firefox.installExtension(
           {
             manifestData: basicManifest,
             profile: data.profile,
-            extensionPath: xpiPath,
+            extensionPath: extensionPath,
             asProxy: true,
           })
           .then(makeSureItFails())
           .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.match(error.message,
                          /must be the extension source directory/);
-            assert.include(error.message, xpiPath);
+            assert.include(error.message, extensionPath);
           }));
       }
     ));

@@ -24,7 +24,7 @@ describe('build', () => {
         })
         .then((buildResult) => {
           assert.match(buildResult.extensionPath,
-                       /minimal_extension-1\.0\.xpi$/);
+                       /minimal_extension-1\.0\.zip$/);
           return buildResult.extensionPath;
         })
         .then((extensionPath) => zipFile.open(extensionPath))
@@ -62,12 +62,12 @@ describe('build', () => {
       })
       .then((buildResult) => {
         assert.match(buildResult.extensionPath,
-                     /the_extension-0\.0\.1\.xpi$/);
+                     /the_extension-0\.0\.1\.zip$/);
         return buildResult.extensionPath;
       })
   ));
 
-  it('asks FileFilter what files to include in the XPI', () => {
+  it('asks FileFilter what files to include in the ZIP', () => {
     let zipFile = new ZipFile();
     let fileFilter = new FileFilter({
       filesToIgnore: ['**/background-script.js'],
@@ -99,7 +99,7 @@ describe('build', () => {
         {manifestData: basicManifest, onSourceChange, fileFilter})
         .then((buildResult) => {
           // Make sure we still have a build result.
-          assert.match(buildResult.extensionPath, /\.xpi$/);
+          assert.match(buildResult.extensionPath, /\.zip$/);
           return buildResult;
         })
         .then((buildResult) => {
@@ -122,7 +122,7 @@ describe('build', () => {
             .then(() => args.onChange());
         })
         .then((buildResult) => {
-          assert.match(buildResult.extensionPath, /\.xpi$/);
+          assert.match(buildResult.extensionPath, /\.zip$/);
           return fs.stat(buildResult.extensionPath);
         })
         .then((stat) => {
@@ -209,7 +209,7 @@ describe('build', () => {
       assert.equal(filter.wantFile('some.xpi'), true);
       assert.equal(filter.wantFile('manifest.json'), false);
     });
-    
+
     it('ignores node_modules by default', () => {
       assert.equal(defaultFilter.wantFile('path/to/node_modules'), false);
     });
