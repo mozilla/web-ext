@@ -203,6 +203,13 @@ Example: $0 --help run.
           demand: true,
           type: 'string',
         },
+        'id': {
+          describe:
+            'A custom ID for the extension. This will override ' +
+            'any ID declared by manifest.json.',
+          demand: false,
+          type: 'string',
+        },
         'timeout' : {
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
