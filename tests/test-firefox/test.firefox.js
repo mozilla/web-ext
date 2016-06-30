@@ -10,9 +10,10 @@ import * as firefox from '../../src/firefox';
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import fs from 'mz/fs';
 import {withTempDir} from '../../src/util/temp-dir';
-import {fixturePath, makeSureItFails} from '../helpers';
+import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest} from '../test-util/test.manifest';
 import {defaultFirefoxEnv} from '../../src/firefox/';
+import {RemoteFirefox} from '../../src/firefox/remote';
 
 
 describe('firefox', () => {
@@ -45,20 +46,40 @@ describe('firefox', () => {
       }));
     }
 
+    function runFirefox({profile=fakeProfile, ...args}: Object = {}) {
+      return firefox.run(profile, {
+        fxRunner: createFakeFxRunner(),
+        findRemotePort: () => Promise.resolve(6000),
+        ...args,
+      });
+    }
+
     it('executes the Firefox runner with a given profile', () => {
-      let runner = createFakeFxRunner();
-      return firefox.run(fakeProfile, {fxRunner: runner})
+      const runner = createFakeFxRunner();
+      const profile = fakeProfile;
+      return runFirefox({fxRunner: runner, profile})
         .then(() => {
           assert.equal(runner.called, true);
           assert.equal(runner.firstCall.args[0].profile,
-                       fakeProfile.path());
+                       profile.path());
+        });
+    });
+
+    it('starts the remote debugger on a discovered port', () => {
+      const port = 6001;
+      const runner = createFakeFxRunner();
+      const findRemotePort = sinon.spy(() => Promise.resolve(port));
+      return runFirefox({fxRunner: runner, findRemotePort})
+        .then(() => {
+          assert.equal(runner.called, true);
+          assert.equal(runner.firstCall.args[0].listen, port);
         });
     });
 
     it('passes binary args to Firefox', () => {
       const fxRunner = createFakeFxRunner();
       const binaryArgs = '--safe-mode';
-      return firefox.run(fakeProfile, {fxRunner, binaryArgs})
+      return runFirefox({fxRunner, binaryArgs})
         .then(() => {
           assert.equal(fxRunner.called, true);
           assert.equal(fxRunner.firstCall.args[0]['binary-args'],
@@ -70,7 +91,7 @@ describe('firefox', () => {
       let runner = createFakeFxRunner();
       // Make sure it passes through process environment variables.
       process.env._WEB_EXT_FIREFOX_ENV_TEST = 'thing';
-      return firefox.run(fakeProfile, {fxRunner: runner})
+      return runFirefox({fxRunner: runner})
         .then(() => {
           let declaredEnv = runner.firstCall.args[0].env;
           for (let key in defaultFirefoxEnv) {
@@ -91,7 +112,7 @@ describe('firefox', () => {
         },
       });
 
-      return firefox.run(fakeProfile, {fxRunner: runner})
+      return runFirefox({fxRunner: runner})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, someError.message);
@@ -101,7 +122,7 @@ describe('firefox', () => {
     it('passes a custom Firefox binary when specified', () => {
       let runner = createFakeFxRunner();
       let firefoxBinary = '/pretend/path/to/firefox-bin';
-      return firefox.run(fakeProfile, {fxRunner: runner, firefoxBinary})
+      return runFirefox({fxRunner: runner, firefoxBinary})
         .then(() => {
           assert.equal(runner.called, true);
           assert.equal(runner.firstCall.args[0].binary,
@@ -125,7 +146,7 @@ describe('firefox', () => {
         },
       });
 
-      return firefox.run(fakeProfile, {fxRunner: runner})
+      return runFirefox({fxRunner: runner})
         .then(() => {
           // This makes sure that when each handler writes to the
           // logger they don't raise any exceptions.
@@ -366,6 +387,47 @@ describe('firefox', () => {
       }
     ));
 
+    it('can install the extension as a proxy', () => setUp(
+      (data) => {
+        const sourceDir = fixturePath('minimal-web-ext');
+        return firefox.installExtension(
+          {
+            manifestData: basicManifest,
+            profile: data.profile,
+            extensionPath: sourceDir,
+            asProxy: true,
+          })
+          .then(() => {
+            const proxyFile = path.join(data.profile.extensionsDir,
+                                        'basic-manifest@web-ext-test-suite');
+            return fs.readFile(proxyFile);
+          })
+          .then((proxyData) => {
+            // The proxy file should contain the path to the extension.
+            assert.equal(proxyData.toString(), sourceDir);
+          });
+      }
+    ));
+
+    it('requires a directory path for proxy installs', () => setUp(
+      (data) => {
+        const xpiPath = fixturePath('minimal_extension-1.0.xpi');
+        return firefox.installExtension(
+          {
+            manifestData: basicManifest,
+            profile: data.profile,
+            extensionPath: xpiPath,
+            asProxy: true,
+          })
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(WebExtError, (error) => {
+            assert.match(error.message,
+                         /must be the extension source directory/);
+            assert.include(error.message, xpiPath);
+          }));
+      }
+    ));
+
     it('re-uses an existing extension directory', () => setUp(
       (data) => {
         return fs.mkdir(path.join(data.profile.extensionsDir))
@@ -384,6 +446,46 @@ describe('firefox', () => {
           }));
       }
     ));
+
+  });
+
+  describe('defaultRemotePortFinder', () => {
+
+    function findRemotePort({...args}: Object = {}) {
+      return firefox.defaultRemotePortFinder({...args});
+    }
+
+    it('resolves to an open port', () => {
+      const connectToFirefox = sinon.spy(
+        () => Promise.reject(new TCPConnectError()));
+      return findRemotePort({connectToFirefox})
+        .then((port) => {
+          assert.isNumber(port);
+        });
+    });
+
+    it('throws an error when the port is occupied', () => {
+      // TODO: add a retry for occupied ports.
+      // https://github.com/mozilla/web-ext/issues/283
+      const client = fake(RemoteFirefox.prototype);
+      const connectToFirefox = sinon.spy(() => Promise.resolve(client));
+      return findRemotePort({connectToFirefox})
+        .then(makeSureItFails())
+        .catch(onlyInstancesOf(WebExtError, (error) => {
+          assert.match(error.message, /Cannot listen on port/);
+          assert.equal(client.disconnect.called, true);
+        }));
+    });
+
+    it('re-throws unexpected connection errors', () => {
+      const connectToFirefox = sinon.spy(
+        () => Promise.reject(new Error('not a connection error')));
+      return findRemotePort({connectToFirefox})
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.match(error.message, /not a connection error/);
+        });
+    });
 
   });
 

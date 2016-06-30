@@ -8,6 +8,7 @@ import {WebExtError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 
 const log = createLogger(__filename);
+const envPrefix = 'WEB_EXT';
 
 
 /*
@@ -16,6 +17,7 @@ const log = createLogger(__filename);
 export class Program {
   yargs: any;
   commands: { [key: string]: Function };
+  shouldExitProgram: boolean;
 
   constructor(argv: ?Array<string>, {yargsInstance=yargs}: Object = {}) {
     if (argv !== undefined) {
@@ -23,6 +25,7 @@ export class Program {
       // testing.
       yargsInstance = yargs(argv);
     }
+    this.shouldExitProgram = true;
     this.yargs = yargsInstance;
     this.yargs.strict();
     this.commands = {};
@@ -34,7 +37,13 @@ export class Program {
       if (!commandOptions) {
         return;
       }
-      return yargs.options(commandOptions);
+      return yargs
+        .strict()
+        .exitProcess(this.shouldExitProgram)
+        // Calling env() will be unnecessary after
+        // https://github.com/yargs/yargs/issues/486 is fixed
+        .env(envPrefix)
+        .options(commandOptions);
     });
     this.commands[name] = executor;
     return this;
@@ -46,19 +55,30 @@ export class Program {
     // with the `global` flag so this makes sure every option has it.
     Object.keys(options).forEach((key) => {
       options[key].global = true;
+      if (options[key].demand === undefined) {
+        // By default, all options should be "demanded" otherwise
+        // yargs.strict() will think they are missing when declared.
+        options[key].demand = true;
+      }
     });
     this.yargs.options(options);
     return this;
   }
 
   run(absolutePackageDir: string,
-      {throwError=false, systemProcess=process, logStream=defaultLogStream,
-       getVersion=version}
+      {systemProcess=process, logStream=defaultLogStream,
+       getVersion=defaultVersionGetter, shouldExitProgram=true}
       : Object = {}): Promise {
-    let argv = this.yargs.argv;
-    let cmd = argv._[0];
+
+    this.shouldExitProgram = shouldExitProgram;
+    let argv;
+    let cmd;
+
     return new Promise(
       (resolve) => {
+        this.yargs.exitProcess(this.shouldExitProgram);
+        argv = this.yargs.argv;
+        cmd = argv._[0];
         if (cmd === undefined) {
           throw new WebExtError('No sub-command was specified in the args');
         }
@@ -80,17 +100,17 @@ export class Program {
           log.error(`${prefix}Error code: ${error.code}\n`);
         }
 
-        if (throwError) {
-          throw error;
-        } else {
+        if (this.shouldExitProgram) {
           systemProcess.exit(1);
+        } else {
+          throw error;
         }
       });
   }
 }
 
 
-export function version(absolutePackageDir: string): string {
+export function defaultVersionGetter(absolutePackageDir: string): string {
   let packageData: any = readFileSync(
     path.join(absolutePackageDir, 'package.json'));
   return JSON.parse(packageData).version;
@@ -99,7 +119,8 @@ export function version(absolutePackageDir: string): string {
 
 export function main(
     absolutePackageDir: string,
-    {commands=defaultCommands, argv, runOptions={}}: Object = {}): Promise {
+    {getVersion=defaultVersionGetter, commands=defaultCommands, argv,
+     runOptions={}}: Object = {}): Promise {
   let program = new Program(argv);
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
@@ -108,7 +129,7 @@ export function main(
     .usage(`Usage: $0 [options] command
 
 Option values can also be set by declaring an environment variable prefixed
-with \$WEB_EXT_. For example: $WEB_EXT_SOURCE_DIR=/path is the same as
+with $${envPrefix}_. For example: $${envPrefix}_SOURCE_DIR=/path is the same as
 --source-dir=/path.
 
 To view specific help for any given command, add the command name.
@@ -116,8 +137,10 @@ Example: $0 --help run.
 `)
     .help('help')
     .alias('h', 'help')
-    .env('WEB_EXT')
-    .version(() => version(absolutePackageDir));
+    .env(envPrefix)
+    .version(() => getVersion(absolutePackageDir))
+    .demand(1)
+    .strict();
 
   program.setGlobalOptions({
     'source-dir': {
@@ -125,7 +148,6 @@ Example: $0 --help run.
       describe: 'Web extension source directory.',
       default: process.cwd(),
       requiresArg: true,
-      demand: true,
       type: 'string',
     },
     'artifacts-dir': {
@@ -133,7 +155,6 @@ Example: $0 --help run.
       describe: 'Directory where artifacts will be saved.',
       default: path.join(process.cwd(), 'web-ext-artifacts'),
       requiresArg: true,
-      demand: true,
       type: 'string',
     },
     'verbose': {
@@ -144,38 +165,40 @@ Example: $0 --help run.
   });
 
   program
-    .command('build',
-             'Create a web extension package from source',
-             commands.build, {
-      'as-needed': {
-        describe: 'Watch for file changes and re-build as needed',
-        type: 'boolean',
-      },
-    })
-    .command('sign',
-             'Sign the web extension so it can be installed in Firefox',
-             commands.sign, {
-      'api-key': {
-        describe: 'API key (JWT issuer) from addons.mozilla.org',
-        demand: true,
-        type: 'string',
-      },
-      'api-secret': {
-        describe: 'API secret (JWT secret) from addons.mozilla.org',
-        demand: true,
-        type: 'string',
-      },
-      'api-url-prefix': {
-        describe: 'Signing API URL prefix',
-        default: 'https://addons.mozilla.org/api/v3',
-        demand: true,
-        type: 'string',
-      },
-      'timeout' : {
-        describe: 'Number of milliseconds to wait before giving up',
-        type: 'number',
-      },
-    })
+    .command(
+      'build',
+      'Create a web extension package from source',
+      commands.build, {
+        'as-needed': {
+          describe: 'Watch for file changes and re-build as needed',
+          type: 'boolean',
+        },
+      })
+    .command(
+      'sign',
+      'Sign the web extension so it can be installed in Firefox',
+      commands.sign, {
+        'api-key': {
+          describe: 'API key (JWT issuer) from addons.mozilla.org',
+          demand: true,
+          type: 'string',
+        },
+        'api-secret': {
+          describe: 'API secret (JWT secret) from addons.mozilla.org',
+          demand: true,
+          type: 'string',
+        },
+        'api-url-prefix': {
+          describe: 'Signing API URL prefix',
+          default: 'https://addons.mozilla.org/api/v3',
+          demand: true,
+          type: 'string',
+        },
+        'timeout' : {
+          describe: 'Number of milliseconds to wait before giving up',
+          type: 'number',
+        },
+      })
     .command('run', 'Run the web extension', commands.run, {
       'firefox-binary': {
         describe: 'Path to a Firefox executable such as firefox-bin. ' +
@@ -193,7 +216,15 @@ Example: $0 --help run.
         type: 'string',
       },
       'no-reload': {
-        describe: 'Do not reload the extension as the source changes',
+        describe: 'Do not reload the extension when source files change',
+        demand: false,
+        type: 'boolean',
+      },
+      'pre-install': {
+        describe: 'Pre-install the extension into the profile before ' +
+                  'startup. This is only needed to support older versions ' +
+                  'of Firefox.',
+        demand: false,
         type: 'boolean',
       },
     });

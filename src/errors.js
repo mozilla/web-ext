@@ -23,6 +23,16 @@ export class InvalidManifest extends WebExtError {
 
 
 /*
+ * The remote Firefox does not support temporary add-on installation.
+ */
+export class RemoteTempInstallNotSupported extends WebExtError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+
+/*
  * Sugar-y way to catch only instances of a certain error.
  *
  * Usage:

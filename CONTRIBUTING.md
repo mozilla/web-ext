@@ -98,7 +98,16 @@ To release a new version of `web-ext`, follow these steps:
 * Pull from master to make sure you're up to date.
 * Bump the version in `package.json`.
 * Commit and push the version change.
-* Tag master (example: `git tag 0.0.1`) and run `git push --tags upstream`.
+* Tag master with the new release you're about to create
+  (example: `git tag 1.0.1`) and run `git push --tags upstream`.
+* Create a changelog by running `grunt changelog:1.0.0` where
+  `1.0.0` is the *last published* release tag. This will output a Markdown list
+  of changes that you can paste into the tag notes on github. It may
+  require some editing. For example, the *Uncategorized* section may need
+  rearranging.
+* Go to the github
+  [releases page](https://github.com/mozilla/web-ext/releases),
+  edit the tag you just created, and enter in the changelog notes.
 * When TravisCI builds the tag,
   it will automatically publish the package to
-  [npm](https://www.npmjs.com/package/web-ext):
+  [npm](https://www.npmjs.com/package/web-ext).

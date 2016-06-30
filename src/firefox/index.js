@@ -12,6 +12,7 @@ import {promisify} from '../util/es6-modules';
 import {onlyErrorsWithCode, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 import {createLogger} from '../util/logger';
+import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 
 const log = createLogger(__filename);
 
@@ -21,22 +22,48 @@ export const defaultFirefoxEnv = {
   NS_TRACE_MALLOC_DISABLE_STACKS: '1',
 };
 
+
+export function defaultRemotePortFinder(
+    {portToTry=REMOTE_PORT, connectToFirefox=defaultFirefoxConnector}
+    : Object = {}) {
+  log.debug(`Checking if remote Firefox port ${portToTry} is available`);
+
+  return connectToFirefox(portToTry)
+    .then((client) => {
+      log.debug(`Remote Firefox port ${portToTry} is in use`);
+      client.disconnect();
+      // TODO: instead of throw an error, pick a new random port until
+      // one of them is available.
+      // https://github.com/mozilla/web-ext/issues/283
+      throw new WebExtError(
+        `Cannot listen on port ${portToTry} because it's in use`);
+    })
+    .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
+      // The connection was refused so this port is good to use.
+      return portToTry;
+    }));
+}
+
+
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
  */
 export function run(
     profile: FirefoxProfile,
-    {fxRunner=defaultFxRunner, firefoxBinary, binaryArgs}
+    {fxRunner=defaultFxRunner, findRemotePort=defaultRemotePortFinder,
+     firefoxBinary, binaryArgs}
     : Object = {}): Promise {
 
   log.info(`Running Firefox with profile at ${profile.path()}`);
-  return fxRunner(
-    {
+  return findRemotePort()
+    .then((remotePort) => fxRunner({
       // if this is falsey, fxRunner tries to find the default one.
       'binary': firefoxBinary,
       'binary-args': binaryArgs,
-      'no-remote': false,
-      'listen': '6000',
+      // This ensures a new instance of Firefox is created. It has nothing
+      // to do with the devtools remote debugger.
+      'no-remote': true,
+      'listen': remotePort,
       'foreground': true,
       'profile': profile.path(),
       'env': {
@@ -44,7 +71,7 @@ export function run(
         ...defaultFirefoxEnv,
       },
       'verbose': true,
-    })
+    }))
     .then((results) => {
       return new Promise((resolve) => {
         let firefox = results.process;
@@ -59,8 +86,12 @@ export function run(
           throw error;
         });
 
+        log.info(
+          'Use --verbose or open Tools > Web Developer > Browser Console ' +
+          'to see logging');
+
         firefox.stderr.on('data', (data) => {
-          log.error(`Firefox stderr: ${data.toString().trim()}`);
+          log.debug(`Firefox stderr: ${data.toString().trim()}`);
         });
 
         firefox.stdout.on('data', (data) => {
@@ -164,9 +195,12 @@ export function copyProfile(
  * The extension is copied into a special location and you need to turn
  * on some preferences to allow this. See extensions.autoDisableScopes in
  * ./preferences.js.
+ *
+ * When asProxy is true, a special proxy file will be installed. This is a
+ * text file that contains the path to the extension source.
  */
 export function installExtension(
-    {manifestData, profile, extensionPath}: Object): Promise {
+    {asProxy=false, manifestData, profile, extensionPath}: Object): Promise {
 
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
@@ -185,21 +219,40 @@ export function installExtension(
       return fs.mkdir(profile.extensionsDir);
     }))
     .then(() => {
-      let readStream = nodeFs.createReadStream(extensionPath);
-      let id = manifestData.applications.gecko.id;
+      const id = manifestData.applications.gecko.id;
 
-      // TODO: also support copying a directory of code to this
-      // destination. That is, to name the directory ${id}.
-      // https://github.com/mozilla/web-ext/issues/70
-      let destPath = path.join(profile.extensionsDir, `${id}.xpi`);
-      let writeStream = nodeFs.createWriteStream(destPath);
+      if (asProxy) {
+        log.debug(`Installing as an extension proxy; source: ${extensionPath}`);
+        return isDirectory(extensionPath)
+          .then((isDir) => {
+            if (!isDir) {
+              throw new WebExtError(
+                'proxy install: extensionPath must be the extension source ' +
+                `directory; got: ${extensionPath}`);
+            }
+          })
+          .then(() => {
+            // Write a special extension proxy file containing the source
+            // directory. See:
+            // https://developer.mozilla.org/en-US/Add-ons/Setting_up_extension_development_environment#Firefox_extension_proxy_file
+            const destPath = path.join(profile.extensionsDir, `${id}`);
+            const writeStream = nodeFs.createWriteStream(destPath);
+            writeStream.write(extensionPath);
+            writeStream.end();
+            return streamToPromise(writeStream);
+          });
+      } else {
+        const readStream = nodeFs.createReadStream(extensionPath);
+        const destPath = path.join(profile.extensionsDir, `${id}.xpi`);
+        const writeStream = nodeFs.createWriteStream(destPath);
 
-      log.debug(`Copying ${extensionPath} to ${destPath}`);
-      readStream.pipe(writeStream);
+        log.debug(`Installing extension from ${extensionPath} to ${destPath}`);
+        readStream.pipe(writeStream);
 
-      return Promise.all([
-        streamToPromise(readStream),
-        streamToPromise(writeStream),
-      ]);
+        return Promise.all([
+          streamToPromise(readStream),
+          streamToPromise(writeStream),
+        ]);
+      }
     });
 }

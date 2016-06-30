@@ -3,7 +3,7 @@ import path from 'path';
 import sinon from 'sinon';
 import yauzl from 'yauzl';
 
-import {promisify} from '../src/util/es6-modules';
+import {ExtendableError, promisify} from '../src/util/es6-modules';
 import {createLogger} from '../src/util/logger';
 
 const log = createLogger(__filename);
@@ -175,4 +175,59 @@ export function fake(original: Object, methods: Object = {}): Object {
   });
 
   return stub;
+}
+
+
+/*
+ * Returns a fake Firefox client as would be returned by
+ * connect() of 'node-firefox-connect'
+ */
+export function fakeFirefoxClient(
+    {requestResult={}, requestError=null,
+     makeRequestResult={}, makeRequestError=null}: Object = {}) {
+  return {
+    disconnect: sinon.spy(() => {}),
+    request: sinon.spy(
+      (request, callback) => callback(requestError, requestResult)),
+    // This is client.client, the actual underlying connection.
+    client: {
+      on: () => {},
+      makeRequest: sinon.spy((request, callback) => {
+        //
+        // The real function returns a response object that you
+        // use like this:
+        // if (response.error) {
+        //   ...
+        // } else {
+        //   response.something; // ...
+        // }
+        //
+        if (makeRequestError) {
+          let error;
+          if (typeof makeRequestError === 'object') {
+            error = makeRequestError;
+          } else {
+            error = {error: makeRequestError};
+          }
+          callback(error);
+        } else {
+          callback(makeRequestResult);
+        }
+      }),
+    },
+  };
+}
+
+
+/*
+ * A simulated TCP connection error.
+ *
+ * By default, the error code will be ECONNREFUSED.
+ */
+export class TCPConnectError extends ExtendableError {
+  code: string;
+  constructor(msg: string = 'simulated connection error') {
+    super(msg);
+    this.code = 'ECONNREFUSED';
+  }
 }

@@ -51,8 +51,6 @@ function defaultPackageCreator(
 
 export default function build(
     {sourceDir, artifactsDir, asNeeded=false}: Object,
-    {manifestData, fileFilter=new FileFilter(),
-    {sourceDir, artifactsDir, asNeeded}: Object,
     {manifestData, fileFilter=new FileFilter({filePathsToIgnore: [path.resolve(artifactsDir)]}),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
@@ -97,31 +95,12 @@ export function safeFileName(name: string): string {
 export class FileFilter {
   filesToIgnore: Array<string>;
 
-  constructor(artifactsDir,{filesToIgnore}: Object = {}) {
-    var eliminateArtifactDir = '';
-    if(artifactsDir.indexOf('web-ext-artifacts') != -1){
-        eliminateArtifactDir = artifactsDir.slice(artifactsDir.indexOf('web-ext-artifacts'));
-    var eliminateArtifactDir =  new String();
-    var buf = artifactsDir;
-    if(typeof buf !== 'undefined' && buf.indexOf('web-ext-artifacts') != -1){
-        eliminateArtifactDir = buf.slice(buf.indexOf('web-ext-artifacts'));
-    }
-    else if(artifactsDir.slice(-1) === '/'){
-	eliminateArtifactDir = path.join(artifactsDir.slice(0,-1));
-    }
-    else{
-	eliminateArtifactDir = path.join(artifactsDir);
-    }
-  dirToIgnore : Array<string>;
-  
   constructor({filesToIgnore,filePathsToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
-      '**/node_modules',
-      '**/*'+eliminateArtifactDir,
-    ];    
+      '**/node_modules',  
     ];
     
     this.filePathsToIgnore = filePathsToIgnore;

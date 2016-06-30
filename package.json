@@ -1,6 +1,6 @@
 {
   "name": "web-ext",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
   "bin": {
@@ -41,34 +41,34 @@
     "es6-error": "3.0.0",
     "es6-promisify": "4.1.0",
     "firefox-profile": "0.4.0",
-    "fx-runner": "1.0.1",
-    "minimatch": "3.0.0",
+    "fx-runner": "1.0.4",
+    "minimatch": "3.0.2",
     "mz": "2.4.0",
     "node-firefox-connect": "1.2.0",
-    "sign-addon": "0.0.3",
+    "sign-addon": "0.0.4",
     "source-map-support": "0.4.0",
-    "stream-to-promise": "1.1.0",
+    "stream-to-promise": "2.1.1",
     "tmp": "0.0.28",
     "watchpack": "1.1.0",
     "yargs": "4.7.1",
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
-    "babel-core": "6.9.1",
-    "babel-eslint": "6.0.4",
+    "babel-core": "6.10.4",
+    "babel-eslint": "6.1.0",
     "babel-istanbul": "0.8.0",
     "babel-istanbul-loader": "0.1.0",
     "babel-loader": "6.2.4",
-    "babel-plugin-transform-class-properties": "6.9.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "6.8.0",
+    "babel-plugin-transform-class-properties": "6.10.2",
+    "babel-plugin-transform-es2015-modules-commonjs": "6.10.3",
     "babel-plugin-transform-flow-strip-types": "6.8.0",
     "babel-preset-es2015": "6.9.0",
-    "babel-preset-stage-2": "6.5.0",
+    "babel-preset-stage-2": "6.11.0",
     "chai": "3.5.0",
     "coveralls": "2.11.9",
-    "deepcopy": "0.6.1",
-    "eslint": "2.11.1",
-    "flow-bin": "0.26.0",
+    "deepcopy": "0.6.3",
+    "eslint": "2.13.1",
+    "flow-bin": "0.27.0",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "1.0.0",
@@ -87,8 +87,11 @@
     "sinon": "1.17.4",
     "webpack": "1.13.1",
     "webpack-dev-server": "1.14.1",
-    "yauzl": "2.4.2"
+    "yauzl": "2.6.0"
   },
   "author": "Kumar McMillan",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "yargs": {
+    "boolean-negation": false
+  }
 }
