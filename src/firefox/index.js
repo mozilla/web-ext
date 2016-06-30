@@ -11,6 +11,7 @@ import isDirectory from '../util/is-directory';
 import {promisify} from '../util/es6-modules';
 import {onlyErrorsWithCode, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
+import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 
@@ -219,8 +220,15 @@ export function installExtension(
       return fs.mkdir(profile.extensionsDir);
     }))
     .then(() => {
-      const id = manifestData.applications.gecko.id;
-
+      const id = getManifestId(manifestData);
+      if (!id) {
+        throw new WebExtError(
+          'An explicit extension ID is required when installing to ' +
+          'a profile (applications.gecko.id not found in manifest.json)');
+      }
+      return id;
+    })
+    .then((id) => {
       if (asProxy) {
         log.debug(`Installing as an extension proxy; source: ${extensionPath}`);
         return isDirectory(extensionPath)
@@ -242,6 +250,7 @@ export function installExtension(
             return streamToPromise(writeStream);
           });
       } else {
+        // Write the XPI file to the profile.
         const readStream = nodeFs.createReadStream(extensionPath);
         const destPath = path.join(profile.extensionsDir, `${id}.xpi`);
         const writeStream = nodeFs.createWriteStream(destPath);

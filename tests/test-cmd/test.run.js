@@ -1,7 +1,6 @@
 /* @flow */
 import path from 'path';
 import {EventEmitter} from 'events';
-import deepcopy from 'deepcopy';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -10,16 +9,18 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
-  ExtensionRunner,
 } from '../../src/cmd/run';
 import * as firefox from '../../src/firefox';
 import {RemoteFirefox} from '../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
 import {createLogger} from '../../src/util/logger';
-import {basicManifest} from '../test-util/test.manifest';
 
 const log = createLogger(__filename);
+// Fake result for client.installTemporaryAddon().then(installResult => ...)
+const tempInstallResult = {
+  addon: {id: 'some-addon@test-suite'},
+};
 
 
 describe('run', () => {
@@ -35,7 +36,7 @@ describe('run', () => {
       firefox: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(fake(RemoteFirefox.prototype, {
-          installTemporaryAddon: () => Promise.resolve(),
+          installTemporaryAddon: () => Promise.resolve(tempInstallResult),
         }));
       }),
       reloadStrategy: sinon.spy(() => {
@@ -71,7 +72,7 @@ describe('run', () => {
     const cmd = prepareRun();
     const {firefox} = cmd.options;
     const firefoxClient = fake(RemoteFirefox.prototype, {
-      installTemporaryAddon: () => Promise.resolve(),
+      installTemporaryAddon: () => Promise.resolve(tempInstallResult),
     });
 
     return cmd.run({}, {
@@ -133,7 +134,7 @@ describe('run', () => {
   it('can pre-install into the profile before startup', () => {
     const cmd = prepareRun();
     const firefoxClient = fake(RemoteFirefox.prototype, {
-      installTemporaryAddon: () => Promise.resolve(),
+      installTemporaryAddon: () => Promise.resolve(tempInstallResult),
     });
     const fakeProfile = {};
     const firefox = getFakeFirefox({
@@ -168,7 +169,7 @@ describe('run', () => {
       const args = reloadStrategy.firstCall.args[0];
       assert.equal(args.sourceDir, sourceDir);
       assert.equal(args.artifactsDir, artifactsDir);
-      assert.typeOf(args.createRunner, 'function');
+      assert.equal(args.addonId, tempInstallResult.addon.id);
     });
   });
 
@@ -204,14 +205,13 @@ describe('run', () => {
 
     function prepare() {
       const config = {
+        addonId: 'some-addon@test-suite',
         profile: {},
         client: fake(RemoteFirefox.prototype, {
           reloadAddon: () => Promise.resolve(),
         }),
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
-        createRunner:
-          () => Promise.resolve(fake(ExtensionRunner.prototype)),
         onSourceChange: sinon.spy(() => {}),
       };
       return {
@@ -241,10 +241,7 @@ describe('run', () => {
 
     it('reloads the extension', () => {
       const {config, createWatcher} = prepare();
-
-      const runner = fake(ExtensionRunner.prototype);
-      runner.manifestData = deepcopy(basicManifest);
-      createWatcher({createRunner: () => Promise.resolve(runner)});
+      createWatcher();
 
       const callArgs = config.onSourceChange.firstCall.args[0];
       assert.typeOf(callArgs.onChange, 'function');
@@ -253,17 +250,15 @@ describe('run', () => {
         .then(() => {
           assert.equal(config.client.reloadAddon.called, true);
           const reloadArgs = config.client.reloadAddon.firstCall.args;
-          assert.equal(reloadArgs[0], 'basic-manifest@web-ext-test-suite');
+          assert.ok(config.addonId);
+          assert.equal(reloadArgs[0], config.addonId);
         });
     });
 
     it('throws errors from source change handler', () => {
-      const runner = fake(ExtensionRunner.prototype);
-      runner.manifestData = deepcopy(basicManifest);
-
       const {createWatcher, config} = prepare();
       config.client.reloadAddon = () => Promise.reject(new Error('an error'));
-      createWatcher({createRunner: () => Promise.resolve(runner)});
+      createWatcher();
 
       assert.equal(config.onSourceChange.called, true);
       // Simulate executing the handler when a source file changes.
@@ -284,13 +279,12 @@ describe('run', () => {
         close: sinon.spy(() => {}),
       };
       const args = {
+        addonId: 'some-addon@test-suite',
         client,
         firefox: new EventEmitter(),
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
-        createRunner: sinon.spy(
-          () => Promise.resolve(fake(ExtensionRunner.prototype))),
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
@@ -324,7 +318,7 @@ describe('run', () => {
       assert.equal(receivedArgs.client, sentArgs.client);
       assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
-      assert.equal(receivedArgs.createRunner, sentArgs.createRunner);
+      assert.equal(receivedArgs.addonId, sentArgs.addonId);
     });
 
   });

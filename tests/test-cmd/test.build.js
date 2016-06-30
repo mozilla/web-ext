@@ -8,7 +8,7 @@ import sinon from 'sinon';
 import build, {safeFileName, FileFilter} from '../../src/cmd/build';
 import {withTempDir} from '../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
-import {basicManifest} from '../test-util/test.manifest';
+import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 
 
 describe('build', () => {
@@ -34,6 +34,19 @@ describe('build', () => {
           assert.deepEqual(fileNames,
                            ['background-script.js', 'manifest.json']);
         })
+    );
+  });
+
+  it('can build an extension without an ID', () => {
+    return withTempDir(
+      (tmpDir) => {
+        // Make sure a manifest without an ID doesn't throw an error.
+        return build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          manifestData: manifestWithoutApps,
+          artifactsDir: tmpDir.path(),
+        });
+      }
     );
   });
 

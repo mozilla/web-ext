@@ -63,7 +63,7 @@ export class RemoteFirefox {
     });
   }
 
-  installTemporaryAddon(addonPath: string) {
+  installTemporaryAddon(addonPath: string): Promise {
     return new Promise((resolve, reject) => {
       this.client.request('listTabs', (error, response) => {
         if (error) {
@@ -88,7 +88,7 @@ export class RemoteFirefox {
             }
             log.debug(`installTemporaryAddon: ${JSON.stringify(response)}`);
             log.info(`Installed ${addonPath} as a temporary add-on`);
-            resolve();
+            resolve(response);
           });
       });
     });

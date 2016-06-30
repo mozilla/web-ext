@@ -11,7 +11,7 @@ import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import fs from 'mz/fs';
 import {withTempDir} from '../../src/util/temp-dir';
 import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
-import {basicManifest} from '../test-util/test.manifest';
+import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import {defaultFirefoxEnv} from '../../src/firefox/';
 import {RemoteFirefox} from '../../src/firefox/remote';
 
@@ -384,6 +384,22 @@ describe('firefox', () => {
             assert.deepEqual(
               files, ['basic-manifest@web-ext-test-suite.xpi']);
           });
+      }
+    ));
+
+    it('requires a manifest ID', () => setUp(
+      (data) => {
+        return firefox.installExtension(
+          {
+            manifestData: manifestWithoutApps,
+            profile: data.profile,
+            extensionPath: data.extensionPath,
+          })
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(WebExtError, (error) => {
+            assert.match(error.message,
+                         /explicit extension ID is required/);
+          }));
       }
     ));
 

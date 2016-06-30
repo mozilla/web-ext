@@ -61,7 +61,7 @@
     "no-redeclare": 0,
     "no-script-url": 2,
     "no-sequences": 2,
-    "no-trailing-spaces": [2, {"skipBlankLines": true}],
+    "no-trailing-spaces": [2, {"skipBlankLines": false}],
     "no-undef": 2,
     "no-underscore-dangle": 0,
     "no-unused-vars": 2,

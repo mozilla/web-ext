@@ -249,11 +249,15 @@ describe('firefox.remote', () => {
             addonsActor: 'addons1.actor.conn',
           },
           // installTemporaryAddon response:
-          makeRequestResult: {},
+          makeRequestResult: {
+            addon: {id: 'abc123@temporary-addon'},
+          },
         });
         const conn = makeInstance(client);
-        // Make sure this resolves Okay.
-        return conn.installTemporaryAddon('/path/to/addon');
+        return conn.installTemporaryAddon('/path/to/addon')
+          .then((response) => {
+            assert.equal(response.addon.id, 'abc123@temporary-addon');
+          });
       });
 
       it('throws install errors', () => {
