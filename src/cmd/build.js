@@ -94,7 +94,7 @@ export function safeFileName(name: string): string {
  */
 export class FileFilter {
   filesToIgnore: Array<string>;
-
+  filePathsToIgnore : Array<String>;
   constructor({filesToIgnore,filePathsToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
