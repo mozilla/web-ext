@@ -1,6 +1,7 @@
 /*eslint prefer-template: 0*/
 var path = require('path');
 var spawn = require('child_process').spawn;
+var semver = require('semver');
 
 module.exports = function(grunt) {
 
@@ -47,12 +48,39 @@ module.exports = function(grunt) {
   grunt.registerTask('lint', 'checks for syntax errors', function() {
     if (process.env.SKIP_LINT) {
       grunt.log.writeln('lint task skipped because of $SKIP_LINT');
+    } else if (semver.satisfies(process.version, '< 4.0.0')) {
+      // eslint now requires a new-ish Node.
+      grunt.log.writeln('task skipped because this version of Node is too old');
     } else {
       grunt.task.run([
         'newer:eslint',
       ]);
     }
   });
+
+  grunt.registerTask(
+    'lint-commit-msg', 'checks for commit message lint', function() {
+      var done = this.async();
+      if (semver.satisfies(process.version, '>= 4.0.0')) {
+
+        var proc = spawn('conventional-changelog-lint', ['--from', 'master']);
+        proc.stderr.on('data', function(data) {
+          grunt.log.write(data);
+        });
+        proc.stdout.on('data', function(data) {
+          grunt.log.write(data);
+        });
+        proc.on('close', function(code) {
+          var succeeded = code === 0;
+          done(succeeded);
+        });
+
+      } else {
+        grunt.log.writeln(
+          'task skipped because this version of Node is too old');
+        done(true);
+      }
+    });
 
   grunt.registerTask(
     'check-for-smoke',

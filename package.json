@@ -16,6 +16,7 @@
     "start": "node -e \"require('grunt').cli()\" null develop",
     "flow-check": "node -e \"require('grunt').cli()\" null flowbin:check",
     "lint": "node -e \"require('grunt').cli()\" null lint",
+    "lint-commit-msg": "node -e \"require('grunt').cli()\" null lint-commit-msg",
     "test": "node -e \"require('grunt').cli()\" null test",
     "publish-coverage": "node -e \"require('grunt').cli()\" null coveralls"
   },
@@ -70,6 +71,7 @@
     "babel-preset-es2015": "6.9.0",
     "babel-preset-stage-2": "6.11.0",
     "chai": "3.5.0",
+    "conventional-changelog-lint": "1.0.0",
     "copy-dir": "0.3.0",
     "coveralls": "2.11.9",
     "deepcopy": "0.6.3",
@@ -89,6 +91,7 @@
     "load-grunt-tasks": "3.5.0",
     "mocha": "2.5.3",
     "mocha-multi": "0.9.0",
+    "semver": "5.2.0",
     "shelljs": "0.7.0",
     "sinon": "1.17.4",
     "webpack": "1.13.1",
