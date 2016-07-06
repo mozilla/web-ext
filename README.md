@@ -151,3 +151,4 @@ Cons of creating a new tool:
 * Developers of existing add-ons will need to port to web extensions sooner rather than later.
 * The web-ext tool will require some ramp-up time for scaffolding.
 * The community of jpm contributors will need to shift focus to web-ext.
+
