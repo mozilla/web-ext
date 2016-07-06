@@ -52,7 +52,8 @@ function defaultPackageCreator(
 
 export default function build(
     {sourceDir, artifactsDir, asNeeded=false}: Object,
-    {manifestData, fileFilter=new FileFilter({filePathsToIgnore: [path.resolve(artifactsDir)]}),
+    {manifestData, fileFilter=new FileFilter({
+      filePathsToIgnore: [path.resolve(artifactsDir)]}),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
     : Object = {}): Promise {
@@ -96,15 +97,14 @@ export function safeFileName(name: string): string {
 export class FileFilter {
   filesToIgnore: Array<string>;
   filePathsToIgnore : Array<String>;
-  constructor({filesToIgnore,filePathsToIgnore}: Object = {}) {
+  constructor({filesToIgnore, filePathsToIgnore}: Object = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
-      '**/node_modules',  
+      '**/node_modules',
     ];
-    
-    this.filePathsToIgnore = filePathsToIgnore;
+    this.filePathsToIgnore = filePathsToIgnore || []	;
   }
 
   /*
@@ -123,10 +123,9 @@ export class FileFilter {
     for (const filePath of this.filePathsToIgnore) {
       if (filePath === path){
         log.debug(`FileFilter: ignoring file ${path}`);
-        return false; 
+        return false;
       }
     }
     return true;
-  }    
-  
+  }
 }
