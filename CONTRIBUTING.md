@@ -103,15 +103,15 @@ it is okay to include each as a separate commit.
 To release a new version of `web-ext`, follow these steps:
 
 * Pull from master to make sure you're up to date.
+* Create a changelog by running `grunt changelog`.
+  This will output a Markdown list of all unreleased changes.
+  You can copy/paste this into the tag notes on github after the tag is created.
+  It may require some manual editing. For example, commit messages might be
+  truncated.
 * Bump the version in `package.json`.
 * Commit and push the version change.
 * Tag master with the new release you're about to create
   (example: `git tag 1.0.1`) and run `git push --tags upstream`.
-* Create a changelog by running `grunt changelog:1.0.0` where
-  `1.0.0` is the *last published* release tag. This will output a Markdown list
-  of changes that you can paste into the tag notes on github. It may
-  require some editing. For example, the *Uncategorized* section may need
-  rearranging.
 * Go to the github
   [releases page](https://github.com/mozilla/web-ext/releases),
   edit the tag you just created, and enter in the changelog notes.
