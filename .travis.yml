@@ -5,7 +5,7 @@ node_js:
 - '4'
 before_install:
 - npm install -g npm
-script: COVERAGE=y npm test
+script: COVERAGE=y npm test && npm run lint-commit-msg
 after_script: npm run publish-coverage
 notifications:
   irc:

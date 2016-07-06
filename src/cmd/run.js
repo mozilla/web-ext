@@ -6,24 +6,19 @@ import {
   WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
-import getValidatedManifest from '../util/manifest';
+import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
 
 const log = createLogger(__filename);
 
 
 export function defaultWatcherCreator(
-    {client, sourceDir, artifactsDir, createRunner,
+    {addonId, client, sourceDir, artifactsDir,
      onSourceChange=defaultSourceWatcher}: Object): Object {
   return onSourceChange({
     sourceDir, artifactsDir, onChange: () => {
-      return createRunner()
-        .then((runner) => {
-          log.debug('Attempting to reload extension');
-          const addonId = runner.manifestData.applications.gecko.id;
-          log.debug(`Reloading add-on ID ${addonId}`);
-          return client.reloadAddon(addonId);
-        })
+      log.debug(`Reloading add-on ID ${addonId}`);
+      return client.reloadAddon(addonId)
         .catch((error) => {
           log.error(error.stack);
           throw error;
@@ -34,7 +29,7 @@ export function defaultWatcherCreator(
 
 
 export function defaultReloadStrategy(
-    {firefox, client, profile, sourceDir, artifactsDir, createRunner}: Object,
+    {addonId, firefox, client, profile, sourceDir, artifactsDir}: Object,
     {createWatcher=defaultWatcherCreator}: Object = {}) {
   let watcher;
 
@@ -43,9 +38,7 @@ export function defaultReloadStrategy(
     watcher.close();
   });
 
-  watcher = createWatcher({
-    client, sourceDir, artifactsDir, createRunner,
-  });
+  watcher = createWatcher({addonId, client, sourceDir, artifactsDir});
 }
 
 
@@ -103,22 +96,18 @@ export default function run(
   // When not pre-installing the extension, we require a remote
   // connection to Firefox.
   const requiresRemote = !preInstall;
-
-  function createRunner() {
-    return getValidatedManifest(sourceDir)
-      .then((manifestData) => {
-        return new ExtensionRunner({
-          sourceDir,
-          firefox,
-          firefoxBinary,
-          manifestData,
-          firefoxProfile,
-        });
-      });
-  }
-
   let installed = false;
-  return createRunner()
+
+  return getValidatedManifest(sourceDir)
+    .then((manifestData) => {
+      return new ExtensionRunner({
+        sourceDir,
+        firefox,
+        firefoxBinary,
+        manifestData,
+        firefoxProfile,
+      });
+    })
     .then((runner) => {
       return runner.getProfile().then((profile) => {
         return {runner, profile};
@@ -131,19 +120,20 @@ export default function run(
           if (!preInstall) {
             log.debug('Deferring extension installation until after ' +
                       'connecting to the remote debugger');
-            resolve();
+            resolve(config);
           } else {
             log.debug('Pre-installing extension as a proxy file');
-            resolve(runner.installAsProxy(profile).then(() => {
+            resolve(runner.installAsProxy(profile).then((addonId) => {
               installed = true;
+              return {addonId, ...config};
             }));
           }
-        })
-        .then(() => config);
+        });
     })
-    .then(({runner, profile}) => {
+    .then((config) => {
+      const {runner, profile} = config;
       return runner.run(profile).then((firefox) => {
-        return {runner, profile, firefox};
+        return {firefox, ...config};
       });
     })
     .then((config) => {
@@ -156,19 +146,17 @@ export default function run(
       }
     })
     .then((config) => {
-      return new Promise(
-        (resolve) => {
-          const {runner} = config;
-          if (installed) {
-            log.debug('Not installing as temporary add-on because the ' +
-                      'add-on was already installed');
-            resolve();
-          } else {
-            const {client} = config;
-            resolve(runner.installAsTemporaryAddon(client));
-          }
-        })
-        .then(() => config);
+      if (installed) {
+        log.debug('Not installing as temporary add-on because the ' +
+                  'add-on was already installed');
+        return config;
+      } else {
+        const {runner, client} = config;
+        return runner.installAsTemporaryAddon(client)
+          .then((installResult) => {
+            return {addonId: installResult.addon.id, ...config};
+          });
+      }
     })
     .catch(onlyInstancesOf(RemoteTempInstallNotSupported, (error) => {
       log.debug(`Caught: ${error}`);
@@ -177,13 +165,15 @@ export default function run(
         'of Firefox (you need Firefox 49 or higher). For older Firefox ' +
         'versions, use --pre-install');
     }))
-    .then(({firefox, profile, client}) => {
+    .then(({firefox, profile, client, addonId}) => {
       if (noReload) {
         log.debug('Extension auto-reloading has been disabled');
       } else {
-        log.debug('Reloading extension when the source changes');
-        reloadStrategy({firefox, profile, client, sourceDir,
-                        artifactsDir, createRunner});
+        log.debug(
+          `Reloading extension when the source changes; id=${addonId}`);
+        reloadStrategy({
+          firefox, profile, client, sourceDir, artifactsDir, addonId,
+        });
       }
       return firefox;
     });
@@ -225,12 +215,14 @@ export class ExtensionRunner {
 
   installAsProxy(profile: Object): Promise {
     const {firefox, sourceDir, manifestData} = this;
-    return firefox.installExtension({
-      manifestData,
-      asProxy: true,
-      extensionPath: sourceDir,
-      profile,
-    });
+    return firefox.installExtension(
+      {
+        manifestData,
+        asProxy: true,
+        extensionPath: sourceDir,
+        profile,
+      })
+      .then(() => getManifestId(manifestData));
   }
 
   run(profile: Object): Promise {

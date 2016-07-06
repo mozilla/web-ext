@@ -19,7 +19,8 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Installation from npm
 
-First, make sure your `npm` is up to date:
+First, make sure your `npm` is up to date.
+You will need npm greater than version `3.0.0`:
 
     npm install --global npm
 
@@ -31,7 +32,7 @@ Install `web-ext`:
 
 You'll need:
 * [Node.js](https://nodejs.org/en/), 0.12 or higher
-* [npm](https://www.npmjs.com/), 3.x or higher
+* [npm](https://www.npmjs.com/), 3.0.0 or higher
 
 Optionally, you may like:
 * [nvm](https://github.com/creationix/nvm), which helps manage node versions

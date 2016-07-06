@@ -6,7 +6,7 @@ import deepcopy from 'deepcopy';
 
 import {onlyInstancesOf, InvalidManifest} from '../../src/errors';
 import fs from 'mz/fs';
-import getValidatedManifest from '../../src/util/manifest';
+import getValidatedManifest, {getManifestId} from '../../src/util/manifest';
 import {withTempDir} from '../../src/util/temp-dir';
 import {makeSureItFails} from '../helpers';
 
@@ -21,6 +21,9 @@ export const basicManifest = {
   },
 };
 
+export const manifestWithoutApps = deepcopy(basicManifest);
+delete manifestWithoutApps.applications;
+
 
 describe('util/manifest', () => {
 
@@ -32,6 +35,15 @@ describe('util/manifest', () => {
         .then(() => getValidatedManifest(tmpDir.path()))
         .then((manifestData) => {
           assert.deepEqual(manifestData, basicManifest);
+        })
+    ));
+
+    it('allows manifests without an applications property', () => withTempDir(
+      (tmpDir) =>
+        writeManifest(tmpDir.path(), manifestWithoutApps)
+        .then(() => getValidatedManifest(tmpDir.path()))
+        .then((manifestData) => {
+          assert.deepEqual(manifestData, manifestWithoutApps);
         })
     ));
 
@@ -102,25 +114,6 @@ describe('util/manifest', () => {
       }
     ));
 
-    it('reports an error when missing applications', () => withTempDir(
-      (tmpDir) => {
-        let incompleteManifest = deepcopy(basicManifest);
-        delete incompleteManifest.applications;
-
-        return writeManifest(tmpDir.path(), incompleteManifest)
-          .then((manifestFile) => {
-            return getValidatedManifest(tmpDir.path())
-              .then(makeSureItFails())
-              .catch(onlyInstancesOf(InvalidManifest, (error) => {
-                assert.match(
-                  error.message,
-                  /Manifest at .* is invalid: missing "applications" property/);
-                assert.include(error.message, manifestFile);
-              }));
-          });
-      }
-    ));
-
     it('reports an error when missing applications.gecko', () => withTempDir(
       (tmpDir) => {
         let incompleteManifest = deepcopy(basicManifest);
@@ -140,21 +133,15 @@ describe('util/manifest', () => {
       }
     ));
 
-    it('reports an error when missing applications.gecko.id', () => withTempDir(
+    it('allows a missing applications.gecko.id', () => withTempDir(
       (tmpDir) => {
-        let incompleteManifest = deepcopy(basicManifest);
+        const incompleteManifest = deepcopy(basicManifest);
         delete incompleteManifest.applications.gecko.id;
 
         return writeManifest(tmpDir.path(), incompleteManifest)
-          .then((manifestFile) => {
-            return getValidatedManifest(tmpDir.path())
-              .then(makeSureItFails())
-              .catch(onlyInstancesOf(InvalidManifest, (error) => {
-                assert.match(
-                  error.message,
-                  /Manifest .* is invalid: missing "applications.gecko.id".*/);
-                assert.include(error.message, manifestFile);
-              }));
+          .then(() => getValidatedManifest(tmpDir.path()))
+          .then((manifestData) => {
+            assert.strictEqual(getManifestId(manifestData), undefined);
           });
       }
     ));
@@ -177,6 +164,19 @@ describe('util/manifest', () => {
           });
       }
     ));
+
+  });
+
+  describe('getManifestId', () => {
+
+    it('returns a gecko ID', () => {
+      assert.equal(getManifestId(basicManifest),
+                   'basic-manifest@web-ext-test-suite');
+    });
+
+    it('returns undefined when ID is not specified', () => {
+      assert.strictEqual(getManifestId(manifestWithoutApps), undefined);
+    });
 
   });
 

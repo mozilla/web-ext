@@ -78,6 +78,13 @@ export class Program {
       (resolve) => {
         this.yargs.exitProcess(this.shouldExitProgram);
         argv = this.yargs.argv;
+
+        // Fix up sourceDir. This can hopefully move to option configuration
+        // soon. See https://github.com/yargs/yargs/issues/535
+        if (argv.sourceDir) {
+          argv.sourceDir = path.resolve(argv.sourceDir);
+        }
+
         cmd = argv._[0];
         if (cmd === undefined) {
           throw new WebExtError('No sub-command was specified in the args');
@@ -147,6 +154,7 @@ Example: $0 --help run.
       alias: 's',
       describe: 'Web extension source directory.',
       default: process.cwd(),
+      normalize: true,
       requiresArg: true,
       type: 'string',
     },
@@ -154,6 +162,7 @@ Example: $0 --help run.
       alias: 'a',
       describe: 'Directory where artifacts will be saved.',
       default: path.join(process.cwd(), 'web-ext-artifacts'),
+      normalize: true,
       requiresArg: true,
       type: 'string',
     },
@@ -192,6 +201,13 @@ Example: $0 --help run.
           describe: 'Signing API URL prefix',
           default: 'https://addons.mozilla.org/api/v3',
           demand: true,
+          type: 'string',
+        },
+        'id': {
+          describe:
+            'A custom ID for the extension. This will override ' +
+            'any ID declared by manifest.json.',
+          demand: false,
           type: 'string',
         },
         'timeout' : {

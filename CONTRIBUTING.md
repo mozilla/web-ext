@@ -83,6 +83,13 @@ Examples:
 If you want to use scopes then it would look more like:
 `feat(dysfunctioner): Added --quiet option`.
 
+### Check for commit message lint
+
+You can test that your commit message is formatted in a way that will support
+our changelog generator like this:
+
+    npm run lint-commit-msg
+
 ## Squashing commits
 
 When fixing up a pull request based on code review comments,
