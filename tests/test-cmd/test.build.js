@@ -227,6 +227,15 @@ describe('build', () => {
       assert.equal(defaultFilter.wantFile('path/to/node_modules'), false);
     });
 
+    it('ignores the artifacts dir', () => withTempDir(
+      (tmpDir) => {
+        const filter = new FileFilter({
+          filePathsToIgnore: [path.join(tmpDir.path(), 'artifacts')],
+        });
+        assert.equal(filter.wantFile(path.join(tmpDir.path(), 'artifacts')),
+          false);
+      }
+    ));
   });
 
 });
