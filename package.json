@@ -71,6 +71,7 @@
     "babel-preset-es2015": "6.9.0",
     "babel-preset-stage-2": "6.11.0",
     "chai": "3.5.0",
+    "conventional-changelog-cli": "1.2.0",
     "conventional-changelog-lint": "1.0.0",
     "copy-dir": "0.3.0",
     "coveralls": "2.11.9",
