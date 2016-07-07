@@ -52,11 +52,16 @@ function defaultPackageCreator(
 
 export default function build(
     {sourceDir, artifactsDir, asNeeded=false}: Object,
-    {manifestData, fileFilter=new FileFilter({
-      filePathsToIgnore: [path.resolve(artifactsDir)]}),
+    {manifestData, fileFilter=new FileFilter(),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
     : Object = {}): Promise {
+
+  if (!fileFilter) {
+    fileFilter = new FileFilter({
+      filePathsToIgnore: [path.resolve(artifactsDir)],
+    });
+  }
 
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
@@ -95,10 +100,10 @@ export function safeFileName(name: string): string {
  * Allows or ignores files when creating a ZIP archive.
  */
 export class FileFilter {
-  filesToIgnore: Array<string>;
+  filePatternsToIgnore: Array<string>;
   filePathsToIgnore : Array<String>;
-  constructor({filesToIgnore, filePathsToIgnore}: Object = {}) {
-    this.filesToIgnore = filesToIgnore || [
+  constructor({filePatternsToIgnore, filePathsToIgnore}: Object = {}) {
+    this.filePatternsToIgnore = filePatternsToIgnore || [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file
@@ -114,7 +119,7 @@ export class FileFilter {
    * file in the folder that is being archived.
    */
   wantFile(path: string): boolean {
-    for (const test of this.filesToIgnore) {
+    for (const test of this.filePatternsToIgnore) {
       if (minimatch(path, test)) {
         log.debug(`FileFilter: ignoring file ${path}`);
         return false;
@@ -122,7 +127,7 @@ export class FileFilter {
     }
     for (const filePath of this.filePathsToIgnore) {
       if (filePath === path){
-        log.debug(`FileFilter: ignoring file ${path}`);
+        log.debug(`FileFilter: ignoring file path ${path}`);
         return false;
       }
     }

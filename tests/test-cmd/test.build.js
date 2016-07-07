@@ -83,7 +83,7 @@ describe('build', () => {
   it('asks FileFilter what files to include in the ZIP', () => {
     let zipFile = new ZipFile();
     let fileFilter = new FileFilter({
-      filesToIgnore: ['**/background-script.js'],
+      filePatternsToIgnore: ['**/background-script.js'],
     });
 
     return withTempDir(
@@ -217,7 +217,7 @@ describe('build', () => {
 
     it('allows you to override the defaults', () => {
       const filter = new FileFilter({
-        filesToIgnore: ['manifest.json'],
+        filePatternsToIgnore: ['manifest.json'],
       });
       assert.equal(filter.wantFile('some.xpi'), true);
       assert.equal(filter.wantFile('manifest.json'), false);
@@ -227,7 +227,7 @@ describe('build', () => {
       assert.equal(defaultFilter.wantFile('path/to/node_modules'), false);
     });
 
-    it('ignores the artifacts dir', () => withTempDir(
+    it('ignores an array of absolute file paths', () => withTempDir(
       (tmpDir) => {
         const filter = new FileFilter({
           filePathsToIgnore: [path.join(tmpDir.path(), 'artifacts')],
