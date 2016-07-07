@@ -73,8 +73,8 @@ describe('sign', () => {
     (tmpDir) => {
       const stubs = getStubs();
       const sourceDir = path.join(tmpDir.path(), 'source-dir');
-      const copyDirAsPomised = promisify(copyDir);
-      return copyDirAsPomised(fixturePath('minimal-web-ext'), sourceDir)
+      const copyDirAsPromised = promisify(copyDir);
+      return copyDirAsPromised(fixturePath('minimal-web-ext'), sourceDir)
         .then(() => completeSignCommand({
           sourceDir,
           artifactsDir: path.join(tmpDir.path(), 'artifacts'),

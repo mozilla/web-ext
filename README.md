@@ -24,6 +24,10 @@ You will need npm greater than version `3.0.0`:
 
     npm install --global npm
 
+If you're on Windows, you will also need to
+[follow these instructions](https://github.com/npm/npm/wiki/Troubleshooting#upgrading-on-windows)
+after upgrading npm.
+
 Install `web-ext`:
 
     npm install --global web-ext
