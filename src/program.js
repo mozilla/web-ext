@@ -205,8 +205,8 @@ Example: $0 --help run.
         },
         'id': {
           describe:
-            'A custom ID for the extension. This will override ' +
-            'any ID declared by manifest.json.',
+            'A custom ID for the extension. This has no effect if the ' +
+            'extension already declares an explicit ID in its manifest.',
           demand: false,
           type: 'string',
         },
