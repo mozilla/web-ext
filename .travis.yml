@@ -20,6 +20,7 @@ notifications:
 deploy:
   provider: npm
   email: addons-dev-automation+npm@mozilla.com
+  skip_cleanup: true
   # This is the API key for npm user 'addons-robot'
   api_key:
     secure: gMZR5u6VxrXFxTigPlaoCre+SpFWf2dp3nsjYqYfvSW7eVqy9WtZpxOxJaNMn4Fwo+U8BVz7u23sugC/gm6JwjhIjVb20dwHhKJd1rjo4U+1Dbf9IdGysNWE6FYi3IKr2HpB/lht2HFb3+X01bLgB0xcTY459HOorAIDinTvrMMlmilV0S+sp9MeYjbcNl+tT71raVf4O2AJqsI1cA5yDLc3lhoNd87l7aB/+3AR3Vvbt0HymuzZJBz5dY5txxw2m53jPIj4Dxj6RMwsJ7fuEESkM0Da26ViOEuK+4zvwt/HhUFeDveKyOZklX7tLHg9m5MhOrnRsRRvGTxi+jIGlyO9NHhKMaK7Cvlp3K9DzTSpyilNFjEzmAE6H6HiI/DfdrmvD365RJU1SE/3R77c/n3GROmka/m9g6dJXteScoA2kitFizjnkMwPdPunZP2OXl8kUGeA3VIIDF03JXTFPz+bjNslmO0u5Y4vuKBy3fVhoxMd0c8hb+okCbkFJSwHVM4qWmLPYarN8I1XxmcVuJWbrjnFo8EAgaFXwge4PoglZsmCo0oDbM7IC0DirCsCiq4Fj+U2mrIA7k/9EVQ/i/3t2NCZ5xDdTyQzhqRx78lJt2Wr2lhx7kImiZ8SiFrIsAjkLvU4P8zE66eOpfgMAHdDDQAX9PA08Twyp1IG8Bk=
