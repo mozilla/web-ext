@@ -74,7 +74,7 @@
     "conventional-changelog-cli": "1.2.0",
     "conventional-changelog-lint": "1.0.0",
     "copy-dir": "0.3.0",
-    "coveralls": "2.11.9",
+    "coveralls": "2.11.10",
     "deepcopy": "0.6.3",
     "eslint": "3.0.1",
     "flow-bin": "0.28.0",
