@@ -16,9 +16,10 @@
     "start": "node -e \"require('grunt').cli()\" null develop",
     "flow-check": "node -e \"require('grunt').cli()\" null flowbin:check",
     "lint": "node -e \"require('grunt').cli()\" null lint",
-    "lint-commit-msg": "node -e \"require('grunt').cli()\" null lint-commit-msg",
     "test": "node -e \"require('grunt').cli()\" null test",
-    "publish-coverage": "node -e \"require('grunt').cli()\" null coveralls"
+    "publish-coverage": "node -e \"require('grunt').cli()\" null coveralls",
+    "changelog": "conventional-changelog -p angular -u",
+    "changelog-lint": "conventional-changelog-lint --from master"
   },
   "homepage": "https://github.com/mozilla/web-ext",
   "repository": {
