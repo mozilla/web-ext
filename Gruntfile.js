@@ -59,19 +59,6 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask(
-    'lint-commit-msg', 'checks for commit message lint', function() {
-      var done = this.async();
-      if (semver.satisfies(process.version, '>= 4.0.0')) {
-        gruntExec(grunt, 'conventional-changelog-lint', ['--from', 'master'],
-                  done);
-      } else {
-        grunt.log.writeln(
-          'task skipped because this version of Node is too old');
-        done(true);
-      }
-    });
-
-  grunt.registerTask(
     'check-for-smoke',
     'checks to see if web-ext is completely broken', function() {
       grunt.log.writeln('making sure web-ext is not catastrophically broken');
@@ -91,33 +78,4 @@ module.exports = function(grunt) {
       });
     });
 
-  grunt.registerTask(
-    'changelog', 'Create a changelog from commits', function() {
-      // See https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md#writing-commit-messages
-      gruntExec(grunt, 'conventional-changelog', ['-p', 'angular', '-u'],
-                this.async());
-    });
-
 };
-
-
-function gruntExec(grunt, cmd, args, onCompletion) {
-  var PATH = process.env.PATH || '';
-  // Make sure the script dir for local node modules is on the path.
-  process.env.PATH =
-    PATH + ':' + path.resolve(__dirname) + '/node_modules/.bin';
-  var proc = spawn(cmd, args);
-
-  proc.stderr.on('data', function(data) {
-    grunt.log.write(data);
-  });
-
-  proc.stdout.on('data', function(data) {
-    grunt.log.write(data);
-  });
-
-  proc.on('close', function(code) {
-    var succeeded = code === 0;
-    onCompletion(succeeded);
-  });
-}

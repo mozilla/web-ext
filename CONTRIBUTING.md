@@ -88,7 +88,7 @@ If you want to use scopes then it would look more like:
 You can test that your commit message is formatted in a way that will support
 our changelog generator like this:
 
-    npm run lint-commit-msg
+    npm run changelog-lint
 
 ## Squashing commits
 
@@ -103,7 +103,7 @@ it is okay to include each as a separate commit.
 To release a new version of `web-ext`, follow these steps:
 
 * Pull from master to make sure you're up to date.
-* Create a changelog by running `grunt changelog`.
+* Create a changelog by running `npm run changelog`.
   This will output a Markdown list of all unreleased changes.
   You can copy/paste this into the tag notes on github after the tag is created.
   It may require some manual editing. For example, commit messages might be
