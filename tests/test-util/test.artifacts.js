@@ -2,7 +2,7 @@
 import path from 'path';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
-import fs from 'mz/fs';
+import {fs} from 'mz';
 
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import {withTempDir} from '../../src/util/temp-dir';

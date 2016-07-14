@@ -1,6 +1,6 @@
 /* @flow */
 import {describe, it} from 'mocha';
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import {assert} from 'chai';
 
 import {withTempDir, TempDir} from '../../src/util/temp-dir';

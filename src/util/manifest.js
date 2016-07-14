@@ -1,7 +1,7 @@
 /* @flow */
 import path from 'path';
 
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import {InvalidManifest} from '../errors';
 import {createLogger} from './logger';
 

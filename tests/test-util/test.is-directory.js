@@ -1,6 +1,6 @@
 /* @flow */
 import path from 'path';
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
 

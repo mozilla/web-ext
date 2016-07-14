@@ -19,24 +19,13 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Installation from npm
 
-First, make sure your `npm` is up to date.
-You will need npm greater than version `3.0.0`:
-
-    npm install --global npm
-
-If you're on Windows, you will also need to
-[follow these instructions](https://github.com/npm/npm/wiki/Troubleshooting#upgrading-on-windows)
-after upgrading npm.
-
-Install `web-ext`:
-
     npm install --global web-ext
 
 ## Installation from source
 
 You'll need:
 * [Node.js](https://nodejs.org/en/), 0.12 or higher
-* [npm](https://www.npmjs.com/), 3.0.0 or higher
+* [npm](https://www.npmjs.com/), 3.0.0 or higher is recommended
 
 Optionally, you may like:
 * [nvm](https://github.com/creationix/nvm), which helps manage node versions
@@ -45,10 +34,6 @@ If you had already installed `web-ext` from npm,
 you may need to uninstall it first:
 
     npm uninstall --global web-ext
-
-Make sure `npm` is up to date:
-
-    npm install --global npm
 
 Change into the source and install all dependencies:
 
