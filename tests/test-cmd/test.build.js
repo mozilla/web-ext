@@ -1,5 +1,5 @@
 /* @flow */
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import path from 'path';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';

@@ -1,5 +1,5 @@
 /* @flow */
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import {WebExtError, onlyErrorsWithCode} from '../errors';
 import {createLogger} from './logger';
 

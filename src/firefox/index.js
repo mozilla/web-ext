@@ -5,7 +5,7 @@ import defaultFxRunner from 'fx-runner/lib/run';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
 import streamToPromise from 'stream-to-promise';
-import fs from 'mz/fs';
+import {fs} from 'mz';
 
 import isDirectory from '../util/is-directory';
 import {promisify} from '../util/es6-modules';

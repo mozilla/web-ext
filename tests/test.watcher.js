@@ -1,7 +1,7 @@
 /* @flow */
 import path from 'path';
 import {it, describe} from 'mocha';
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import sinon from 'sinon';
 import {assert} from 'chai';
 

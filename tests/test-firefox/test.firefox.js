@@ -8,7 +8,7 @@ import FirefoxProfile from 'firefox-profile';
 
 import * as firefox from '../../src/firefox';
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import {withTempDir} from '../../src/util/temp-dir';
 import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';

@@ -1,6 +1,6 @@
 /* @flow */
 import path from 'path';
-import fs from 'mz/fs';
+import {fs} from 'mz';
 import {signAddon as defaultAddonSigner} from '../util/es6-modules';
 
 import defaultBuilder from './build';
