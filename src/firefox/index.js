@@ -1,7 +1,7 @@
 /* @flow */
 import nodeFs from 'fs';
 import path from 'path';
-import {defaultFxRunner} from 'fx-runner';
+import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
 import streamToPromise from 'stream-to-promise';
