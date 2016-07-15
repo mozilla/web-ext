@@ -243,6 +243,37 @@ Example: $0 --help run.
         demand: false,
         type: 'boolean',
       },
+    })
+    .command('lint', 'Validate the web extension source', commands.lint, {
+      'output': {
+        alias: 'o',
+        describe: 'The type of output to generate',
+        type: 'string',
+        default: 'text',
+        choices: ['json', 'text'],
+      },
+      'metadata': {
+        describe: 'Output only metadata as JSON',
+        type: 'boolean',
+        default: false,
+      },
+      'pretty': {
+        describe: 'Prettify JSON output',
+        type: 'boolean',
+        default: false,
+      },
+      'self-hosted': {
+        describe:
+          'Your extension will be self-hosted. This disables messages ' +
+          'related to hosting on addons.mozilla.org.',
+        type: 'boolean',
+        default: false,
+      },
+      'boring': {
+        describe: 'Disables colorful shell output',
+        type: 'boolean',
+        default: false,
+      },
     });
 
   return program.run(absolutePackageDir, runOptions);
