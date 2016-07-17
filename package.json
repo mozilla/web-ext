@@ -57,7 +57,7 @@
     "stream-to-promise": "2.1.1",
     "tmp": "0.0.28",
     "watchpack": "1.1.0",
-    "yargs": "4.8.0",
+    "yargs": "4.8.1",
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
