@@ -7,7 +7,7 @@ const log = createLogger(__filename);
 export default function lint(
     {verbose, sourceDir, selfHosted, boring, output,
      metadata, pretty}: Object,
-    {createLinter=defaultLinterCreator}: Object): Promise {
+    {createLinter=defaultLinterCreator}: Object = {}): Promise {
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({
     config: {
