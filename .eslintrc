@@ -2,7 +2,7 @@
   "parser": "babel-eslint",
   "env": {
     "node": true,
-    "es6": true,
+    "es6": true
   },
   "ecmaFeatures": {
     "arrowFunctions": true,
@@ -12,7 +12,7 @@
     "defaultParams": true,
     "modules": true,
     "restParams": true,
-    "spread": true,
+    "spread": true
   },
   "globals": {
     "exports": false,
@@ -32,7 +32,7 @@
     "guard-for-in": 0,
     "indent": [2, 2],
     "keyword-spacing": 2,
-    "max-len": [2, 80, 2, {ignoreComments: true}],
+    "max-len": [2, 80, 2, {"ignoreComments": true}],
     "new-cap": [2, {"capIsNewExceptions": ["Deferred"]}],
     "no-bitwise": 2,
     "no-caller": 2,
@@ -68,8 +68,8 @@
     "no-with": 2,
     "one-var": [2, "never"],
     "prefer-template": 2,
-    "quotes": [2, "single", "avoid-escape"],
     "quote-props": [1, "consistent-as-needed"],
+    "quotes": [2, "single", "avoid-escape"],
     "semi": [2, "always"],
     "space-before-function-paren": [2, "never"],
     "space-infix-ops": 0,
