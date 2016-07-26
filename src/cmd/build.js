@@ -14,7 +14,7 @@ const log = createLogger(__filename);
 
 
 function defaultPackageCreator(
-    {manifestData, sourceDir, fileFilter, artifactsDir}) {
+    {manifestData, sourceDir, fileFilter, artifactsDir, fileExtension}) {
 
   return new Promise(
     (resolve) => {
@@ -32,8 +32,13 @@ function defaultPackageCreator(
           filter: (...args) => fileFilter.wantFile(...args),
         })
         .then((buffer) => {
+          let ext = 'zip';
+          // override file extension if appropriate
+          if (fileExtension) {
+            ext = fileExtension;
+          }
           let packageName = safeFileName(
-            `${manifestData.name}-${manifestData.version}.zip`);
+            `${manifestData.name}-${manifestData.version}.${ext}`);
           let extensionPath = path.join(artifactsDir, packageName);
           let stream = createWriteStream(extensionPath);
           let promisedStream = streamToPromise(stream);
@@ -51,7 +56,7 @@ function defaultPackageCreator(
 
 
 export default function build(
-    {sourceDir, artifactsDir, asNeeded=false}: Object,
+    {sourceDir, artifactsDir, asNeeded=false, extension}: Object,
     {manifestData, fileFilter=new FileFilter(),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
@@ -60,8 +65,16 @@ export default function build(
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
+  const fileExtension = extension; // alias for `build --extension <ext>`
+  let allowedExtension = /^[a-zA-Z0-9_-]+$/;
+  if (!allowedExtension.test(fileExtension)) {
+    throw Error('Only alphanumeric, -, _ characters are ' +
+                'allowed for --extension.');
+  }
+  log.info(`Using custom file extension ${extension}`);
+
   const createPackage = () => packageCreator({
-    manifestData, sourceDir, fileFilter, artifactsDir,
+    manifestData, sourceDir, fileFilter, artifactsDir, fileExtension,
   });
 
   return prepareArtifactsDir(artifactsDir)

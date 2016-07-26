@@ -37,6 +37,40 @@ describe('build', () => {
     );
   });
 
+  it('zips a package with custom file extension', () => {
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+          extension: 'blah',
+        })
+        .then((buildResult) => {
+          assert.match(buildResult.extensionPath,
+                       /minimal_extension-1\.0\.blah$/);
+          return buildResult.extensionPath;
+        })
+    );
+  });
+
+  it('throws an error when invalid extension is provided', () => {
+    let failed = false;
+    try {
+      build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        extension: '$#@',
+      });
+    } catch (error) {
+      failed = true;
+      assert.include(
+        error.message,
+          'Only alphanumeric, -, _ characters are ' +
+          'allowed for --extension.'
+      );
+    }
+    assert.equal(failed, true);
+  });
+
   it('can build an extension without an ID', () => {
     return withTempDir(
       (tmpDir) => {

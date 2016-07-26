@@ -182,6 +182,11 @@ Example: $0 --help run.
           describe: 'Watch for file changes and re-build as needed',
           type: 'boolean',
         },
+        'extension': {
+          describe: 'Change the file extension from .zip to something else.' +
+                    'Example: --extension=xpi',
+          type: 'string',
+        },
       })
     .command(
       'sign',
