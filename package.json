@@ -49,7 +49,7 @@
     "es6-error": "3.0.1",
     "es6-promisify": "4.1.0",
     "firefox-profile": "0.4.0",
-    "fx-runner": "1.0.4",
+    "fx-runner": "1.0.5",
     "minimatch": "3.0.2",
     "mz": "2.4.0",
     "node-firefox-connect": "1.2.0",
