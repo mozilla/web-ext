@@ -4,11 +4,12 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import defaultLintCommand from '../../src/cmd/lint';
-import {makeSureItFails} from '../helpers';
+import {FileFilter} from '../../src/cmd/build';
+import {fake, makeSureItFails} from '../helpers';
 
 describe('lint', () => {
 
-  function setUp({createLinter} = {}) {
+  function setUp({createLinter, fileFilter}: Object = {}) {
     const lintResult = '<lint.run() result placeholder>';
     const runLinter = sinon.spy(() => Promise.resolve(lintResult));
     if (!createLinter) {
@@ -21,7 +22,7 @@ describe('lint', () => {
       createLinter,
       runLinter,
       lint: ({...args}) => {
-        return defaultLintCommand(args, {createLinter});
+        return defaultLintCommand(args, {createLinter, fileFilter});
       },
     };
   }
@@ -97,6 +98,22 @@ describe('lint', () => {
       assert.equal(config.boring, 'boring flag');
       assert.equal(config.selfHosted, 'self-hosted flag');
     });
+  });
+
+  it('passes a file filter to the linter', () => {
+    const fileFilter = fake(new FileFilter());
+    const {lint, createLinter} = setUp({fileFilter});
+    return lint()
+      .then(() => {
+        assert.equal(createLinter.called, true);
+        const config = createLinter.firstCall.args[0].config;
+        assert.isFunction(config.shouldScanFile);
+
+        // Simulate how the linter will use this callback.
+        config.shouldScanFile('manifest.json');
+        assert.equal(fileFilter.wantFile.called, true);
+        assert.equal(fileFilter.wantFile.firstCall.args[0], 'manifest.json');
+      });
   });
 
 });
