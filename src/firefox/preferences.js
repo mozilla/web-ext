@@ -89,4 +89,9 @@ prefs.firefox = {
     'http://localhost/safebrowsing-dummy/newkey',
   'browser.safebrowsing.provider.0.updateURL' :
     'http://localhost/safebrowsing-dummy/update',
+
+  // Disable self repair/SHIELD
+  'browser.selfsupport.url': 'https://localhost/selfrepair',
+  // Disable Reader Mode UI tour
+  'browser.reader.detectedFirstArticle': true,
 };
