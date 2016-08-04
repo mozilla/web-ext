@@ -1,18 +1,13 @@
 language: node_js
 sudo: false
 node_js:
-- '0.12'
 - '4'
+- '6'
 before_install:
 # Create a master branch for conventional-changelog-lint
 - git remote set-branches origin master && git fetch
 - git checkout master
 - git checkout -
-# On 0.12, we want to test with the default version of npm, otherwise
-# upgrade to the latest.
-- if [[ ${TRAVIS_NODE_VERSION:0:1} -gt "0" ]]; then
-    npm install -g npm;
-  fi
 script:
 - COVERAGE=y npm test
 # Run changelog-lint but only on newer versions of Node (because of syntax errors)
