@@ -6,9 +6,9 @@ import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
 import streamToPromise from 'stream-to-promise';
 import {fs} from 'mz';
+import promisify from 'es6-promisify';
 
 import isDirectory from '../util/is-directory';
-import {promisify} from '../util/es6-modules';
 import {onlyErrorsWithCode, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';

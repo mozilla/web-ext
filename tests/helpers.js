@@ -3,7 +3,8 @@ import path from 'path';
 import sinon from 'sinon';
 import yauzl from 'yauzl';
 
-import {ExtendableError, promisify} from '../src/util/es6-modules';
+import ExtendableError from 'es6-error';
+import promisify from 'es6-promisify';
 import {createLogger} from '../src/util/logger';
 
 const log = createLogger(__filename);

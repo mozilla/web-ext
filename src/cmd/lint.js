@@ -1,5 +1,5 @@
 /* @flow */
-import {createLinter as defaultLinterCreator} from '../util/es6-modules';
+import {createInstance as defaultLinterCreator} from 'addons-linter';
 import {createLogger} from '../util/logger';
 import {FileFilter} from './build';
 

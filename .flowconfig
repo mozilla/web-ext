@@ -7,7 +7,7 @@ module.system=node
 log.file=./artifacts/flow.log
 
 [ignore]
-.*/dist/.*
+<PROJECT_ROOT>/dist/.*
 
 # A lot of babel modules seem to use Flow and for some reason they're mostly
 # broken.

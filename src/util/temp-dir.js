@@ -1,7 +1,7 @@
 /* @flow */
 import tmp from 'tmp';
+import promisify from 'es6-promisify';
 
-import {promisify} from './es6-modules';
 import {createLogger} from './logger';
 
 const log = createLogger(__filename);
