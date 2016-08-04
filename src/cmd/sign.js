@@ -17,7 +17,7 @@ export default function sign(
     {verbose, sourceDir, artifactsDir, apiKey, apiSecret,
      apiUrlPrefix, id, timeout}: Object,
     {build=defaultBuilder, signAddon=defaultAddonSigner,
-     preValidatedManifest=null}: Object = {}): Promise {
+     preValidatedManifest=null}: Object = {}): Promise<Object> {
 
   return withTempDir(
     (tmpDir) => {
@@ -93,7 +93,7 @@ export default function sign(
 }
 
 
-export function getIdFromSourceDir(sourceDir: string): Promise {
+export function getIdFromSourceDir(sourceDir: string): Promise<string> {
   const filePath = path.join(sourceDir, extensionIdFile);
   return fs.readFile(filePath)
     .then((content) => {
@@ -117,7 +117,8 @@ export function getIdFromSourceDir(sourceDir: string): Promise {
 }
 
 
-export function saveIdToSourceDir(sourceDir: string, id: string): Promise {
+export function saveIdToSourceDir(sourceDir: string, id: string)
+    : Promise<void> {
   const filePath = path.join(sourceDir, extensionIdFile);
   return fs.writeFile(filePath,
     [

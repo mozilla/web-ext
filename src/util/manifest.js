@@ -8,7 +8,8 @@ import {createLogger} from './logger';
 const log = createLogger(__filename);
 
 
-export default function getValidatedManifest(sourceDir: string): Promise {
+export default function getValidatedManifest(sourceDir: string)
+    : Promise<Object> {
   let manifestFile = path.join(sourceDir, 'manifest.json');
   log.debug(`Validating manifest at ${manifestFile}`);
   return fs.readFile(manifestFile)

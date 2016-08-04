@@ -26,7 +26,7 @@ export const defaultFirefoxEnv = {
 
 export function defaultRemotePortFinder(
     {portToTry=REMOTE_PORT, connectToFirefox=defaultFirefoxConnector}
-    : Object = {}) {
+    : Object = {}): Promise<number> {
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
 
   return connectToFirefox(portToTry)
@@ -53,7 +53,7 @@ export function run(
     profile: FirefoxProfile,
     {fxRunner=defaultFxRunner, findRemotePort=defaultRemotePortFinder,
      firefoxBinary, binaryArgs}
-    : Object = {}): Promise {
+    : Object = {}): Promise<Object> {
 
   log.info(`Running Firefox with profile at ${profile.path()}`);
   return findRemotePort()
@@ -117,7 +117,8 @@ export function run(
  */
 export function configureProfile(
     profile: FirefoxProfile,
-    {app='firefox', getPrefs=defaultPrefGetter}: Object = {}): Promise {
+    {app='firefox', getPrefs=defaultPrefGetter}: Object = {})
+    : Promise<FirefoxProfile> {
   return new Promise((resolve) => {
     // Set default preferences. Some of these are required for the add-on to
     // operate, such as disabling signatures.
@@ -139,7 +140,8 @@ export function configureProfile(
  * The profile will be deleted when the system process exits.
  */
 export function createProfile(
-    {app, configureThisProfile=configureProfile}: Object = {}): Promise {
+    {app, configureThisProfile=configureProfile}: Object = {})
+    : Promise<FirefoxProfile> {
 
   return new Promise(
     (resolve) => {
@@ -166,7 +168,7 @@ export function copyProfile(
     profileDirectory: string,
     {copyFromUserProfile=defaultUserProfileCopier,
      configureThisProfile=configureProfile,
-     app}: Object = {}): Promise {
+     app}: Object = {}): Promise<FirefoxProfile> {
 
   let copy = promisify(FirefoxProfile.copy);
   let copyByName = promisify(copyFromUserProfile);
@@ -201,7 +203,7 @@ export function copyProfile(
  * text file that contains the path to the extension source.
  */
 export function installExtension(
-    {asProxy=false, manifestData, profile, extensionPath}: Object): Promise {
+    {asProxy=false, manifestData, profile, extensionPath}: Object): Promise<*> {
 
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531

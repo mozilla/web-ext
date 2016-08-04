@@ -22,7 +22,7 @@ const log = createLogger(__filename);
  * );
  *
  */
-export function withTempDir(makePromise: Function): Promise {
+export function withTempDir(makePromise: Function): Promise<*> {
   let tmpDir = new TempDir();
   return tmpDir.create()
     .then(() => {
@@ -61,7 +61,7 @@ export class TempDir {
    * Returns a promise that is fulfilled when the temp directory has
    * been created.
    */
-  create(): Promise {
+  create(): Promise<TempDir> {
     let createTempDir = promisify(tmp.dir, {multiArgs: true});
     return createTempDir(
       {

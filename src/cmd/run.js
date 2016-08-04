@@ -9,6 +9,9 @@ import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
 
+// Import objects that are only used as Flow types.
+import type FirefoxProfile from 'firefox-profile';
+
 const log = createLogger(__filename);
 
 
@@ -45,7 +48,7 @@ export function defaultReloadStrategy(
 export function defaultFirefoxClient(
     {connectToFirefox=defaultFirefoxConnector,
      // A max of 250 will try connecting for 30 seconds.
-     maxRetries=250, retryInterval=120}: Object = {}) {
+     maxRetries=250, retryInterval=120}: Object = {}): Promise<Object> {
   var retries = 0;
 
   function establishConnection() {
@@ -85,7 +88,7 @@ export default function run(
      preInstall=false, noReload=false}: Object,
     {firefoxClient=defaultFirefoxClient, firefox=defaultFirefox,
      reloadStrategy=defaultReloadStrategy}
-    : Object = {}): Promise {
+    : Object = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
@@ -105,7 +108,7 @@ export default function run(
         firefox,
         firefoxBinary,
         manifestData,
-        firefoxProfile,
+        profilePath: firefoxProfile,
       });
     })
     .then((runner) => {
@@ -183,25 +186,25 @@ export default function run(
 export class ExtensionRunner {
   sourceDir: string;
   manifestData: Object;
-  firefoxProfile: Object;
+  profilePath: string;
   firefox: Object;
   firefoxBinary: string;
 
   constructor({firefox, sourceDir, manifestData,
-               firefoxProfile, firefoxBinary}: Object) {
+               profilePath, firefoxBinary}: Object) {
     this.sourceDir = sourceDir;
     this.manifestData = manifestData;
-    this.firefoxProfile = firefoxProfile;
+    this.profilePath = profilePath;
     this.firefox = firefox;
     this.firefoxBinary = firefoxBinary;
   }
 
-  getProfile(): Promise {
-    const {firefox, firefoxProfile} = this;
+  getProfile(): Promise<FirefoxProfile> {
+    const {firefox, profilePath} = this;
     return new Promise((resolve) => {
-      if (firefoxProfile) {
-        log.debug(`Copying Firefox profile from ${firefoxProfile}`);
-        resolve(firefox.copyProfile(firefoxProfile));
+      if (profilePath) {
+        log.debug(`Copying Firefox profile from ${profilePath}`);
+        resolve(firefox.copyProfile(profilePath));
       } else {
         log.debug('Creating new Firefox profile');
         resolve(firefox.createProfile());
@@ -209,11 +212,11 @@ export class ExtensionRunner {
     });
   }
 
-  installAsTemporaryAddon(client: Object): Promise {
+  installAsTemporaryAddon(client: Object): Promise<Object> {
     return client.installTemporaryAddon(this.sourceDir);
   }
 
-  installAsProxy(profile: Object): Promise {
+  installAsProxy(profile: Object): Promise<string> {
     const {firefox, sourceDir, manifestData} = this;
     return firefox.installExtension(
       {
@@ -225,7 +228,7 @@ export class ExtensionRunner {
       .then(() => getManifestId(manifestData));
   }
 
-  run(profile: Object): Promise {
+  run(profile: Object): Promise<Object> {
     const {firefox, firefoxBinary} = this;
     return firefox.run(profile, {firefoxBinary});
   }

@@ -55,7 +55,7 @@ export default function build(
     {manifestData, fileFilter=new FileFilter(),
      onSourceChange=defaultSourceWatcher,
      packageCreator=defaultPackageCreator}
-    : Object = {}): Promise {
+    : Object = {}): Promise<Object> {
 
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
