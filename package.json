@@ -4,7 +4,7 @@
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
   "engines": {
-    "node": ">=0.12",
+    "node": ">=4.0.0",
     "npm": ">=3.0.0"
   },
   "engine-strict": true,
@@ -42,7 +42,7 @@
     "opera"
   ],
   "dependencies": {
-    "addons-linter": "0.14.0",
+    "addons-linter": "0.14.4",
     "babel-polyfill": "6.9.1",
     "bunyan": "1.8.1",
     "debounce": "1.0.0",
