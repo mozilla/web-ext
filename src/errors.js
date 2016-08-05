@@ -1,5 +1,5 @@
 /* @flow */
-import {ExtendableError} from './util/es6-modules';
+import ExtendableError from 'es6-error';
 
 
 /*

@@ -5,8 +5,8 @@ import {fs} from 'mz';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+import promisify from 'es6-promisify';
 
-import {promisify} from '../../src/util/es6-modules';
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import {getManifestId} from '../../src/util/manifest';
 import {withTempDir} from '../../src/util/temp-dir';
@@ -54,7 +54,7 @@ describe('sign', () => {
    */
   function sign(
       tmpDir: Object, stubs: Object,
-      {extraArgs={}, extraOptions={}}: Object = {}): Promise {
+      {extraArgs={}, extraOptions={}}: Object = {}): Promise<*> {
     return completeSignCommand({
       verbose: false,
       artifactsDir: path.join(tmpDir.path(), 'artifacts-dir'),

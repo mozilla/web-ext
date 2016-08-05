@@ -1,5 +1,5 @@
 /* @flow */
-import {createLinter as defaultLinterCreator} from '../util/es6-modules';
+import {createInstance as defaultLinterCreator} from 'addons-linter';
 import {createLogger} from '../util/logger';
 import {FileFilter} from './build';
 
@@ -9,7 +9,7 @@ export default function lint(
     {verbose, sourceDir, selfHosted, boring, output,
      metadata, pretty}: Object,
     {createLinter=defaultLinterCreator, fileFilter=new FileFilter()}
-    : Object = {}): Promise {
+    : Object = {}): Promise<void> {
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({
     config: {

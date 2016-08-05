@@ -11,7 +11,8 @@ export const REMOTE_PORT = 6005;
 
 export default function connect(
     port: number = REMOTE_PORT,
-    {connectToFirefox=defaultFirefoxConnector}: Object = {}): Promise {
+    {connectToFirefox=defaultFirefoxConnector}: Object = {})
+    : Promise<RemoteFirefox> {
   log.debug(`Connecting to Firefox on port ${port}`);
   return connectToFirefox(port)
     .then((client) => {
@@ -48,7 +49,7 @@ export class RemoteFirefox {
     this.client.disconnect();
   }
 
-  addonRequest(addon: Object, request: string): Promise {
+  addonRequest(addon: Object, request: string): Promise<Object> {
     return new Promise((resolve, reject) => {
       this.client.client.makeRequest(
         {to: addon.actor, type: request}, (response) => {
@@ -63,7 +64,7 @@ export class RemoteFirefox {
     });
   }
 
-  installTemporaryAddon(addonPath: string): Promise {
+  installTemporaryAddon(addonPath: string): Promise<Object> {
     return new Promise((resolve, reject) => {
       this.client.request('listTabs', (error, response) => {
         if (error) {
@@ -94,7 +95,7 @@ export class RemoteFirefox {
     });
   }
 
-  getInstalledAddon(addonId: string): Promise {
+  getInstalledAddon(addonId: string): Promise<Object> {
     return new Promise(
       (resolve, reject) => {
         this.client.request('listAddons', (error, response) => {
@@ -119,7 +120,7 @@ export class RemoteFirefox {
       });
   }
 
-  checkForAddonReloading(addon: Object): Promise {
+  checkForAddonReloading(addon: Object): Promise<Object> {
     if (this.checkedForAddonReloading) {
       // We only need to check once if reload() is supported.
       return Promise.resolve(addon);
@@ -140,7 +141,7 @@ export class RemoteFirefox {
     }
   }
 
-  reloadAddon(addonId: string): Promise {
+  reloadAddon(addonId: string): Promise<Object> {
     return this.getInstalledAddon(addonId)
       .then((addon) => this.checkForAddonReloading(addon))
       .then((addon) => {

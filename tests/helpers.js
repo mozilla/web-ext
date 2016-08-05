@@ -3,7 +3,8 @@ import path from 'path';
 import sinon from 'sinon';
 import yauzl from 'yauzl';
 
-import {ExtendableError, promisify} from '../src/util/es6-modules';
+import ExtendableError from 'es6-error';
+import promisify from 'es6-promisify';
 import {createLogger} from '../src/util/logger';
 
 const log = createLogger(__filename);
@@ -23,7 +24,7 @@ export class ZipFile {
    * Open a zip file and return a promise that resolves to a yauzl
    * zipfile object.
    */
-  open(...args: Array<any>): Promise {
+  open(...args: Array<any>): Promise<void> {
     return promisify(yauzl.open)(...args)
       .then((zip) => {
         this._zip = zip;
@@ -36,7 +37,7 @@ export class ZipFile {
    *
    * The onRead callback receives a single argument, a yauzl Entry object.
    */
-  readEach(onRead: Function): Promise {
+  readEach(onRead: Function): Promise<void> {
     return new Promise((resolve, reject) => {
 
       if (!this._zip) {
@@ -61,7 +62,7 @@ export class ZipFile {
   /*
    * Resolve a promise with an array of all file names in the zip archive.
    */
-  extractFilenames(): Promise {
+  extractFilenames(): Promise<Array<String>> {
     return new Promise((resolve, reject) => {
       var fileNames = [];
       this.readEach(

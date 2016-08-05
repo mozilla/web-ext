@@ -6,7 +6,7 @@ import {createLogger} from './logger';
 const log = createLogger(__filename);
 
 
-export function prepareArtifactsDir(artifactsDir: string): Promise {
+export function prepareArtifactsDir(artifactsDir: string): Promise<string> {
   return fs.stat(artifactsDir)
     .then((stats) => {
       if (!stats.isDirectory()) {
