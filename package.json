@@ -43,7 +43,7 @@
   ],
   "dependencies": {
     "addons-linter": "0.14.4",
-    "babel-polyfill": "6.9.1",
+    "babel-polyfill": "6.13.0",
     "bunyan": "1.8.1",
     "debounce": "1.0.0",
     "es6-error": "3.0.1",
