@@ -3,6 +3,7 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import bunyan from 'bunyan';
 import sinon from 'sinon';
+import {WriteStream} from 'tty';
 
 import {createLogger, ConsoleStream} from '../../src/util/logger';
 
@@ -30,11 +31,17 @@ describe('logger', () => {
       };
     }
 
+    // NOTE: create a fake process that makes flow happy.
     function fakeProcess() {
+      class FakeWritableStream extends WriteStream {
+        write(): boolean { return true; }
+      }
+
+      let fakeWritableStream = new FakeWritableStream();
+      sinon.spy(fakeWritableStream, 'write');
+
       return {
-        stdout: {
-          write: sinon.spy(() => {}),
-        },
+        stdout: fakeWritableStream,
       };
     }
 
