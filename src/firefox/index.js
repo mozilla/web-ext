@@ -26,6 +26,8 @@ import type {
   PreferencesGetterFn,
 } from './preferences';
 
+import type {ExtensionManifest} from '../util/manifest';
+
 export type FirefoxRunnerParams = {
   binary?: string,
   profile?: string,
@@ -85,7 +87,7 @@ export type CopyProfileExtraParams = {
 
 export type InstallExtensionParams = {
   asProxy?: boolean,
-  manifestData: Object,
+  manifestData: ExtensionManifest,
   profile: FirefoxProfile,
   extensionPath: string,
 };
