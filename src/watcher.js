@@ -7,9 +7,38 @@ import {FileFilter} from './cmd/build';
 
 const log = createLogger(__filename);
 
+// Flow Types
+
+export type ShouldWatchFn = (filePath: string) => boolean;
+
+export type OnChangeFn = () => any;
+
+export type OnSourceChangeParams = {
+  sourceDir: string,
+  artifactsDir: string,
+  onChange: OnChangeFn,
+  shouldWatchFile?: ShouldWatchFn,
+};
+
+export type ProxyFileChangesParams = {
+  artifactsDir: string,
+  onChange: OnChangeFn,
+  filePath: string,
+  shouldWatchFile?: ShouldWatchFn,
+};
+
+export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
+
+// NOTE: this fix an issue with flow and default exports (which currently
+// lose their type signatures) by explicitly declare the default export
+// signature. Reference: https://github.com/facebook/flow/issues/449
+declare function exports(params: OnSourceChangeParams): Watchpack; // eslint-disable-line no-unused-vars
+
+// Exports
 
 export default function onSourceChange(
-    {sourceDir, artifactsDir, onChange, shouldWatchFile}: Object): Watchpack {
+  {sourceDir, artifactsDir, onChange, shouldWatchFile}: OnSourceChangeParams
+): Watchpack {
   // TODO: For network disks, we would need to add {poll: true}.
   const watcher = new Watchpack();
 
@@ -31,7 +60,8 @@ export default function onSourceChange(
 
 
 export function proxyFileChanges(
-    {artifactsDir, onChange, filePath, shouldWatchFile}: Object) {
+  {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams
+): void {
   if (!shouldWatchFile) {
     const fileFilter = new FileFilter();
     shouldWatchFile = (...args) => fileFilter.wantFile(...args);
