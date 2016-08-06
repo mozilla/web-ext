@@ -203,8 +203,8 @@ export function copyProfile(
  * text file that contains the path to the extension source.
  */
 export function installExtension(
-    {asProxy=false, manifestData, profile, extensionPath}: Object): Promise<*> {
-
+  {asProxy=false, manifestData, profile, extensionPath}: Object
+): Promise<any> {
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
   // (which is broken for web extensions).
