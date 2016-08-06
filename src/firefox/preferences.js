@@ -1,22 +1,26 @@
 /* @flow */
 import {WebExtError} from '../errors';
 
+// Flow Types
 
-export function getPrefs(app: string = 'firefox'): Object {
-  let appPrefs = prefs[app];
-  if (!appPrefs) {
-    throw new WebExtError(`Unsupported application: ${app}`);
-  }
-  return {
-    ...prefs.common,
-    ...appPrefs,
-  };
-}
+export type FirefoxPreferences = {
+  [key: string]: bool | string | number,
+};
 
+// NOTE: 'thuderbird' prefs are not defined on purpose, it is used in the tests to
+// be sure that if flow checks are not running and web-ext is used as a library,
+// an unknown app name raises the expected exception at runtime.
+// Preferences Maps
 
-var prefs = {};
+// $FLOW_IGNORE: suppress property 'thuderbird' Property not found
+export type PreferencesAppName = 'firefox' | 'fennec' | 'thunderbird';
 
-prefs.common = {
+export type PreferencesGetterFn =
+  (appName: PreferencesAppName) => FirefoxPreferences;
+
+// Preferences Maps
+
+const prefsCommon: FirefoxPreferences = {
   // Allow debug output via dump to be printed to the system console
   'browser.dom.window.dump.enabled': true,
   // Warn about possibly incorrect code.
@@ -65,13 +69,13 @@ prefs.common = {
 };
 
 // Prefs specific to Firefox for Android.
-prefs.fennec = {
+const prefsFennec:FirefoxPreferences = {
   'browser.console.showInPanel': true,
   'browser.firstrun.show.uidiscovery': false,
 };
 
 // Prefs specific to Firefox for desktop.
-prefs.firefox = {
+const prefsFirefox:FirefoxPreferences = {
   'browser.startup.homepage' : 'about:blank',
   'startup.homepage_welcome_url' : 'about:blank',
   'startup.homepage_welcome_url.additional' : '',
@@ -95,3 +99,25 @@ prefs.firefox = {
   // Disable Reader Mode UI tour
   'browser.reader.detectedFirstArticle': true,
 };
+
+const prefs = {
+  common: prefsCommon,
+  fennec: prefsFennec,
+  firefox: prefsFirefox,
+  thuderbird: undefined,
+};
+
+// Exports
+
+export function getPrefs(
+  app: PreferencesAppName = 'firefox'
+): FirefoxPreferences {
+  const appPrefs = prefs[app];
+  if (!appPrefs) {
+    throw new WebExtError(`Unsupported application: ${app}`);
+  }
+  return {
+    ...prefsCommon,
+    ...appPrefs,
+  };
+}
