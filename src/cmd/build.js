@@ -12,9 +12,47 @@ import {createLogger} from '../util/logger';
 
 const log = createLogger(__filename);
 
+// Flow Types
+
+import type {OnSourceChangeFn} from '../watcher';
+import type {ExtensionManifest} from '../util/manifest';
+
+export type PackageCreatorFn =
+    (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
+
+export type ExtensionBuildResult = {
+  extensionPath: string,
+};
+
+export type PackageCreatorParams = {
+  manifestData?: ExtensionManifest,
+  sourceDir: string,
+  fileFilter: FileFilter,
+  artifactsDir: string,
+};
+
+export type BuildCmdParams = {
+  sourceDir: string,
+  artifactsDir: string,
+  asNeeded?: boolean,
+};
+
+export type BuildCmdExtraParams = {
+  manifestData?: ExtensionManifest,
+  fileFilter?: FileFilter,
+  onSourceChange?: OnSourceChangeFn,
+  packageCreator?: PackageCreatorFn,
+};
+
+export type FileFilterOptions = {
+  filesToIgnore?: Array<string>,
+};
+
+// Module internals & exports
 
 function defaultPackageCreator(
-    {manifestData, sourceDir, fileFilter, artifactsDir}) {
+  {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
+): Promise<ExtensionBuildResult> {
 
   return new Promise(
     (resolve) => {
@@ -51,12 +89,13 @@ function defaultPackageCreator(
 
 
 export default function build(
-    {sourceDir, artifactsDir, asNeeded=false}: Object,
-    {manifestData, fileFilter=new FileFilter(),
-     onSourceChange=defaultSourceWatcher,
-     packageCreator=defaultPackageCreator}
-    : Object = {}): Promise<Object> {
-
+  {sourceDir, artifactsDir, asNeeded=false}: BuildCmdParams,
+  {
+    manifestData, fileFilter=new FileFilter(),
+    onSourceChange=defaultSourceWatcher,
+    packageCreator=defaultPackageCreator,
+  }: BuildCmdExtraParams = {}
+): Promise<ExtensionBuildResult> {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
@@ -96,7 +135,7 @@ export function safeFileName(name: string): string {
 export class FileFilter {
   filesToIgnore: Array<string>;
 
-  constructor({filesToIgnore}: Object = {}) {
+  constructor({filesToIgnore}: FileFilterOptions = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',
