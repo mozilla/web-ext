@@ -9,15 +9,55 @@ import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
 
-// Import objects that are only used as Flow types.
-import type FirefoxProfile from 'firefox-profile';
-
 const log = createLogger(__filename);
 
+// Flow types
+
+// Import objects that are only used as Flow types.
+import type FirefoxProfile from 'firefox-profile';
+import type FirefoxClient from 'firefox-client';
+import type {OnSourceChangeFn} from '../watcher';
+import type Watchpack from 'watchpack';
+import type {EventEmitter} from 'events';
+import type {FirefoxConnectorFn} from '../firefox/remote';
+
+export type WatcherCreatorParams = {
+  addonId: string,
+  client: FirefoxClient,
+  sourceDir: string,
+  artifactsDir: string,
+  onSourceChange?: OnSourceChangeFn,
+};
+
+export type ReloadStrategyParams = {
+  addonId: string,
+  firefox: EventEmitter,
+  client: FirefoxClient,
+  profile: FirefoxProfile,
+  sourceDir: string,
+  artifactsDir: string,
+};
+
+export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
+
+export type ReloadStrategyExtraParams = {
+  createWatcher?: WatcherCreatorFn,
+};
+
+export type CreateFirefoxClientParams = {
+  connectToFirefox?: FirefoxConnectorFn,
+  maxRetries: number,
+  retryInterval: number,
+};
+
+// Module internals & exports
 
 export function defaultWatcherCreator(
-    {addonId, client, sourceDir, artifactsDir,
-     onSourceChange=defaultSourceWatcher}: Object): Object {
+  {
+    addonId, client, sourceDir, artifactsDir,
+    onSourceChange=defaultSourceWatcher,
+  }: WatcherCreatorParams
+ ): Watchpack {
   return onSourceChange({
     sourceDir, artifactsDir, onChange: () => {
       log.debug(`Reloading add-on ID ${addonId}`);
@@ -32,8 +72,13 @@ export function defaultWatcherCreator(
 
 
 export function defaultReloadStrategy(
-    {addonId, firefox, client, profile, sourceDir, artifactsDir}: Object,
-    {createWatcher=defaultWatcherCreator}: Object = {}) {
+  {
+    addonId, firefox, client, profile, sourceDir, artifactsDir,
+  }: ReloadStrategyParams,
+  {
+    createWatcher=defaultWatcherCreator,
+  }: ReloadStrategyExtraParams = {}
+): void {
   let watcher;
 
   firefox.on('close', () => {
@@ -46,9 +91,12 @@ export function defaultReloadStrategy(
 
 
 export function defaultFirefoxClient(
-    {connectToFirefox=defaultFirefoxConnector,
-     // A max of 250 will try connecting for 30 seconds.
-     maxRetries=250, retryInterval=120}: Object = {}): Promise<Object> {
+  {
+    connectToFirefox=defaultFirefoxConnector,
+    // A max of 250 will try connecting for 30 seconds.
+    maxRetries=250, retryInterval=120,
+  }: CreateFirefoxClientParams = {}
+): Promise<FirefoxClient> {
   var retries = 0;
 
   function establishConnection() {

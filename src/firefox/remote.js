@@ -11,7 +11,7 @@ const log = createLogger(__filename);
 import type FirefoxClient from 'firefox-client';
 
 export type FirefoxConnectorFn =
-  (port: number) => Promise<FirefoxClient>;
+  (port?: number) => Promise<FirefoxClient>;
 
 export type ConnectExtraParams = {
   connectToFirefox: FirefoxConnectorFn,

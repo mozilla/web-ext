@@ -134,7 +134,8 @@ export function makeSureItFails(): Function {
  * assert.equal(fakeProcess.exit.called, true);
  *
  */
-export function fake(original: Object, methods: Object = {}): Object {
+ // $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
+export function fake<T>(original: Object, methods: Object = {}): T {
   var stub = {};
 
   // Provide stubs for all original members:
