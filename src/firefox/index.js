@@ -31,15 +31,15 @@ import type {ExtensionManifest} from '../util/manifest';
 export type FirefoxRunnerParams = {
   binary?: string,
   profile?: string,
-  "new-instance"?: boolean,
-  "no-remote"?: boolean,
-  "foreground"?: boolean,
-  "listen"?: number,
-  "binary-args"?: Array<string> | string,
-  "env"?: {
+  'new-instance'?: boolean,
+  'no-remote'?: boolean,
+  'foreground'?: boolean,
+  'listen': number,
+  'binary-args'?: Array<string> | string,
+  'env'?: {
     [key: string]: string
   },
-  "verbose"?: boolean,
+  'verbose'?: boolean,
 };
 
 export type FirefoxRunnerResults = {
