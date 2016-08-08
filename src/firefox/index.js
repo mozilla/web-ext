@@ -49,7 +49,7 @@ export type FirefoxRunnerResults = {
 };
 
 export type FirefoxRunnerFn =
-  (params: FirefoxRunnerParams) => FirefoxRunnerResults;
+  (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
 
 export type RemotePortFinderParams = {
   portToTry?: number,
