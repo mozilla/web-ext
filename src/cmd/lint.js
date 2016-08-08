@@ -5,11 +5,59 @@ import {FileFilter} from './build';
 
 const log = createLogger(__filename);
 
+// Flow types
+
+export type LinterLogLevel = 'debug' | 'fatal';
+export type LinterOutputType = 'text' | 'json';
+
+export type LinterCreatorParams = {
+  config: {
+    logLevel: LinterLogLevel,
+    stack: boolean,
+    pretty?: boolean,
+    metadata?: boolean,
+    output?: LinterOutputType,
+    boring?: boolean,
+    selfHosted?: boolean,
+    shouldScanFile: (fileName: string) => boolean,
+    _: Array<string>,
+  },
+};
+
+export type Linter = {
+  run: () => Promise<void>,
+};
+
+export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
+
+
+export type LintCmdParams = {
+  sourceDir: string,
+  verbose?: boolean,
+  selfHosted?: boolean,
+  boring?: boolean,
+  output?: LinterOutputType,
+  metadata?: boolean,
+  pretty?: boolean,
+};
+
+export type LintCmdExtraParams = {
+  createLinter: LinterCreatorFn,
+  fileFilter: FileFilter,
+};
+
+// Module internals & exports
+
 export default function lint(
-    {verbose, sourceDir, selfHosted, boring, output,
-     metadata, pretty}: Object,
-    {createLinter=defaultLinterCreator, fileFilter=new FileFilter()}
-    : Object = {}): Promise<void> {
+  {
+    verbose, sourceDir, selfHosted, boring, output,
+    metadata, pretty,
+  }: LintCmdParams,
+  {
+    createLinter=defaultLinterCreator,
+    fileFilter=new FileFilter(),
+  }: LintCmdExtraParams = {}
+): Promise<void> {
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({
     config: {

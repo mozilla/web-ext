@@ -22,6 +22,7 @@ describe('lint', () => {
       createLinter,
       runLinter,
       lint: ({...args}) => {
+        // $FLOW_IGNORE: type checks skipped for testing purpose
         return defaultLintCommand(args, {createLinter, fileFilter});
       },
     };
@@ -85,10 +86,15 @@ describe('lint', () => {
   it('passes through linter configuration', () => {
     const {lint, createLinter} = setUp();
     return lint({
+      // $FLOW_IGNORE: wrong type used for testing purpose
       pretty: 'pretty flag',
+      // $FLOW_IGNORE: wrong type used for testing purpose
       metadata: 'metadata flag',
+      // $FLOW_IGNORE: wrong type used for testing purpose
       output: 'output value',
+      // $FLOW_IGNORE: wrong type used for testing purpose
       boring: 'boring flag',
+      // $FLOW_IGNORE: wrong type used for testing purpose
       selfHosted: 'self-hosted flag',
     }).then(() => {
       const config = createLinter.firstCall.args[0].config;
