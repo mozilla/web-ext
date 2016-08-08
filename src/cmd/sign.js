@@ -13,12 +13,46 @@ import {createLogger} from '../util/logger';
 const log = createLogger(__filename);
 export const extensionIdFile = '.web-extension-id';
 
-export default function sign(
-    {verbose, sourceDir, artifactsDir, apiKey, apiSecret,
-     apiUrlPrefix, id, timeout}: Object,
-    {build=defaultBuilder, signAddon=defaultAddonSigner,
-     preValidatedManifest=null}: Object = {}): Promise<Object> {
+// Flow Types
 
+import type {ExtensionManifest} from  '../util/manifest';
+
+export type SignCmdParams = {
+  id?: string,
+  verbose?: boolean,
+  sourceDir: string,
+  artifactsDir: string,
+  apiKey: string,
+  apiSecret: string,
+  apiUrlPrefix: string,
+  timeout: number,
+};
+
+export type SignCmdExtraParams = {
+  build?: typeof defaultBuilder,
+  signAddon?: typeof defaultAddonSigner,
+  preValidatedManifest?: ExtensionManifest,
+};
+
+export type SignCmdResult = {
+  success: boolean,
+  id: string,
+  downloadedFiles: Array<string>,
+};
+
+
+// Module internals & exports
+
+export default function sign(
+  {
+    verbose, sourceDir, artifactsDir, apiKey, apiSecret,
+    apiUrlPrefix, id, timeout,
+  }: SignCmdParams,
+  {
+    build=defaultBuilder, signAddon=defaultAddonSigner,
+    preValidatedManifest,
+  }: SignCmdExtraParams = {}
+): Promise<SignCmdResult> {
   return withTempDir(
     (tmpDir) => {
       return prepareArtifactsDir(artifactsDir)
