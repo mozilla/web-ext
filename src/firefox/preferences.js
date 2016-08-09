@@ -7,13 +7,7 @@ export type FirefoxPreferences = {
   [key: string]: bool | string | number,
 };
 
-// NOTE: 'thuderbird' prefs are not defined on purpose, it is used in the tests to
-// be sure that if flow checks are not running and web-ext is used as a library,
-// an unknown app name raises the expected exception at runtime.
-// Preferences Maps
-
-// $FLOW_IGNORE: suppress property 'thuderbird' Property not found
-export type PreferencesAppName = 'firefox' | 'fennec' | 'thunderbird';
+export type PreferencesAppName = 'firefox' | 'fennec';
 
 export type PreferencesGetterFn =
   (appName: PreferencesAppName) => FirefoxPreferences;
@@ -104,7 +98,6 @@ const prefs = {
   common: prefsCommon,
   fennec: prefsFennec,
   firefox: prefsFirefox,
-  thuderbird: undefined,
 };
 
 // Exports
