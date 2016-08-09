@@ -7,12 +7,11 @@ const log = createLogger(__filename);
 
 // Flow types
 
-export type LinterLogLevel = 'debug' | 'fatal';
 export type LinterOutputType = 'text' | 'json';
 
 export type LinterCreatorParams = {
   config: {
-    logLevel: LinterLogLevel,
+    logLevel: 'debug' | 'fatal',
     stack: boolean,
     pretty?: boolean,
     metadata?: boolean,
