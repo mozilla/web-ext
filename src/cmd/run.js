@@ -15,15 +15,14 @@ const log = createLogger(__filename);
 
 // Import objects that are only used as Flow types.
 import type FirefoxProfile from 'firefox-profile';
-import type FirefoxClient from 'firefox-client';
 import type {OnSourceChangeFn} from '../watcher';
 import type Watchpack from 'watchpack';
 import type {EventEmitter} from 'events';
-import type {FirefoxConnectorFn} from '../firefox/remote';
+import type {FirefoxConnectorFn, RemoteFirefox} from '../firefox/remote';
 
 export type WatcherCreatorParams = {
   addonId: string,
-  client: FirefoxClient,
+  client: RemoteFirefox,
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
@@ -32,7 +31,7 @@ export type WatcherCreatorParams = {
 export type ReloadStrategyParams = {
   addonId: string,
   firefox: EventEmitter,
-  client: FirefoxClient,
+  client: RemoteFirefox,
   profile: FirefoxProfile,
   sourceDir: string,
   artifactsDir: string,
@@ -96,7 +95,7 @@ export function defaultFirefoxClient(
     // A max of 250 will try connecting for 30 seconds.
     maxRetries=250, retryInterval=120,
   }: CreateFirefoxClientParams = {}
-): Promise<FirefoxClient> {
+): Promise<RemoteFirefox> {
   var retries = 0;
 
   function establishConnection() {
