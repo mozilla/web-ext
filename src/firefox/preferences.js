@@ -9,9 +9,6 @@ export type FirefoxPreferences = {
 
 export type PreferencesAppName = 'firefox' | 'fennec';
 
-export type PreferencesGetterFn =
-  (appName: PreferencesAppName) => FirefoxPreferences;
-
 // Preferences Maps
 
 const prefsCommon: FirefoxPreferences = {
@@ -100,7 +97,10 @@ const prefs = {
   firefox: prefsFirefox,
 };
 
-// Exports
+// Module exports
+
+export type PreferencesGetterFn =
+  (appName: PreferencesAppName) => FirefoxPreferences;
 
 export function getPrefs(
   app: PreferencesAppName = 'firefox'

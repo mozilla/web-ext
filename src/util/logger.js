@@ -39,24 +39,7 @@ export type BunyanLogEntry = {
   level: BunyanLogLevel,
 };
 
-export type BunyanStreamConfig = {
-  type: string,
-  stream: ConsoleStream,
-};
-
-export type CreateBunyanLogParams = {
-  name: string,
-  level: BunyanLogLevel,
-  streams: Array<BunyanStreamConfig>,
-};
-
-export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
-
-export type CreateLoggerOptions = {
-  createBunyanLog: CreateBunyanLogFn,
-};
-
-// Exports
+// Module internals & exports
 
 export class ConsoleStream {
   verbose: boolean;
@@ -112,6 +95,22 @@ export class ConsoleStream {
 
 export const consoleStream = new ConsoleStream();
 
+export type BunyanStreamConfig = {
+  type: string,
+  stream: ConsoleStream,
+};
+
+export type CreateBunyanLogParams = {
+  name: string,
+  level: BunyanLogLevel,
+  streams: Array<BunyanStreamConfig>,
+};
+
+export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
+
+export type CreateLoggerOptions = {
+  createBunyanLog: CreateBunyanLogFn,
+};
 
 export function createLogger(
   filename: string,

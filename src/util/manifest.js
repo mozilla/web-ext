@@ -14,7 +14,7 @@ export type ExtensionManifest = {
   version: string,
 };
 
-// Exports
+// Module internals & exports
 
 export default function getValidatedManifest(
   sourceDir: string

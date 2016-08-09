@@ -28,6 +28,8 @@ import type {
 
 import type {ExtensionManifest} from '../util/manifest';
 
+// Declare the needed 'fx-runner' module flow types.
+
 export type FirefoxRunnerParams = {
   binary?: string,
   profile?: string,
@@ -51,6 +53,8 @@ export type FirefoxRunnerResults = {
 export type FirefoxRunnerFn =
   (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
 
+// Declare the 'port finder'-related types
+
 export type RemotePortFinderParams = {
   portToTry?: number,
   connectToFirefox?: DefaultFirefoxConnectorFn,
@@ -59,42 +63,7 @@ export type RemotePortFinderParams = {
 export type RemotePortFinderFn =
   (params?: RemotePortFinderParams) => Promise<number>;
 
-export type FirefoxRunOptions = {
-  fxRunner?: FirefoxRunnerFn,
-  findRemotePort?: RemotePortFinderFn,
-  firefoxBinary?: string,
-  binaryArgs?: Array<string>,
-};
-
-export type ConfigureProfileOptions = {
-  app?: PreferencesAppName,
-  getPrefs?: PreferencesGetterFn,
-};
-
-export type ConfigureProfileFn = (
-  profile: FirefoxProfile,
-  options?: ConfigureProfileOptions
-) => Promise<FirefoxProfile>;
-
-export type CreateProfileParams = {
-  app?: PreferencesAppName,
-  configureThisProfile?: ConfigureProfileFn,
-};
-
-export type CopyProfileOptions = {
-  app?: PreferencesAppName,
-  copyFromUserProfile?: Function,
-  configureThisProfile?: ConfigureProfileFn,
-};
-
-export type InstallExtensionParams = {
-  asProxy?: boolean,
-  manifestData: ExtensionManifest,
-  profile: FirefoxProfile,
-  extensionPath: string,
-};
-
-// Exports
+// Module internals & exports
 
 export const defaultFirefoxEnv = {
   XPCOM_DEBUG_BREAK: 'stack',
@@ -126,6 +95,13 @@ export function defaultRemotePortFinder(
     }));
 }
 
+
+export type FirefoxRunOptions = {
+  fxRunner?: FirefoxRunnerFn,
+  findRemotePort?: RemotePortFinderFn,
+  firefoxBinary?: string,
+  binaryArgs?: Array<string>,
+};
 
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
@@ -193,6 +169,16 @@ export function run(
 }
 
 
+export type ConfigureProfileOptions = {
+  app?: PreferencesAppName,
+  getPrefs?: PreferencesGetterFn,
+};
+
+export type ConfigureProfileFn = (
+  profile: FirefoxProfile,
+  options?: ConfigureProfileOptions
+) => Promise<FirefoxProfile>;
+
 /*
  * Configures a profile with common preferences that are required to
  * activate extension development.
@@ -221,6 +207,11 @@ export function configureProfile(
 }
 
 
+export type CreateProfileParams = {
+  app?: PreferencesAppName,
+  configureThisProfile?: ConfigureProfileFn,
+};
+
 /*
  * Creates a new temporary profile and resolves with the profile object.
  *
@@ -237,6 +228,12 @@ export function createProfile(
     .then((profile) => configureThisProfile(profile, {app}));
 }
 
+
+export type CopyProfileOptions = {
+  app?: PreferencesAppName,
+  copyFromUserProfile?: Function,
+  configureThisProfile?: ConfigureProfileFn,
+};
 
 /*
  * Copies an existing Firefox profile and creates a new temporary profile.
@@ -279,6 +276,13 @@ export function copyProfile(
     });
 }
 
+
+export type InstallExtensionParams = {
+  asProxy?: boolean,
+  manifestData: ExtensionManifest,
+  profile: FirefoxProfile,
+  extensionPath: string,
+};
 
 /*
  * Installs an extension into the given Firefox profile object.

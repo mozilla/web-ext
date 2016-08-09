@@ -5,8 +5,6 @@ import {FileFilter} from './build';
 
 const log = createLogger(__filename);
 
-// Flow types
-
 // Define the needed 'addons-linter' module flow types.
 
 export type LinterOutputType = 'text' | 'json';

@@ -40,24 +40,11 @@ export type FirefoxRDPResponseMaybe =
 export type DefaultFirefoxConnectorFn =
   (port: number, options?: ConnectOptions) => Promise<RemoteFirefox>;
 
-// Exports
+// Module internals & exports
 
 // The default port that Firefox's remote debugger will listen on and the
 // client will connect to.
 export const REMOTE_PORT = 6005;
-
-
-export default function connect(
-  port: number = REMOTE_PORT,
-  {connectToFirefox=defaultFirefoxConnector}: ConnectOptions = {}
-): Promise<RemoteFirefox> {
-  log.debug(`Connecting to Firefox on port ${port}`);
-  return connectToFirefox(port)
-    .then((client) => {
-      log.debug('Connected to the remote Firefox debugger');
-      return new RemoteFirefox(client);
-    });
-}
 
 
 export class RemoteFirefox {
@@ -197,9 +184,22 @@ export class RemoteFirefox {
   }
 }
 
+
 // NOTE: this fix an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declare the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
 declare function exports(
   port: number, options?: ConnectOptions
 ): Promise<RemoteFirefox>;
+
+export default function connect(
+  port: number = REMOTE_PORT,
+  {connectToFirefox=defaultFirefoxConnector}: ConnectOptions = {}
+): Promise<RemoteFirefox> {
+  log.debug(`Connecting to Firefox on port ${port}`);
+  return connectToFirefox(port)
+    .then((client) => {
+      log.debug('Connected to the remote Firefox debugger');
+      return new RemoteFirefox(client);
+    });
+}
