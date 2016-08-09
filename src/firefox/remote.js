@@ -200,6 +200,6 @@ export class RemoteFirefox {
 // NOTE: this fix an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declare the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
-declare function exports( // eslint-disable-line no-unused-vars
+declare function exports(
   port: number, options?: ConnectOptions
 ): Promise<RemoteFirefox>;
