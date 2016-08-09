@@ -63,13 +63,13 @@ const prefsCommon: FirefoxPreferences = {
 };
 
 // Prefs specific to Firefox for Android.
-const prefsFennec:FirefoxPreferences = {
+const prefsFennec: FirefoxPreferences = {
   'browser.console.showInPanel': true,
   'browser.firstrun.show.uidiscovery': false,
 };
 
 // Prefs specific to Firefox for desktop.
-const prefsFirefox:FirefoxPreferences = {
+const prefsFirefox: FirefoxPreferences = {
   'browser.startup.homepage' : 'about:blank',
   'startup.homepage_welcome_url' : 'about:blank',
   'startup.homepage_welcome_url.additional' : '',
