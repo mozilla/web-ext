@@ -33,7 +33,7 @@ export type ConsoleStreamParams = {
   verbose?: boolean,
 };
 
-export type ConsoleFormatParams = {
+export type BunyanLogEntry = {
   name: string,
   msg: string,
   level: BunyanLogLevel,
@@ -69,7 +69,7 @@ export class ConsoleStream {
     this.capturedMessages = [];
   }
 
-  format({name, msg, level}: ConsoleFormatParams): string {
+  format({name, msg, level}: BunyanLogEntry): string {
     const prefix = this.verbose ? `[${name}][${nameFromLevel[level]}] ` : '';
     return `${prefix}${msg}\n`;
   }
@@ -79,7 +79,7 @@ export class ConsoleStream {
   }
 
   write(
-    packet: ConsoleFormatParams,
+    packet: BunyanLogEntry,
     {localProcess=process}: ConsoleOptions = {}
   ): void {
     const thisLevel = this.verbose ? bunyan.TRACE : bunyan.INFO;
