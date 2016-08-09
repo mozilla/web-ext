@@ -7,6 +7,8 @@ const log = createLogger(__filename);
 
 // Flow types
 
+// Define the needed 'addons-linter' module flow types.
+
 export type LinterOutputType = 'text' | 'json';
 
 export type LinterCreatorParams = {
@@ -29,6 +31,7 @@ export type Linter = {
 
 export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
 
+// Define the './cmd/lint' flow types.
 
 export type LintCmdParams = {
   sourceDir: string,
@@ -41,8 +44,8 @@ export type LintCmdParams = {
 };
 
 export type LintCmdOptions = {
-  createLinter: LinterCreatorFn,
-  fileFilter: FileFilter,
+  createLinter?: LinterCreatorFn,
+  fileFilter?: FileFilter,
 };
 
 // Module internals & exports
