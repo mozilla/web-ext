@@ -4,8 +4,6 @@ import bunyan, {nameFromLevel, createLogger as defaultLogCreator}
 
 // Flow types
 
-import type {Logger} from 'bunyan';
-
 import type {Writable} from 'stream';
 import type {WriteStream} from 'tty';
 
@@ -19,7 +17,7 @@ export type ConsoleOptions = {
 
 // Bunyan-related types
 
-export type TRACE = 10
+export type TRACE = 10;
 export type DEBUG = 20;
 export type INFO = 30;
 export type WARN = 40;
@@ -37,6 +35,13 @@ export type BunyanLogEntry = {
   name: string,
   msg: string,
   level: BunyanLogLevel,
+};
+
+export type Logger = {
+  debug: (msg: string) => void,
+  error: (msg: string) => void,
+  info: (msg: string) => void,
+  warn: (msg: string) => void,
 };
 
 // Module internals & exports
@@ -65,7 +70,7 @@ export class ConsoleStream {
     packet: BunyanLogEntry,
     {localProcess=process}: ConsoleOptions = {}
   ): void {
-    const thisLevel = this.verbose ? bunyan.TRACE : bunyan.INFO;
+    const thisLevel: BunyanLogLevel = this.verbose ? bunyan.TRACE : bunyan.INFO;
     if (packet.level >= thisLevel) {
       const msg = this.format(packet);
       if (this.isCapturing) {
