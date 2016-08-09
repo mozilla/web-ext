@@ -59,31 +59,33 @@ export type RemotePortFinderParams = {
 export type RemotePortFinderFn =
   (params?: RemotePortFinderParams) => Promise<number>;
 
-export type FirefoxRunExtraParams = {
+export type FirefoxRunOptions = {
   fxRunner?: FirefoxRunnerFn,
   findRemotePort?: RemotePortFinderFn,
   firefoxBinary?: string,
   binaryArgs?: Array<string>,
-}
+};
 
-export type ConfigureProfileExtraParams = {
+export type ConfigureProfileOptions = {
   app?: PreferencesAppName,
   getPrefs?: PreferencesGetterFn,
-}
+};
 
-export type ConfigureProfileFn = (profile: FirefoxProfile,
-  extraParams?: ConfigureProfileExtraParams) => Promise<FirefoxProfile>
+export type ConfigureProfileFn = (
+  profile: FirefoxProfile,
+  options?: ConfigureProfileOptions
+) => Promise<FirefoxProfile>;
 
 export type CreateProfileParams = {
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
 };
 
-export type CopyProfileExtraParams = {
+export type CopyProfileOptions = {
   app?: PreferencesAppName,
   copyFromUserProfile?: Function,
   configureThisProfile?: ConfigureProfileFn,
-}
+};
 
 export type InstallExtensionParams = {
   asProxy?: boolean,
@@ -134,7 +136,7 @@ export function run(
     fxRunner=defaultFxRunner,
     findRemotePort=defaultRemotePortFinder,
     firefoxBinary, binaryArgs,
-  }: FirefoxRunExtraParams = {}
+  }: FirefoxRunOptions = {}
 ): Promise<ChildProcess> {
 
   log.info(`Running Firefox with profile at ${profile.path()}`);
@@ -202,7 +204,7 @@ export function configureProfile(
   {
     app='firefox',
     getPrefs=defaultPrefGetter,
-  }: ConfigureProfileExtraParams = {}
+  }: ConfigureProfileOptions = {}
 ): Promise<FirefoxProfile> {
   return new Promise((resolve) => {
     // Set default preferences. Some of these are required for the add-on to
@@ -254,7 +256,7 @@ export function copyProfile(
     copyFromUserProfile=defaultUserProfileCopier,
     configureThisProfile=configureProfile,
     app,
-  }: CopyProfileExtraParams = {}
+  }: CopyProfileOptions = {}
 ): Promise<FirefoxProfile> {
 
   let copy = promisify(FirefoxProfile.copy);

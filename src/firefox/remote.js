@@ -13,7 +13,7 @@ import type FirefoxClient from 'firefox-client';
 export type FirefoxConnectorFn =
   (port?: number) => Promise<FirefoxClient>;
 
-export type ConnectExtraParams = {
+export type ConnectOptions = {
   connectToFirefox: FirefoxConnectorFn,
 };
 
@@ -38,7 +38,7 @@ export type FirefoxRDPResponseMaybe =
   FirefoxRDPResponseError | FirefoxRDPResponseAddon | FirefoxRDPResponseAny;
 
 export type DefaultFirefoxConnectorFn =
-  (port: number, extraParams?: ConnectExtraParams) => Promise<RemoteFirefox>;
+  (port: number, options?: ConnectOptions) => Promise<RemoteFirefox>;
 
 // Exports
 
@@ -49,7 +49,7 @@ export const REMOTE_PORT = 6005;
 
 export default function connect(
   port: number = REMOTE_PORT,
-  {connectToFirefox=defaultFirefoxConnector}: ConnectExtraParams = {}
+  {connectToFirefox=defaultFirefoxConnector}: ConnectOptions = {}
 ): Promise<RemoteFirefox> {
   log.debug(`Connecting to Firefox on port ${port}`);
   return connectToFirefox(port)
@@ -201,5 +201,5 @@ export class RemoteFirefox {
 // lose their type signatures) by explicitly declare the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
 declare function exports( // eslint-disable-line no-unused-vars
-  port: number, extraParams?: ConnectExtraParams
+  port: number, options?: ConnectOptions
 ): Promise<RemoteFirefox>;

@@ -28,7 +28,7 @@ export type SignCmdParams = {
   timeout: number,
 };
 
-export type SignCmdExtraParams = {
+export type SignCmdOptions = {
   build?: typeof defaultBuilder,
   signAddon?: typeof defaultAddonSigner,
   preValidatedManifest?: ExtensionManifest,
@@ -51,7 +51,7 @@ export default function sign(
   {
     build=defaultBuilder, signAddon=defaultAddonSigner,
     preValidatedManifest,
-  }: SignCmdExtraParams = {}
+  }: SignCmdOptions = {}
 ): Promise<SignCmdResult> {
   return withTempDir(
     (tmpDir) => {

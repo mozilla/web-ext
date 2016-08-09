@@ -37,7 +37,7 @@ export type BuildCmdParams = {
   asNeeded?: boolean,
 };
 
-export type BuildCmdExtraParams = {
+export type BuildCmdOptions = {
   manifestData?: ExtensionManifest,
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
@@ -94,7 +94,7 @@ export default function build(
     manifestData, fileFilter=new FileFilter(),
     onSourceChange=defaultSourceWatcher,
     packageCreator=defaultPackageCreator,
-  }: BuildCmdExtraParams = {}
+  }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);

@@ -41,7 +41,7 @@ export type LintCmdParams = {
   pretty?: boolean,
 };
 
-export type LintCmdExtraParams = {
+export type LintCmdOptions = {
   createLinter: LinterCreatorFn,
   fileFilter: FileFilter,
 };
@@ -56,7 +56,7 @@ export default function lint(
   {
     createLinter=defaultLinterCreator,
     fileFilter=new FileFilter(),
-  }: LintCmdExtraParams = {}
+  }: LintCmdOptions = {}
 ): Promise<void> {
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({

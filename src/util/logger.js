@@ -13,7 +13,7 @@ export type FakeProcess = {
   stdout: Writable | WriteStream;
 };
 
-export type ConsoleExtraParams = {
+export type ConsoleOptions = {
   localProcess?: FakeProcess,
 };
 
@@ -52,7 +52,7 @@ export type CreateBunyanLogParams = {
 
 export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
 
-export type CreateLoggerExtraParams = {
+export type CreateLoggerOptions = {
   createBunyanLog: CreateBunyanLogFn,
 };
 
@@ -80,7 +80,7 @@ export class ConsoleStream {
 
   write(
     packet: ConsoleFormatParams,
-    {localProcess=process}: ConsoleExtraParams = {}
+    {localProcess=process}: ConsoleOptions = {}
   ): void {
     const thisLevel = this.verbose ? bunyan.TRACE : bunyan.INFO;
     if (packet.level >= thisLevel) {
@@ -102,7 +102,7 @@ export class ConsoleStream {
     this.capturedMessages = [];
   }
 
-  flushCapturedLogs({localProcess=process}: ConsoleExtraParams = {}) {
+  flushCapturedLogs({localProcess=process}: ConsoleOptions = {}) {
     for (let msg of this.capturedMessages) {
       localProcess.stdout.write(msg);
     }
@@ -115,7 +115,7 @@ export const consoleStream = new ConsoleStream();
 
 export function createLogger(
   filename: string,
-  {createBunyanLog=defaultLogCreator}: CreateLoggerExtraParams = {}
+  {createBunyanLog=defaultLogCreator}: CreateLoggerOptions = {}
 ): Logger {
   return createBunyanLog({
     // Strip the leading src/ from file names (which is in all file names) to

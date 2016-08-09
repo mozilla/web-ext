@@ -40,7 +40,7 @@ export type ReloadStrategyParams = {
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
-export type ReloadStrategyExtraParams = {
+export type ReloadStrategyOptions = {
   createWatcher?: WatcherCreatorFn,
 };
 
@@ -77,7 +77,7 @@ export function defaultReloadStrategy(
   }: ReloadStrategyParams,
   {
     createWatcher=defaultWatcherCreator,
-  }: ReloadStrategyExtraParams = {}
+  }: ReloadStrategyOptions = {}
 ): void {
   let watcher;
 
