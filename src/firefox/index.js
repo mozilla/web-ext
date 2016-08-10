@@ -15,9 +15,15 @@ import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 
+
 const log = createLogger(__filename);
 
-// Flow Types
+export const defaultFirefoxEnv = {
+  XPCOM_DEBUG_BREAK: 'stack',
+  NS_TRACE_MALLOC_DISABLE_STACKS: '1',
+};
+
+// Import flow types.
 
 import type {DefaultFirefoxConnectorFn} from './remote';
 import type {ChildProcess} from 'child_process';
@@ -28,32 +34,8 @@ import type {
 
 import type {ExtensionManifest} from '../util/manifest';
 
-// Declare the needed 'fx-runner' module flow types.
 
-export type FirefoxRunnerParams = {
-  binary?: string,
-  profile?: string,
-  'new-instance'?: boolean,
-  'no-remote'?: boolean,
-  'foreground'?: boolean,
-  'listen': number,
-  'binary-args'?: Array<string> | string,
-  'env'?: {
-    [key: string]: string
-  },
-  'verbose'?: boolean,
-};
-
-export type FirefoxRunnerResults = {
-  process: ChildProcess,
-  binary: string,
-  args: Array<string>,
-};
-
-export type FirefoxRunnerFn =
-  (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
-
-// Declare the 'port finder'-related types
+// defaultRemotePortFinder types and implementation.
 
 export type RemotePortFinderParams = {
   portToTry?: number,
@@ -62,14 +44,6 @@ export type RemotePortFinderParams = {
 
 export type RemotePortFinderFn =
   (params?: RemotePortFinderParams) => Promise<number>;
-
-// Module internals & exports
-
-export const defaultFirefoxEnv = {
-  XPCOM_DEBUG_BREAK: 'stack',
-  NS_TRACE_MALLOC_DISABLE_STACKS: '1',
-};
-
 
 export function defaultRemotePortFinder(
   {
@@ -96,15 +70,43 @@ export function defaultRemotePortFinder(
 }
 
 
+// Declare the needed 'fx-runner' module flow types.
+
+export type FirefoxRunnerParams = {
+  binary?: string,
+  profile?: string,
+  'new-instance'?: boolean,
+  'no-remote'?: boolean,
+  'foreground'?: boolean,
+  'listen': number,
+  'binary-args'?: Array<string> | string,
+  'env'?: {
+    [key: string]: string
+  },
+  'verbose'?: boolean,
+};
+
+// NOTE: alias FirefoxProcess to a node ChildProcess type
+export type FirefoxProcess = ChildProcess;
+
+export type FirefoxRunnerResults = {
+  process: FirefoxProcess,
+  binary: string,
+  args: Array<string>,
+};
+
+export type FirefoxRunnerFn =
+  (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
+
+
+// Run command types and implementaion.
+
 export type FirefoxRunOptions = {
   fxRunner?: FirefoxRunnerFn,
   findRemotePort?: RemotePortFinderFn,
   firefoxBinary?: string,
   binaryArgs?: Array<string>,
 };
-
-// NOTE: alias FirefoxProcess to a node ChildProcess type
-export type FirefoxProcess = ChildProcess;
 
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
@@ -172,6 +174,8 @@ export function run(
 }
 
 
+// configureProfile types and implementation.
+
 export type ConfigureProfileOptions = {
   app?: PreferencesAppName,
   getPrefs?: PreferencesGetterFn,
@@ -210,6 +214,8 @@ export function configureProfile(
 }
 
 
+// createProfile types and implementation.
+
 export type CreateProfileParams = {
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
@@ -231,6 +237,8 @@ export function createProfile(
     .then((profile) => configureThisProfile(profile, {app}));
 }
 
+
+// copyProfile types and implementation.
 
 export type CopyProfileOptions = {
   app?: PreferencesAppName,
@@ -279,6 +287,8 @@ export function copyProfile(
     });
 }
 
+
+// installExtension types and implementation.
 
 export type InstallExtensionParams = {
   asProxy?: boolean,
