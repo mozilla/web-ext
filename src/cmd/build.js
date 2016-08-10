@@ -31,23 +31,6 @@ export type PackageCreatorParams = {
   artifactsDir: string,
 };
 
-export type BuildCmdParams = {
-  sourceDir: string,
-  artifactsDir: string,
-  asNeeded?: boolean,
-};
-
-export type BuildCmdOptions = {
-  manifestData?: ExtensionManifest,
-  fileFilter?: FileFilter,
-  onSourceChange?: OnSourceChangeFn,
-  packageCreator?: PackageCreatorFn,
-};
-
-export type FileFilterOptions = {
-  filesToIgnore?: Array<string>,
-};
-
 // Module internals & exports
 
 function defaultPackageCreator(
@@ -87,6 +70,18 @@ function defaultPackageCreator(
     });
 }
 
+export type BuildCmdParams = {
+  sourceDir: string,
+  artifactsDir: string,
+  asNeeded?: boolean,
+};
+
+export type BuildCmdOptions = {
+  manifestData?: ExtensionManifest,
+  fileFilter?: FileFilter,
+  onSourceChange?: OnSourceChangeFn,
+  packageCreator?: PackageCreatorFn,
+};
 
 export default function build(
   {sourceDir, artifactsDir, asNeeded=false}: BuildCmdParams,
@@ -128,6 +123,9 @@ export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
 }
 
+export type FileFilterOptions = {
+  filesToIgnore?: Array<string>,
+};
 
 /*
  * Allows or ignores files when creating a ZIP archive.
