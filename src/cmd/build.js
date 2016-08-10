@@ -10,15 +10,17 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 
+
 const log = createLogger(__filename);
 
-// Flow Types
+
+// Import flow types.
 
 import type {OnSourceChangeFn} from '../watcher';
 import type {ExtensionManifest} from '../util/manifest';
 
-export type PackageCreatorFn =
-    (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
+
+// defaultPackageCreator types and implementation.
 
 export type ExtensionBuildResult = {
   extensionPath: string,
@@ -31,7 +33,8 @@ export type PackageCreatorParams = {
   artifactsDir: string,
 };
 
-// Module internals & exports
+export type PackageCreatorFn =
+    (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
 function defaultPackageCreator(
   {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
@@ -69,6 +72,9 @@ function defaultPackageCreator(
         });
     });
 }
+
+
+// Build command types and implementation.
 
 export type BuildCmdParams = {
   sourceDir: string,
@@ -119,9 +125,14 @@ export default function build(
 }
 
 
+// safeFileName helper implementation.
+
 export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
 }
+
+
+// FileFilter types and implementation.
 
 export type FileFilterOptions = {
   filesToIgnore?: Array<string>,
