@@ -5,9 +5,11 @@ import debounce from 'debounce';
 import {createLogger} from './util/logger';
 import {FileFilter} from './cmd/build';
 
+
 const log = createLogger(__filename);
 
-// Flow Types
+
+// onSourceChange types and implementation
 
 export type ShouldWatchFn = (filePath: string) => boolean;
 
@@ -20,14 +22,12 @@ export type OnSourceChangeParams = {
   shouldWatchFile?: ShouldWatchFn,
 };
 
-export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
-
-// Module implementation & exports
-
 // NOTE: this fix an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declare the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
 declare function exports(params: OnSourceChangeParams): Watchpack;
+
+export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
 
 export default function onSourceChange(
   {sourceDir, artifactsDir, onChange, shouldWatchFile}: OnSourceChangeParams
@@ -50,6 +50,9 @@ export default function onSourceChange(
   process.on('SIGINT', () => watcher.close());
   return watcher;
 }
+
+
+// proxyFileChanges types and implementation.
 
 export type ProxyFileChangesParams = {
   artifactsDir: string,
