@@ -11,7 +11,6 @@ import defaultSourceWatcher from '../watcher';
 
 const log = createLogger(__filename);
 
-// Flow types
 
 // Import objects that are only used as Flow types.
 import type FirefoxProfile from 'firefox-profile';
@@ -26,6 +25,9 @@ import type {
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
 
+
+// defaultWatcherCreator types and implementation.
+
 export type WatcherCreatorParams = {
   addonId: string,
   client: RemoteFirefox,
@@ -34,28 +36,7 @@ export type WatcherCreatorParams = {
   onSourceChange?: OnSourceChangeFn,
 };
 
-export type ReloadStrategyParams = {
-  addonId: string,
-  firefox: FirefoxProcess,
-  client: RemoteFirefox,
-  profile: FirefoxProfile,
-  sourceDir: string,
-  artifactsDir: string,
-};
-
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
-
-export type ReloadStrategyOptions = {
-  createWatcher?: WatcherCreatorFn,
-};
-
-export type CreateFirefoxClientParams = {
-  connectToFirefox?: FirefoxConnectorFn,
-  maxRetries: number,
-  retryInterval: number,
-};
-
-// Module internals & exports
 
 export function defaultWatcherCreator(
   {
@@ -76,6 +57,21 @@ export function defaultWatcherCreator(
 }
 
 
+// defaultReloadStrategy types and implementation.
+
+export type ReloadStrategyParams = {
+  addonId: string,
+  firefox: FirefoxProcess,
+  client: RemoteFirefox,
+  profile: FirefoxProfile,
+  sourceDir: string,
+  artifactsDir: string,
+};
+
+export type ReloadStrategyOptions = {
+  createWatcher?: WatcherCreatorFn,
+};
+
 export function defaultReloadStrategy(
   {
     addonId, firefox, client, profile, sourceDir, artifactsDir,
@@ -94,6 +90,14 @@ export function defaultReloadStrategy(
   watcher = createWatcher({addonId, client, sourceDir, artifactsDir});
 }
 
+
+// defaultFirefoxClient types and implementation.
+
+export type CreateFirefoxClientParams = {
+  connectToFirefox?: FirefoxConnectorFn,
+  maxRetries: number,
+  retryInterval: number,
+};
 
 export function defaultFirefoxClient(
   {
@@ -135,6 +139,9 @@ export function defaultFirefoxClient(
   return establishConnection();
 }
 
+
+// Run command types and implementation.
+
 export type CmdRunParams = {
   sourceDir: string,
   artifactsDir: string,
@@ -143,7 +150,6 @@ export type CmdRunParams = {
   preInstall: boolean,
   noReload: boolean,
 };
-
 
 export type CmdRunOptions = {
   firefox: typeof defaultFirefox,
@@ -262,6 +268,8 @@ export default function run(
     });
 }
 
+
+// ExtensionRunner types and implementation.
 
 export type ExtensionRunnerParams = {
   sourceDir: string,
