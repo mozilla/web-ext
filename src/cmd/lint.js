@@ -3,7 +3,9 @@ import {createInstance as defaultLinterCreator} from 'addons-linter';
 import {createLogger} from '../util/logger';
 import {FileFilter} from './build';
 
+
 const log = createLogger(__filename);
+
 
 // Define the needed 'addons-linter' module flow types.
 
@@ -29,7 +31,8 @@ export type Linter = {
 
 export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
 
-// Define the './cmd/lint' flow types.
+
+// Lint command types and implementation.
 
 export type LintCmdParams = {
   sourceDir: string,
@@ -45,8 +48,6 @@ export type LintCmdOptions = {
   createLinter?: LinterCreatorFn,
   fileFilter?: FileFilter,
 };
-
-// Module internals & exports
 
 export default function lint(
   {
