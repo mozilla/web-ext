@@ -20,21 +20,14 @@ export type OnSourceChangeParams = {
   shouldWatchFile?: ShouldWatchFn,
 };
 
-export type ProxyFileChangesParams = {
-  artifactsDir: string,
-  onChange: OnChangeFn,
-  filePath: string,
-  shouldWatchFile?: ShouldWatchFn,
-};
-
 export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
+
+// Module implementation & exports
 
 // NOTE: this fix an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declare the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
 declare function exports(params: OnSourceChangeParams): Watchpack;
-
-// Exports
 
 export default function onSourceChange(
   {sourceDir, artifactsDir, onChange, shouldWatchFile}: OnSourceChangeParams
@@ -58,6 +51,12 @@ export default function onSourceChange(
   return watcher;
 }
 
+export type ProxyFileChangesParams = {
+  artifactsDir: string,
+  onChange: OnChangeFn,
+  filePath: string,
+  shouldWatchFile?: ShouldWatchFn,
+};
 
 export function proxyFileChanges(
   {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams
