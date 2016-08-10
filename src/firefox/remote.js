@@ -28,11 +28,12 @@ export type FirefoxRDPResponseError = {
   },
 };
 
-export type FirefoxRDPResponseAny = Object;
-
 export type FirefoxRDPResponseAddon = {
   addon: FirefoxRDPAddonActor,
 };
+
+// NOTE: this type aliases Object to catch any other possible reponse.
+export type FirefoxRDPResponseAny = Object;
 
 export type FirefoxRDPResponseMaybe =
   FirefoxRDPResponseError | FirefoxRDPResponseAddon | FirefoxRDPResponseAny;

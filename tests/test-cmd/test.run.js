@@ -281,6 +281,7 @@ describe('run', () => {
       const args = {
         addonId: 'some-addon@test-suite',
         client,
+        // $FLOW_IGNORE: fake a Firefox ChildProcess using an EventEmitter for testing reasons.
         firefox: new EventEmitter(),
         profile: {},
         sourceDir: '/path/to/extension/source',

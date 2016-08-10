@@ -17,8 +17,14 @@ const log = createLogger(__filename);
 import type FirefoxProfile from 'firefox-profile';
 import type {OnSourceChangeFn} from '../watcher';
 import type Watchpack from 'watchpack';
-import type {EventEmitter} from 'events';
-import type {FirefoxConnectorFn, RemoteFirefox} from '../firefox/remote';
+import type {
+  FirefoxProcess,
+} from '../firefox/index';
+import type {
+  FirefoxConnectorFn, RemoteFirefox,
+  FirefoxRDPResponseAddon,
+} from '../firefox/remote';
+import type {ExtensionManifest} from '../util/manifest';
 
 export type WatcherCreatorParams = {
   addonId: string,
@@ -30,7 +36,7 @@ export type WatcherCreatorParams = {
 
 export type ReloadStrategyParams = {
   addonId: string,
-  firefox: EventEmitter,
+  firefox: FirefoxProcess,
   client: RemoteFirefox,
   profile: FirefoxProfile,
   sourceDir: string,
@@ -78,7 +84,7 @@ export function defaultReloadStrategy(
     createWatcher=defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
-  let watcher;
+  let watcher: Watchpack;
 
   firefox.on('close', () => {
     client.disconnect();
@@ -129,13 +135,31 @@ export function defaultFirefoxClient(
   return establishConnection();
 }
 
+export type CmdRunParams = {
+  sourceDir: string,
+  artifactsDir: string,
+  firefoxBinary: string,
+  firefoxProfile: string,
+  preInstall: boolean,
+  noReload: boolean,
+};
+
+export type CmdRunOptions = {
+  firefox: typeof defaultFirefox,
+  firefoxClient: typeof defaultFirefoxClient,
+  reloadStrategy: typeof defaultReloadStrategy,
+};
 
 export default function run(
-    {sourceDir, artifactsDir, firefoxBinary, firefoxProfile,
-     preInstall=false, noReload=false}: Object,
-    {firefoxClient=defaultFirefoxClient, firefox=defaultFirefox,
-     reloadStrategy=defaultReloadStrategy}
-    : Object = {}): Promise<Object> {
+  {
+    sourceDir, artifactsDir, firefoxBinary, firefoxProfile,
+    preInstall=false, noReload=false,
+  }: CmdRunParams,
+  {
+    firefox=defaultFirefox,
+    firefoxClient=defaultFirefoxClient,
+    reloadStrategy=defaultReloadStrategy,
+  }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
@@ -158,13 +182,14 @@ export default function run(
         profilePath: firefoxProfile,
       });
     })
-    .then((runner) => {
-      return runner.getProfile().then((profile) => {
+    .then((runner: ExtensionRunner) => {
+      return runner.getProfile().then((profile: FirefoxProfile) => {
         return {runner, profile};
       });
     })
     .then((config) => {
-      const {runner, profile} = config;
+      const runner: ExtensionRunner = config.runner;
+      const profile: FirefoxProfile = config.profile;
       return new Promise(
         (resolve) => {
           if (!preInstall) {
@@ -181,7 +206,8 @@ export default function run(
         });
     })
     .then((config) => {
-      const {runner, profile} = config;
+      const runner: ExtensionRunner = config.runner;
+      const profile: FirefoxProfile = config.profile;
       return runner.run(profile).then((firefox) => {
         return {firefox, ...config};
       });
@@ -201,9 +227,10 @@ export default function run(
                   'add-on was already installed');
         return config;
       } else {
-        const {runner, client} = config;
+        const runner: ExtensionRunner = config.runner;
+        const client: RemoteFirefox = config.client;
         return runner.installAsTemporaryAddon(client)
-          .then((installResult) => {
+          .then((installResult: FirefoxRDPResponseAddon) => {
             return {addonId: installResult.addon.id, ...config};
           });
       }
@@ -215,7 +242,12 @@ export default function run(
         'of Firefox (you need Firefox 49 or higher). For older Firefox ' +
         'versions, use --pre-install');
     }))
-    .then(({firefox, profile, client, addonId}) => {
+    .then((config) => {
+      const firefox: FirefoxProcess = config.firefox;
+      const profile: FirefoxProfile = config.profile;
+      const client: RemoteFirefox = config.firefox;
+      const addonId: string = config.addonId;
+
       if (noReload) {
         log.debug('Extension auto-reloading has been disabled');
       } else {
@@ -230,15 +262,27 @@ export default function run(
 }
 
 
+export type ExtensionRunnerParams = {
+  sourceDir: string,
+  manifestData: ExtensionManifest,
+  profilePath: string,
+  firefox: typeof defaultFirefox,
+  firefoxBinary: string,
+};
+
 export class ExtensionRunner {
   sourceDir: string;
-  manifestData: Object;
+  manifestData: ExtensionManifest;
   profilePath: string;
-  firefox: Object;
+  firefox: typeof defaultFirefox;
   firefoxBinary: string;
 
-  constructor({firefox, sourceDir, manifestData,
-               profilePath, firefoxBinary}: Object) {
+  constructor(
+    {
+      firefox, sourceDir, manifestData,
+      profilePath, firefoxBinary,
+    }: ExtensionRunnerParams
+  ) {
     this.sourceDir = sourceDir;
     this.manifestData = manifestData;
     this.profilePath = profilePath;
@@ -259,11 +303,13 @@ export class ExtensionRunner {
     });
   }
 
-  installAsTemporaryAddon(client: Object): Promise<Object> {
+  installAsTemporaryAddon(
+    client: RemoteFirefox
+  ): Promise<FirefoxRDPResponseAddon> {
     return client.installTemporaryAddon(this.sourceDir);
   }
 
-  installAsProxy(profile: Object): Promise<string> {
+  installAsProxy(profile: Object): Promise<string|void> {
     const {firefox, sourceDir, manifestData} = this;
     return firefox.installExtension(
       {
@@ -275,7 +321,7 @@ export class ExtensionRunner {
       .then(() => getManifestId(manifestData));
   }
 
-  run(profile: Object): Promise<Object> {
+  run(profile: Object): Promise<FirefoxProcess> {
     const {firefox, firefoxBinary} = this;
     return firefox.run(profile, {firefoxBinary});
   }

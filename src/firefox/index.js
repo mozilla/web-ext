@@ -103,6 +103,9 @@ export type FirefoxRunOptions = {
   binaryArgs?: Array<string>,
 };
 
+// NOTE: alias FirefoxProcess to a node ChildProcess type
+export type FirefoxProcess = ChildProcess;
+
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
  */
@@ -113,7 +116,7 @@ export function run(
     findRemotePort=defaultRemotePortFinder,
     firefoxBinary, binaryArgs,
   }: FirefoxRunOptions = {}
-): Promise<ChildProcess> {
+): Promise<FirefoxProcess> {
 
   log.info(`Running Firefox with profile at ${profile.path()}`);
   return findRemotePort()
