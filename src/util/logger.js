@@ -2,6 +2,7 @@
 import bunyan, {nameFromLevel, createLogger as defaultLogCreator}
   from 'bunyan';
 
+
 // Bunyan-related Flow types
 
 export type TRACE = 10;
@@ -13,10 +14,6 @@ export type FATAL = 60;
 
 export type BunyanLogLevel =
   TRACE | DEBUG | INFO | WARN | ERROR | FATAL;
-
-export type ConsoleStreamParams = {
-  verbose?: boolean,
-};
 
 export type BunyanLogEntry = {
   name: string,
@@ -31,7 +28,12 @@ export type Logger = {
   warn: (msg: string) => void,
 };
 
-// Module internals & exports
+
+// ConsoleStream types and implementation.
+
+export type ConsoleStreamParams = {
+  verbose?: boolean,
+};
 
 export type ConsoleOptions = {
   localProcess?: typeof process,
@@ -90,6 +92,9 @@ export class ConsoleStream {
 }
 
 export const consoleStream = new ConsoleStream();
+
+
+// createLogger types and implementation.
 
 export type BunyanStreamConfig = {
   type: string,
