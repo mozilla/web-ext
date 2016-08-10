@@ -5,16 +5,16 @@ import {fs} from 'mz';
 import {InvalidManifest} from '../errors';
 import {createLogger} from './logger';
 
+
 const log = createLogger(__filename);
 
-// Flow Types
+
+// getValidatedManifest helper types and implementation
 
 export type ExtensionManifest = {
   name: string,
   version: string,
 };
-
-// Module internals & exports
 
 export default function getValidatedManifest(
   sourceDir: string
@@ -58,6 +58,8 @@ export default function getValidatedManifest(
     });
 }
 
+
+// getManifestId helper implementation.
 
 export function getManifestId(manifestData: ExtensionManifest): string|void {
   return manifestData.applications ?
