@@ -10,14 +10,19 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 
+
 const log = createLogger(__filename);
 export const extensionIdFile = '.web-extension-id';
 
-// Flow Types
+
+// Import flow types.
 
 import type {ExtensionManifest} from  '../util/manifest';
 
-export type SignCmdParams = {
+
+// Sign command types and implementation.
+
+export type SignParams = {
   id?: string,
   verbose?: boolean,
   sourceDir: string,
@@ -28,31 +33,28 @@ export type SignCmdParams = {
   timeout: number,
 };
 
-export type SignCmdOptions = {
+export type SignOptions = {
   build?: typeof defaultBuilder,
   signAddon?: typeof defaultAddonSigner,
   preValidatedManifest?: ExtensionManifest,
 };
 
-export type SignCmdResult = {
+export type SignResult = {
   success: boolean,
   id: string,
   downloadedFiles: Array<string>,
 };
 
-
-// Module internals & exports
-
 export default function sign(
   {
     verbose, sourceDir, artifactsDir, apiKey, apiSecret,
     apiUrlPrefix, id, timeout,
-  }: SignCmdParams,
+  }: SignParams,
   {
     build=defaultBuilder, signAddon=defaultAddonSigner,
     preValidatedManifest,
-  }: SignCmdOptions = {}
-): Promise<SignCmdResult> {
+  }: SignOptions = {}
+): Promise<SignResult> {
   return withTempDir(
     (tmpDir) => {
       return prepareArtifactsDir(artifactsDir)
@@ -127,6 +129,8 @@ export default function sign(
 }
 
 
+// getIdFromSourceDir helper implementation.
+
 export function getIdFromSourceDir(sourceDir: string): Promise<string> {
   const filePath = path.join(sourceDir, extensionIdFile);
   return fs.readFile(filePath)
@@ -150,6 +154,8 @@ export function getIdFromSourceDir(sourceDir: string): Promise<string> {
     }));
 }
 
+
+// getIdFromSourceDir helper implementation.
 
 export function saveIdToSourceDir(sourceDir: string, id: string)
     : Promise<void> {
