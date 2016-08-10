@@ -25,7 +25,7 @@ export const defaultFirefoxEnv = {
 
 // Import flow types.
 
-import type {DefaultFirefoxConnectorFn} from './remote';
+import type {FirefoxConnectorFn} from './remote';
 import type {ChildProcess} from 'child_process';
 import type {
   PreferencesAppName,
@@ -39,7 +39,7 @@ import type {ExtensionManifest} from '../util/manifest';
 
 export type RemotePortFinderParams = {
   portToTry?: number,
-  connectToFirefox?: DefaultFirefoxConnectorFn,
+  connectToFirefox?: FirefoxConnectorFn,
 };
 
 export type RemotePortFinderFn =

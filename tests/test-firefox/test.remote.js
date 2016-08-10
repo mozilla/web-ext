@@ -172,6 +172,7 @@ describe('firefox.remote', () => {
         const stubResponse = {requestTypes: ['reload']};
 
         const conn = makeInstance();
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.addonRequest = sinon.spy(() => Promise.resolve(stubResponse));
 
         return conn.checkForAddonReloading(addon)
@@ -190,6 +191,7 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const stubResponse = {requestTypes: ['install']};
         const conn = makeInstance();
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.addonRequest = () => Promise.resolve(stubResponse);
 
         return conn.checkForAddonReloading(addon)
@@ -202,6 +204,7 @@ describe('firefox.remote', () => {
       it('only checks for reloading once', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.addonRequest =
           sinon.spy(() => Promise.resolve({requestTypes: ['reload']}));
         return conn.checkForAddonReloading(addon)
@@ -285,8 +288,11 @@ describe('firefox.remote', () => {
       it('asks the actor to reload the add-on', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.getInstalledAddon = sinon.spy(() => Promise.resolve(addon));
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.checkForAddonReloading = (addon) => Promise.resolve(addon);
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.addonRequest = sinon.spy(() => Promise.resolve({}));
 
         return conn.reloadAddon('some-id')
@@ -304,7 +310,9 @@ describe('firefox.remote', () => {
       it('makes sure the addon can be reloaded', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.getInstalledAddon = () => Promise.resolve(addon);
+        // $FLOW_IGNORE: override class method for testing reasons.
         conn.checkForAddonReloading =
           sinon.spy((addon) => Promise.resolve(addon));
 
