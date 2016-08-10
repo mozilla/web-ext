@@ -36,7 +36,7 @@ export type FirefoxRDPResponseRequestTypes = {
   requestTypes: Array<string>,
 };
 
-// NOTE: this type aliases Object to catch any other possible reponse.
+// NOTE: this type aliases Object to catch any other possible response.
 export type FirefoxRDPResponseAny = Object;
 
 export type FirefoxRDPResponseMaybe =
@@ -184,8 +184,8 @@ export type ConnectOptions = {
   connectToFirefox: FirefoxConnectorFn,
 };
 
-// NOTE: this fix an issue with flow and default exports (which currently
-// lose their type signatures) by explicitly declare the default export
+// NOTE: this fixes an issue with flow and default exports (which currently
+// lose their type signatures) by explicitly declaring the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
 declare function exports(
   port: number, options?: ConnectOptions
