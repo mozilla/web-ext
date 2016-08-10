@@ -72,6 +72,7 @@ describe('logger', () => {
     it('does not log debug packets unless verbose', () => {
       const log = new ConsoleStream({verbose: false});
       const localProcess = fakeProcess();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.DEBUG}), {localProcess});
       assert.equal(localProcess.stdout.write.called, false);
     });
@@ -79,6 +80,7 @@ describe('logger', () => {
     it('does not log trace packets unless verbose', () => {
       const log = new ConsoleStream({verbose: false});
       const localProcess = fakeProcess();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.TRACE}), {localProcess});
       assert.equal(localProcess.stdout.write.called, false);
     });
@@ -86,6 +88,7 @@ describe('logger', () => {
     it('logs debug packets when verbose', () => {
       const log = new ConsoleStream({verbose: true});
       const localProcess = fakeProcess();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.DEBUG}), {localProcess});
       assert.equal(localProcess.stdout.write.called, true);
     });
@@ -93,6 +96,7 @@ describe('logger', () => {
     it('logs trace packets when verbose', () => {
       const log = new ConsoleStream({verbose: true});
       const localProcess = fakeProcess();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.TRACE}), {localProcess});
       assert.equal(localProcess.stdout.write.called, true);
     });
@@ -100,8 +104,10 @@ describe('logger', () => {
     it('logs info packets when verbose or not', () => {
       const log = new ConsoleStream({verbose: false});
       const localProcess = fakeProcess();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.INFO}), {localProcess});
       log.makeVerbose();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.INFO}), {localProcess});
       assert.equal(localProcess.stdout.write.callCount, 2);
     });
@@ -111,9 +117,10 @@ describe('logger', () => {
       const localProcess = fakeProcess();
 
       log.startCapturing();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({msg: 'message'}), {localProcess});
       assert.equal(localProcess.stdout.write.called, false);
-
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
       assert.equal(localProcess.stdout.write.called, true);
       assert.equal(localProcess.stdout.write.firstCall.args[0],
@@ -125,11 +132,14 @@ describe('logger', () => {
       let localProcess = fakeProcess();
 
       log.startCapturing();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet(), {localProcess});
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
 
       // Make sure there is nothing more to flush.
       localProcess = fakeProcess();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
       assert.equal(localProcess.stdout.write.callCount, 0);
     });
@@ -139,10 +149,12 @@ describe('logger', () => {
       let localProcess = fakeProcess();
 
       log.startCapturing();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet(), {localProcess});
       assert.equal(localProcess.stdout.write.callCount, 0);
 
       log.stopCapturing();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet(), {localProcess});
       assert.equal(localProcess.stdout.write.callCount, 1);
 
@@ -151,6 +163,7 @@ describe('logger', () => {
       log.startCapturing();
       log.write(packet());
       localProcess = fakeProcess();
+      // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
       assert.equal(localProcess.stdout.write.callCount, 1);
     });

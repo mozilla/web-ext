@@ -2,20 +2,7 @@
 import bunyan, {nameFromLevel, createLogger as defaultLogCreator}
   from 'bunyan';
 
-// Flow types
-
-import type {Writable} from 'stream';
-import type {WriteStream} from 'tty';
-
-export type FakeProcess = {
-  stdout: Writable | WriteStream;
-};
-
-export type ConsoleOptions = {
-  localProcess?: FakeProcess,
-};
-
-// Bunyan-related types
+// Bunyan-related Flow types
 
 export type TRACE = 10;
 export type DEBUG = 20;
@@ -45,6 +32,10 @@ export type Logger = {
 };
 
 // Module internals & exports
+
+export type ConsoleOptions = {
+  localProcess?: typeof process,
+};
 
 export class ConsoleStream {
   verbose: boolean;
