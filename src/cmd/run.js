@@ -144,6 +144,7 @@ export type CmdRunParams = {
   noReload: boolean,
 };
 
+
 export type CmdRunOptions = {
   firefox: typeof defaultFirefox,
   firefoxClient: typeof defaultFirefoxClient,
@@ -172,6 +173,12 @@ export default function run(
   const requiresRemote = !preInstall;
   let installed = false;
 
+  let runner;
+  let profile;
+  let client;
+  let runningFirefox;
+  let addonId;
+
   return getValidatedManifest(sourceDir)
     .then((manifestData) => {
       return new ExtensionRunner({
@@ -182,56 +189,48 @@ export default function run(
         profilePath: firefoxProfile,
       });
     })
-    .then((runner: ExtensionRunner) => {
-      return runner.getProfile().then((profile: FirefoxProfile) => {
-        return {runner, profile};
+    .then((extRunner: ExtensionRunner) => {
+      runner = extRunner;
+      return runner.getProfile().then((fxProfile: FirefoxProfile) => {
+        profile = fxProfile;
       });
     })
-    .then((config) => {
-      const runner: ExtensionRunner = config.runner;
-      const profile: FirefoxProfile = config.profile;
+    .then(() => {
       return new Promise(
         (resolve) => {
           if (!preInstall) {
             log.debug('Deferring extension installation until after ' +
                       'connecting to the remote debugger');
-            resolve(config);
+            resolve();
           } else {
             log.debug('Pre-installing extension as a proxy file');
-            resolve(runner.installAsProxy(profile).then((addonId) => {
+            resolve(runner.installAsProxy(profile).then((installedAddonId) => {
               installed = true;
-              return {addonId, ...config};
+              addonId = installedAddonId;
             }));
           }
         });
     })
-    .then((config) => {
-      const runner: ExtensionRunner = config.runner;
-      const profile: FirefoxProfile = config.profile;
-      return runner.run(profile).then((firefox) => {
-        return {firefox, ...config};
+    .then(() => {
+      return runner.run(profile).then((firefoxChildProcess) => {
+        runningFirefox = firefoxChildProcess;
       });
     })
-    .then((config) => {
+    .then(() => {
       if (requiresRemote) {
-        return firefoxClient().then((client) => {
-          return {client, ...config};
+        return firefoxClient().then((remoteFirefoxClient) => {
+          client = remoteFirefoxClient;
         });
-      } else {
-        return config;
       }
     })
-    .then((config) => {
+    .then(() => {
       if (installed) {
         log.debug('Not installing as temporary add-on because the ' +
                   'add-on was already installed');
-        return config;
       } else {
-        const runner: ExtensionRunner = config.runner;
-        const client: RemoteFirefox = config.client;
         return runner.installAsTemporaryAddon(client)
           .then((installResult: FirefoxRDPResponseAddon) => {
-            return {addonId: installResult.addon.id, ...config};
+            addonId = installResult.addon.id;
           });
       }
     })
@@ -242,11 +241,12 @@ export default function run(
         'of Firefox (you need Firefox 49 or higher). For older Firefox ' +
         'versions, use --pre-install');
     }))
-    .then((config) => {
-      const firefox: FirefoxProcess = config.firefox;
-      const profile: FirefoxProfile = config.profile;
-      const client: RemoteFirefox = config.firefox;
-      const addonId: string = config.addonId;
+    .then(() => {
+      if (!addonId) {
+        throw new WebExtError(
+          'Missing addonId in the installAsTemporaryAddon result'
+        );
+      }
 
       if (noReload) {
         log.debug('Extension auto-reloading has been disabled');
@@ -254,7 +254,8 @@ export default function run(
         log.debug(
           `Reloading extension when the source changes; id=${addonId}`);
         reloadStrategy({
-          firefox, profile, client, sourceDir, artifactsDir, addonId,
+          firefox: runningFirefox,
+          profile, client, sourceDir, artifactsDir, addonId,
         });
       }
       return firefox;
@@ -309,7 +310,7 @@ export class ExtensionRunner {
     return client.installTemporaryAddon(this.sourceDir);
   }
 
-  installAsProxy(profile: Object): Promise<string|void> {
+  installAsProxy(profile: FirefoxProfile): Promise<string|void> {
     const {firefox, sourceDir, manifestData} = this;
     return firefox.installExtension(
       {
@@ -321,7 +322,7 @@ export class ExtensionRunner {
       .then(() => getManifestId(manifestData));
   }
 
-  run(profile: Object): Promise<FirefoxProcess> {
+  run(profile: FirefoxProfile): Promise<FirefoxProcess> {
     const {firefox, firefoxBinary} = this;
     return firefox.run(profile, {firefoxBinary});
   }
