@@ -59,8 +59,6 @@ export default function getValidatedManifest(
 }
 
 
-// getManifestId helper implementation.
-
 export function getManifestId(manifestData: ExtensionManifest): string|void {
   return manifestData.applications ?
     manifestData.applications.gecko.id : undefined;

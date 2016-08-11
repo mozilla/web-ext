@@ -13,6 +13,10 @@ import {createLogger} from '../util/logger';
 
 const log = createLogger(__filename);
 
+export function safeFileName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
+}
+
 
 // Import flow types.
 
@@ -122,13 +126,6 @@ export default function build(
       }
       return result;
     });
-}
-
-
-// safeFileName helper implementation.
-
-export function safeFileName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
 }
 
 

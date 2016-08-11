@@ -23,6 +23,7 @@ export const defaultFirefoxEnv = {
   NS_TRACE_MALLOC_DISABLE_STACKS: '1',
 };
 
+
 // Import flow types.
 
 import type {FirefoxConnectorFn} from './remote';

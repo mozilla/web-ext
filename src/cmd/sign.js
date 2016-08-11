@@ -12,6 +12,7 @@ import {createLogger} from '../util/logger';
 
 
 const log = createLogger(__filename);
+
 export const extensionIdFile = '.web-extension-id';
 
 
@@ -129,8 +130,6 @@ export default function sign(
 }
 
 
-// getIdFromSourceDir helper implementation.
-
 export function getIdFromSourceDir(sourceDir: string): Promise<string> {
   const filePath = path.join(sourceDir, extensionIdFile);
   return fs.readFile(filePath)
@@ -154,8 +153,6 @@ export function getIdFromSourceDir(sourceDir: string): Promise<string> {
     }));
 }
 
-
-// getIdFromSourceDir helper implementation.
 
 export function saveIdToSourceDir(sourceDir: string, id: string)
     : Promise<void> {

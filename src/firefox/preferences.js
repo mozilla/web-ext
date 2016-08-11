@@ -1,6 +1,7 @@
 /* @flow */
 import {WebExtError} from '../errors';
 
+
 // Flow Types
 
 export type FirefoxPreferences = {
@@ -8,6 +9,7 @@ export type FirefoxPreferences = {
 };
 
 export type PreferencesAppName = 'firefox' | 'fennec';
+
 
 // Preferences Maps
 
@@ -96,6 +98,7 @@ const prefs = {
   fennec: prefsFennec,
   firefox: prefsFirefox,
 };
+
 
 // Module exports
 

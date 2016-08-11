@@ -5,6 +5,7 @@ import defaultFirefoxConnector from 'node-firefox-connect';
 
 
 const log = createLogger(__filename);
+
 // The default port that Firefox's remote debugger will listen on and the
 // client will connect to.
 export const REMOTE_PORT = 6005;
