@@ -249,15 +249,15 @@ export default function run(
         'versions, use --pre-install');
     }))
     .then(() => {
-      if (!addonId) {
-        throw new WebExtError(
-          'Missing addonId in the installAsTemporaryAddon result'
-        );
-      }
-
       if (noReload) {
         log.debug('Extension auto-reloading has been disabled');
       } else {
+        if (!addonId) {
+          throw new Error(
+            'Unexpected missing addonId in the installAsTemporaryAddon result'
+          );
+        }
+
         log.debug(
           `Reloading extension when the source changes; id=${addonId}`);
         reloadStrategy({
