@@ -186,10 +186,16 @@ describe('run', () => {
 
       return cmd.run({noReload: false})
         .catch((error) => error)
-        .then((error) => assert.equal(
-          error.message,
-          'Unexpected missing addonId in the installAsTemporaryAddon result'
-        ));
+        .then((error) => {
+          assert.equal(
+            error instanceof WebExtError,
+            true
+          );
+          assert.equal(
+            error.message,
+            'Unexpected missing addonId in the installAsTemporaryAddon result'
+          );
+        });
     }
   );
 

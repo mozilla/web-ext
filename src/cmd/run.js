@@ -253,7 +253,7 @@ export default function run(
         log.debug('Extension auto-reloading has been disabled');
       } else {
         if (!addonId) {
-          throw new Error(
+          throw new WebExtError(
             'Unexpected missing addonId in the installAsTemporaryAddon result'
           );
         }
