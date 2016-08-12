@@ -10,11 +10,39 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 
+
 const log = createLogger(__filename);
 
+export function safeFileName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
+}
+
+
+// Import flow types.
+
+import type {OnSourceChangeFn} from '../watcher';
+import type {ExtensionManifest} from '../util/manifest';
+
+
+// defaultPackageCreator types and implementation.
+
+export type ExtensionBuildResult = {
+  extensionPath: string,
+};
+
+export type PackageCreatorParams = {
+  manifestData?: ExtensionManifest,
+  sourceDir: string,
+  fileFilter: FileFilter,
+  artifactsDir: string,
+};
+
+export type PackageCreatorFn =
+    (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
 function defaultPackageCreator(
-    {manifestData, sourceDir, fileFilter, artifactsDir}) {
+  {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
+): Promise<ExtensionBuildResult> {
 
   return new Promise(
     (resolve) => {
@@ -50,13 +78,29 @@ function defaultPackageCreator(
 }
 
 
-export default function build(
-    {sourceDir, artifactsDir, asNeeded=false}: Object,
-    {manifestData, fileFilter=new FileFilter(),
-     onSourceChange=defaultSourceWatcher,
-     packageCreator=defaultPackageCreator}
-    : Object = {}): Promise<Object> {
+// Build command types and implementation.
 
+export type BuildCmdParams = {
+  sourceDir: string,
+  artifactsDir: string,
+  asNeeded?: boolean,
+};
+
+export type BuildCmdOptions = {
+  manifestData?: ExtensionManifest,
+  fileFilter?: FileFilter,
+  onSourceChange?: OnSourceChangeFn,
+  packageCreator?: PackageCreatorFn,
+};
+
+export default function build(
+  {sourceDir, artifactsDir, asNeeded=false}: BuildCmdParams,
+  {
+    manifestData, fileFilter=new FileFilter(),
+    onSourceChange=defaultSourceWatcher,
+    packageCreator=defaultPackageCreator,
+  }: BuildCmdOptions = {}
+): Promise<ExtensionBuildResult> {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
@@ -85,10 +129,11 @@ export default function build(
 }
 
 
-export function safeFileName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
-}
+// FileFilter types and implementation.
 
+export type FileFilterOptions = {
+  filesToIgnore?: Array<string>,
+};
 
 /*
  * Allows or ignores files when creating a ZIP archive.
@@ -96,7 +141,7 @@ export function safeFileName(name: string): string {
 export class FileFilter {
   filesToIgnore: Array<string>;
 
-  constructor({filesToIgnore}: Object = {}) {
+  constructor({filesToIgnore}: FileFilterOptions = {}) {
     this.filesToIgnore = filesToIgnore || [
       '**/*.xpi',
       '**/*.zip',

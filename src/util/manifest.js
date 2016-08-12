@@ -5,11 +5,20 @@ import {fs} from 'mz';
 import {InvalidManifest} from '../errors';
 import {createLogger} from './logger';
 
+
 const log = createLogger(__filename);
 
 
-export default function getValidatedManifest(sourceDir: string)
-    : Promise<Object> {
+// getValidatedManifest helper types and implementation
+
+export type ExtensionManifest = {
+  name: string,
+  version: string,
+};
+
+export default function getValidatedManifest(
+  sourceDir: string
+): Promise<ExtensionManifest> {
   let manifestFile = path.join(sourceDir, 'manifest.json');
   log.debug(`Validating manifest at ${manifestFile}`);
   return fs.readFile(manifestFile)
@@ -50,7 +59,7 @@ export default function getValidatedManifest(sourceDir: string)
 }
 
 
-export function getManifestId(manifestData: Object): string|void {
+export function getManifestId(manifestData: ExtensionManifest): string|void {
   return manifestData.applications ?
     manifestData.applications.gecko.id : undefined;
 }

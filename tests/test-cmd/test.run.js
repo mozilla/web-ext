@@ -21,11 +21,15 @@ const log = createLogger(__filename);
 const tempInstallResult = {
   addon: {id: 'some-addon@test-suite'},
 };
+// Fake missing addon id result for client.installTemporaryAddon
+const tempInstallResultMissingAddonId = {
+  addon: {id: null},
+};
 
 
 describe('run', () => {
 
-  function prepareRun() {
+  function prepareRun(fakeInstallResult) {
     const sourceDir = fixturePath('minimal-web-ext');
     let argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
@@ -36,7 +40,10 @@ describe('run', () => {
       firefox: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(fake(RemoteFirefox.prototype, {
-          installTemporaryAddon: () => Promise.resolve(tempInstallResult),
+          installTemporaryAddon: () =>
+            Promise.resolve(
+              fakeInstallResult || tempInstallResult
+            ),
         }));
       }),
       reloadStrategy: sinon.spy(() => {
@@ -173,6 +180,25 @@ describe('run', () => {
     });
   });
 
+  it('raise an error on addonId missing from installTemporaryAddon result',
+    () => {
+      const cmd = prepareRun(tempInstallResultMissingAddonId);
+
+      return cmd.run({noReload: false})
+        .catch((error) => error)
+        .then((error) => {
+          assert.equal(
+            error instanceof WebExtError,
+            true
+          );
+          assert.equal(
+            error.message,
+            'Unexpected missing addonId in the installAsTemporaryAddon result'
+          );
+        });
+    }
+  );
+
   it('will not reload when using --pre-install', () => {
     const cmd = prepareRun();
     const {reloadStrategy} = cmd.options;
@@ -281,6 +307,7 @@ describe('run', () => {
       const args = {
         addonId: 'some-addon@test-suite',
         client,
+        // $FLOW_IGNORE: fake a Firefox ChildProcess using an EventEmitter for testing reasons.
         firefox: new EventEmitter(),
         profile: {},
         sourceDir: '/path/to/extension/source',

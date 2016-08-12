@@ -27,6 +27,7 @@ describe('firefox/preferences', () => {
     });
 
     it('throws an error for unsupported apps', () => {
+      // $FLOW_IGNORE: ignore type errors on testing nonexistent 'thunderbird' prefs
       assert.throws(() => getPrefs('thunderbird'),
                     WebExtError, /Unsupported application: thunderbird/);
     });

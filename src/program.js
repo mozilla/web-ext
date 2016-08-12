@@ -68,7 +68,7 @@ export class Program {
   run(absolutePackageDir: string,
       {systemProcess=process, logStream=defaultLogStream,
        getVersion=defaultVersionGetter, shouldExitProgram=true}
-      : Object = {}): Promise<*> {
+      : Object = {}): Promise<any> {
 
     this.shouldExitProgram = shouldExitProgram;
     let argv;
@@ -127,7 +127,7 @@ export function defaultVersionGetter(absolutePackageDir: string): string {
 export function main(
     absolutePackageDir: string,
     {getVersion=defaultVersionGetter, commands=defaultCommands, argv,
-     runOptions={}}: Object = {}): Promise<*> {
+     runOptions={}}: Object = {}): Promise<any> {
   let program = new Program(argv);
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively

@@ -22,7 +22,7 @@ const log = createLogger(__filename);
  * );
  *
  */
-export function withTempDir(makePromise: Function): Promise<*> {
+export function withTempDir(makePromise: Function): Promise<any> {
   let tmpDir = new TempDir();
   return tmpDir.create()
     .then(() => {

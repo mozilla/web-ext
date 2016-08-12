@@ -15,8 +15,8 @@ import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 
-const log = createLogger(__filename);
 
+const log = createLogger(__filename);
 
 export const defaultFirefoxEnv = {
   XPCOM_DEBUG_BREAK: 'stack',
@@ -24,9 +24,34 @@ export const defaultFirefoxEnv = {
 };
 
 
+// Import flow types.
+
+import type {FirefoxConnectorFn} from './remote';
+import type {ChildProcess} from 'child_process';
+import type {
+  PreferencesAppName,
+  PreferencesGetterFn,
+} from './preferences';
+
+import type {ExtensionManifest} from '../util/manifest';
+
+
+// defaultRemotePortFinder types and implementation.
+
+export type RemotePortFinderParams = {
+  portToTry?: number,
+  connectToFirefox?: FirefoxConnectorFn,
+};
+
+export type RemotePortFinderFn =
+  (params?: RemotePortFinderParams) => Promise<number>;
+
 export function defaultRemotePortFinder(
-    {portToTry=REMOTE_PORT, connectToFirefox=defaultFirefoxConnector}
-    : Object = {}): Promise<number> {
+  {
+    portToTry=REMOTE_PORT,
+    connectToFirefox=defaultFirefoxConnector,
+  }: RemotePortFinderParams = {}
+): Promise<number> {
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
 
   return connectToFirefox(portToTry)
@@ -46,14 +71,55 @@ export function defaultRemotePortFinder(
 }
 
 
+// Declare the needed 'fx-runner' module flow types.
+
+export type FirefoxRunnerParams = {
+  binary?: string,
+  profile?: string,
+  'new-instance'?: boolean,
+  'no-remote'?: boolean,
+  'foreground'?: boolean,
+  'listen': number,
+  'binary-args'?: Array<string> | string,
+  'env'?: {
+    [key: string]: string
+  },
+  'verbose'?: boolean,
+};
+
+// NOTE: alias FirefoxProcess to a node ChildProcess type
+export type FirefoxProcess = ChildProcess;
+
+export type FirefoxRunnerResults = {
+  process: FirefoxProcess,
+  binary: string,
+  args: Array<string>,
+};
+
+export type FirefoxRunnerFn =
+  (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
+
+
+// Run command types and implementaion.
+
+export type FirefoxRunOptions = {
+  fxRunner?: FirefoxRunnerFn,
+  findRemotePort?: RemotePortFinderFn,
+  firefoxBinary?: string,
+  binaryArgs?: Array<string>,
+};
+
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
  */
 export function run(
-    profile: FirefoxProfile,
-    {fxRunner=defaultFxRunner, findRemotePort=defaultRemotePortFinder,
-     firefoxBinary, binaryArgs}
-    : Object = {}): Promise<Object> {
+  profile: FirefoxProfile,
+  {
+    fxRunner=defaultFxRunner,
+    findRemotePort=defaultRemotePortFinder,
+    firefoxBinary, binaryArgs,
+  }: FirefoxRunOptions = {}
+): Promise<FirefoxProcess> {
 
   log.info(`Running Firefox with profile at ${profile.path()}`);
   return findRemotePort()
@@ -109,6 +175,18 @@ export function run(
 }
 
 
+// configureProfile types and implementation.
+
+export type ConfigureProfileOptions = {
+  app?: PreferencesAppName,
+  getPrefs?: PreferencesGetterFn,
+};
+
+export type ConfigureProfileFn = (
+  profile: FirefoxProfile,
+  options?: ConfigureProfileOptions
+) => Promise<FirefoxProfile>;
+
 /*
  * Configures a profile with common preferences that are required to
  * activate extension development.
@@ -116,9 +194,12 @@ export function run(
  * Returns a promise that resolves with the original profile object.
  */
 export function configureProfile(
-    profile: FirefoxProfile,
-    {app='firefox', getPrefs=defaultPrefGetter}: Object = {})
-    : Promise<FirefoxProfile> {
+  profile: FirefoxProfile,
+  {
+    app='firefox',
+    getPrefs=defaultPrefGetter,
+  }: ConfigureProfileOptions = {}
+): Promise<FirefoxProfile> {
   return new Promise((resolve) => {
     // Set default preferences. Some of these are required for the add-on to
     // operate, such as disabling signatures.
@@ -134,15 +215,21 @@ export function configureProfile(
 }
 
 
+// createProfile types and implementation.
+
+export type CreateProfileParams = {
+  app?: PreferencesAppName,
+  configureThisProfile?: ConfigureProfileFn,
+};
+
 /*
  * Creates a new temporary profile and resolves with the profile object.
  *
  * The profile will be deleted when the system process exits.
  */
 export function createProfile(
-    {app, configureThisProfile=configureProfile}: Object = {})
-    : Promise<FirefoxProfile> {
-
+  {app, configureThisProfile=configureProfile}: CreateProfileParams = {}
+): Promise<FirefoxProfile> {
   return new Promise(
     (resolve) => {
       // The profile is created in a self-destructing temp dir.
@@ -151,6 +238,14 @@ export function createProfile(
     .then((profile) => configureThisProfile(profile, {app}));
 }
 
+
+// copyProfile types and implementation.
+
+export type CopyProfileOptions = {
+  app?: PreferencesAppName,
+  copyFromUserProfile?: Function,
+  configureThisProfile?: ConfigureProfileFn,
+};
 
 /*
  * Copies an existing Firefox profile and creates a new temporary profile.
@@ -165,10 +260,13 @@ export function createProfile(
  * one that exists in the current user's Firefox directory.
  */
 export function copyProfile(
-    profileDirectory: string,
-    {copyFromUserProfile=defaultUserProfileCopier,
-     configureThisProfile=configureProfile,
-     app}: Object = {}): Promise<FirefoxProfile> {
+  profileDirectory: string,
+  {
+    copyFromUserProfile=defaultUserProfileCopier,
+    configureThisProfile=configureProfile,
+    app,
+  }: CopyProfileOptions = {}
+): Promise<FirefoxProfile> {
 
   let copy = promisify(FirefoxProfile.copy);
   let copyByName = promisify(copyFromUserProfile);
@@ -191,6 +289,15 @@ export function copyProfile(
 }
 
 
+// installExtension types and implementation.
+
+export type InstallExtensionParams = {
+  asProxy?: boolean,
+  manifestData: ExtensionManifest,
+  profile: FirefoxProfile,
+  extensionPath: string,
+};
+
 /*
  * Installs an extension into the given Firefox profile object.
  * Resolves when complete.
@@ -203,8 +310,8 @@ export function copyProfile(
  * text file that contains the path to the extension source.
  */
 export function installExtension(
-    {asProxy=false, manifestData, profile, extensionPath}: Object): Promise<*> {
-
+  {asProxy=false, manifestData, profile, extensionPath}: InstallExtensionParams
+): Promise<any> {
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
   // (which is broken for web extensions).

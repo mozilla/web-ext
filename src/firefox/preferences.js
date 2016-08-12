@@ -2,21 +2,18 @@
 import {WebExtError} from '../errors';
 
 
-export function getPrefs(app: string = 'firefox'): Object {
-  let appPrefs = prefs[app];
-  if (!appPrefs) {
-    throw new WebExtError(`Unsupported application: ${app}`);
-  }
-  return {
-    ...prefs.common,
-    ...appPrefs,
-  };
-}
+// Flow Types
+
+export type FirefoxPreferences = {
+  [key: string]: bool | string | number,
+};
+
+export type PreferencesAppName = 'firefox' | 'fennec';
 
 
-var prefs = {};
+// Preferences Maps
 
-prefs.common = {
+const prefsCommon: FirefoxPreferences = {
   // Allow debug output via dump to be printed to the system console
   'browser.dom.window.dump.enabled': true,
   // Warn about possibly incorrect code.
@@ -65,13 +62,13 @@ prefs.common = {
 };
 
 // Prefs specific to Firefox for Android.
-prefs.fennec = {
+const prefsFennec: FirefoxPreferences = {
   'browser.console.showInPanel': true,
   'browser.firstrun.show.uidiscovery': false,
 };
 
 // Prefs specific to Firefox for desktop.
-prefs.firefox = {
+const prefsFirefox: FirefoxPreferences = {
   'browser.startup.homepage' : 'about:blank',
   'startup.homepage_welcome_url' : 'about:blank',
   'startup.homepage_welcome_url.additional' : '',
@@ -95,3 +92,28 @@ prefs.firefox = {
   // Disable Reader Mode UI tour
   'browser.reader.detectedFirstArticle': true,
 };
+
+const prefs = {
+  common: prefsCommon,
+  fennec: prefsFennec,
+  firefox: prefsFirefox,
+};
+
+
+// Module exports
+
+export type PreferencesGetterFn =
+  (appName: PreferencesAppName) => FirefoxPreferences;
+
+export function getPrefs(
+  app: PreferencesAppName = 'firefox'
+): FirefoxPreferences {
+  const appPrefs = prefs[app];
+  if (!appPrefs) {
+    throw new WebExtError(`Unsupported application: ${app}`);
+  }
+  return {
+    ...prefsCommon,
+    ...appPrefs,
+  };
+}

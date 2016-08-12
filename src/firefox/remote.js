@@ -3,33 +3,51 @@ import {createLogger} from '../util/logger';
 import {RemoteTempInstallNotSupported, WebExtError} from '../errors';
 import defaultFirefoxConnector from 'node-firefox-connect';
 
+
 const log = createLogger(__filename);
+
 // The default port that Firefox's remote debugger will listen on and the
 // client will connect to.
 export const REMOTE_PORT = 6005;
 
 
-export default function connect(
-    port: number = REMOTE_PORT,
-    {connectToFirefox=defaultFirefoxConnector}: Object = {})
-    : Promise<RemoteFirefox> {
-  log.debug(`Connecting to Firefox on port ${port}`);
-  return connectToFirefox(port)
-    .then((client) => {
-      log.debug('Connected to the remote Firefox debugger');
-      return new RemoteFirefox(client);
-    });
-}
+// RemoteFirefox types and implementation
 
+import type FirefoxClient from 'firefox-client';
+
+export type FirefoxConnectorFn =
+  (port?: number) => Promise<FirefoxClient>;
+
+export type FirefoxRDPAddonActor = {
+  id: string,
+  actor: string,
+};
+
+export type FirefoxRDPResponseError = {
+  error: {
+    message: string,
+  },
+};
+
+export type FirefoxRDPResponseAddon = {
+  addon: FirefoxRDPAddonActor,
+};
+
+export type FirefoxRDPResponseRequestTypes = {
+  requestTypes: Array<string>,
+};
+
+// NOTE: this type aliases Object to catch any other possible response.
+export type FirefoxRDPResponseAny = Object;
+
+export type FirefoxRDPResponseMaybe =
+  FirefoxRDPResponseRequestTypes | FirefoxRDPResponseAny;
 
 export class RemoteFirefox {
   client: Object;
-  checkForAddonReloading: Function;
   checkedForAddonReloading: boolean;
-  addonRequest: Function;
-  getInstalledAddon: Function;
 
-  constructor(client: Object) {
+  constructor(client: FirefoxClient) {
     this.client = client;
     this.checkedForAddonReloading = false;
 
@@ -49,7 +67,10 @@ export class RemoteFirefox {
     this.client.disconnect();
   }
 
-  addonRequest(addon: Object, request: string): Promise<Object> {
+  addonRequest(
+    addon: FirefoxRDPAddonActor,
+    request: string
+  ): Promise<FirefoxRDPResponseMaybe> {
     return new Promise((resolve, reject) => {
       this.client.client.makeRequest(
         {to: addon.actor, type: request}, (response) => {
@@ -64,7 +85,9 @@ export class RemoteFirefox {
     });
   }
 
-  installTemporaryAddon(addonPath: string): Promise<Object> {
+  installTemporaryAddon(
+    addonPath: string
+  ): Promise<FirefoxRDPResponseAddon> {
     return new Promise((resolve, reject) => {
       this.client.request('listTabs', (error, response) => {
         if (error) {
@@ -95,7 +118,7 @@ export class RemoteFirefox {
     });
   }
 
-  getInstalledAddon(addonId: string): Promise<Object> {
+  getInstalledAddon(addonId: string): Promise<FirefoxRDPAddonActor> {
     return new Promise(
       (resolve, reject) => {
         this.client.request('listAddons', (error, response) => {
@@ -120,16 +143,19 @@ export class RemoteFirefox {
       });
   }
 
-  checkForAddonReloading(addon: Object): Promise<Object> {
+  checkForAddonReloading(
+    addon: FirefoxRDPAddonActor
+  ): Promise<FirefoxRDPAddonActor> {
     if (this.checkedForAddonReloading) {
       // We only need to check once if reload() is supported.
       return Promise.resolve(addon);
     } else {
       return this.addonRequest(addon, 'requestTypes')
-        .then((response) => {
+        .then((response: FirefoxRDPResponseRequestTypes) => {
           if (response.requestTypes.indexOf('reload') === -1) {
+            let supportedRequestTypes = JSON.stringify(response.requestTypes);
             log.debug(
-              `Remote Firefox only supports: ${response.requestTypes}`);
+              `Remote Firefox only supports: ${supportedRequestTypes}`);
             throw new WebExtError(
               'This Firefox version does not support add-on reloading. ' +
               'Re-run with --no-reload');
@@ -141,7 +167,7 @@ export class RemoteFirefox {
     }
   }
 
-  reloadAddon(addonId: string): Promise<Object> {
+  reloadAddon(addonId: string): Promise<FirefoxRDPResponseMaybe> {
     return this.getInstalledAddon(addonId)
       .then((addon) => this.checkForAddonReloading(addon))
       .then((addon) => {
@@ -150,4 +176,30 @@ export class RemoteFirefox {
         return this.addonRequest(addon, 'reload');
       });
   }
+}
+
+
+// Connect types and implementation
+
+export type ConnectOptions = {
+  connectToFirefox: FirefoxConnectorFn,
+};
+
+// NOTE: this fixes an issue with flow and default exports (which currently
+// lose their type signatures) by explicitly declaring the default export
+// signature. Reference: https://github.com/facebook/flow/issues/449
+declare function exports(
+  port: number, options?: ConnectOptions
+): Promise<RemoteFirefox>;
+
+export default function connect(
+  port: number = REMOTE_PORT,
+  {connectToFirefox=defaultFirefoxConnector}: ConnectOptions = {}
+): Promise<RemoteFirefox> {
+  log.debug(`Connecting to Firefox on port ${port}`);
+  return connectToFirefox(port)
+    .then((client) => {
+      log.debug('Connected to the remote Firefox debugger');
+      return new RemoteFirefox(client);
+    });
 }

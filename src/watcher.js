@@ -5,11 +5,33 @@ import debounce from 'debounce';
 import {createLogger} from './util/logger';
 import {FileFilter} from './cmd/build';
 
+
 const log = createLogger(__filename);
 
 
+// onSourceChange types and implementation
+
+export type ShouldWatchFn = (filePath: string) => boolean;
+
+export type OnChangeFn = () => any;
+
+export type OnSourceChangeParams = {
+  sourceDir: string,
+  artifactsDir: string,
+  onChange: OnChangeFn,
+  shouldWatchFile?: ShouldWatchFn,
+};
+
+// NOTE: this fix an issue with flow and default exports (which currently
+// lose their type signatures) by explicitly declare the default export
+// signature. Reference: https://github.com/facebook/flow/issues/449
+declare function exports(params: OnSourceChangeParams): Watchpack;
+
+export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
+
 export default function onSourceChange(
-    {sourceDir, artifactsDir, onChange, shouldWatchFile}: Object): Watchpack {
+  {sourceDir, artifactsDir, onChange, shouldWatchFile}: OnSourceChangeParams
+): Watchpack {
   // TODO: For network disks, we would need to add {poll: true}.
   const watcher = new Watchpack();
 
@@ -30,8 +52,18 @@ export default function onSourceChange(
 }
 
 
+// proxyFileChanges types and implementation.
+
+export type ProxyFileChangesParams = {
+  artifactsDir: string,
+  onChange: OnChangeFn,
+  filePath: string,
+  shouldWatchFile?: ShouldWatchFn,
+};
+
 export function proxyFileChanges(
-    {artifactsDir, onChange, filePath, shouldWatchFile}: Object) {
+  {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams
+): void {
   if (!shouldWatchFile) {
     const fileFilter = new FileFilter();
     shouldWatchFile = (...args) => fileFilter.wantFile(...args);

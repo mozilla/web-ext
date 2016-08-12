@@ -10,15 +10,52 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 
+
 const log = createLogger(__filename);
+
 export const extensionIdFile = '.web-extension-id';
 
-export default function sign(
-    {verbose, sourceDir, artifactsDir, apiKey, apiSecret,
-     apiUrlPrefix, id, timeout}: Object,
-    {build=defaultBuilder, signAddon=defaultAddonSigner,
-     preValidatedManifest=null}: Object = {}): Promise<Object> {
 
+// Import flow types.
+
+import type {ExtensionManifest} from  '../util/manifest';
+
+
+// Sign command types and implementation.
+
+export type SignParams = {
+  id?: string,
+  verbose?: boolean,
+  sourceDir: string,
+  artifactsDir: string,
+  apiKey: string,
+  apiSecret: string,
+  apiUrlPrefix: string,
+  timeout: number,
+};
+
+export type SignOptions = {
+  build?: typeof defaultBuilder,
+  signAddon?: typeof defaultAddonSigner,
+  preValidatedManifest?: ExtensionManifest,
+};
+
+export type SignResult = {
+  success: boolean,
+  id: string,
+  downloadedFiles: Array<string>,
+};
+
+export default function sign(
+  {
+    verbose, sourceDir, artifactsDir, apiKey, apiSecret,
+    apiUrlPrefix, id, timeout,
+  }: SignParams,
+  {
+    build=defaultBuilder, signAddon=defaultAddonSigner,
+    preValidatedManifest,
+  }: SignOptions = {}
+): Promise<SignResult> {
   return withTempDir(
     (tmpDir) => {
       return prepareArtifactsDir(artifactsDir)
