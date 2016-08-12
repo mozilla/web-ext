@@ -92,7 +92,7 @@
     "grunt-newer": "1.2.0",
     "grunt-webpack": "1.0.14",
     "load-grunt-configs": "1.0.0",
-    "load-grunt-tasks": "3.5.0",
+    "load-grunt-tasks": "3.5.1",
     "mocha": "3.0.2",
     "mocha-multi": "0.9.1",
     "semver": "5.3.0",
