@@ -1,7 +1,6 @@
 /*eslint prefer-template: 0*/
 var path = require('path');
 var spawn = require('child_process').spawn;
-var semver = require('semver');
 
 module.exports = function(grunt) {
 
@@ -48,12 +47,9 @@ module.exports = function(grunt) {
   grunt.registerTask('lint', 'checks for syntax errors', function() {
     if (process.env.SKIP_LINT) {
       grunt.log.writeln('lint task skipped because of $SKIP_LINT');
-    } else if (semver.satisfies(process.version, '< 4.0.0')) {
-      // eslint now requires a new-ish Node.
-      grunt.log.writeln('task skipped because this version of Node is too old');
     } else {
       grunt.task.run([
-        'newer:eslint',
+        'eslint',
       ]);
     }
   });
