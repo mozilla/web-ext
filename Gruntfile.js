@@ -1,7 +1,6 @@
 /*eslint prefer-template: 0*/
 var path = require('path');
 var spawn = require('child_process').spawn;
-var semver = require('semver');
 
 module.exports = function(grunt) {
 

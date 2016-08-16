@@ -95,7 +95,6 @@
     "load-grunt-tasks": "3.5.2",
     "mocha": "3.0.2",
     "mocha-multi": "0.9.1",
-    "semver": "5.3.0",
     "sinon": "1.17.5",
     "webpack": "1.13.1",
     "webpack-dev-server": "1.14.1",
