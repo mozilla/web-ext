@@ -35,7 +35,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', [
     'build-tests',
     'mochaTest',
-    'lint',
+    'newer:eslint',
     'flowbin:check',
     'check-for-smoke',
   ]);
@@ -53,7 +53,7 @@ module.exports = function(grunt) {
       grunt.log.writeln('task skipped because this version of Node is too old');
     } else {
       grunt.task.run([
-        'newer:eslint',
+        'eslint',
       ]);
     }
   });
