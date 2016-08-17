@@ -216,7 +216,8 @@ Example: $0 --help run.
         },
       })
     .command('run', 'Run the web extension', commands.run, {
-      'firefox-binary': {
+      'firefox': {
+        alias: 'f',
         describe: 'Path to a Firefox executable such as firefox-bin. ' +
                   'If not specified, the default Firefox will be used.',
         demand: false,
