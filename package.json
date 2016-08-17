@@ -66,7 +66,7 @@
     "babel-eslint": "6.1.2",
     "babel-istanbul": "0.11.0",
     "babel-istanbul-loader": "0.1.0",
-    "babel-loader": "6.2.4",
+    "babel-loader": "6.2.5",
     "babel-plugin-transform-class-properties": "6.11.5",
     "babel-plugin-transform-es2015-modules-commonjs": "6.11.5",
     "babel-plugin-transform-flow-strip-types": "6.8.0",
