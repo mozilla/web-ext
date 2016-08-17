@@ -62,7 +62,7 @@ export function defaultWatcherCreator(
 
 export type ReloadStrategyParams = {
   addonId: string,
-  firefox: FirefoxProcess,
+  firefoxApp: FirefoxProcess,
   client: RemoteFirefox,
   profile: FirefoxProfile,
   sourceDir: string,
@@ -75,7 +75,7 @@ export type ReloadStrategyOptions = {
 
 export function defaultReloadStrategy(
   {
-    addonId, firefox, client, profile, sourceDir, artifactsDir,
+    addonId, firefoxApp, client, profile, sourceDir, artifactsDir,
   }: ReloadStrategyParams,
   {
     createWatcher=defaultWatcherCreator,
@@ -83,7 +83,7 @@ export function defaultReloadStrategy(
 ): void {
   let watcher: Watchpack;
 
-  firefox.on('close', () => {
+  firefoxApp.on('close', () => {
     client.disconnect();
     watcher.close();
   });
@@ -146,25 +146,25 @@ export function defaultFirefoxClient(
 export type CmdRunParams = {
   sourceDir: string,
   artifactsDir: string,
-  firefoxBinary: string,
+  firefox: string,
   firefoxProfile: string,
   preInstall: boolean,
   noReload: boolean,
 };
 
 export type CmdRunOptions = {
-  firefox: typeof defaultFirefox,
+  firefoxApp: typeof defaultFirefox,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
 };
 
 export default function run(
   {
-    sourceDir, artifactsDir, firefoxBinary, firefoxProfile,
+    sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall=false, noReload=false,
   }: CmdRunParams,
   {
-    firefox=defaultFirefox,
+    firefoxApp=defaultFirefox,
     firefoxClient=defaultFirefoxClient,
     reloadStrategy=defaultReloadStrategy,
   }: CmdRunOptions = {}): Promise<Object> {
@@ -190,8 +190,8 @@ export default function run(
     .then((manifestData) => {
       return new ExtensionRunner({
         sourceDir,
+        firefoxApp,
         firefox,
-        firefoxBinary,
         manifestData,
         profilePath: firefoxProfile,
       });
@@ -261,11 +261,11 @@ export default function run(
         log.debug(
           `Reloading extension when the source changes; id=${addonId}`);
         reloadStrategy({
-          firefox: runningFirefox,
+          firefoxApp: runningFirefox,
           profile, client, sourceDir, artifactsDir, addonId,
         });
       }
-      return firefox;
+      return firefoxApp;
     });
 }
 
@@ -276,39 +276,39 @@ export type ExtensionRunnerParams = {
   sourceDir: string,
   manifestData: ExtensionManifest,
   profilePath: string,
-  firefox: typeof defaultFirefox,
-  firefoxBinary: string,
+  firefoxApp: typeof defaultFirefox,
+  firefox: string,
 };
 
 export class ExtensionRunner {
   sourceDir: string;
   manifestData: ExtensionManifest;
   profilePath: string;
-  firefox: typeof defaultFirefox;
-  firefoxBinary: string;
+  firefoxApp: typeof defaultFirefox;
+  firefox: string;
 
   constructor(
     {
-      firefox, sourceDir, manifestData,
-      profilePath, firefoxBinary,
+      firefoxApp, sourceDir, manifestData,
+      profilePath, firefox,
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
     this.manifestData = manifestData;
     this.profilePath = profilePath;
+    this.firefoxApp = firefoxApp;
     this.firefox = firefox;
-    this.firefoxBinary = firefoxBinary;
   }
 
   getProfile(): Promise<FirefoxProfile> {
-    const {firefox, profilePath} = this;
+    const {firefoxApp, profilePath} = this;
     return new Promise((resolve) => {
       if (profilePath) {
         log.debug(`Copying Firefox profile from ${profilePath}`);
-        resolve(firefox.copyProfile(profilePath));
+        resolve(firefoxApp.copyProfile(profilePath));
       } else {
         log.debug('Creating new Firefox profile');
-        resolve(firefox.createProfile());
+        resolve(firefoxApp.createProfile());
       }
     });
   }
@@ -320,8 +320,8 @@ export class ExtensionRunner {
   }
 
   installAsProxy(profile: FirefoxProfile): Promise<string|void> {
-    const {firefox, sourceDir, manifestData} = this;
-    return firefox.installExtension(
+    const {firefoxApp, sourceDir, manifestData} = this;
+    return firefoxApp.installExtension(
       {
         manifestData,
         asProxy: true,
@@ -332,7 +332,7 @@ export class ExtensionRunner {
   }
 
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
-    const {firefox, firefoxBinary} = this;
-    return firefox.run(profile, {firefoxBinary});
+    const {firefoxApp, firefox} = this;
+    return firefoxApp.run(profile, {firefox});
   }
 }
