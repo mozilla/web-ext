@@ -34,7 +34,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', [
     'build-tests',
     'mochaTest',
-    'lint',
+    'eslint',
     'flowbin:check',
     'check-for-smoke',
   ]);
