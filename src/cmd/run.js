@@ -2,7 +2,8 @@
 import * as defaultFirefoxApp from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
 import {
-  onlyInstancesOf, onlyErrorsWithCode, RemoteTempInstallNotSupported,
+  isErrorWithCode,
+  RemoteTempInstallNotSupported,
   WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
@@ -107,33 +108,33 @@ export function defaultFirefoxClient(
     maxRetries = 250, retryInterval = 120,
   }: CreateFirefoxClientParams = {}
 ): Promise<RemoteFirefox> {
-  var retries = 0;
+  async function establishConnection() {
+    var retries = 0;
+    var lastError;
 
-  function establishConnection() {
-    return new Promise((resolve, reject) => {
-      connectToFirefox()
-        .then((connectedClient) => {
-          log.debug('Connected to the Firefox debugger');
-          resolve(connectedClient);
-        })
-        .catch(onlyErrorsWithCode('ECONNREFUSED', (error) => {
-          if (retries >= maxRetries) {
-            log.debug('Connect to Firefox debugger: too many retries');
-            throw error;
-          } else {
-            setTimeout(() => {
-              retries ++;
-              log.debug(
-                `Retrying Firefox (${retries}); connection error: ${error}`);
-              resolve(establishConnection());
-            }, retryInterval);
-          }
-        }))
-        .catch((error) => {
+    while (retries <= maxRetries) {
+      try {
+        return await connectToFirefox();
+      } catch (error) {
+        if (isErrorWithCode('ECONNREFUSED', error)) {
+          // Wait for `retryInterval` ms.
+          await new Promise((resolve) => {
+            setTimeout(resolve, retryInterval);
+          });
+
+          retries++;
+          lastError = error;
+          log.debug(
+            `Retrying Firefox (${retries}); connection error: ${error}`);
+        } else {
           log.error(error.stack);
-          reject(error);
-        });
-    });
+          throw error;
+        }
+      }
+    }
+
+    log.debug('Connect to Firefox debugger: too many retries');
+    throw lastError;
   }
 
   log.info('Connecting to the remote Firefox debugger');
@@ -158,7 +159,7 @@ export type CmdRunOptions = {
   reloadStrategy: typeof defaultReloadStrategy,
 };
 
-export default function run(
+export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
@@ -186,87 +187,70 @@ export default function run(
   let runningFirefox;
   let addonId;
 
-  return getValidatedManifest(sourceDir)
-    .then((manifestData) => {
-      return new ExtensionRunner({
-        sourceDir,
-        firefoxApp,
-        firefox,
-        manifestData,
-        profilePath: firefoxProfile,
-      });
-    })
-    .then((extRunner: ExtensionRunner) => {
-      runner = extRunner;
-      return runner.getProfile().then((fxProfile: FirefoxProfile) => {
-        profile = fxProfile;
-      });
-    })
-    .then(() => {
-      return new Promise(
-        (resolve) => {
-          if (!preInstall) {
-            log.debug('Deferring extension installation until after ' +
-                      'connecting to the remote debugger');
-            resolve();
-          } else {
-            log.debug('Pre-installing extension as a proxy file');
-            resolve(runner.installAsProxy(profile).then((installedAddonId) => {
-              installed = true;
-              addonId = installedAddonId;
-            }));
-          }
-        });
-    })
-    .then(() => {
-      return runner.run(profile).then((firefoxChildProcess) => {
-        runningFirefox = firefoxChildProcess;
-      });
-    })
-    .then(() => {
-      if (requiresRemote) {
-        return firefoxClient().then((remoteFirefoxClient) => {
-          client = remoteFirefoxClient;
-        });
-      }
-    })
-    .then(() => {
-      if (installed) {
-        log.debug('Not installing as temporary add-on because the ' +
-                  'add-on was already installed');
-      } else {
-        return runner.installAsTemporaryAddon(client)
-          .then((installResult: FirefoxRDPResponseAddon) => {
-            addonId = installResult.addon.id;
-          });
-      }
-    })
-    .catch(onlyInstancesOf(RemoteTempInstallNotSupported, (error) => {
-      log.debug(`Caught: ${error}`);
-      throw new WebExtError(
-        'Temporary add-on installation is not supported in this version ' +
-        'of Firefox (you need Firefox 49 or higher). For older Firefox ' +
-        'versions, use --pre-install');
-    }))
-    .then(() => {
-      if (noReload) {
-        log.debug('Extension auto-reloading has been disabled');
-      } else {
-        if (!addonId) {
-          throw new WebExtError(
-            'Unexpected missing addonId in the installAsTemporaryAddon result'
-          );
-        }
+  let manifestData = await getValidatedManifest(sourceDir);
 
-        log.debug(
-          `Reloading extension when the source changes; id=${addonId}`);
-        reloadStrategy({
-          firefoxProcess: runningFirefox,
-          profile, client, sourceDir, artifactsDir, addonId,
-        });
+  runner = new ExtensionRunner({
+    sourceDir,
+    firefoxApp,
+    firefox,
+    manifestData,
+    profilePath: firefoxProfile,
+  });
+
+  profile = await  runner.getProfile();
+
+  if (!preInstall) {
+    log.debug('Deferring extension installation until after ' +
+              'connecting to the remote debugger');
+  } else {
+    log.debug('Pre-installing extension as a proxy file');
+    addonId = await runner.installAsProxy(profile);
+    installed = true;
+  }
+
+  runningFirefox = await runner.run(profile);
+
+  if (installed) {
+    log.debug('Not installing as temporary add-on because the ' +
+              'add-on was already installed');
+  } else if (requiresRemote) {
+    client = await firefoxClient();
+
+    try {
+      addonId = await runner.installAsTemporaryAddon(client).then(
+        (installResult: FirefoxRDPResponseAddon) => installResult.addon.id
+      );
+    } catch (error) {
+      if (error instanceof RemoteTempInstallNotSupported) {
+        log.debug(`Caught: ${error}`);
+        throw new WebExtError(
+          'Temporary add-on installation is not supported in this version ' +
+          'of Firefox (you need Firefox 49 or higher). For older Firefox ' +
+          'versions, use --pre-install');
+      } else {
+        throw error;
       }
-      return firefoxApp;
-    });
+    }
+
+    if (noReload) {
+      log.debug('Extension auto-reloading has been disabled');
+    } else {
+      if (!addonId) {
+        throw new WebExtError(
+          'Unexpected missing addonId in the installAsTemporaryAddon result'
+        );
+      }
+
+      log.debug(
+        `Reloading extension when the source changes; id=${addonId}`);
+      reloadStrategy({
+        firefoxProcess: runningFirefox,
+        profile, client, sourceDir, artifactsDir, addonId,
+      });
+    }
+  }
+
+  return firefoxApp;
 }
 
 

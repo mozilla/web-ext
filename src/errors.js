@@ -95,3 +95,16 @@ export function onlyErrorsWithCode(
     return errorHandler(error);
   };
 }
+
+export function isErrorWithCode(
+  codeWanted: string | Array<string>,
+  error: Object,
+): boolean {
+  if (Array.isArray(codeWanted) && codeWanted.indexOf(error.code) !== -1) {
+    return true;
+  } else if (error.code === codeWanted) {
+    return true;
+  }
+
+  return false;
+}
