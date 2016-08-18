@@ -5,7 +5,7 @@ import defaultAddonSigner from 'sign-addon';
 
 import defaultBuilder from './build';
 import {withTempDir} from '../util/temp-dir';
-import {onlyErrorsWithCode, WebExtError} from '../errors';
+import {isErrorWithCode, WebExtError} from '../errors';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
@@ -46,7 +46,7 @@ export type SignResult = {
   downloadedFiles: Array<string>,
 };
 
-export default function sign(
+export default async function sign(
   {
     verbose, sourceDir, artifactsDir, apiKey, apiSecret,
     apiUrlPrefix, id, timeout,
@@ -57,113 +57,115 @@ export default function sign(
   }: SignOptions = {}
 ): Promise<SignResult> {
   return withTempDir(
-    (tmpDir) => {
-      return prepareArtifactsDir(artifactsDir)
-        .then(() => {
-          if (preValidatedManifest) {
-            return preValidatedManifest;
-          } else {
-            return getValidatedManifest(sourceDir);
-          }
-        })
-        .then((manifestData) => {
-          return Promise.all([
-            build({sourceDir, artifactsDir: tmpDir.path()}, {manifestData}),
-            getIdFromSourceDir(sourceDir),
-          ])
-          .then(([buildResult, idFromSourceDir]) => {
-            return {buildResult, manifestData, idFromSourceDir};
-          });
-        })
-        .then(({buildResult, manifestData, idFromSourceDir}) => {
-          const manifestId = getManifestId(manifestData);
-          if (id && manifestId) {
-            throw new WebExtError(
-              `Cannot set custom ID ${id} because manifest.json ` +
-              `declares ID ${manifestId}`);
-          }
-          if (manifestId) {
-            id = manifestId;
-          }
-          if (!id && idFromSourceDir) {
-            log.info(
-              'Using previously auto-generated extension ID: ' +
-              `${idFromSourceDir}`);
-            id = idFromSourceDir;
-          }
-          if (!id) {
-            log.warn('No extension ID specified (it will be auto-generated)');
-          }
-          return signAddon({
-            apiKey,
-            apiSecret,
-            apiUrlPrefix,
-            timeout,
-            verbose,
-            id,
-            xpiPath: buildResult.extensionPath,
-            version: manifestData.version,
-            downloadDir: artifactsDir,
-          });
-        })
-        .then((signingResult) => {
-          if (signingResult.id) {
-            return saveIdToSourceDir(sourceDir, signingResult.id)
-              .then(() => signingResult);
-          } else {
-            return signingResult;
-          }
-        })
-        .then((signingResult) => {
-          // All information about the downloaded files would have
-          // already been logged by signAddon().
-          if (signingResult.success) {
-            log.info(`Extension ID: ${signingResult.id}`);
-            log.info('SUCCESS');
-          } else {
-            log.info('FAIL');
-          }
-          return signingResult;
-        });
+    async function (tmpDir) {
+      await prepareArtifactsDir(artifactsDir);
+
+      let manifestData;
+
+      if (preValidatedManifest) {
+        manifestData = preValidatedManifest;
+      } else {
+        manifestData = await getValidatedManifest(sourceDir);
+      }
+
+      let [buildResult, idFromSourceDir] = await Promise.all([
+        build({sourceDir, artifactsDir: tmpDir.path()}, {manifestData}),
+        getIdFromSourceDir(sourceDir),
+      ]);
+
+      const manifestId = getManifestId(manifestData);
+
+      if (id && manifestId) {
+        throw new WebExtError(
+          `Cannot set custom ID ${id} because manifest.json ` +
+          `declares ID ${manifestId}`);
+      }
+
+      if (manifestId) {
+        id = manifestId;
+      }
+
+      if (!id && idFromSourceDir) {
+        log.info(
+          'Using previously auto-generated extension ID: ' +
+          `${idFromSourceDir}`);
+        id = idFromSourceDir;
+      }
+
+      if (!id) {
+        log.warn('No extension ID specified (it will be auto-generated)');
+      }
+
+      let signingResult = await signAddon({
+        apiKey,
+        apiSecret,
+        apiUrlPrefix,
+        timeout,
+        verbose,
+        id,
+        xpiPath: buildResult.extensionPath,
+        version: manifestData.version,
+        downloadDir: artifactsDir,
+      });
+
+      if (signingResult.id) {
+        await saveIdToSourceDir(sourceDir, signingResult.id);
+      }
+
+      // All information about the downloaded files would have
+      // already been logged by signAddon().
+      if (signingResult.success) {
+        log.info(`Extension ID: ${signingResult.id}`);
+        log.info('SUCCESS');
+      } else {
+        log.info('FAIL');
+      }
+
+      return signingResult;
     }
   );
 }
 
 
-export function getIdFromSourceDir(sourceDir: string): Promise<string> {
+export async function getIdFromSourceDir(
+  sourceDir: string
+): Promise<string|void> {
   const filePath = path.join(sourceDir, extensionIdFile);
-  return fs.readFile(filePath)
-    .then((content) => {
-      let lines = content.toString().split('\n');
-      lines = lines.filter((line) => {
-        line = line.trim();
-        if (line && !line.startsWith('#')) {
-          return line;
-        }
-      });
-      let id = lines[0];
-      log.debug(`Found extension ID ${id} in ${filePath}`);
-      if (!id) {
-        throw new WebExtError(`No ID found in extension ID file ${filePath}`);
+
+  try {
+    const content = await fs.readFile(filePath);
+
+    let lines = content.toString().split('\n');
+    lines = lines.filter((line) => {
+      line = line.trim();
+      if (line && !line.startsWith('#')) {
+        return line;
       }
-      return id;
-    })
-    .catch(onlyErrorsWithCode('ENOENT', () => {
+    });
+    let id = lines[0];
+    log.debug(`Found extension ID ${id} in ${filePath}`);
+    if (!id) {
+      throw new WebExtError(`No ID found in extension ID file ${filePath}`);
+    }
+    return id;
+  } catch (error) {
+    if (isErrorWithCode('ENOENT', error)) {
       log.debug(`No ID file found at: ${filePath}`);
-    }));
+    } else {
+      throw error;
+    }
+  }
 }
 
 
-export function saveIdToSourceDir(sourceDir: string, id: string)
+export async function saveIdToSourceDir(sourceDir: string, id: string)
     : Promise<void> {
   const filePath = path.join(sourceDir, extensionIdFile);
-  return fs.writeFile(filePath,
-    [
-      '# This file was created by https://github.com/mozilla/web-ext',
-      '# Your auto-generated extension ID for addons.mozilla.org is:',
-      id.toString(),
-    ].join('\n'))
-    .then(() => {
-      log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
-    });
+  await fs.writeFile(filePath, [
+    '# This file was created by https://github.com/mozilla/web-ext',
+    '# Your auto-generated extension ID for addons.mozilla.org is:',
+    id.toString(),
+  ].join('\n'));
+
+  log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
 }
