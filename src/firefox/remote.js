@@ -143,38 +143,35 @@ export class RemoteFirefox {
       });
   }
 
-  checkForAddonReloading(
+  async checkForAddonReloading(
     addon: FirefoxRDPAddonActor
   ): Promise<FirefoxRDPAddonActor> {
     if (this.checkedForAddonReloading) {
       // We only need to check once if reload() is supported.
-      return Promise.resolve(addon);
+      return addon;
     } else {
-      return this.addonRequest(addon, 'requestTypes')
-        .then((response: FirefoxRDPResponseRequestTypes) => {
-          if (response.requestTypes.indexOf('reload') === -1) {
-            let supportedRequestTypes = JSON.stringify(response.requestTypes);
-            log.debug(
-              `Remote Firefox only supports: ${supportedRequestTypes}`);
-            throw new WebExtError(
-              'This Firefox version does not support add-on reloading. ' +
-              'Re-run with --no-reload');
-          } else {
-            this.checkedForAddonReloading = true;
-            return addon;
-          }
-        });
+      const response = await this.addonRequest(addon, 'requestTypes');
+
+      if (response.requestTypes.indexOf('reload') === -1) {
+        let supportedRequestTypes = JSON.stringify(response.requestTypes);
+        log.debug(
+          `Remote Firefox only supports: ${supportedRequestTypes}`);
+        throw new WebExtError(
+          'This Firefox version does not support add-on reloading. ' +
+          'Re-run with --no-reload');
+      } else {
+        this.checkedForAddonReloading = true;
+        return addon;
+      }
     }
   }
 
-  reloadAddon(addonId: string): Promise<FirefoxRDPResponseMaybe> {
-    return this.getInstalledAddon(addonId)
-      .then((addon) => this.checkForAddonReloading(addon))
-      .then((addon) => {
-        log.info(
-          `${(new Date()).toTimeString()}: Reloaded extension: ${addon.id}`);
-        return this.addonRequest(addon, 'reload');
-      });
+  async reloadAddon(addonId: string): Promise<void> {
+    const addon = await this.getInstalledAddon(addonId);
+    await this.checkForAddonReloading(addon);
+    await this.addonRequest(addon, 'reload');
+    log.info(
+      `${(new Date()).toTimeString()}: Reloaded extension: ${addon.id}`);
   }
 }
 
@@ -192,14 +189,12 @@ declare function exports(
   port: number, options?: ConnectOptions
 ): Promise<RemoteFirefox>;
 
-export default function connect(
+export default async function connect(
   port: number = REMOTE_PORT,
   {connectToFirefox = defaultFirefoxConnector}: ConnectOptions = {}
 ): Promise<RemoteFirefox> {
   log.debug(`Connecting to Firefox on port ${port}`);
-  return connectToFirefox(port)
-    .then((client) => {
-      log.debug('Connected to the remote Firefox debugger');
-      return new RemoteFirefox(client);
-    });
+  const client = await connectToFirefox(port);
+  log.debug('Connected to the remote Firefox debugger');
+  return new RemoteFirefox(client);
 }
