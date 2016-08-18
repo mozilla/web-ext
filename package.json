@@ -96,7 +96,7 @@
     "mocha": "3.0.2",
     "mocha-multi": "0.9.1",
     "sinon": "1.17.5",
-    "webpack": "1.13.1",
+    "webpack": "1.13.2",
     "webpack-dev-server": "1.14.1",
     "yauzl": "2.6.0"
   },
