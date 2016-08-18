@@ -2,7 +2,9 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {onlyErrorsWithCode, onlyInstancesOf} from '../../src/errors';
+import {
+  onlyErrorsWithCode, isErrorWithCode, onlyInstancesOf,
+} from '../../src/errors';
 import {makeSureItFails} from './helpers';
 
 
@@ -78,4 +80,29 @@ describe('errors', () => {
 
   });
 
+  describe('isErrorWithCode', () => {
+    class ErrorWithCode extends Error {
+      code: string;
+      constructor() {
+        super('pretend this is a system error');
+        this.code = 'SOME_CODE';
+      }
+    }
+
+    it('returns true on errors that do match the code', () => {
+      assert.equal(isErrorWithCode('SOME_CODE', new ErrorWithCode()), true);
+      assert.equal(
+        isErrorWithCode(['SOME_CODE', 'OTHER_CODE'], new ErrorWithCode()), true
+      );
+    });
+
+    it('returns false on errors that do not match the code', () => {
+      assert.equal(isErrorWithCode('OTHER_CODE', new ErrorWithCode()), false);
+      assert.equal(
+        isErrorWithCode(['OTHER_CODE', 'ANOTHER_CODE'], new ErrorWithCode()),
+        false
+      );
+      assert.equal(isErrorWithCode('ANY_CODE', new Error()), false);
+    });
+  });
 });
