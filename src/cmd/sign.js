@@ -87,8 +87,7 @@ export default async function sign(
 
       if (!id && idFromSourceDir) {
         log.info(
-          'Using previously auto-generated extension ID: ' +
-          `${idFromSourceDir}`);
+          `Using previously auto-generated extension ID: ${idFromSourceDir}`);
         id = idFromSourceDir;
       }
 
