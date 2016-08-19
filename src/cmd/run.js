@@ -109,10 +109,15 @@ export function defaultFirefoxClient(
   }: CreateFirefoxClientParams = {}
 ): Promise<RemoteFirefox> {
   async function establishConnection() {
-    var retries = 0;
     var lastError;
 
-    while (retries <= maxRetries) {
+    function* range(min: number, max: number, step: number = 1) {
+      for (let i = min; i <= max; i += step) {
+        yield i;
+      }
+    }
+
+    for (const retries of range(0, maxRetries)) {
       try {
         return await connectToFirefox();
       } catch (error) {
@@ -122,7 +127,6 @@ export function defaultFirefoxClient(
             setTimeout(resolve, retryInterval);
           });
 
-          retries++;
           lastError = error;
           log.debug(
             `Retrying Firefox (${retries}); connection error: ${error}`);
