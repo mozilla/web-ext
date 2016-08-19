@@ -131,29 +131,34 @@ export async function getIdFromSourceDir(
 ): Promise<string|void> {
   const filePath = path.join(sourceDir, extensionIdFile);
 
-  try {
-    const content = await fs.readFile(filePath);
+  let content;
 
-    let lines = content.toString().split('\n');
-    lines = lines.filter((line) => {
-      line = line.trim();
-      if (line && !line.startsWith('#')) {
-        return line;
-      }
-    });
-    let id = lines[0];
-    log.debug(`Found extension ID ${id} in ${filePath}`);
-    if (!id) {
-      throw new WebExtError(`No ID found in extension ID file ${filePath}`);
-    }
-    return id;
+  try {
+    content = await fs.readFile(filePath);
   } catch (error) {
     if (isErrorWithCode('ENOENT', error)) {
       log.debug(`No ID file found at: ${filePath}`);
-    } else {
-      throw error;
+      return;
     }
+    throw error;
   }
+
+  let lines = content.toString().split('\n');
+  lines = lines.filter((line) => {
+    line = line.trim();
+    if (line && !line.startsWith('#')) {
+      return line;
+    }
+  });
+
+  let id = lines[0];
+  log.debug(`Found extension ID ${id} in ${filePath}`);
+
+  if (!id) {
+    throw new WebExtError(`No ID found in extension ID file ${filePath}`);
+  }
+
+  return id;
 }
 
 

@@ -56,14 +56,13 @@ export async function defaultRemotePortFinder(
 ): Promise<number> {
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
 
+  let client;
+
   while (retriesLeft >= 0) {
     try {
-      const client = await connectToFirefox(portToTry);
+      client = await connectToFirefox(portToTry);
       log.debug(`Remote Firefox port ${portToTry} is in use ` +
                 `(retries remaining: ${retriesLeft} )`);
-      client.disconnect();
-      portToTry++;
-      retriesLeft--;
     } catch (error) {
       if (isErrorWithCode('ECONNREFUSED', error)) {
         // The connection was refused so this port is good to use.
@@ -72,6 +71,10 @@ export async function defaultRemotePortFinder(
 
       throw error;
     }
+
+    client.disconnect();
+    portToTry++;
+    retriesLeft--;
   }
 
   throw new WebExtError('Too many retries on port search');
