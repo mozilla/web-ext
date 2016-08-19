@@ -60,11 +60,10 @@ async function defaultPackageCreator(
     `${manifestData.name}-${manifestData.version}.zip`);
   let extensionPath = path.join(artifactsDir, packageName);
   let stream = createWriteStream(extensionPath);
-  let promisedStream = streamToPromise(stream);
 
   stream.write(buffer, () => stream.end());
 
-  await promisedStream;
+  await streamToPromise(stream);
 
   log.info(`Your web extension is ready: ${extensionPath}`);
   return {extensionPath};
