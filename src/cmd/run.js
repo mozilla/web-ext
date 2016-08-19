@@ -197,7 +197,7 @@ export default async function run(
     profilePath: firefoxProfile,
   });
 
-  profile = await  runner.getProfile();
+  profile = await runner.getProfile();
 
   if (!preInstall) {
     log.debug('Deferring extension installation until after ' +

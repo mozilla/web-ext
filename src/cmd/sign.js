@@ -18,7 +18,7 @@ export const extensionIdFile = '.web-extension-id';
 
 // Import flow types.
 
-import type {ExtensionManifest} from  '../util/manifest';
+import type {ExtensionManifest} from '../util/manifest';
 
 
 // Sign command types and implementation.
