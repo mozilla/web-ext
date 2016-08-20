@@ -75,7 +75,7 @@ export type ReloadStrategyOptions = {
 
 export function defaultReloadStrategy(
   {
-    addonId, firefox, client, profile, sourceDir, artifactsDir,
+    addonId, firefoxApp, client, profile, sourceDir, artifactsDir,
   }: ReloadStrategyParams,
   {
     createWatcher=defaultWatcherCreator,
@@ -83,7 +83,7 @@ export function defaultReloadStrategy(
 ): void {
   let watcher: Watchpack;
 
-  firefox.on('close', () => {
+  firefoxApp.on('close', () => {
     client.disconnect();
     watcher.close();
   });
