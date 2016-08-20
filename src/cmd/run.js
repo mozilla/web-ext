@@ -62,7 +62,7 @@ export function defaultWatcherCreator(
 
 export type ReloadStrategyParams = {
   addonId: string,
-  firefox: FirefoxProcess,
+  firefoxApp: FirefoxProcess,
   client: RemoteFirefox,
   profile: FirefoxProfile,
   sourceDir: string,
