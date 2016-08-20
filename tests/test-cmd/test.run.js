@@ -10,7 +10,7 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
 } from '../../src/cmd/run';
-import * as firefox from '../../src/firefox';
+import * as firefoxApp from '../../src/firefox';
 import {RemoteFirefox} from '../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
@@ -37,7 +37,7 @@ describe('run', () => {
       noReload: true,
     };
     let options = {
-      firefox: getFakeFirefox(),
+      firefoxApp: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(fake(RemoteFirefox.prototype, {
           installTemporaryAddon: () =>
@@ -69,7 +69,7 @@ describe('run', () => {
       run: () => Promise.resolve(),
       ...implementations,
     };
-    return fake(firefox, allImplementations);
+    return fake(firefoxApp, allImplementations);
   }
 
   it('installs and runs the extension', () => {
@@ -77,7 +77,7 @@ describe('run', () => {
     let profile = {};
 
     const cmd = prepareRun();
-    const {firefox} = cmd.options;
+    const {firefoxApp} = cmd.options;
     const firefoxClient = fake(RemoteFirefox.prototype, {
       installTemporaryAddon: () => Promise.resolve(tempInstallResult),
     });
@@ -91,8 +91,8 @@ describe('run', () => {
       assert.equal(install.called, true);
       assert.equal(install.firstCall.args[0], cmd.argv.sourceDir);
 
-      assert.equal(firefox.run.called, true);
-      assert.deepEqual(firefox.run.firstCall.args[0], profile);
+      assert.equal(firefoxApp.run.called, true);
+      assert.deepEqual(firefoxApp.run.firstCall.args[0], profile);
     });
   });
 
@@ -114,26 +114,26 @@ describe('run', () => {
   });
 
   it('passes a custom Firefox binary when specified', () => {
-    const firefoxBinary = '/pretend/path/to/Firefox/firefox-bin';
+    const firefox = '/pretend/path/to/Firefox/firefox-bin';
     const cmd = prepareRun();
-    const {firefox} = cmd.options;
+    const {firefoxApp} = cmd.options;
 
-    return cmd.run({firefoxBinary}).then(() => {
-      assert.equal(firefox.run.called, true);
-      assert.equal(firefox.run.firstCall.args[1].firefoxBinary,
-                   firefoxBinary);
+    return cmd.run({firefox}).then(() => {
+      assert.equal(firefoxApp.run.called, true);
+      assert.equal(firefoxApp.run.firstCall.args[1].firefox,
+                   firefox);
     });
   });
 
   it('passes a custom Firefox profile when specified', () => {
     const firefoxProfile = '/pretend/path/to/firefox/profile';
     const cmd = prepareRun();
-    const {firefox} = cmd.options;
+    const {firefoxApp} = cmd.options;
 
     return cmd.run({firefoxProfile}).then(() => {
-      assert.equal(firefox.createProfile.called, false);
-      assert.equal(firefox.copyProfile.called, true);
-      assert.equal(firefox.copyProfile.firstCall.args[0],
+      assert.equal(firefoxApp.createProfile.called, false);
+      assert.equal(firefoxApp.copyProfile.called, true);
+      assert.equal(firefoxApp.copyProfile.firstCall.args[0],
                    firefoxProfile);
     });
   });
@@ -144,19 +144,19 @@ describe('run', () => {
       installTemporaryAddon: () => Promise.resolve(tempInstallResult),
     });
     const fakeProfile = {};
-    const firefox = getFakeFirefox({
+    const firefoxApp = getFakeFirefox({
       copyProfile: () => fakeProfile,
     });
     const {sourceDir} = cmd.argv;
 
     return cmd.run({preInstall: true}, {
-      firefox,
+      firefoxApp,
       firefoxClient: sinon.spy(() => Promise.resolve(firefoxClient)),
     }).then(() => {
-      assert.equal(firefox.installExtension.called, true);
+      assert.equal(firefoxApp.installExtension.called, true);
       assert.equal(firefoxClient.installTemporaryAddon.called, false);
 
-      const install = firefox.installExtension.firstCall.args[0];
+      const install = firefoxApp.installExtension.firstCall.args[0];
       assert.equal(install.asProxy, true);
       assert.equal(install.manifestData.applications.gecko.id,
                    'minimal-example@web-ext-test-suite');
