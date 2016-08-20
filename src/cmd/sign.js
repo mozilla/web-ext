@@ -46,7 +46,7 @@ export type SignResult = {
   downloadedFiles: Array<string>,
 };
 
-export default async function sign(
+export default function sign(
   {
     verbose, sourceDir, artifactsDir, apiKey, apiSecret,
     apiUrlPrefix, id, timeout,

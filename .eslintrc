@@ -80,6 +80,7 @@
     "prefer-template": 2,
     "quote-props": [1, "consistent-as-needed"],
     "quotes": [2, "single", "avoid-escape"],
+    "require-yield": 2,
     "semi": [2, "always"],
     "space-before-blocks": [2, "always"],
     "space-before-function-paren": [2, "never"],
