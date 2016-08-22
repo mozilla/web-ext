@@ -308,7 +308,7 @@ describe('run', () => {
         addonId: 'some-addon@test-suite',
         client,
         // $FLOW_IGNORE: fake a Firefox ChildProcess using an EventEmitter for testing reasons.
-        firefoxApp: new EventEmitter(),
+        firefoxProcess: new EventEmitter(),
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
@@ -330,9 +330,9 @@ describe('run', () => {
     }
 
     it('cleans up connections when firefox closes', () => {
-      const {firefoxApp, client, watcher, reloadStrategy} = prepare();
+      const {firefoxProcess, client, watcher, reloadStrategy} = prepare();
       reloadStrategy();
-      firefoxApp.emit('close');
+      firefoxProcess.emit('close');
       assert.equal(client.client.disconnect.called, true);
       assert.equal(watcher.close.called, true);
     });

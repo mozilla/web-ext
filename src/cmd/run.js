@@ -62,7 +62,7 @@ export function defaultWatcherCreator(
 
 export type ReloadStrategyParams = {
   addonId: string,
-  firefoxApp: FirefoxProcess,
+  firefoxProcess: FirefoxProcess,
   client: RemoteFirefox,
   profile: FirefoxProfile,
   sourceDir: string,
@@ -75,7 +75,7 @@ export type ReloadStrategyOptions = {
 
 export function defaultReloadStrategy(
   {
-    addonId, firefoxApp, client, profile, sourceDir, artifactsDir,
+    addonId, firefoxProcess, client, profile, sourceDir, artifactsDir,
   }: ReloadStrategyParams,
   {
     createWatcher=defaultWatcherCreator,
@@ -83,7 +83,7 @@ export function defaultReloadStrategy(
 ): void {
   let watcher: Watchpack;
 
-  firefoxApp.on('close', () => {
+  firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
   });
@@ -261,7 +261,7 @@ export default function run(
         log.debug(
           `Reloading extension when the source changes; id=${addonId}`);
         reloadStrategy({
-          firefoxApp: runningFirefox,
+          firefoxProcess: runningFirefox,
           profile, client, sourceDir, artifactsDir, addonId,
         });
       }
