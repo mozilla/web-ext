@@ -150,9 +150,7 @@ Example: $0 --help run.
       default: process.cwd(),
       requiresArg: true,
       type: 'string',
-      coerce: (arg) => {
-        return path.resolve(arg);
-      },
+      coerce: path.resolve,
     },
     'artifacts-dir': {
       alias: 'a',
