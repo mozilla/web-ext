@@ -79,12 +79,6 @@ export class Program {
         this.yargs.exitProcess(this.shouldExitProgram);
         argv = this.yargs.argv;
 
-        // Fix up sourceDir. This can hopefully move to option configuration
-        // soon. See https://github.com/yargs/yargs/issues/535
-        if (argv.sourceDir) {
-          argv.sourceDir = path.resolve(argv.sourceDir);
-        }
-
         cmd = argv._[0];
         if (cmd === undefined) {
           throw new WebExtError('No sub-command was specified in the args');
@@ -154,9 +148,11 @@ Example: $0 --help run.
       alias: 's',
       describe: 'Web extension source directory.',
       default: process.cwd(),
-      normalize: true,
       requiresArg: true,
       type: 'string',
+      coerce: (arg) => {
+        return path.resolve(arg);
+      },
     },
     'artifacts-dir': {
       alias: 'a',
