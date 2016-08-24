@@ -1,5 +1,5 @@
 /* @flow */
-import * as defaultFirefox from '../firefox';
+import * as defaultFirefoxApp from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
 import {
   onlyInstancesOf, onlyErrorsWithCode, RemoteTempInstallNotSupported,
@@ -153,7 +153,7 @@ export type CmdRunParams = {
 };
 
 export type CmdRunOptions = {
-  firefoxApp: typeof defaultFirefox,
+  firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
 };
@@ -164,7 +164,7 @@ export default function run(
     preInstall=false, noReload=false,
   }: CmdRunParams,
   {
-    firefoxApp=defaultFirefox,
+    firefoxApp=defaultFirefoxApp,
     firefoxClient=defaultFirefoxClient,
     reloadStrategy=defaultReloadStrategy,
   }: CmdRunOptions = {}): Promise<Object> {
@@ -276,7 +276,7 @@ export type ExtensionRunnerParams = {
   sourceDir: string,
   manifestData: ExtensionManifest,
   profilePath: string,
-  firefoxApp: typeof defaultFirefox,
+  firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
 };
 
@@ -284,7 +284,7 @@ export class ExtensionRunner {
   sourceDir: string;
   manifestData: ExtensionManifest;
   profilePath: string;
-  firefoxApp: typeof defaultFirefox;
+  firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
 
   constructor(

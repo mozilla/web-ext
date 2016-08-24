@@ -10,7 +10,7 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
 } from '../../src/cmd/run';
-import * as firefoxApp from '../../src/firefox';
+import * as defaultFirefoxApp from '../../src/firefox';
 import {RemoteFirefox} from '../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
@@ -69,7 +69,7 @@ describe('run', () => {
       run: () => Promise.resolve(),
       ...implementations,
     };
-    return fake(firefoxApp, allImplementations);
+    return fake(defaultFirefoxApp, allImplementations);
   }
 
   it('installs and runs the extension', () => {
