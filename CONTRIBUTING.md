@@ -20,13 +20,35 @@ To run the entire suite of tests once and exit, type:
 This is the same as the `develop` command but it won't re-run automatically as
 you edit files. It's also a little slower because there's no caching.
 
-### Build web-ext
+### Run a single test
+
+Instead of running the entire suite, you can run a single test by invoking
+the `mocha` executable directly with the `-f` option to filter by test
+description. For example, if the test you'd like to run is defined in
+`tests/test.program.js` and is described as
+"turns sourceDir into an absolute path" then you could run it like this:
+
+    ./node_modules/.bin/mocha -r babel-core/register tests/test.program.js -f "sourceDir"
+
+### Debug a test
+
+You can enter the [Node debugger](https://nodejs.org/api/debugger.html) by
+directly invoking the `mocha` executable with the `debug` command. For example,
+if the test you want to debug is defined in `tests/test.program.js` then you
+could enter the debugger like this:
+
+    ./node_modules/.bin/mocha debug -r babel-core/register tests/test.program.js
+
+You could also put the `debugger` statement somewhere in the code to set a
+breakpoint.
+
+## Build web-ext
 
 Type `npm run build` to build a new version of the libraries used by the
 `./bin/web-ext` command. When successful, you will see newly built files in
 the `./dist/` directory.
 
-### Check for lint
+## Check for lint
 
 Type `npm run lint` to make sure there are no syntax errors or other house
 keeping problems in the source code.
@@ -37,12 +59,12 @@ the test suite without lint checks:
 
     SKIP_LINT=1 npm test
 
-### Check for Flow errors
+## Check for Flow errors
 
 This project relies on [flow](http://flowtype.org/) to ensure functions and
 classes are used correctly. Run all flow checks with `npm run flow-check`.
 
-### Code Coverage
+## Code Coverage
 
 You can generate Code Coverage reports every time you run the test suite
 by setting `$COVERAGE` in the environment. Here is an example of running
