@@ -74,7 +74,7 @@ export function defaultRemotePortFinder(
 // Declare the needed 'fx-runner' module flow types.
 
 export type FirefoxRunnerParams = {
-  binary?: string,
+  binary: ?string,
   profile?: string,
   'new-instance'?: boolean,
   'no-remote'?: boolean,
@@ -105,7 +105,7 @@ export type FirefoxRunnerFn =
 export type FirefoxRunOptions = {
   fxRunner?: FirefoxRunnerFn,
   findRemotePort?: RemotePortFinderFn,
-  firefoxBinary?: string,
+  firefoxBinary: ?string,
   binaryArgs?: Array<string>,
 };
 

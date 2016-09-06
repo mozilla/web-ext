@@ -333,6 +333,6 @@ export class ExtensionRunner {
 
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
     const {firefoxApp, firefox} = this;
-    return firefoxApp.run(profile, {firefox});
+    return firefoxApp.run(profile, {firefoxBinary: firefox});
   }
 }

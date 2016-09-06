@@ -120,7 +120,7 @@ describe('run', () => {
 
     return cmd.run({firefox}).then(() => {
       assert.equal(firefoxApp.run.called, true);
-      assert.equal(firefoxApp.run.firstCall.args[1].firefox,
+      assert.equal(firefoxApp.run.firstCall.args[1].firefoxBinary,
                    firefox);
     });
   });
