@@ -82,13 +82,11 @@ export class Program {
       : Object = {}): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
-    let argv;
-    let cmd;
-
     this.yargs.exitProcess(this.shouldExitProgram);
-    argv = this.yargs.argv;
 
-    cmd = argv._[0];
+    const argv = this.yargs.argv;
+    const cmd = argv._[0];
+
     if (cmd === undefined) {
       throw new WebExtError('No sub-command was specified in the args');
     }
