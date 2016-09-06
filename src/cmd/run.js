@@ -111,13 +111,7 @@ export function defaultFirefoxClient(
   async function establishConnection() {
     var lastError;
 
-    function* range(min: number, max: number, step: number = 1) {
-      for (let i = min; i <= max; i += step) {
-        yield i;
-      }
-    }
-
-    for (const retries of range(0, maxRetries)) {
+    for (let retries = 0; retries <= maxRetries; retries++) {
       try {
         return await connectToFirefox();
       } catch (error) {
