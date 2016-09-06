@@ -8,6 +8,7 @@ module.exports = {
     },
   },
   all: ['dist/tests.js'],
+  smoke: ['dist/smoke-tests.js'],
 };
 
 if (process.env.COVERAGE === 'y') {

@@ -12,4 +12,11 @@ module.exports = {
       filename: 'tests.js',
     },
   },
+  smoke: {
+    entry: './tests/smoke/runner.js',
+    output: {
+      path: path.join(__dirname, '../dist'),
+      filename: 'smoke-tests.js',
+    },
+  },
 };

@@ -1,7 +1,4 @@
 /*eslint prefer-template: 0*/
-var path = require('path');
-var spawn = require('child_process').spawn;
-
 module.exports = function(grunt) {
 
   // Looking for something?
@@ -58,20 +55,9 @@ module.exports = function(grunt) {
     'check-for-smoke',
     'checks to see if web-ext is completely broken', function() {
       grunt.log.writeln('making sure web-ext is not catastrophically broken');
-
-      var done = this.async();
-      var webExt = path.join(path.resolve(__dirname), 'bin', 'web-ext');
-      var result = spawn(webExt, ['--help']);
-
-      result.stderr.on('data', function(data) {
-        grunt.log.writeln(data);
-      });
-
-      result.on('close', function(code) {
-        grunt.log.writeln('web-ext exited: ' + code);
-        var succeeded = code === 0;
-        done(succeeded);
-      });
+      grunt.task.run([
+        'webpack:smoke',
+        'mochaTest:smoke',
+      ]);
     });
-
 };
