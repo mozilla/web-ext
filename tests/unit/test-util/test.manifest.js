@@ -4,10 +4,10 @@ import path from 'path';
 import {assert} from 'chai';
 import deepcopy from 'deepcopy';
 
-import {onlyInstancesOf, InvalidManifest} from '../../src/errors';
+import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
 import {fs} from 'mz';
-import getValidatedManifest, {getManifestId} from '../../src/util/manifest';
-import {withTempDir} from '../../src/util/temp-dir';
+import getValidatedManifest, {getManifestId} from '../../../src/util/manifest';
+import {withTempDir} from '../../../src/util/temp-dir';
 import {makeSureItFails} from '../helpers';
 
 

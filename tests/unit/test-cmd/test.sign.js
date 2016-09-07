@@ -7,13 +7,13 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 import promisify from 'es6-promisify';
 
-import {onlyInstancesOf, WebExtError} from '../../src/errors';
-import {getManifestId} from '../../src/util/manifest';
-import {withTempDir} from '../../src/util/temp-dir';
+import {onlyInstancesOf, WebExtError} from '../../../src/errors';
+import {getManifestId} from '../../../src/util/manifest';
+import {withTempDir} from '../../../src/util/temp-dir';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import completeSignCommand, {
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
-} from '../../src/cmd/sign';
+} from '../../../src/cmd/sign';
 import {makeSureItFails, fixturePath} from '../helpers';
 
 

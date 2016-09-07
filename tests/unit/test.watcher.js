@@ -5,8 +5,8 @@ import {fs} from 'mz';
 import sinon from 'sinon';
 import {assert} from 'chai';
 
-import {default as onSourceChange, proxyFileChanges} from '../src/watcher';
-import {withTempDir} from '../src/util/temp-dir';
+import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
+import {withTempDir} from '../../src/util/temp-dir';
 
 
 describe('watcher', () => {

@@ -4,9 +4,9 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import {fs} from 'mz';
 
-import {onlyInstancesOf, WebExtError} from '../../src/errors';
-import {withTempDir} from '../../src/util/temp-dir';
-import {prepareArtifactsDir} from '../../src/util/artifacts';
+import {onlyInstancesOf, WebExtError} from '../../../src/errors';
+import {withTempDir} from '../../../src/util/temp-dir';
+import {prepareArtifactsDir} from '../../../src/util/artifacts';
 import {makeSureItFails} from '../helpers';
 
 

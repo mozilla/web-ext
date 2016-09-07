@@ -6,7 +6,7 @@ module.exports = {
   options: webpackConfig,
   build: {},
   test: {
-    entry: './tests/runner.js',
+    entry: './tests/unit/runner.js',
     output: {
       path: path.join(__dirname, '../dist'),
       filename: 'tests.js',

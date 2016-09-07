@@ -6,15 +6,15 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
-  from '../../src/errors';
+  from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
-} from '../../src/cmd/run';
-import * as defaultFirefoxApp from '../../src/firefox';
-import {RemoteFirefox} from '../../src/firefox/remote';
+} from '../../../src/cmd/run';
+import * as defaultFirefoxApp from '../../../src/firefox';
+import {RemoteFirefox} from '../../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
-import {createLogger} from '../../src/util/logger';
+import {createLogger} from '../../../src/util/logger';
 
 const log = createLogger(__filename);
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
