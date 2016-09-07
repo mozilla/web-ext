@@ -54,20 +54,41 @@ export function defaultRemotePortFinder(
 ): Promise<number> {
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
 
-  return connectToFirefox(portToTry)
-    .then((client) => {
-      log.debug(`Remote Firefox port ${portToTry} is in use`);
-      client.disconnect();
-      // TODO: instead of throw an error, pick a new random port until
-      // one of them is available.
-      // https://github.com/mozilla/web-ext/issues/283
+  let retriesCount = 10;
+  function portConnectionRetry(){
+    if (retriesCount === 0) {
       throw new WebExtError(
-        `Cannot listen on port ${portToTry} because it's in use`);
+        'Too many retries on searching for an open port'
+      );
+    }
+    return new Promise((resolve, reject) => {
+      connectToFirefox(portToTry)
+        .then((client) => {
+          log.debug(`Remote Firefox port ${portToTry} is in use.
+            Trying next one`);
+          client.disconnect();
+          portToTry++;
+          throw new WebExtError(
+            `Cannot listen on port ${portToTry} because it's in use
+            Trying next one`
+          );
+        })
+        .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
+          resolve(portToTry);
+        }))
+        .catch((err) => {
+          reject(err);
+        });
     })
-    .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
-      // The connection was refused so this port is good to use.
+    .then(() => {
       return portToTry;
-    }));
+    })
+    .catch(() => {
+      retriesCount--;
+      portConnectionRetry();
+    });
+  }
+  return portConnectionRetry();
 }
 
 
