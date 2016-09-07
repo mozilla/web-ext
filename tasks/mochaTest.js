@@ -7,7 +7,7 @@ module.exports = {
       spec: '-',
     },
   },
-  all: ['dist/tests.js'],
+  unit: ['dist/tests.js'],
   smoke: ['dist/smoke-tests.js'],
 };
 

@@ -29,10 +29,10 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', [
-    'build-tests',
-    'mochaTest',
     'lint',
     'flowbin:check',
+    'build-tests',
+    'mochaTest:unit',
     'check-for-smoke',
   ]);
 
