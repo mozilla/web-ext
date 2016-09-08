@@ -15,7 +15,6 @@ module.exports = {
     tasks: [
       'build-tests',
       'mochaTest:unit',
-      'mochaTest:functional',
       'flowbin:status',
       'newer:eslint',
     ],
