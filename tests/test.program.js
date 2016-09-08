@@ -67,6 +67,16 @@ describe('program.Program', () => {
       });
   });
 
+  it('throws an error if sub-command is given an argument', () => {
+    const program = new Program(['thing', 'nope'])
+      .command('thing', '', () => {});
+    return run(program)
+      .then(makeSureItFails())
+      .catch((error) => {
+        assert.match(error.message, /This command does not take any arguments/);
+      });
+  });
+
   it('handles errors that have codes', () => {
 
     class ErrorWithCode extends Error {

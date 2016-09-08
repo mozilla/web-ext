@@ -38,6 +38,7 @@ export class Program {
         return;
       }
       return yargs
+        .demand(0, 0, 'This command does not take any arguments')
         .strict()
         .exitProcess(this.shouldExitProgram)
         // Calling env() will be unnecessary after
