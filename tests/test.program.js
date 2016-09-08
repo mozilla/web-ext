@@ -216,13 +216,13 @@ describe('program.Program', () => {
   });
 
   it('throws an error about unknown sub-command options', () => {
-    const program = new Program(['thing --nope'])
+    const program = new Program(['thing', '--nope'])
       .command('thing', '', () => {});
     return run(program)
       .then(makeSureItFails())
       .catch((error) => {
         // Again, yargs calls this an argument not an option for some reason.
-        assert.match(error.message, /Unknown argument: thing --nope/);
+        assert.match(error.message, /Unknown argument: nope/);
       });
   });
 
