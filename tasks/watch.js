@@ -13,9 +13,10 @@ module.exports = {
       '.flowconfig',
     ],
     tasks: [
-      'flowbin:status',
       'build-tests',
-      'mochaTest',
+      'mochaTest:unit',
+      'mochaTest:functional',
+      'flowbin:status',
       'newer:eslint',
     ],
   },

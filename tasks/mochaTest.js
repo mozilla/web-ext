@@ -7,8 +7,8 @@ module.exports = {
       spec: '-',
     },
   },
-  unit: ['dist/tests.js'],
-  smoke: ['dist/smoke-tests.js'],
+  unit: ['dist/unit-tests.js'],
+  functional: ['dist/functional-tests.js'],
 };
 
 if (process.env.COVERAGE === 'y') {

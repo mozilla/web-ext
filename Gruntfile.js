@@ -25,7 +25,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build-tests', [
     'build',
-    'webpack:test',
+    'webpack:unit_tests',
+    'webpack:functional_tests',
   ]);
 
   grunt.registerTask('test', [
@@ -33,7 +34,7 @@ module.exports = function(grunt) {
     'flowbin:check',
     'build-tests',
     'mochaTest:unit',
-    'check-for-smoke',
+    'mochaTest:functional',
   ]);
 
   grunt.registerTask('develop', [
@@ -50,14 +51,4 @@ module.exports = function(grunt) {
       ]);
     }
   });
-
-  grunt.registerTask(
-    'check-for-smoke',
-    'checks to see if web-ext is completely broken', function() {
-      grunt.log.writeln('making sure web-ext is not catastrophically broken');
-      grunt.task.run([
-        'webpack:smoke',
-        'mochaTest:smoke',
-      ]);
-    });
 };
