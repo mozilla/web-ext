@@ -19,15 +19,18 @@ export class Program {
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
 
-  constructor(argv: ?Array<string>, {yargsInstance=yargs}: Object = {}) {
-    if (argv !== undefined) {
-      // This allows us to override the process argv which is useful for
-      // testing.
-      yargsInstance = yargs(argv);
-    }
+  constructor(
+    argv: ?Array<string>,
+    {absolutePackageDir=process.cwd()}: {absolutePackageDir?: string} = {}
+  ) {
+    // This allows us to override the process argv which is useful for
+    // testing.
+    const yargsInstance = yargs(argv || process.argv, absolutePackageDir);
+
     this.shouldExitProgram = true;
     this.yargs = yargsInstance;
     this.yargs.strict();
+
     this.commands = {};
   }
 
@@ -123,7 +126,7 @@ export function main(
     absolutePackageDir: string,
     {getVersion=defaultVersionGetter, commands=defaultCommands, argv,
      runOptions={}}: Object = {}): Promise<any> {
-  let program = new Program(argv);
+  let program = new Program(argv, {absolutePackageDir});
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.
