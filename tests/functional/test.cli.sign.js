@@ -1,38 +1,46 @@
 /* @flow */
 import {spawn} from 'child_process';
-import {describe, it} from 'mocha';
+import {describe, it, beforeEach, afterEach} from 'mocha';
 
 import {
-  webExt, addonPath, artifactsPath, fakeServerPath,
+  webExt, addonPath, fakeServerPath,
+  withTempAddonDir, runCommand, reportRunCommandError,
 } from './common';
 
 describe('web-ext sign', () => {
-  it('webext lint --source-dir SRCDIR', () => {
-    return new Promise((resolve, reject) => {
-      const fakeServerProcess = spawn(fakeServerPath);
+  let fakeServerProcess;
 
-      const webextProcess = spawn(webExt, [
-        'sign', '--verbose',
-        '--api-url-prefix', 'http://localhost:8989/fake/api/v3',
-        '--api-key', 'FAKEAPIKEY', '--api-secret', 'FAKEAPISECRET',
-        '--source-dir', addonPath,
-        '--artifacts-dir', artifactsPath,
-      ]);
-
-      let errorData = '';
-      webextProcess.stderr.on('data', (data) => {
-        errorData += data;
-      });
-
-      webextProcess.on('close', (code) => {
-        fakeServerProcess.kill();
-
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(errorData));
-        }
-      });
-    });
+  beforeEach(() => {
+    fakeServerProcess = spawn(fakeServerPath);
   });
+
+  afterEach(() => {
+    if (fakeServerProcess) {
+      fakeServerProcess.kill();
+      fakeServerProcess = null;
+    }
+  });
+
+  it('should accept: --source-dir SRCDIR --api-url-prefix URL',
+     () => withTempAddonDir({addonPath}, (srcDir, tmpDir) => {
+       const argv = [
+         'sign', '--verbose',
+         '--api-url-prefix', 'http://localhost:8989/fake/api/v3',
+         '--api-key', 'FAKEAPIKEY', '--api-secret', 'FAKEAPISECRET',
+         '--source-dir', srcDir,
+       ];
+       const cmd = runCommand(webExt, argv, {cwd: tmpDir});
+
+       return cmd.waitForExited.then(({exitCode, stdout, stderr}) => {
+         if (exitCode !== 0) {
+           reportRunCommandError({
+             argv,
+             exitCode,
+             stdout,
+             stderr,
+           });
+         }
+       });
+     })
+    );
 });

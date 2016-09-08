@@ -1,26 +1,25 @@
 /* @flow */
-import {spawn} from 'child_process';
 import {describe, it} from 'mocha';
 
-import {webExt} from './common';
+import {
+  webExt,
+  withTempDir, runCommand, reportRunCommandError,
+} from './common';
 
 describe('web-ext', () => {
-  it('webext --help should complete successfully', () => {
-    return new Promise((resolve, reject) => {
-      const webextProcess = spawn(webExt, ['--help']);
+  it('should accept: --help', () => withTempDir((tmpDir) => {
+    const argv =  ['--help'];
+    const cmd = runCommand(webExt, argv, {cwd: tmpDir});
 
-      let errorData = '';
-      webextProcess.stderr.on('data', (data) => {
-        errorData += data;
-      });
-
-      webextProcess.on('close', (code) => {
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(errorData));
-        }
-      });
+    return cmd.waitForExited.then(({exitCode, stdout, stderr}) => {
+      if (exitCode !== 0) {
+        reportRunCommandError({
+          argv,
+          exitCode,
+          stdout,
+          stderr,
+        });
+      }
     });
-  });
+  }));
 });

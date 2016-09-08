@@ -1,29 +1,27 @@
 /* @flow */
-import {spawn} from 'child_process';
 import {describe, it} from 'mocha';
 
-import {webExt, addonPath} from './common';
+import {
+  webExt, addonPath,
+  withTempAddonDir, runCommand, reportRunCommandError,
+} from './common';
 
 describe('web-ext lint', () => {
-  it('webext lint --source-dir SRCDIR', () => {
-    return new Promise((resolve, reject) => {
-      const webextProcess = spawn(webExt, [
-        'lint',
-        '--source-dir', addonPath,
-      ]);
+  it('should accept: --source-dir SRCDIR',
+     () => withTempAddonDir({addonPath}, (srcDir, tmpDir) => {
+       const argv =  ['lint', '--source-dir', srcDir, '--verbose'];
+       let cmd = runCommand(webExt, argv, {cwd: tmpDir});
 
-      let errorData = '';
-      webextProcess.stderr.on('data', (data) => {
-        errorData += data;
-      });
-
-      webextProcess.on('close', (code) => {
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(errorData));
-        }
-      });
-    });
-  });
+       return cmd.waitForExited.then(({exitCode, stdout, stderr}) => {
+         if (exitCode !== 0) {
+           reportRunCommandError({
+             argv,
+             exitCode,
+             stdout,
+             stderr,
+           });
+         }
+       });
+     })
+    );
 });

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 // Load the TCP Library
 const net = require('net');
 
@@ -31,10 +30,14 @@ net.createServer(function(socket) {
     } else if (String(data) === toRDP(REQUEST_INSTALL_ADDON)) {
       socket.write(toRDP(REPLY_INSTALL_ADDON));
 
-      process.stderr.write(process.env.EXPECTED_MESSAGE);
+      process.stderr.write(`${process.env.EXPECTED_MESSAGE}\n`);
 
       process.exit(0);
     } else {
+
+      process.stderr.write(
+        `Fake Firefox received an unexpected message: ${String(data)}\n`
+      );
       process.exit(1);
     }
   });

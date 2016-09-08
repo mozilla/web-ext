@@ -11,4 +11,3 @@ node_modules
 dist/*
 artifacts/*
 coverage/*
-tests/fixtures/**/.web-extension-id

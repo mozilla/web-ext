@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Fake AMO signing server:
+// -  http://addons-server.readthedocs.io/en/latest/topics/api/signing.html
+
 var http = require('http');
 
 const FAKE_REPLIES = [
@@ -23,7 +26,6 @@ const FAKE_REPLIES = [
 var replyIndex = 0;
 
 http.createServer(function(req, res) {
-  //  console.log("REQ", req);
   const reply = FAKE_REPLIES[replyIndex++];
 
   if (reply) {
