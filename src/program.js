@@ -25,7 +25,14 @@ export class Program {
   ) {
     // This allows us to override the process argv which is useful for
     // testing.
-    const yargsInstance = yargs(argv || process.argv, absolutePackageDir);
+    // NOTE: process.argv.slice(2) removes the path to node and web-ext
+    // executables from the process.argv array.
+    argv = argv || process.argv.slice(2);
+
+    // NOTE: always initialize yargs explicitly with the package dir
+    // so that we are sure that it is going to load the 'boolean-negation: false'
+    // config (See web-ext#469 for rationale).
+    const yargsInstance = yargs(argv, absolutePackageDir);
 
     this.shouldExitProgram = true;
     this.yargs = yargsInstance;
