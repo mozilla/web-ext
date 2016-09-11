@@ -46,7 +46,7 @@
     "babel-polyfill": "6.13.0",
     "bunyan": "1.8.1",
     "debounce": "1.0.0",
-    "es6-error": "3.0.1",
+    "es6-error": "3.1.0",
     "es6-promisify": "4.1.0",
     "firefox-profile": "0.4.2",
     "fx-runner": "1.0.5",
