@@ -50,48 +50,39 @@ export function defaultRemotePortFinder(
   {
     portToTry=REMOTE_PORT,
     connectToFirefox=defaultFirefoxConnector,
-  }: RemotePortFinderParams = {}
+  }: RemotePortFinderParams = {},
+
 ): Promise<number> {
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
-
   let retriesCount = 10;
   function portConnectionRetry(){
-    if (retriesCount === 0) {
-      throw new WebExtError(
-        'Too many retries on searching for an open port'
-      );
-    }
     return new Promise((resolve, reject) => {
       connectToFirefox(portToTry)
         .then((client) => {
-          log.debug(`Remote Firefox port ${portToTry} is in use.
-            Trying next one`);
+          log.debug(`Remote Firefox port ${portToTry} is in use.`);
           client.disconnect();
           portToTry++;
-          throw new WebExtError(
-            `Cannot listen on port ${portToTry} because it's in use
-            Trying next one`
-          );
+          if (retriesCount > 0){
+            retriesCount--;
+            return portConnectionRetry();
+          }
+          else {
+            throw new WebExtError('Too many retries on port search');
+          }
         })
-        .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
-          resolve(portToTry);
-        }))
-        .catch((err) => {
-          reject(err);
-        });
+       .catch(onlyErrorsWithCode('ECONNREFUSED', () =>{
+         resolve(portToTry);
+       }))
+       .catch((err) => {
+         reject(err);
+       });
     })
-    .then(() => {
-      return portToTry;
-    })
-    .catch(() => {
-      retriesCount--;
-      portConnectionRetry();
+    .then((port) => {
+      return port;
     });
   }
   return portConnectionRetry();
 }
-
-
 // Declare the needed 'fx-runner' module flow types.
 
 export type FirefoxRunnerParams = {

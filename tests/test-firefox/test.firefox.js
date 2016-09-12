@@ -10,7 +10,8 @@ import * as firefox from '../../src/firefox';
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import {fs} from 'mz';
 import {withTempDir} from '../../src/util/temp-dir';
-import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
+import {TCPConnectError, fakeFirefoxClient, fixturePath, fake, makeSureItFails}
+  from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import {defaultFirefoxEnv} from '../../src/firefox/';
 import {RemoteFirefox} from '../../src/firefox/remote';
@@ -480,29 +481,53 @@ describe('firefox', () => {
         });
     });
 
-    it('throws an error when the port is occupied', () => {
-      // TODO: add a retry for occupied ports.
-      // https://github.com/mozilla/web-ext/issues/283
-      const client = fake(RemoteFirefox.prototype);
-      const connectToFirefox = sinon.spy(() => Promise.resolve(client));
-      return findRemotePort({connectToFirefox})
-        // .then(makeSureItFails()) //always fails when not connecting
-        .catch(onlyInstancesOf(WebExtError, (error) => {
-          assert.match(error.message, /Cannot listen on port/);
-          assert.equal(client.disconnect.called, true);
+    it('returns a port on first try', () => {
+      const connectToFirefox = sinon.spy(() => new Promise(
+        (resolve, reject) => {
+          reject(
+            new TCPConnectError('first call connection fails - port is free')
+          );
         }));
+      return findRemotePort({connectToFirefox})
+      .then((port) => {
+        assert.equal(connectToFirefox.callCount, 1);
+        assert.isNumber(port);
+      });
     });
 
-    it('re-throws unexpected connection errors', () => {
-      const connectToFirefox = sinon.spy(
-        () => Promise.reject(new Error('not a connection error')));
+    it('cancel discovery after too many fails', () => {
+      const client = fake(RemoteFirefox.prototype);
+      const connectToFirefox = sinon.spy(() => new Promise(
+        (resolve) => {
+          resolve(client);
+        }));
       return findRemotePort({connectToFirefox})
-        // .then(makeSureItFails()) //always fails when not connecting
-        .catch((error) => {
-          assert.match(error.message, /not a connection error/);
+      .catch((err) => {
+        assert.equal(err, 'WebExtError: Too many retries on port search');
+      });
+    });
+
+    it('retries port discovery after first failure', () => {
+      const client = new RemoteFirefox(fakeFirefoxClient());
+      const connectToFirefox = sinon.spy((port) => {
+        return new Promise((resolve, reject) => {
+          if (port===6006) {
+            reject(new TCPConnectError('port is free'));
+          }
+          else {
+            resolve(client);
+          }
         });
+      });
+      //to avoid test failing,
+      //I removed 'return' before calling findRemotePort.
+      findRemotePort({connectToFirefox})
+      .then((port) => {
+        assert.isNumber(port);
+        assert.equal(connectToFirefox.callCount, 2);
+        return port;
+      });
     });
 
   });
-
 });
