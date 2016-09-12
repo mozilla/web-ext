@@ -89,7 +89,7 @@ export type RunCommandResult = {
 export type RunningCommand = {
   execPath: string,
   argv: Array<string>,
-  waitForExited: Promise<RunCommandResult>,
+  waitForExit: Promise<RunCommandResult>,
   spawnedProcess: ChildProcess,
 };
 
@@ -97,7 +97,7 @@ export function runCommand(
   execPath: string, argv: Array<string>, spawnOptions: child_process$spawnOpts,
 ): RunningCommand {
   const spawnedProcess = spawn(execPath, argv, spawnOptions);
-  const waitForExited = new Promise((resolve) => {
+  const waitForExit = new Promise((resolve) => {
     let errorData = '';
     let outputData = '';
 
@@ -113,5 +113,5 @@ export function runCommand(
     });
   });
 
-  return {execPath, argv, waitForExited, spawnedProcess};
+  return {execPath, argv, waitForExit, spawnedProcess};
 }

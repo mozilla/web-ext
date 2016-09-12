@@ -28,7 +28,7 @@ describe('web-ext run', () => {
 
          const cmd = runCommand(webExt, argv, spawnOptions);
 
-         return cmd.waitForExited.then(({exitCode, stdout, stderr}) => {
+         return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
            if (stdout.indexOf(EXPECTED_MESSAGE) < 0) {
              reportRunCommandError({
                argv,

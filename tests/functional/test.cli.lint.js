@@ -12,7 +12,7 @@ describe('web-ext lint', () => {
        const argv =  ['lint', '--source-dir', srcDir, '--verbose'];
        let cmd = runCommand(webExt, argv, {cwd: tmpDir});
 
-       return cmd.waitForExited.then(({exitCode, stdout, stderr}) => {
+       return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
          if (exitCode !== 0) {
            reportRunCommandError({
              argv,

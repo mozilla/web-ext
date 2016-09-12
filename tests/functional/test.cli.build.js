@@ -12,7 +12,7 @@ describe('web-ext build', () => {
        const argv =  ['build', '--source-dir', srcDir, '--verbose'];
        const cmd = runCommand(webExt, argv, {cwd: tmpDir});
 
-       return cmd.waitForExited.then(({exitCode, stdout, stderr}) => {
+       return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
          if (exitCode !== 0) {
            reportRunCommandError({
              argv,
