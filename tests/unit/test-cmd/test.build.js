@@ -5,8 +5,8 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import build, {safeFileName, FileFilter} from '../../src/cmd/build';
-import {withTempDir} from '../../src/util/temp-dir';
+import build, {safeFileName, FileFilter} from '../../../src/cmd/build';
+import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 

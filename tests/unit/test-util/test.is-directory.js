@@ -4,8 +4,8 @@ import {fs} from 'mz';
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
 
-import isDirectory from '../../src/util/is-directory';
-import {withTempDir} from '../../src/util/temp-dir';
+import isDirectory from '../../../src/util/is-directory';
+import {withTempDir} from '../../../src/util/temp-dir';
 
 
 describe('util.isDirectory', () => {

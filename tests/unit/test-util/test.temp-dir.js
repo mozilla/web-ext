@@ -3,7 +3,7 @@ import {describe, it} from 'mocha';
 import {fs} from 'mz';
 import {assert} from 'chai';
 
-import {withTempDir, TempDir} from '../../src/util/temp-dir';
+import {withTempDir, TempDir} from '../../../src/util/temp-dir';
 import {makeSureItFails} from '../helpers';
 
 

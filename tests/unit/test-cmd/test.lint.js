@@ -3,8 +3,8 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import defaultLintCommand from '../../src/cmd/lint';
-import {FileFilter} from '../../src/cmd/build';
+import defaultLintCommand from '../../../src/cmd/lint';
+import {FileFilter} from '../../../src/cmd/build';
 import {fake, makeSureItFails} from '../helpers';
 
 describe('lint', () => {

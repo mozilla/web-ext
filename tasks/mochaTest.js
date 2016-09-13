@@ -7,7 +7,8 @@ module.exports = {
       spec: '-',
     },
   },
-  all: ['dist/tests.js'],
+  unit: ['dist/unit-tests.js'],
+  functional: ['dist/functional-tests.js'],
 };
 
 if (process.env.COVERAGE === 'y') {
