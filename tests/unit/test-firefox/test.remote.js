@@ -4,10 +4,10 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {RemoteTempInstallNotSupported, WebExtError, onlyInstancesOf}
-  from '../../src/errors';
+  from '../../../src/errors';
 import {fakeFirefoxClient, makeSureItFails} from '../helpers';
 import {default as defaultConnector, RemoteFirefox}
-  from '../../src/firefox/remote';
+  from '../../../src/firefox/remote';
 
 
 describe('firefox.remote', () => {

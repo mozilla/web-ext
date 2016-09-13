@@ -5,7 +5,7 @@ import yauzl from 'yauzl';
 
 import ExtendableError from 'es6-error';
 import promisify from 'es6-promisify';
-import {createLogger} from '../src/util/logger';
+import {createLogger} from '../../src/util/logger';
 
 const log = createLogger(__filename);
 
@@ -84,7 +84,7 @@ export class ZipFile {
  * Returns a path to a test fixture file. Invoke it the same as path.join().
  */
 export function fixturePath(...pathParts: Array<string>): string {
-  return path.join(__dirname, 'fixtures', ...pathParts);
+  return path.join(__dirname, '..', 'fixtures', ...pathParts);
 }
 
 

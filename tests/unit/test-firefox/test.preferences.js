@@ -2,8 +2,8 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {WebExtError} from '../../src/errors';
-import {getPrefs} from '../../src/firefox/preferences';
+import {WebExtError} from '../../../src/errors';
+import {getPrefs} from '../../../src/firefox/preferences';
 
 
 describe('firefox/preferences', () => {

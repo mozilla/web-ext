@@ -5,11 +5,18 @@ var webpackConfig = require('../webpack.config.js');
 module.exports = {
   options: webpackConfig,
   build: {},
-  test: {
-    entry: './tests/runner.js',
+  unit_tests: {
+    entry: './tests/unit/runner.js',
     output: {
       path: path.join(__dirname, '../dist'),
-      filename: 'tests.js',
+      filename: 'unit-tests.js',
+    },
+  },
+  functional_tests: {
+    entry: './tests/functional/runner.js',
+    output: {
+      path: path.join(__dirname, '../dist'),
+      filename: 'functional-tests.js',
     },
   },
 };

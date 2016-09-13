@@ -5,15 +5,14 @@ import {assert} from 'chai';
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
-import * as firefox from '../../src/firefox';
-import {onlyInstancesOf, WebExtError} from '../../src/errors';
+import * as firefox from '../../../src/firefox';
+import {onlyInstancesOf, WebExtError} from '../../../src/errors';
 import {fs} from 'mz';
-import {withTempDir} from '../../src/util/temp-dir';
-import {TCPConnectError, fakeFirefoxClient, fixturePath, fake, makeSureItFails}
-  from '../helpers';
+import {withTempDir} from '../../../src/util/temp-dir';
+import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
-import {defaultFirefoxEnv} from '../../src/firefox/';
-import {RemoteFirefox} from '../../src/firefox/remote';
+import {defaultFirefoxEnv} from '../../../src/firefox/';
+import {RemoteFirefox} from '../../../src/firefox/remote';
 
 
 describe('firefox', () => {
@@ -506,7 +505,7 @@ describe('firefox', () => {
     });
 
     it('retries port discovery after first failure', () => {
-      const client = new RemoteFirefox(fakeFirefoxClient());
+      const client = fake(RemoteFirefox.prototype);
       let callCount = 0;
       const connectToFirefox = sinon.spy(() => {
         callCount++;

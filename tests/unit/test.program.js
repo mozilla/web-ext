@@ -6,18 +6,18 @@ import sinon from 'sinon';
 import {assert} from 'chai';
 import {spy} from 'sinon';
 
-import {defaultVersionGetter, main, Program} from '../src/program';
-import commands from '../src/cmd';
-import {onlyInstancesOf, WebExtError} from '../src/errors';
+import {defaultVersionGetter, main, Program} from '../../src/program';
+import commands from '../../src/cmd';
+import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import {fake, makeSureItFails} from './helpers';
-import {ConsoleStream} from '../src/util/logger';
+import {ConsoleStream} from '../../src/util/logger';
 
 
 describe('program.Program', () => {
 
   function run(program, options={}) {
     let fakeProcess = fake(process);
-    let absolutePackageDir = path.join(__dirname, '..');
+    let absolutePackageDir = path.join(__dirname, '..', '..');
     return program.run(
       absolutePackageDir, {
         systemProcess: fakeProcess,
@@ -64,6 +64,16 @@ describe('program.Program', () => {
       .then(() => {
         assert.equal(fakeProcess.exit.called, true);
         assert.equal(fakeProcess.exit.firstCall.args[0], 1);
+      });
+  });
+
+  it('throws an error if sub-command is given an argument', () => {
+    const program = new Program(['thing', 'nope'])
+      .command('thing', '', () => {});
+    return run(program)
+      .then(makeSureItFails())
+      .catch((error) => {
+        assert.match(error.message, /This command does not take any arguments/);
       });
   });
 
@@ -179,7 +189,8 @@ describe('program.Program', () => {
     program.command('thing', 'does a thing', () => {});
     return run(program, {getVersion: version})
       .then(() => {
-        assert.equal(version.firstCall.args[0], path.join(__dirname, '..'));
+        assert.equal(version.firstCall.args[0],
+                     path.join(__dirname, '..', '..'));
       });
   });
 
@@ -216,13 +227,13 @@ describe('program.Program', () => {
   });
 
   it('throws an error about unknown sub-command options', () => {
-    const program = new Program(['thing --nope'])
+    const program = new Program(['thing', '--nope'])
       .command('thing', '', () => {});
     return run(program)
       .then(makeSureItFails())
       .catch((error) => {
         // Again, yargs calls this an argument not an option for some reason.
-        assert.match(error.message, /Unknown argument: thing --nope/);
+        assert.match(error.message, /Unknown argument: nope/);
       });
   });
 
@@ -303,7 +314,7 @@ describe('program.main', () => {
 describe('program.defaultVersionGetter', () => {
 
   it('returns the package version', () => {
-    let root = path.join(__dirname, '..');
+    let root = path.join(__dirname, '..', '..');
     let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
