@@ -488,30 +488,31 @@ describe('firefox', () => {
             new TCPConnectError('first call connection fails - port is free')
           );
         }));
-      return findRemotePort({connectToFirefox})
-      .then((port) => {
-        assert.equal(connectToFirefox.callCount, 1);
-        assert.isNumber(port);
-      });
+      return findRemotePort({connectToFirefox, retriesLeft: 2})
+        .then((port) => {
+          assert.equal(connectToFirefox.callCount, 1);
+          assert.isNumber(port);
+        });
     });
 
-    it('cancel discovery after too many fails', () => {
+    it('cancels search after too many fails', () => {
       const client = fake(RemoteFirefox.prototype);
       const connectToFirefox = sinon.spy(() => new Promise(
-        (resolve) => {
-          resolve(client);
-        }));
-      return findRemotePort({connectToFirefox})
+        (resolve) => resolve(client)));
+      return findRemotePort({connectToFirefox, retriesLeft: 2})
       .catch((err) => {
         assert.equal(err, 'WebExtError: Too many retries on port search');
+        assert.equal(connectToFirefox.callCount, 3);
       });
     });
 
     it('retries port discovery after first failure', () => {
       const client = new RemoteFirefox(fakeFirefoxClient());
-      const connectToFirefox = sinon.spy((port) => {
+      let callCount = 0;
+      const connectToFirefox = sinon.spy(() => {
+        callCount++;
         return new Promise((resolve, reject) => {
-          if (port===6006) {
+          if (callCount===2) {
             reject(new TCPConnectError('port is free'));
           }
           else {
@@ -519,14 +520,11 @@ describe('firefox', () => {
           }
         });
       });
-      //to avoid test failing,
-      //I removed 'return' before calling findRemotePort.
-      findRemotePort({connectToFirefox})
-      .then((port) => {
-        assert.isNumber(port);
-        assert.equal(connectToFirefox.callCount, 2);
-        return port;
-      });
+      return findRemotePort({connectToFirefox, retriesLeft: 2})
+        .then((port) => {
+          assert.isNumber(port);
+          assert.equal(connectToFirefox.callCount, 2);
+        });
     });
 
   });
