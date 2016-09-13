@@ -58,22 +58,22 @@ export function defaultRemotePortFinder(
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
   function tryToFindAnOpenPort() {
     return connectToFirefox(portToTry)
-        .then((client) => {
-          log.debug(`Remote Firefox port ${portToTry} is in use
-            (retries remaining: ${retriesLeft} )`);
-          client.disconnect();
-          portToTry++;
-          if (retriesLeft > 0){
-            retriesLeft--;
-            return tryToFindAnOpenPort();
-          }
-          else {
-            throw new WebExtError('Too many retries on port search');
-          }
-        })
-       .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
-         return portToTry;
-       }));
+      .then((client) => {
+        log.debug(`Remote Firefox port ${portToTry} is in use
+          (retries remaining: ${retriesLeft} )`);
+        client.disconnect();
+        portToTry++;
+        if (retriesLeft > 0){
+          retriesLeft--;
+          return tryToFindAnOpenPort();
+        }
+        else {
+          throw new WebExtError('Too many retries on port search');
+        }
+      })
+     .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
+       return portToTry;
+     }));
   }
   return tryToFindAnOpenPort();
 }
