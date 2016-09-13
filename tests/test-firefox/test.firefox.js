@@ -5,7 +5,6 @@ import {assert} from 'chai';
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
-
 import * as firefox from '../../src/firefox';
 import {onlyInstancesOf, WebExtError} from '../../src/errors';
 import {fs} from 'mz';
@@ -500,10 +499,10 @@ describe('firefox', () => {
       const connectToFirefox = sinon.spy(() => new Promise(
         (resolve) => resolve(client)));
       return findRemotePort({connectToFirefox, retriesLeft: 2})
-      .catch((err) => {
-        assert.equal(err, 'WebExtError: Too many retries on port search');
-        assert.equal(connectToFirefox.callCount, 3);
-      });
+        .catch((err) => {
+          assert.equal(err, 'WebExtError: Too many retries on port search');
+          assert.equal(connectToFirefox.callCount, 3);
+        });
     });
 
     it('retries port discovery after first failure', () => {
@@ -512,7 +511,7 @@ describe('firefox', () => {
       const connectToFirefox = sinon.spy(() => {
         callCount++;
         return new Promise((resolve, reject) => {
-          if (callCount===2) {
+          if (callCount === 2) {
             reject(new TCPConnectError('port is free'));
           }
           else {

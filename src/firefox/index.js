@@ -59,8 +59,8 @@ export function defaultRemotePortFinder(
   function tryToFindAnOpenPort() {
     return connectToFirefox(portToTry)
       .then((client) => {
-        log.debug(`Remote Firefox port ${portToTry} is in use
-          (retries remaining: ${retriesLeft} )`);
+        log.debug(`Remote Firefox port ${portToTry} is in use ` +
+          `(retries remaining: ${retriesLeft} )`);
         client.disconnect();
         portToTry++;
         if (retriesLeft > 0){
