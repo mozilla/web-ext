@@ -63,7 +63,7 @@ export function defaultRemotePortFinder(
           `(retries remaining: ${retriesLeft} )`);
         client.disconnect();
         portToTry++;
-        if (retriesLeft > 0){
+        if (retriesLeft > 0) {
           retriesLeft--;
           return tryToFindAnOpenPort();
         }
