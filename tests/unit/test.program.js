@@ -15,7 +15,7 @@ import {ConsoleStream} from '../../src/util/logger';
 
 describe('program.Program', () => {
 
-  function run(program, options={}) {
+  function run(program, options = {}) {
     let fakeProcess = fake(process);
     let absolutePackageDir = path.join(__dirname, '..', '..');
     return program.run(
@@ -242,7 +242,7 @@ describe('program.Program', () => {
 
 describe('program.main', () => {
 
-  function run(argv, {projectRoot='', ...mainOptions}: Object = {}) {
+  function run(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
     const runOptions = {shouldExitProgram: false, systemProcess: fake(process)};
     return main(projectRoot, {argv, runOptions, ...mainOptions});
   }

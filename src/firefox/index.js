@@ -48,8 +48,8 @@ export type RemotePortFinderFn =
 
 export function defaultRemotePortFinder(
   {
-    portToTry=REMOTE_PORT,
-    connectToFirefox=defaultFirefoxConnector,
+    portToTry = REMOTE_PORT,
+    connectToFirefox = defaultFirefoxConnector,
   }: RemotePortFinderParams = {}
 ): Promise<number> {
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
@@ -115,8 +115,8 @@ export type FirefoxRunOptions = {
 export function run(
   profile: FirefoxProfile,
   {
-    fxRunner=defaultFxRunner,
-    findRemotePort=defaultRemotePortFinder,
+    fxRunner = defaultFxRunner,
+    findRemotePort = defaultRemotePortFinder,
     firefoxBinary, binaryArgs,
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxProcess> {
@@ -196,8 +196,8 @@ export type ConfigureProfileFn = (
 export function configureProfile(
   profile: FirefoxProfile,
   {
-    app='firefox',
-    getPrefs=defaultPrefGetter,
+    app = 'firefox',
+    getPrefs = defaultPrefGetter,
   }: ConfigureProfileOptions = {}
 ): Promise<FirefoxProfile> {
   return new Promise((resolve) => {
@@ -228,7 +228,7 @@ export type CreateProfileParams = {
  * The profile will be deleted when the system process exits.
  */
 export function createProfile(
-  {app, configureThisProfile=configureProfile}: CreateProfileParams = {}
+  {app, configureThisProfile = configureProfile}: CreateProfileParams = {}
 ): Promise<FirefoxProfile> {
   return new Promise(
     (resolve) => {
@@ -262,8 +262,8 @@ export type CopyProfileOptions = {
 export function copyProfile(
   profileDirectory: string,
   {
-    copyFromUserProfile=defaultUserProfileCopier,
-    configureThisProfile=configureProfile,
+    copyFromUserProfile = defaultUserProfileCopier,
+    configureThisProfile = configureProfile,
     app,
   }: CopyProfileOptions = {}
 ): Promise<FirefoxProfile> {
@@ -310,8 +310,12 @@ export type InstallExtensionParams = {
  * text file that contains the path to the extension source.
  */
 export function installExtension(
-  {asProxy=false, manifestData, profile, extensionPath}: InstallExtensionParams
-): Promise<any> {
+  {
+    asProxy = false,
+    manifestData,
+    profile,
+    extensionPath,
+  }: InstallExtensionParams): Promise<any> {
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
   // (which is broken for web extensions).
