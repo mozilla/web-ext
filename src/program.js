@@ -21,7 +21,7 @@ export class Program {
 
   constructor(
     argv: ?Array<string>,
-    {absolutePackageDir=process.cwd()}: {absolutePackageDir?: string} = {}
+    {absolutePackageDir = process.cwd()}: {absolutePackageDir?: string} = {}
   ) {
     // This allows us to override the process argv which is useful for
     // testing.
@@ -77,8 +77,8 @@ export class Program {
   }
 
   run(absolutePackageDir: string,
-      {systemProcess=process, logStream=defaultLogStream,
-       getVersion=defaultVersionGetter, shouldExitProgram=true}
+      {systemProcess = process, logStream = defaultLogStream,
+       getVersion = defaultVersionGetter, shouldExitProgram = true}
       : Object = {}): Promise<any> {
 
     this.shouldExitProgram = shouldExitProgram;
@@ -131,8 +131,8 @@ export function defaultVersionGetter(absolutePackageDir: string): string {
 
 export function main(
     absolutePackageDir: string,
-    {getVersion=defaultVersionGetter, commands=defaultCommands, argv,
-     runOptions={}}: Object = {}): Promise<any> {
+    {getVersion = defaultVersionGetter, commands = defaultCommands, argv,
+     runOptions = {}}: Object = {}): Promise<any> {
   let program = new Program(argv, {absolutePackageDir});
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively

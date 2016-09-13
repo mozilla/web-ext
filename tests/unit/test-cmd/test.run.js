@@ -53,14 +53,14 @@ describe('run', () => {
 
     return {
       argv, options,
-      run: (customArgv={}, customOpt={}) => run(
+      run: (customArgv = {}, customOpt = {}) => run(
         {...argv, ...customArgv},
         {...options, ...customOpt}
       ),
     };
   }
 
-  function getFakeFirefox(implementations={}) {
+  function getFakeFirefox(implementations = {}) {
     let profile = {}; // empty object just to avoid errors.
     let allImplementations = {
       createProfile: () => Promise.resolve(profile),
@@ -242,7 +242,7 @@ describe('run', () => {
       };
       return {
         config,
-        createWatcher: (customConfig={}) => {
+        createWatcher: (customConfig = {}) => {
           return defaultWatcherCreator({...config, ...customConfig});
         },
       };
@@ -321,7 +321,7 @@ describe('run', () => {
         ...options,
         client,
         watcher,
-        reloadStrategy: (argOverride={}, optOverride={}) => {
+        reloadStrategy: (argOverride = {}, optOverride = {}) => {
           return defaultReloadStrategy(
             {...args, ...argOverride},
             {...options, ...optOverride});

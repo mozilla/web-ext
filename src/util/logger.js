@@ -44,7 +44,7 @@ export class ConsoleStream {
   isCapturing: boolean;
   capturedMessages: Array<string>;
 
-  constructor({verbose=false}: ConsoleStreamParams = {}) {
+  constructor({verbose = false}: ConsoleStreamParams = {}) {
     this.verbose = verbose;
     this.isCapturing = false;
     this.capturedMessages = [];
@@ -61,7 +61,7 @@ export class ConsoleStream {
 
   write(
     packet: BunyanLogEntry,
-    {localProcess=process}: ConsoleOptions = {}
+    {localProcess = process}: ConsoleOptions = {}
   ): void {
     const thisLevel: BunyanLogLevel = this.verbose ? bunyan.TRACE : bunyan.INFO;
     if (packet.level >= thisLevel) {
@@ -83,7 +83,7 @@ export class ConsoleStream {
     this.capturedMessages = [];
   }
 
-  flushCapturedLogs({localProcess=process}: ConsoleOptions = {}) {
+  flushCapturedLogs({localProcess = process}: ConsoleOptions = {}) {
     for (let msg of this.capturedMessages) {
       localProcess.stdout.write(msg);
     }
@@ -115,7 +115,7 @@ export type CreateLoggerOptions = {
 
 export function createLogger(
   filename: string,
-  {createBunyanLog=defaultLogCreator}: CreateLoggerOptions = {}
+  {createBunyanLog = defaultLogCreator}: CreateLoggerOptions = {}
 ): Logger {
   return createBunyanLog({
     // Strip the leading src/ from file names (which is in all file names) to
