@@ -8,12 +8,16 @@ before_install:
 - git remote set-branches origin master && git fetch
 - git checkout master
 - git checkout -
-script:
-- COVERAGE=y npm test
+
+before_script:
 # Run changelog-lint but only on newer versions of Node (because of syntax errors)
 - if [[ ${TRAVIS_NODE_VERSION:0:1} -ge "4" ]]; then
     npm run changelog-lint;
   fi
+
+script:
+- COVERAGE=y npm test
+
 after_script: npm run publish-coverage
 notifications:
   irc:
