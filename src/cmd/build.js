@@ -91,9 +91,9 @@ async function defaultPackageCreator(
         })
         .then((buffer) => {
           let messageData: any =  readFileSync(
-             path.join(sourceDir, '_locales', `${manifestData.default_locale}`
-              , 'messages.json'));
-          let extensionName =JSON.parse(messageData).extensionName.description;
+             path.join(sourceDir, '_locales', manifestData.default_locale,
+              'messages.json'));
+          let extensionName = JSON.parse(messageData).extensionName.description;
           let packageName = safeFileName(
             `${extensionName}-${manifestData.version}.zip`);
           let extensionPath = path.join(artifactsDir, packageName);
