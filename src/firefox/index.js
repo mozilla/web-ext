@@ -71,6 +71,7 @@ export function defaultRemotePortFinder(
           throw new WebExtError('Too many retries on port search');
         }
       })
+      // The connection was refused so this port is good to use.
      .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
        return portToTry;
      }));
