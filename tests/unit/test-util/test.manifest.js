@@ -19,6 +19,7 @@ export const basicManifest = {
       id: 'basic-manifest@web-ext-test-suite',
     },
   },
+  default_locale: 'en',
 };
 
 export const manifestWithoutApps = deepcopy(basicManifest);

@@ -3,6 +3,7 @@ import path from 'path';
 import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
+import {readFileSync} from 'fs';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
@@ -45,6 +46,7 @@ async function defaultPackageCreator(
 ): Promise<ExtensionBuildResult> {
   let id;
 
+<<<<<<< HEAD
   if (manifestData) {
     id = getManifestId(manifestData);
     log.debug(`Using manifest id=${id || '[not specified]'}`);
@@ -55,9 +57,13 @@ async function defaultPackageCreator(
   let buffer = await zipDir(sourceDir, {
     filter: (...args) => fileFilter.wantFile(...args),
   });
-
+  let messageData: any =  readFileSync(
+             path.join(sourceDir, '_locales', `${manifestData.default_locale}`
+              , 'messages.json'));
+  let extensionName =JSON.parse(messageData).extensionName.description;
   let packageName = safeFileName(
-    `${manifestData.name}-${manifestData.version}.zip`);
+            `${extensionName}-${manifestData.version}.zip`);
+  let extensionPath = path.join(artifactsDir, packageName);
   let extensionPath = path.join(artifactsDir, packageName);
   let stream = createWriteStream(extensionPath);
 
@@ -67,6 +73,43 @@ async function defaultPackageCreator(
 
   log.info(`Your web extension is ready: ${extensionPath}`);
   return {extensionPath};
+=======
+  return new Promise(
+    (resolve) => {
+      if (manifestData) {
+        const id = getManifestId(manifestData);
+        log.debug(`Using manifest id=${id || '[not specified]'}`);
+        resolve(manifestData);
+      } else {
+        resolve(getValidatedManifest(sourceDir));
+      }
+    })
+    .then((manifestData) => {
+      return zipDir(
+        sourceDir, {
+          filter: (...args) => fileFilter.wantFile(...args),
+        })
+        .then((buffer) => {
+          let messageData: any =  readFileSync(
+             path.join(sourceDir, '_locales', `${manifestData.default_locale}`
+              , 'messages.json'));
+          let extensionName =JSON.parse(messageData).extensionName.description;
+          let packageName = safeFileName(
+            `${extensionName}-${manifestData.version}.zip`);
+          let extensionPath = path.join(artifactsDir, packageName);
+          let stream = createWriteStream(extensionPath);
+          let promisedStream = streamToPromise(stream);
+
+          stream.write(buffer, () => stream.end());
+
+          return promisedStream
+            .then(() => {
+              log.info(`Your web extension is ready: ${extensionPath}`);
+              return {extensionPath};
+            });
+        });
+    });
+>>>>>>> fix: Building an XPI with only localizations makes an ugly file name
 }
 
 
