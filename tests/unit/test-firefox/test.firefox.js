@@ -34,7 +34,7 @@ describe('firefox', () => {
       stderr: {on: () => {}},
     };
 
-    function createFakeFxRunner(firefoxOverrides={}) {
+    function createFakeFxRunner(firefoxOverrides = {}) {
       let firefox = {
         ...deepcopy(fakeFirefoxProcess),
         ...firefoxOverrides,
@@ -45,7 +45,7 @@ describe('firefox', () => {
       }));
     }
 
-    function runFirefox({profile=fakeProfile, ...args}: Object = {}) {
+    function runFirefox({profile = fakeProfile, ...args}: Object = {}) {
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),

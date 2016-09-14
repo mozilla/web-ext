@@ -94,11 +94,11 @@ export type BuildCmdOptions = {
 };
 
 export default function build(
-  {sourceDir, artifactsDir, asNeeded=false}: BuildCmdParams,
+  {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
   {
-    manifestData, fileFilter=new FileFilter(),
-    onSourceChange=defaultSourceWatcher,
-    packageCreator=defaultPackageCreator,
+    manifestData, fileFilter = new FileFilter(),
+    onSourceChange = defaultSourceWatcher,
+    packageCreator = defaultPackageCreator,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`

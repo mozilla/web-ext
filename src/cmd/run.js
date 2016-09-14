@@ -42,7 +42,7 @@ export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 export function defaultWatcherCreator(
   {
     addonId, client, sourceDir, artifactsDir,
-    onSourceChange=defaultSourceWatcher,
+    onSourceChange = defaultSourceWatcher,
   }: WatcherCreatorParams
  ): Watchpack {
   return onSourceChange({
@@ -78,7 +78,7 @@ export function defaultReloadStrategy(
     addonId, firefoxProcess, client, profile, sourceDir, artifactsDir,
   }: ReloadStrategyParams,
   {
-    createWatcher=defaultWatcherCreator,
+    createWatcher = defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
   let watcher: Watchpack;
@@ -102,9 +102,9 @@ export type CreateFirefoxClientParams = {
 
 export function defaultFirefoxClient(
   {
-    connectToFirefox=defaultFirefoxConnector,
+    connectToFirefox = defaultFirefoxConnector,
     // A max of 250 will try connecting for 30 seconds.
-    maxRetries=250, retryInterval=120,
+    maxRetries = 250, retryInterval = 120,
   }: CreateFirefoxClientParams = {}
 ): Promise<RemoteFirefox> {
   var retries = 0;
@@ -161,12 +161,12 @@ export type CmdRunOptions = {
 export default function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
-    preInstall=false, noReload=false,
+    preInstall = false, noReload = false,
   }: CmdRunParams,
   {
-    firefoxApp=defaultFirefoxApp,
-    firefoxClient=defaultFirefoxClient,
-    reloadStrategy=defaultReloadStrategy,
+    firefoxApp = defaultFirefoxApp,
+    firefoxClient = defaultFirefoxClient,
+    reloadStrategy = defaultReloadStrategy,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);

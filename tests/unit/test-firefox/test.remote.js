@@ -14,7 +14,7 @@ describe('firefox.remote', () => {
 
   describe('connect', () => {
 
-    function prepareConnection(port=undefined, options={}) {
+    function prepareConnection(port = undefined, options = {}) {
       options = {
         connectToFirefox:
           sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
@@ -52,7 +52,7 @@ describe('firefox.remote', () => {
       return {id: 'some-id', actor: 'serv1.localhost'};
     }
 
-    function makeInstance(client=fakeFirefoxClient()) {
+    function makeInstance(client = fakeFirefoxClient()) {
       return new RemoteFirefox(client);
     }
 

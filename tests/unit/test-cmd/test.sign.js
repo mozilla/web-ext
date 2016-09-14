@@ -54,7 +54,7 @@ describe('sign', () => {
    */
   function sign(
       tmpDir: Object, stubs: Object,
-      {extraArgs={}, extraOptions={}}: Object = {}): Promise<*> {
+      {extraArgs = {}, extraOptions = {}}: Object = {}): Promise<*> {
     return completeSignCommand({
       verbose: false,
       artifactsDir: path.join(tmpDir.path(), 'artifacts-dir'),

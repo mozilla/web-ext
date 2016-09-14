@@ -194,7 +194,7 @@ declare function exports(
 
 export default function connect(
   port: number = REMOTE_PORT,
-  {connectToFirefox=defaultFirefoxConnector}: ConnectOptions = {}
+  {connectToFirefox = defaultFirefoxConnector}: ConnectOptions = {}
 ): Promise<RemoteFirefox> {
   log.debug(`Connecting to Firefox on port ${port}`);
   return connectToFirefox(port)

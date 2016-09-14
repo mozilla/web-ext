@@ -52,7 +52,7 @@ export default function sign(
     apiUrlPrefix, id, timeout,
   }: SignParams,
   {
-    build=defaultBuilder, signAddon=defaultAddonSigner,
+    build = defaultBuilder, signAddon = defaultAddonSigner,
     preValidatedManifest,
   }: SignOptions = {}
 ): Promise<SignResult> {

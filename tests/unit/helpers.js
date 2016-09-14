@@ -185,8 +185,8 @@ export function fake<T>(original: Object, methods: Object = {}): T {
  * connect() of 'node-firefox-connect'
  */
 export function fakeFirefoxClient(
-    {requestResult={}, requestError=null,
-     makeRequestResult={}, makeRequestError=null}: Object = {}) {
+    {requestResult = {}, requestError = null,
+     makeRequestResult = {}, makeRequestError = null}: Object = {}) {
   return {
     disconnect: sinon.spy(() => {}),
     request: sinon.spy(
