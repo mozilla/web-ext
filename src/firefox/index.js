@@ -40,6 +40,7 @@ import type {ExtensionManifest} from '../util/manifest';
 
 export type RemotePortFinderParams = {
   portToTry?: number,
+  retriesLeft?: number,
   connectToFirefox?: FirefoxConnectorFn,
 };
 
@@ -49,28 +50,33 @@ export type RemotePortFinderFn =
 export function defaultRemotePortFinder(
   {
     portToTry = REMOTE_PORT,
+    retriesLeft = 10,
     connectToFirefox = defaultFirefoxConnector,
   }: RemotePortFinderParams = {}
 ): Promise<number> {
   log.debug(`Checking if remote Firefox port ${portToTry} is available`);
-
-  return connectToFirefox(portToTry)
-    .then((client) => {
-      log.debug(`Remote Firefox port ${portToTry} is in use`);
-      client.disconnect();
-      // TODO: instead of throw an error, pick a new random port until
-      // one of them is available.
-      // https://github.com/mozilla/web-ext/issues/283
-      throw new WebExtError(
-        `Cannot listen on port ${portToTry} because it's in use`);
-    })
-    .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
+  function tryToFindAnOpenPort() {
+    return connectToFirefox(portToTry)
+      .then((client) => {
+        log.debug(`Remote Firefox port ${portToTry} is in use ` +
+          `(retries remaining: ${retriesLeft} )`);
+        client.disconnect();
+        portToTry++;
+        if (retriesLeft > 0) {
+          retriesLeft--;
+          return tryToFindAnOpenPort();
+        }
+        else {
+          throw new WebExtError('Too many retries on port search');
+        }
+      })
       // The connection was refused so this port is good to use.
-      return portToTry;
-    }));
+     .catch(onlyErrorsWithCode('ECONNREFUSED', () => {
+       return portToTry;
+     }));
+  }
+  return tryToFindAnOpenPort();
 }
-
-
 // Declare the needed 'fx-runner' module flow types.
 
 export type FirefoxRunnerParams = {
