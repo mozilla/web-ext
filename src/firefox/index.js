@@ -62,7 +62,7 @@ export async function defaultRemotePortFinder(
     try {
       client = await connectToFirefox(portToTry);
       log.debug(`Remote Firefox port ${portToTry} is in use ` +
-                `(retries remaining: ${retriesLeft} )`);
+                `(retries remaining: ${retriesLeft})`);
     } catch (error) {
       if (isErrorWithCode('ECONNREFUSED', error)) {
         // The connection was refused so this port is good to use.
