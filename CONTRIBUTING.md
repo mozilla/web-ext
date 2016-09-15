@@ -28,7 +28,7 @@ description. For example, if the test you'd like to run is defined in
 `tests/test.program.js` and is described as
 "turns sourceDir into an absolute path" then you could run it like this:
 
-    ./node_modules/.bin/mocha -r babel-core/register tests/test.program.js -f "sourceDir"
+    ./node_modules/.bin/mocha -r babel-core/register tests/unit/test.program.js -f "sourceDir"
 
 ### Debug a test
 
@@ -37,7 +37,7 @@ directly invoking the `mocha` executable with the `debug` command. For example,
 if the test you want to debug is defined in `tests/test.program.js` then you
 could enter the debugger like this:
 
-    ./node_modules/.bin/mocha debug -r babel-core/register tests/test.program.js
+    ./node_modules/.bin/mocha debug -r babel-core/register tests/unit/test.program.js
 
 You could also put the `debugger` statement somewhere in the code to set a
 breakpoint.
