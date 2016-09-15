@@ -40,41 +40,33 @@ export type PackageCreatorParams = {
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
-function defaultPackageCreator(
+async function defaultPackageCreator(
   {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
 ): Promise<ExtensionBuildResult> {
+  let id;
 
-  return new Promise(
-    (resolve) => {
-      if (manifestData) {
-        const id = getManifestId(manifestData);
-        log.debug(`Using manifest id=${id || '[not specified]'}`);
-        resolve(manifestData);
-      } else {
-        resolve(getValidatedManifest(sourceDir));
-      }
-    })
-    .then((manifestData) => {
-      return zipDir(
-        sourceDir, {
-          filter: (...args) => fileFilter.wantFile(...args),
-        })
-        .then((buffer) => {
-          let packageName = safeFileName(
-            `${manifestData.name}-${manifestData.version}.zip`);
-          let extensionPath = path.join(artifactsDir, packageName);
-          let stream = createWriteStream(extensionPath);
-          let promisedStream = streamToPromise(stream);
+  if (manifestData) {
+    id = getManifestId(manifestData);
+    log.debug(`Using manifest id=${id || '[not specified]'}`);
+  } else {
+    manifestData = await getValidatedManifest(sourceDir);
+  }
 
-          stream.write(buffer, () => stream.end());
+  let buffer = await zipDir(sourceDir, {
+    filter: (...args) => fileFilter.wantFile(...args),
+  });
 
-          return promisedStream
-            .then(() => {
-              log.info(`Your web extension is ready: ${extensionPath}`);
-              return {extensionPath};
-            });
-        });
-    });
+  let packageName = safeFileName(
+    `${manifestData.name}-${manifestData.version}.zip`);
+  let extensionPath = path.join(artifactsDir, packageName);
+  let stream = createWriteStream(extensionPath);
+
+  stream.write(buffer, () => stream.end());
+
+  await streamToPromise(stream);
+
+  log.info(`Your web extension is ready: ${extensionPath}`);
+  return {extensionPath};
 }
 
 
@@ -93,7 +85,7 @@ export type BuildCmdOptions = {
   packageCreator?: PackageCreatorFn,
 };
 
-export default function build(
+export default async function build(
   {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
   {
     manifestData, fileFilter = new FileFilter(),
@@ -108,24 +100,24 @@ export default function build(
     manifestData, sourceDir, fileFilter, artifactsDir,
   });
 
-  return prepareArtifactsDir(artifactsDir)
-    .then(() => createPackage())
-    .then((result) => {
-      if (rebuildAsNeeded) {
-        log.info('Rebuilding when files change...');
-        onSourceChange({
-          sourceDir, artifactsDir,
-          onChange: () => {
-            return createPackage().catch((error) => {
-              log.error(error.stack);
-              throw error;
-            });
-          },
-          shouldWatchFile: (...args) => fileFilter.wantFile(...args),
+  await prepareArtifactsDir(artifactsDir);
+  let result = await createPackage();
+
+  if (rebuildAsNeeded) {
+    log.info('Rebuilding when files change...');
+    onSourceChange({
+      sourceDir, artifactsDir,
+      onChange: () => {
+        return createPackage().catch((error) => {
+          log.error(error.stack);
+          throw error;
         });
-      }
-      return result;
+      },
+      shouldWatchFile: (...args) => fileFilter.wantFile(...args),
     });
+  }
+
+  return result;
 }
 
 

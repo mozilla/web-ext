@@ -76,48 +76,44 @@ export class Program {
     return this;
   }
 
-  run(absolutePackageDir: string,
+  async run(absolutePackageDir: string,
       {systemProcess = process, logStream = defaultLogStream,
        getVersion = defaultVersionGetter, shouldExitProgram = true}
-      : Object = {}): Promise<any> {
+      : Object = {}): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
-    let argv;
-    let cmd;
+    this.yargs.exitProcess(this.shouldExitProgram);
 
-    return new Promise(
-      (resolve) => {
-        this.yargs.exitProcess(this.shouldExitProgram);
-        argv = this.yargs.argv;
+    const argv = this.yargs.argv;
+    const cmd = argv._[0];
 
-        cmd = argv._[0];
-        if (cmd === undefined) {
-          throw new WebExtError('No sub-command was specified in the args');
-        }
-        let runCommand = this.commands[cmd];
-        if (!runCommand) {
-          throw new WebExtError(`unknown command: ${cmd}`);
-        }
-        if (argv.verbose) {
-          log.info('Version:', getVersion(absolutePackageDir));
-          logStream.makeVerbose();
-        }
-        resolve(runCommand);
-      })
-      .then((runCommand) => runCommand(argv))
-      .catch((error) => {
-        const prefix = cmd ? `${cmd}: ` : '';
-        log.error(`\n${prefix}${error.stack}\n`);
-        if (error.code) {
-          log.error(`${prefix}Error code: ${error.code}\n`);
-        }
+    if (cmd === undefined) {
+      throw new WebExtError('No sub-command was specified in the args');
+    }
+    let runCommand = this.commands[cmd];
+    if (!runCommand) {
+      throw new WebExtError(`unknown command: ${cmd}`);
+    }
+    if (argv.verbose) {
+      log.info('Version:', getVersion(absolutePackageDir));
+      logStream.makeVerbose();
+    }
 
-        if (this.shouldExitProgram) {
-          systemProcess.exit(1);
-        } else {
-          throw error;
-        }
-      });
+    try {
+      await runCommand(argv);
+    } catch (error) {
+      const prefix = cmd ? `${cmd}: ` : '';
+      log.error(`\n${prefix}${error.stack}\n`);
+      if (error.code) {
+        log.error(`${prefix}Error code: ${error.code}\n`);
+      }
+
+      if (this.shouldExitProgram) {
+        systemProcess.exit(1);
+      } else {
+        throw error;
+      }
+    }
   }
 }
 

@@ -9,7 +9,7 @@ import {
 describe('web-ext build', () => {
   it('should accept: --source-dir SRCDIR',
      () => withTempAddonDir({addonPath}, (srcDir, tmpDir) => {
-       const argv =  ['build', '--source-dir', srcDir, '--verbose'];
+       const argv = ['build', '--source-dir', srcDir, '--verbose'];
        const cmd = runCommand(webExt, argv, {cwd: tmpDir});
 
        return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {

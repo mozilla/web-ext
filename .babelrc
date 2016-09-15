@@ -4,5 +4,11 @@
     "transform-flow-strip-types",
     "transform-class-properties",
     "transform-es2015-modules-commonjs",
+    [
+      "transform-runtime", {
+        "polyfill": false,
+        "regenerator": true
+      }
+    ]
   ]
 }

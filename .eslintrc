@@ -1,6 +1,7 @@
 {
   "parser": "babel-eslint",
   "plugins": [
+    "async-await",
     "flowtype"
   ],
   "settings": {
@@ -62,6 +63,7 @@
     "no-loop-func": 0,
     "no-mixed-spaces-and-tabs": 2,
     "no-multi-str": 2,
+    "no-multi-spaces": 2,
     "no-multiple-empty-lines": [2, {"max": 2}],
     "no-new": 2,
     "no-plusplus": 0,
@@ -78,6 +80,7 @@
     "prefer-template": 2,
     "quote-props": [1, "consistent-as-needed"],
     "quotes": [2, "single", "avoid-escape"],
+    "require-yield": 2,
     "semi": [2, "always"],
     "space-before-blocks": [2, "always"],
     "space-before-function-paren": [2, "never"],
@@ -85,6 +88,9 @@
     "strict": [2, "never"],
     "valid-typeof": 2,
     "wrap-iife": [2, "inside"],
+
+    "async-await/space-after-async": 2,
+    "async-await/space-after-await": 2,
 
     "flowtype/define-flow-type": 1,
     "flowtype/use-flow-type": 1,
