@@ -90,10 +90,19 @@ async function defaultPackageCreator(
           filter: (...args) => fileFilter.wantFile(...args),
         })
         .then((buffer) => {
-          let messageData: any =  readFileSync(
-             path.join(sourceDir, '_locales', manifestData.default_locale,
-              'messages.json'));
-          let extensionName = JSON.parse(messageData).extensionName.description;
+          let messageData: any;
+          if (manifestData.default_locale) {
+            messageData = readFileSync(
+               path.join(sourceDir, '_locales', manifestData.default_locale,
+                'messages.json'));
+          }
+          let extensionName: string;
+          if (messageData) {
+            extensionName = JSON.parse(messageData).extensionName.description;
+          }
+          else {
+            extensionName = manifestData.name;
+          }
           let packageName = safeFileName(
             `${extensionName}-${manifestData.version}.zip`);
           let extensionPath = path.join(artifactsDir, packageName);
