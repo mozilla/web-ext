@@ -78,7 +78,7 @@
     "copy-dir": "0.3.0",
     "coveralls": "2.11.12",
     "deepcopy": "0.6.3",
-    "eslint-plugin-flowtype": "2.16.1",
+    "eslint-plugin-flowtype": "2.17.1",
     "firefox-client": "0.3.0",
     "flow-bin": "0.32.0",
     "grunt": "1.0.1",
