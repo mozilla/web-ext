@@ -91,7 +91,7 @@
     "grunt-coveralls": "1.0.1",
     "grunt-eslint": "19.0.0",
     "grunt-flowbin": "0.0.6",
-    "grunt-mocha-test": "0.13.0",
+    "grunt-mocha-test": "0.13.1",
     "grunt-newer": "1.2.0",
     "grunt-webpack": "1.0.14",
     "load-grunt-configs": "1.0.0",
