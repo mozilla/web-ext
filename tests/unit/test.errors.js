@@ -34,9 +34,11 @@ describe('errors', () => {
 
     class ErrorWithCode extends Error {
       code: string;
+      errno: string;
       constructor() {
         super('pretend this is a system error');
         this.code = 'SOME_CODE';
+        this.errno = 'SOME_CODE';
       }
     }
 
@@ -44,6 +46,13 @@ describe('errors', () => {
       return Promise.reject(new ErrorWithCode())
         .catch(onlyErrorsWithCode('SOME_CODE', (error) => {
           assert.equal(error.code, 'SOME_CODE');
+        }));
+    });
+
+    it('catches errors having a error no', () => {
+      return Promise.reject(new ErrorWithCode())
+        .catch(onlyErrorsWithCode('SOME_CODE', (error) => {
+          assert.equal(error.errno, 'SOME_CODE');
         }));
     });
 
