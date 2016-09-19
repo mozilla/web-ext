@@ -34,10 +34,16 @@ describe('errors', () => {
 
     class ErrorWithCode extends Error {
       code: string;
-      errno: string;
       constructor() {
         super('pretend this is a system error');
         this.code = 'SOME_CODE';
+      }
+    }
+
+    class ErrorWithErrno extends Error {
+      errno: string;
+      constructor() {
+        super('pretend this is a system error');
         this.errno = 'SOME_CODE';
       }
     }
@@ -50,7 +56,7 @@ describe('errors', () => {
     });
 
     it('catches errors having a error no', () => {
-      return Promise.reject(new ErrorWithCode())
+      return Promise.reject(new ErrorWithErrno())
         .catch(onlyErrorsWithCode('SOME_CODE', (error) => {
           assert.equal(error.errno, 'SOME_CODE');
         }));
@@ -74,6 +80,13 @@ describe('errors', () => {
         }));
     });
 
+    it('catches errors having one of many errno', () => {
+      return Promise.reject(new ErrorWithErrno())
+        .catch(onlyErrorsWithCode(['OTHER_CODE', 'SOME_CODE'], (error) => {
+          assert.equal(error.errno, 'SOME_CODE');
+        }));
+    });
+
     it('throws errors that are not in an array of codes', () => {
       return Promise.reject(new ErrorWithCode())
         .catch(onlyErrorsWithCode(['OTHER_CODE', 'ANOTHER_CODE'], () => {
@@ -82,6 +95,17 @@ describe('errors', () => {
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.code, 'SOME_CODE');
+        });
+    });
+
+    it('throws errors that are not in an array of errno', () => {
+      return Promise.reject(new ErrorWithErrno())
+        .catch(onlyErrorsWithCode(['OTHER_CODE', 'ANOTHER_CODE'], () => {
+          throw new Error('Unexpectedly caught the wrong error');
+        }))
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(error.errno, 'SOME_CODE');
         });
     });
 

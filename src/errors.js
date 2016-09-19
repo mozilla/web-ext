@@ -83,10 +83,8 @@ export function onlyErrorsWithCode(
     let throwError = true;
 
     if (Array.isArray(codeWanted)) {
-      if (codeWanted.indexOf(error.code) !== -1) {
-        throwError = false;
-      }
-      if (codeWanted.indexOf(error.errno) !== -1) {
+      if (codeWanted.indexOf(error.code) !== -1 ||
+          codeWanted.indexOf(error.errno) !== -1) {
         throwError = false;
       }
     }
