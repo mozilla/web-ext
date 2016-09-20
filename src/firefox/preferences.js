@@ -1,5 +1,5 @@
 /* @flow */
-import {WebExtError} from '../errors';
+import {UsageError} from '../errors';
 
 
 // Flow Types
@@ -110,7 +110,7 @@ export function getPrefs(
 ): FirefoxPreferences {
   const appPrefs = prefs[app];
   if (!appPrefs) {
-    throw new WebExtError(`Unsupported application: ${app}`);
+    throw new UsageError(`Unsupported application: ${app}`);
   }
   return {
     ...prefsCommon,

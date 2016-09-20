@@ -2,7 +2,7 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {WebExtError} from '../../../src/errors';
+import {UsageError} from '../../../src/errors';
 import {getPrefs} from '../../../src/firefox/preferences';
 
 
@@ -29,7 +29,7 @@ describe('firefox/preferences', () => {
     it('throws an error for unsupported apps', () => {
       // $FLOW_IGNORE: ignore type errors on testing nonexistent 'thunderbird' prefs
       assert.throws(() => getPrefs('thunderbird'),
-                    WebExtError, /Unsupported application: thunderbird/);
+                    UsageError, /Unsupported application: thunderbird/);
     });
 
   });

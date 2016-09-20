@@ -31,6 +31,12 @@ export class RemoteTempInstallNotSupported extends WebExtError {
   }
 }
 
+export class UsageError extends WebExtError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 
 /*
  * Sugar-y way to catch only instances of a certain error.

@@ -5,7 +5,7 @@ import defaultAddonSigner from 'sign-addon';
 
 import defaultBuilder from './build';
 import {withTempDir} from '../util/temp-dir';
-import {isErrorWithCode, WebExtError} from '../errors';
+import {isErrorWithCode, UsageError} from '../errors';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
@@ -76,7 +76,7 @@ export default function sign(
       const manifestId = getManifestId(manifestData);
 
       if (id && manifestId) {
-        throw new WebExtError(
+        throw new UsageError(
           `Cannot set custom ID ${id} because manifest.json ` +
           `declares ID ${manifestId}`);
       }
@@ -155,7 +155,7 @@ export async function getIdFromSourceDir(
   log.debug(`Found extension ID ${id} in ${filePath}`);
 
   if (!id) {
-    throw new WebExtError(`No ID found in extension ID file ${filePath}`);
+    throw new UsageError(`No ID found in extension ID file ${filePath}`);
   }
 
   return id;

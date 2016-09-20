@@ -1,6 +1,9 @@
 /* @flow */
 import {createLogger} from '../util/logger';
-import {RemoteTempInstallNotSupported, WebExtError} from '../errors';
+import {RemoteTempInstallNotSupported,
+        UsageError,
+        WebExtError,
+        } from '../errors';
 import defaultFirefoxConnector from 'node-firefox-connect';
 
 
@@ -138,7 +141,7 @@ export class RemoteFirefox {
         }
         log.debug(
           `Remote Firefox has these addons: ${addons.map((a) => a.id)}`);
-        throw new WebExtError(
+        throw new UsageError(
           'The remote Firefox does not have your extension installed');
       });
   }
