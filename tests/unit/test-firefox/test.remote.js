@@ -196,7 +196,7 @@ describe('firefox.remote', () => {
 
         return conn.checkForAddonReloading(addon)
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(WebExtError, (error) => {
+          .catch(onlyInstancesOf(UsageError, (error) => {
             assert.match(error.message, /does not support add-on reloading/);
           }));
       });
@@ -276,7 +276,7 @@ describe('firefox.remote', () => {
         const conn = makeInstance(client);
         return conn.installTemporaryAddon('/path/to/addon')
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(WebExtError, (error) => {
+          .catch(onlyInstancesOf(UsageError, (error) => {
             assert.match(error.message, /install error: error message/);
           }));
       });

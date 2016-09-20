@@ -499,7 +499,7 @@ describe('firefox', () => {
         (resolve) => resolve(client)));
       return findRemotePort({connectToFirefox, retriesLeft: 2})
         .catch((err) => {
-          assert.equal(err, 'WebExtError: Too many retries on port search');
+          assert.equal(err, 'UsageError: Too many retries on port search');
           assert.equal(connectToFirefox.callCount, 3);
         });
     });

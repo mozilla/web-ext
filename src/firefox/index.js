@@ -77,7 +77,7 @@ export async function defaultRemotePortFinder(
     retriesLeft--;
   }
 
-  throw new WebExtError('Too many retries on port search');
+  throw new UsageError('Too many retries on port search');
 }
 
 
