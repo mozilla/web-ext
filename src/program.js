@@ -119,9 +119,14 @@ export class Program {
 
 
 export function defaultVersionGetter(absolutePackageDir: string): string {
-  let packageData: any = readFileSync(
+  if (process.env.NODE_ENV === 'production') {
+    let packageData: any = readFileSync(
     path.join(absolutePackageDir, 'package.json'));
-  return JSON.parse(packageData).version;
+    return JSON.parse(packageData).version;
+  } else {
+    var git = require('git-rev-sync');
+    return `${git.branch()}-${git.long()}`;
+  }
 }
 
 
