@@ -37,6 +37,25 @@ describe('build', () => {
     );
   });
 
+  it('gives the correct name to a localized extension', () => {
+    let zipFile = new ZipFile();
+
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('minimal-localizable-web-ext'),
+          artifactsDir: tmpDir.path(),
+        })
+        .then((buildResult) => {
+          assert.match(buildResult.extensionPath,
+                       /minimal_localizable_extension-1\.0\.zip$/);
+          return buildResult.extensionPath;
+        })
+        .then((extensionPath) => zipFile.open(extensionPath))
+        .then(() => zipFile.extractFilenames())
+    );
+  });
+
   it('can build an extension without an ID', () => {
     return withTempDir(
       (tmpDir) => {

@@ -63,7 +63,7 @@ async function defaultPackageCreator(
   }
   let extensionName: string;
   if (messageData) {
-    extensionName = JSON.parse(messageData).extensionName.description;
+    extensionName = JSON.parse(messageData).extensionName.message;
   }
   else {
     extensionName = manifestData.name;
