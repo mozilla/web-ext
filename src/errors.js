@@ -78,7 +78,8 @@ export function onlyInstancesOf(
  *
  */
 export function onlyErrorsWithCode(
-    codeWanted: string | Array<string>, errorHandler: Function): Function {
+    codeWanted: (string|number) | Array<string|number>,
+      errorHandler: Function): Function {
   return (error) => {
     let throwError = true;
 
