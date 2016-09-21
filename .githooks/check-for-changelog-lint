@@ -14,7 +14,7 @@ if [ $exit_status -ne 0 ]; then
     echo "https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md#writing-commit-messages"
     echo
     echo "Type this to fix the message:"
-    echo "    git commit -n --amend"
+    echo "git commit -n --amend"
     echo "-------------------------------------------------------------------"
     echo
 fi
