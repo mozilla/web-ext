@@ -103,7 +103,7 @@ export class Program {
       await runCommand(argv);
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
-      if (!error instanceof UsageError) {
+      if (!(error instanceof UsageError) || argv.verbose) {
         log.error(`\n${prefix}${error.stack}\n`);
       }
       if (error.code) {
