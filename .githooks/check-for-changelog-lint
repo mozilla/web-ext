@@ -3,21 +3,18 @@
 # rebasing), this commit hook script should make it easier for new
 # contributors.
 
-
 npm run changelog-lint
 exit_status=$?
 if [ $exit_status -ne 0 ]; then
     echo
     echo "-------------------------------------------------------------------"
-    echo "The above output indicates a problem with one or more of your "
-    echo "commit messages."
+    echo "The above output indicates a problem with the last commit message"
     echo
     echo "See:"
     echo "https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md#writing-commit-messages"
     echo
-    echo "Some ways to recover:"
-    echo "- git commit -n --amend : fix the last commit message"
-    echo "- git rebase --interactive HEAD~10 : fix any of the last 10 commits"
+    echo "Type this to fix the message:"
+    echo "    git commit -n --amend"
     echo "-------------------------------------------------------------------"
     echo
 fi
