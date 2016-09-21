@@ -1,0 +1,5 @@
+#!/bin/bash
+# Make sure all commit messages are formatted for the changelog correctly.
+# Because commits are hard to remove (unless you are a pro at interactive
+# rebasing), this script should make it easier for new contributors.
+npm run changelog-lint
