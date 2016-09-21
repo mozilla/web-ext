@@ -1,20 +1,10 @@
 #!/bin/bash
-# Make sure all commit messages are formatted for the changelog correctly.
-# Because commits are hard to remove (unless you are a pro at interactive
-# rebasing), this script should make it easier for new contributors.
+# Before pushing all changes to a work branch, this
+# makes sure all commit messages are formatted for the changelog correctly.
 npm run changelog-lint
-if [ $? -ne 0 ]; then
-    echo
-    echo "-------------------------------------------------------------------"
-    echo "The above output indicates a problem with one or more of your "
-    echo "commit messages."
-    echo
-    echo "See:"
-    echo "https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md#writing-commit-messages"
-    echo
-    echo "Some ways to recover:"
-    echo "- git commit --amend : fix the last commit message"
-    echo "- git rebase --interactive HEAD~10 : fix any of the last 10 commits"
-    echo "-------------------------------------------------------------------"
-    echo
+exit_status=$?
+if [ $exit_status -ne 0 ]; then
+    source .githooks/show-changelog-hints.sh
+    source ../show-changelog-hints.sh
 fi
+exit $exit_status
