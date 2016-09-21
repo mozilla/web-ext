@@ -80,15 +80,9 @@ Once the report has been generated, it can be found in the `./coverage` director
 
 ## Writing commit messages
 
-First, try to follow the
-[standard git commit message style](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
-This includes limiting the summary to 50 chars (which integrates well with git
-tools) but favor readability over conciseness if you need to go over that limit.
-
-Next, try adhering to the Angular style of
-[semantic messages](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit)
-when writing a commit message.
-This should allow us to auto-generate a changelog without too much noise in it.
+Commit messages must adhere to the Angular style of
+[semantic messages](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit).
+This allows us to auto-generate a changelog without too much noise in it.
 Additionally, write the commit message in past tense so it will read
 naturally as a historic changelog.
 
