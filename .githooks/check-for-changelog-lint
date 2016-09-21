@@ -3,6 +3,7 @@
 # rebasing), this commit hook script should make it easier for new
 # contributors.
 
+
 npm run changelog-lint
 exit_status=$?
 if [ $exit_status -ne 0 ]; then
