@@ -1,10 +1,5 @@
 #!/bin/bash
 # Before pushing all changes to a work branch, this
 # makes sure all commit messages are formatted for the changelog correctly.
-npm run changelog-lint
-exit_status=$?
-if [ $exit_status -ne 0 ]; then
-    source .githooks/show-changelog-hints.sh
-    source ../show-changelog-hints.sh
-fi
-exit $exit_status
+
+./.githooks/check-for-changelog-lint
