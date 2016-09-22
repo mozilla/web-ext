@@ -9,8 +9,9 @@ before_install:
 - git checkout master
 - git checkout -
 
-after_install:
-- npm run nsp-check # -- --warn-only
+before_script:
+# If this command fails and you can't fix it, file an issue and add an exception to .nsprc
+- npm run nsp-check
 
 script:
 - COVERAGE=y npm test
@@ -19,6 +20,7 @@ script:
     npm run changelog-lint;
   fi
 after_script: npm run publish-coverage
+
 notifications:
   irc:
     channels:
