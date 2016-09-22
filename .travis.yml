@@ -8,6 +8,10 @@ before_install:
 - git remote set-branches origin master && git fetch
 - git checkout master
 - git checkout -
+
+after_install:
+- npm run nsp-check # -- --warn-only
+
 script:
 - COVERAGE=y npm test
 # Run changelog-lint but only on newer versions of Node (because of syntax errors)
