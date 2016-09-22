@@ -78,6 +78,21 @@ or even when the test suite re-runs automatically as you edit files:
 
 Once the report has been generated, it can be found in the `./coverage` directory.
 
+## Creating a pull request
+
+When you create a
+[pull request](https://help.github.com/articles/creating-a-pull-request/)
+for a new fix or feature, be sure to mention the issue
+number for what you're working on.
+The best way to do it is to mention the issue like
+this at the top of your description:
+
+    Fixes #123
+
+The issue number in this case is "123."
+The word *Fixes* is magical; github will automatically close the issue when your
+pull request is merged.
+
 ## Writing commit messages
 
 Commit messages must adhere to the Angular style of
