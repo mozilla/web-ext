@@ -38,8 +38,6 @@ describe('build', () => {
   });
 
   it('gives the correct name to a localized extension', () => {
-    let zipFile = new ZipFile();
-
     return withTempDir(
       (tmpDir) =>
         build({
@@ -48,11 +46,9 @@ describe('build', () => {
         })
         .then((buildResult) => {
           assert.match(buildResult.extensionPath,
-                       /minimal_localizable_extension-1\.0\.zip$/);
+                       /name_of_the_extension-1\.0\.zip$/);
           return buildResult.extensionPath;
         })
-        .then((extensionPath) => zipFile.open(extensionPath))
-        .then(() => zipFile.extractFilenames())
     );
   });
 

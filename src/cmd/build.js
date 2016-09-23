@@ -3,7 +3,7 @@ import path from 'path';
 import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
-import {readFileSync} from 'fs';
+import {fs} from 'mz';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
@@ -41,6 +41,12 @@ export type PackageCreatorParams = {
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
+export type LocalizedNameParams = {
+  manifestData: ExtensionManifest,
+  sourceDir: string,
+};
+
+
 async function defaultPackageCreator(
   {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
 ): Promise<ExtensionBuildResult> {
@@ -55,21 +61,35 @@ async function defaultPackageCreator(
   let buffer = await zipDir(sourceDir, {
     filter: (...args) => fileFilter.wantFile(...args),
   });
-  let messageData: any;
-  if (manifestData.default_locale) {
-    messageData = readFileSync(
-     path.join(sourceDir, '_locales', manifestData.default_locale,
-     'messages.json'));
+
+  async function getDefaultLocalizedName(
+  {manifestData, sourceDir}: LocalizedNameParams
+  ): Promise<string> {
+    let messageData: any;
+    let extensionName: string;
+
+    if (manifestData.default_locale) {
+      messageData = await fs.readFile(path.join(sourceDir, '_locales',
+                                    manifestData.default_locale,
+                                    'messages.json'));
+    }
+    extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/,
+                    function(match, messageName) {
+                      if (messageData[messageName]
+                          && messageData[messageName].message) {
+                        return messageData[messageName].message;
+                      } else {
+                        return match;
+                      }
+                    });
+    return extensionName;
   }
+
   let extensionName: string;
-  if (messageData) {
-    extensionName = JSON.parse(messageData).extensionName.message;
-  }
-  else {
-    extensionName = manifestData.name;
-  }
+  extensionName = await getDefaultLocalizedName({manifestData, sourceDir});
+
   let packageName = safeFileName(
-            `${extensionName}-${manifestData.version}.zip`);
+    `${extensionName}-${manifestData.version}.zip`);
   let extensionPath = path.join(artifactsDir, packageName);
   let stream = createWriteStream(extensionPath);
 
