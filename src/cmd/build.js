@@ -75,9 +75,10 @@ async function defaultPackageCreator(
     }
     extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/,
                     function(match, messageName) {
-                      if (messageData[messageName]
-                          && messageData[messageName].message) {
-                        return messageData[messageName].message;
+                      messageData = JSON.parse(messageData);
+                      if (messageData.messageName
+                          && messageData.messageName.message) {
+                        return messageData.messageName.message;
                       } else {
                         return match;
                       }

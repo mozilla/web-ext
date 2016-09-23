@@ -10,10 +10,6 @@
       "id": "minimal-localizable-example@web-ext-test-suite"
     }
   },
-  "browser_action": {},
-  "permissions": [
-    "tabs"
-  ],
   "background": {
     "scripts": ["background-script.js"]
   }
