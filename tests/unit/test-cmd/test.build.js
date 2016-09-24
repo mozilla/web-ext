@@ -5,10 +5,12 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import build, {safeFileName, FileFilter} from '../../../src/cmd/build';
+import build, {safeFileName, FileFilter,
+                getDefaultLocalizedName} from '../../../src/cmd/build';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
+import {WebExtError} from '../../../src/errors';
 
 
 describe('build', () => {
@@ -48,6 +50,27 @@ describe('build', () => {
           assert.match(buildResult.extensionPath,
                        /name_of_the_extension-1\.0\.zip$/);
           return buildResult.extensionPath;
+        })
+    );
+  });
+
+  it('checks locale file for malformed json', () => {
+    return withTempDir(
+      () =>
+        getDefaultLocalizedName({
+          manifestData: basicManifest,
+          messageData: '{"simulated:" "json syntax error"',
+        })
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(
+            (error) instanceof WebExtError,
+            true
+          );
+          assert.equal(
+            error.message,
+            'The JSON file is malformed'
+          );
         })
     );
   });
