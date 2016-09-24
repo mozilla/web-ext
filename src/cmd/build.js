@@ -47,9 +47,9 @@ export type LocalizedNameParams = {
   messageData: any,
 };
 
-export async function getDefaultLocalizedName(
+export function getDefaultLocalizedName(
   {manifestData, messageData}: LocalizedNameParams
-  ): Promise<string> {
+  ): string {
   let extensionName: string;
 
   if (messageData) {
@@ -97,7 +97,7 @@ async function defaultPackageCreator(
                                     'messages.json'));
   }
   let extensionName: string;
-  extensionName = await getDefaultLocalizedName({manifestData, messageData});
+  extensionName = getDefaultLocalizedName({manifestData, messageData});
 
   let packageName = safeFileName(
     `${extensionName}-${manifestData.version}.zip`);

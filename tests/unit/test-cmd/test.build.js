@@ -55,23 +55,12 @@ describe('build', () => {
   });
 
   it('checks locale file for malformed json', () => {
-    return withTempDir(
-      () =>
-        getDefaultLocalizedName({
-          manifestData: basicManifest,
-          messageData: '{"simulated:" "json syntax error"',
-        })
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(
-            (error) instanceof WebExtError,
-            true
-          );
-          assert.equal(
-            error.message,
-            'The JSON file is malformed'
-          );
-        })
+    assert.throws(() => getDefaultLocalizedName({
+      manifestData: basicManifest,
+      messageData: '{"simulated:" "json syntax error"',
+    }),
+      WebExtError,
+      /The JSON file is malformed/
     );
   });
 
