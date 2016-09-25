@@ -307,6 +307,19 @@ describe('program.main', () => {
                      process.cwd() + path.sep);
       });
   });
+  it('passes the path of a firefox binary when specified', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return run(
+      ['run', '--firefox-binary', '/path/to/firefox-binary'],
+      {commands: fakeCommands})
+      .then(() => {
+        assert.equal(fakeCommands.run.called, true);
+        assert.equal(fakeCommands.run.firstCall.args[0].firefoxBinary,
+                     '/path/to/firefox-binary');
+      });
+  });
 
 });
 
