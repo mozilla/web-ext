@@ -435,7 +435,7 @@ describe('firefox', () => {
             asProxy: true,
           })
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
+          .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.match(error.message,
                          /must be the extension source directory/);
             assert.include(error.message, extensionPath);
@@ -456,7 +456,7 @@ describe('firefox', () => {
         data.profile.extensionsDir = undefined;
         return installBasicExt(data)
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
+          .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.match(error.message, /unexpectedly empty/);
           }));
       }
@@ -499,7 +499,7 @@ describe('firefox', () => {
         (resolve) => resolve(client)));
       return findRemotePort({connectToFirefox, retriesLeft: 2})
         .catch((err) => {
-          assert.equal(err, 'UsageError: Too many retries on port search');
+          assert.equal(err, 'WebExtError: Too many retries on port search');
           assert.equal(connectToFirefox.callCount, 3);
         });
     });

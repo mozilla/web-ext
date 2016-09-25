@@ -92,7 +92,7 @@ export class Program {
     }
     let runCommand = this.commands[cmd];
     if (!runCommand) {
-      throw new UsageError(`unknown command: ${cmd}`);
+      throw new UsageError(`Unknown command: ${cmd}`);
     }
     if (argv.verbose) {
       log.info('Version:', getVersion(absolutePackageDir));

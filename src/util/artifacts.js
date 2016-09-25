@@ -12,7 +12,8 @@ export async function prepareArtifactsDir(
   try {
     const stats = await fs.stat(artifactsDir);
     if (!stats.isDirectory()) {
-      throw new UsageError(`${artifactsDir} is not a directory`);
+      throw new UsageError(`artifacts-dir=${artifactsDir} 
+                          (this value is not a directory)`);
     }
   } catch (error) {
     if (isErrorWithCode('ENOENT', error)) {

@@ -77,7 +77,7 @@ export async function defaultRemotePortFinder(
     retriesLeft--;
   }
 
-  throw new UsageError('Too many retries on port search');
+  throw new WebExtError('Too many retries on port search');
 }
 
 
@@ -328,7 +328,7 @@ export async function installExtension(
   // TODO: maybe uplift a patch that supports web extensions instead?
 
   if (!profile.extensionsDir) {
-    throw new UsageError('profile.extensionsDir was unexpectedly empty');
+    throw new WebExtError('profile.extensionsDir was unexpectedly empty');
   }
 
   try {
@@ -354,7 +354,7 @@ export async function installExtension(
 
     const isDir = await isDirectory(extensionPath);
     if (!isDir) {
-      throw new UsageError(
+      throw new WebExtError(
         'proxy install: extensionPath must be the extension source ' +
         `directory; got: ${extensionPath}`);
     }

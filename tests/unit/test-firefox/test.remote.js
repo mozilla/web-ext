@@ -144,7 +144,7 @@ describe('firefox.remote', () => {
         const conn = makeInstance(client);
         return conn.getInstalledAddon('missing-id')
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
+          .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.match(error.message,
                          /does not have your extension installed/);
           }));

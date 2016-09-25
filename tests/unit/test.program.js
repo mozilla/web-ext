@@ -41,7 +41,7 @@ describe('program.Program', () => {
     return run(program)
       .then(makeSureItFails())
       .catch(onlyInstancesOf(UsageError, (error) => {
-        assert.match(error.message, /unknown command: thing/);
+        assert.match(error.message, /Unknown command: thing/);
       }));
   });
 
@@ -212,7 +212,7 @@ describe('program.Program', () => {
     return run(new Program(['nope']))
       .then(makeSureItFails())
       .catch((error) => {
-        assert.match(error.message, /unknown command: nope/);
+        assert.match(error.message, /Unknown command: nope/);
       });
   });
 

@@ -141,7 +141,7 @@ export class RemoteFirefox {
         }
         log.debug(
           `Remote Firefox has these addons: ${addons.map((a) => a.id)}`);
-        throw new UsageError(
+        throw new WebExtError(
           'The remote Firefox does not have your extension installed');
       });
   }
