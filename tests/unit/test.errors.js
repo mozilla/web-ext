@@ -42,10 +42,25 @@ describe('errors', () => {
       }
     }
 
+    class ErrorWithErrno extends Error {
+      errno: number;
+      constructor() {
+        super('pretend this is a system error');
+        this.errno = 53;
+      }
+    }
+
     it('catches errors having a code', () => {
       return Promise.reject(new ErrorWithCode())
         .catch(onlyErrorsWithCode('SOME_CODE', (error) => {
           assert.equal(error.code, 'SOME_CODE');
+        }));
+    });
+
+    it('catches errors having a error no', () => {
+      return Promise.reject(new ErrorWithErrno())
+        .catch(onlyErrorsWithCode(53, (error) => {
+          assert.equal(error.errno, 53);
         }));
     });
 
@@ -64,6 +79,13 @@ describe('errors', () => {
       return Promise.reject(new ErrorWithCode())
         .catch(onlyErrorsWithCode(['OTHER_CODE', 'SOME_CODE'], (error) => {
           assert.equal(error.code, 'SOME_CODE');
+        }));
+    });
+
+    it('catches errors having one of many errno', () => {
+      return Promise.reject(new ErrorWithErrno())
+        .catch(onlyErrorsWithCode([34, 53], (error) => {
+          assert.equal(error.errno, 53);
         }));
     });
 

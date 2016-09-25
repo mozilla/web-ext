@@ -78,13 +78,18 @@ export function onlyInstancesOf(
  *
  */
 export function onlyErrorsWithCode(
-    codeWanted: string | Array<string>, errorHandler: Function): Function {
+    codeWanted: (string|number) | Array<string|number>,
+      errorHandler: Function): Function {
   return (error) => {
     let throwError = true;
 
-    if (Array.isArray(codeWanted) && codeWanted.indexOf(error.code) !== -1) {
-      throwError = false;
-    } else if (error.code === codeWanted) {
+    if (Array.isArray(codeWanted)) {
+      if (codeWanted.indexOf(error.code) !== -1 ||
+          codeWanted.indexOf(error.errno) !== -1) {
+        throwError = false;
+      }
+    }
+    else if (error.code === codeWanted || error.errno === codeWanted) {
       throwError = false;
     }
 
