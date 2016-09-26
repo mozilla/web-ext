@@ -95,6 +95,7 @@ so as not to disturb any real `addons.mozilla.org` data.
 * Let's say your generated *JWT issuer* is `user:123` and your *JWT secret* is
   `abc1234`. Here is an example of a command you can run that will use the
   development API:
+
   ````
   web-ext sign --api-key user:123 --api-secret abc1234 --api-url-prefix https://addons-dev.allizom.org/api/v3
   ````
