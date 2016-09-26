@@ -78,6 +78,31 @@ or even when the test suite re-runs automatically as you edit files:
 
 Once the report has been generated, it can be found in the `./coverage` directory.
 
+## Developing on `web-ext sign`
+
+When you are developing a fix or feature for the `web-ext sign` command it's wise
+to use a development version of the
+[signing API](http://addons-server.readthedocs.io/en/latest/topics/api/signing.html)
+so as not to disturb any real `addons.mozilla.org` data.
+
+* Read through how to use the
+  [web-ext sign](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext#Distributing_your_own_WebExtension)
+  command so you understand it.
+* Create an API key on the development version of the
+  [Manage API Keys](https://addons-dev.allizom.org/en-US/developers/addon/api/key/)
+  page. You will need to register an account if you don't have one already. Make
+  sure you use a password that is different from your production account.
+* Let's say your generated *JWT issuer* is `user:123` and your *JWT secret* is
+  `abc1234`. Here is an example of a command you can run that will use the
+  development API:
+  ````
+  web-ext sign --api-key user:123 --api-secret abc1234 --api-url-prefix https://addons-dev.allizom.org/api/v3
+  ````
+* Signed add-ons created with the development API are hard to install into
+  Firefox. If you need to test installation of add-ons (you probably don't)
+  then you'd have to use our staging API server. File an issue for information
+  on that.
+
 ## Creating a pull request
 
 When you create a
