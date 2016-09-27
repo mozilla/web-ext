@@ -55,12 +55,21 @@ describe('build', () => {
   });
 
   it('checks locale file for malformed json', () => {
-    assert.throws(() => getDefaultLocalizedName({
-      manifestData: basicManifest,
-      messageData: '{"simulated:" "json syntax error"',
-    }),
-      WebExtError,
-      /The JSON file is malformed/
+    return withTempDir(
+      (tmpDir) => {
+        const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        fs.writeFileSync(messageFileName,
+                '{"simulated:" "json syntax error"');
+        return getDefaultLocalizedName({
+          messageFile: messageFileName,
+          manifestData: manifestWithoutApps,
+        })
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(
+            error instanceof WebExtError, true);
+        });
+      }
     );
   });
 

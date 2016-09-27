@@ -39,40 +39,39 @@ export type PackageCreatorParams = {
   artifactsDir: string,
 };
 
+export type LocalizedNameParams = {
+  messageFile: string,
+  manifestData: ExtensionManifest,
+}
+
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
-export type LocalizedNameParams = {
-  manifestData: ExtensionManifest,
-  messageData: any,
-};
+export async function getDefaultLocalizedName(
+  {messageFile, manifestData}: LocalizedNameParams
+): Promise<string> {
 
-export function getDefaultLocalizedName(
-  {manifestData, messageData}: LocalizedNameParams
-  ): string {
+  let messageData: any;
   let extensionName: string;
 
-  if (messageData) {
-    try {
-      messageData = JSON.parse(messageData);
-    }
-    catch (err) {
-      err.message = 'The JSON file is malformed';
-      let error = new WebExtError(err.message);
-      throw error;
-    }
-  }
+  messageData = await fs.readFile(messageFile);
 
-  extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/,
-                    function(match, messageName) {
-                      if (messageData[messageName]
-                          && messageData[messageName].message) {
-                        return messageData[messageName].message;
-                      } else {
-                        return match;
-                      }
-                    });
-  return extensionName;
+  try {
+    messageData = JSON.parse(messageData);
+  }
+  catch (err) {
+    throw new WebExtError(`The JSON file is malformed: ${err}`);
+  }
+  if (messageData) {
+    extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/g,
+                      (match, messageName) => {
+                        if (messageData[messageName]
+                            && messageData[messageName].message) {
+                          return messageData[messageName].message;
+                        }
+                      });
+    return extensionName;
+  }
 }
 
 async function defaultPackageCreator(
@@ -90,14 +89,19 @@ async function defaultPackageCreator(
     filter: (...args) => fileFilter.wantFile(...args),
   });
 
-  let messageData: any;
-  if (manifestData.default_locale) {
-    messageData = await fs.readFile(path.join(sourceDir, '_locales',
-                                    manifestData.default_locale,
-                                    'messages.json'));
-  }
+  let fileName: string;
   let extensionName: string;
-  extensionName = getDefaultLocalizedName({manifestData, messageData});
+
+  if (manifestData.default_locale) {
+    fileName = path.join(sourceDir, '_locales',
+                                    manifestData.default_locale,
+                                    'messages.json');
+    extensionName = await getDefaultLocalizedName
+                                      (fileName, manifestData);
+  }
+  else {
+    extensionName = manifestData.name;
+  }
 
   let packageName = safeFileName(
     `${extensionName}-${manifestData.version}.zip`);
