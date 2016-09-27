@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "babel-core": "6.14.0",
-    "babel-eslint": "6.1.2",
+    "babel-eslint": "7.0.0",
     "babel-istanbul": "0.11.0",
     "babel-istanbul-loader": "0.1.0",
     "babel-loader": "6.2.5",
