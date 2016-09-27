@@ -109,7 +109,7 @@ export class RemoteFirefox {
           {to: response.addonsActor, type: 'installTemporaryAddon', addonPath},
           (response) => {
             if (response.error) {
-              return reject(new UsageError(
+              return reject(new WebExtError(
                 'installTemporaryAddon: Error: ' +
                 `${response.error}: ${response.message}`));
             }
