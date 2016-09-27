@@ -8,6 +8,11 @@ before_install:
 - git remote set-branches origin master && git fetch
 - git checkout master
 - git checkout -
+
+before_script:
+# If this command fails and you can't fix it, file an issue and add an exception to .nsprc
+- npm run nsp-check
+
 script:
 - COVERAGE=y npm test
 # Run changelog-lint but only on newer versions of Node (because of syntax errors)
@@ -15,6 +20,7 @@ script:
     npm run changelog-lint;
   fi
 after_script: npm run publish-coverage
+
 notifications:
   irc:
     channels:
