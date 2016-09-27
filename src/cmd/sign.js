@@ -57,7 +57,7 @@ export default function sign(
   }: SignOptions = {}
 ): Promise<SignResult> {
   return withTempDir(
-    async function (tmpDir) {
+    async function(tmpDir) {
       await prepareArtifactsDir(artifactsDir);
 
       let manifestData;
