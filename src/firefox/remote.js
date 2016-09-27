@@ -1,9 +1,10 @@
 /* @flow */
 import {createLogger} from '../util/logger';
-import {RemoteTempInstallNotSupported,
-        UsageError,
-        WebExtError,
-        } from '../errors';
+import {
+  RemoteTempInstallNotSupported,
+  UsageError,
+  WebExtError,
+} from '../errors';
 import defaultFirefoxConnector from 'node-firefox-connect';
 
 
