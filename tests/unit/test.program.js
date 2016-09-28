@@ -313,7 +313,8 @@ describe('program.main', () => {
 
 describe('program.defaultVersionGetter', () => {
 
-  it('returns the package version', () => {
+  it('returns the production package version', () => {
+    process.env.NODE_ENV = 'production';
     let root = path.join(__dirname, '..', '..');
     let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
@@ -321,6 +322,15 @@ describe('program.defaultVersionGetter', () => {
         assert.equal(defaultVersionGetter(root),
                      JSON.parse(pkgData).version);
       });
+  });
+
+  it('returns the development package version', () => {
+    process.env.NODE_ENV = 'development';
+    let root = path.join(__dirname, '..', '..');
+    let git = require('git-rev-sync');
+    var devVersion = `${git.branch()}-${git.long()}`;
+    assert.equal(defaultVersionGetter(root),
+                     devVersion);
   });
 
 });
