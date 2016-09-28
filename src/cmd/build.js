@@ -54,7 +54,13 @@ export async function getDefaultLocalizedName(
   let messageData: any;
   let extensionName: string = manifestData.name;
 
-  messageData = await fs.readFile(messageFile);
+  try {
+    messageData = await fs.readFile(messageFile);
+  }
+  catch (err) {
+    log.info(err);
+    throw new WebExtError(`${err}`);
+  }
 
   try {
     messageData = JSON.parse(messageData);

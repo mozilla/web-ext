@@ -11,7 +11,9 @@ import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import {WebExtError} from '../../../src/errors';
+import {createLogger} from '../../../src/util/logger';
 
+const log = createLogger(__filename);
 
 describe('build', () => {
 
@@ -83,9 +85,24 @@ describe('build', () => {
         .catch((error) => {
           assert.equal(
             error instanceof WebExtError, true);
+          assert.match(error.message, /The JSON file is malformed/);
         });
       }
     );
+  });
+
+  it('throws an error if the locale file doesn\'t exist', () => {
+    return getDefaultLocalizedName({
+      messageFile: '/path/to/non-existent-dir/messages.json',
+      manifestData: manifestWithoutApps,
+    })
+    .then(makeSureItFails())
+    .catch((error) => {
+      log.info(error);
+      assert.equal(
+      error instanceof WebExtError, true);
+      assert.match(error.message, /ENOENT: no such file or directory/);
+    });
   });
 
   it('can build an extension without an ID', () => {
