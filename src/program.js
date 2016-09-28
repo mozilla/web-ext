@@ -102,6 +102,9 @@ export class Program {
       if (!(error instanceof UsageError) || argv.verbose) {
         log.error(`\n${prefix}${error.stack}\n`);
       }
+      else {
+        log.error(`\n${prefix}${error}\n`);
+      }
       if (error.code) {
         log.error(`${prefix}Error code: ${error.code}\n`);
       }
