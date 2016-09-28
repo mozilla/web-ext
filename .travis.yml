@@ -10,7 +10,7 @@ before_install:
 - git checkout -
 script:
 - COVERAGE=y npm test
-- npm run changelog-lint;
+- npm run changelog-lint
 
 after_script: npm run publish-coverage
 notifications:
