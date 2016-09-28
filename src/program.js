@@ -87,19 +87,15 @@ export class Program {
     const argv = this.yargs.argv;
     const cmd = argv._[0];
 
-    if (cmd === undefined) {
-      throw new UsageError('No sub-command was specified in the args');
-    }
     let runCommand = this.commands[cmd];
-    if (!runCommand) {
-      throw new UsageError(`Unknown command: ${cmd}`);
-    }
-    if (argv.verbose) {
-      log.info('Version:', getVersion(absolutePackageDir));
-      logStream.makeVerbose();
-    }
 
     try {
+      if (cmd === undefined) {
+        throw new UsageError('No sub-command was specified in the args');
+      }
+      if (!runCommand) {
+        throw new UsageError(`Unknown command: ${cmd}`);
+      }
       await runCommand(argv);
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
@@ -115,6 +111,11 @@ export class Program {
       } else {
         throw error;
       }
+    }
+
+    if (argv.verbose) {
+      log.info('Version:', getVersion(absolutePackageDir));
+      logStream.makeVerbose();
     }
   }
 }
