@@ -141,12 +141,16 @@ Examples:
 If you want to use scopes then it would look more like:
 `feat(dysfunctioner): Added --quiet option`.
 
-### Check for commit message lint
+### Checking commit message formatting
 
-You can test that your commit message is formatted in a way that will support
-our changelog generator like this:
+Because editing git history is difficult for many developers,
+the commit message formatting described above is automatically enforced
+each time you commit to your work branch.
 
-    npm run changelog-lint
+*If you're on Windows*, the commit message verification currently doesn't
+work (sorry!). You will need to commit to your branch using this command:
+
+    git commit --no-verify
 
 ## Squashing commits
 
