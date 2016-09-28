@@ -147,7 +147,7 @@ Because editing git history is difficult for many developers,
 the commit message formatting described above is automatically enforced
 each time you commit to your work branch.
 
-*If you're on Windows*, the commit message verification currently doesn't
+**If you're on Windows**, the commit message verification currently doesn't
 work (sorry!). You will need to commit to your branch using this command:
 
     git commit --no-verify
