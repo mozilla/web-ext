@@ -89,6 +89,11 @@ export class Program {
 
     let runCommand = this.commands[cmd];
 
+    if (argv.verbose) {
+      log.info('Version:', getVersion(absolutePackageDir));
+      logStream.makeVerbose();
+    }
+
     try {
       if (cmd === undefined) {
         throw new UsageError('No sub-command was specified in the args');
@@ -114,11 +119,6 @@ export class Program {
       } else {
         throw error;
       }
-    }
-
-    if (argv.verbose) {
-      log.info('Version:', getVersion(absolutePackageDir));
-      logStream.makeVerbose();
     }
   }
 }

@@ -13,7 +13,7 @@ export async function prepareArtifactsDir(
     const stats = await fs.stat(artifactsDir);
     if (!stats.isDirectory()) {
       throw new UsageError(
-        `artifacts-dir=${artifactsDir} (this value is not a directory)`);
+        `--artifacts-dir=${artifactsDir} (this value is not a directory)`);
     }
   } catch (error) {
     if (isErrorWithCode('ENOENT', error)) {
