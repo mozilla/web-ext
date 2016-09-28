@@ -70,12 +70,16 @@ export async function getDefaultLocalizedName(
   }
   extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/g,
                       (match, messageName) => {
-                        if (messageData[messageName]
-                            && messageData[messageName].message) {
-                          return messageData[messageName].message;
+                        log.info(messageData[messageName]);
+                        if (!(messageData[messageName]
+                            && messageData[messageName].message)) {
+                          let error = new WebExtError
+                        ('The locale file does not have the correct format');
+                          log.info(error.message);
+                          throw error;
                         }
                         else {
-                          return manifestData.name;
+                          return messageData[messageName].message;
                         }
                       });
   return Promise.resolve(extensionName);

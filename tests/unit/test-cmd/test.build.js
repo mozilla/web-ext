@@ -9,7 +9,10 @@ import build, {safeFileName, FileFilter,
                 getDefaultLocalizedName} from '../../../src/cmd/build';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
-import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
+import {basicManifest,
+  basicLocalizedManifest,
+  manifestWithoutApps,
+} from '../test-util/test.manifest';
 import {WebExtError} from '../../../src/errors';
 import {createLogger} from '../../../src/util/logger';
 
@@ -86,6 +89,30 @@ describe('build', () => {
           assert.equal(
             error instanceof WebExtError, true);
           assert.match(error.message, /The JSON file is malformed/);
+        });
+      }
+    );
+  });
+
+  it('checks locale file for incorrect format', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        fs.writeFileSync(messageFileName,
+          `{"extensionName": { 
+              "description": "example extension"
+              }
+          }`);
+        return getDefaultLocalizedName({
+          messageFile: messageFileName,
+          manifestData: basicLocalizedManifest,
+        })
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(
+            error instanceof WebExtError, true);
+          assert.match(
+            error.message, /The locale file does not have the correct format/);
         });
       }
     );
