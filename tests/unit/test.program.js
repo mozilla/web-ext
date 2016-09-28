@@ -8,7 +8,7 @@ import {spy} from 'sinon';
 
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
-import {onlyInstancesOf, WebExtError} from '../../src/errors';
+import {onlyInstancesOf, UsageError} from '../../src/errors';
 import {fake, makeSureItFails} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
 
@@ -40,8 +40,8 @@ describe('program.Program', () => {
     let program = new Program(['thing']);
     return run(program)
       .then(makeSureItFails())
-      .catch(onlyInstancesOf(WebExtError, (error) => {
-        assert.match(error.message, /unknown command: thing/);
+      .catch(onlyInstancesOf(UsageError, (error) => {
+        assert.match(error.message, /Unknown command: thing/);
       }));
   });
 
@@ -49,7 +49,7 @@ describe('program.Program', () => {
     let program = new Program([]);
     return run(program)
       .then(makeSureItFails())
-      .catch(onlyInstancesOf(WebExtError, (error) => {
+      .catch(onlyInstancesOf(UsageError, (error) => {
         assert.match(error.message, /No sub-command was specified/);
       }));
   });
@@ -212,7 +212,7 @@ describe('program.Program', () => {
     return run(new Program(['nope']))
       .then(makeSureItFails())
       .catch((error) => {
-        assert.match(error.message, /unknown command: nope/);
+        assert.match(error.message, /Unknown command: nope/);
       });
   });
 

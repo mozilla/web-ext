@@ -9,7 +9,7 @@ import {fs} from 'mz';
 import promisify from 'es6-promisify';
 
 import isDirectory from '../util/is-directory';
-import {isErrorWithCode, WebExtError} from '../errors';
+import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
@@ -344,7 +344,7 @@ export async function installExtension(
 
   const id = getManifestId(manifestData);
   if (!id) {
-    throw new WebExtError(
+    throw new UsageError(
       'An explicit extension ID is required when installing to ' +
       'a profile (applications.gecko.id not found in manifest.json)');
   }

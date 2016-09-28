@@ -4,7 +4,7 @@ import {readFileSync} from 'fs';
 import yargs from 'yargs';
 
 import defaultCommands from './cmd';
-import {WebExtError} from './errors';
+import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 
 const log = createLogger(__filename);
@@ -87,23 +87,29 @@ export class Program {
     const argv = this.yargs.argv;
     const cmd = argv._[0];
 
-    if (cmd === undefined) {
-      throw new WebExtError('No sub-command was specified in the args');
-    }
     let runCommand = this.commands[cmd];
-    if (!runCommand) {
-      throw new WebExtError(`unknown command: ${cmd}`);
-    }
+
     if (argv.verbose) {
       log.info('Version:', getVersion(absolutePackageDir));
       logStream.makeVerbose();
     }
 
     try {
+      if (cmd === undefined) {
+        throw new UsageError('No sub-command was specified in the args');
+      }
+      if (!runCommand) {
+        throw new UsageError(`Unknown command: ${cmd}`);
+      }
       await runCommand(argv);
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
-      log.error(`\n${prefix}${error.stack}\n`);
+      if (!(error instanceof UsageError) || argv.verbose) {
+        log.error(`\n${prefix}${error.stack}\n`);
+      }
+      else {
+        log.error(`\n${prefix}${error}\n`);
+      }
       if (error.code) {
         log.error(`${prefix}Error code: ${error.code}\n`);
       }
