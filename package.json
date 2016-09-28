@@ -20,7 +20,8 @@
     "publish-coverage": "grunt coveralls",
     "nsp-check": "nsp check -o summary",
     "changelog": "conventional-changelog -p angular -u",
-    "changelog-lint": "conventional-changelog-lint --from master"
+    "changelog-lint": "conventional-changelog-lint --from master",
+    "changelog-lint-from-stdin": "conventional-changelog-lint"
   },
   "homepage": "https://github.com/mozilla/web-ext",
   "repository": {

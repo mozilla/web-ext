@@ -3,7 +3,8 @@
 # rebasing), this commit hook script should make it easier for new
 # contributors.
 
-npm run changelog-lint
+commit_msg=$1
+cat "$commit_msg" | npm run changelog-lint-from-stdin
 exit_status=$?
 
 if [ $exit_status -ne 0 ]; then
@@ -11,14 +12,9 @@ if [ $exit_status -ne 0 ]; then
     echo "--------------------------------------------------------------------"
     echo "The above output indicates a problem with the last commit message(s)."
     echo
-
-    if [ "$1" = "COMMIT_EDITMSG" ]; then
-        echo "The invalid message has not been saved."
-    else
-        echo "Type this to fix the message:"
-        echo "git commit -n --amend"
-    fi
-
+    echo "The invalid message has not been saved."
+    # echo "Type this to fix the message:"
+    # echo "git commit -n --amend"
     echo
     echo "See:"
     echo "https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md#writing-commit-messages"
