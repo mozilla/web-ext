@@ -1,5 +1,0 @@
-#!/bin/bash
-# Before pushing all changes to a work branch, this
-# makes sure all commit messages are formatted for the changelog correctly.
-
-./.githooks/check-for-changelog-lint
