@@ -3,7 +3,7 @@ import {describe, it} from 'mocha';
 
 import {
   webExt,
-  withTempDir, runCommand, reportRunCommandError,
+  withTempDir, runCommand, reportProgramErrors,
 } from './common';
 
 describe('web-ext', () => {
@@ -13,7 +13,7 @@ describe('web-ext', () => {
 
     return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
       if (exitCode !== 0) {
-        reportRunCommandError({
+        reportProgramErrors({
           argv,
           exitCode,
           stdout,

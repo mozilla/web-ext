@@ -3,7 +3,7 @@ import {describe, it} from 'mocha';
 
 import {
   webExt, addonPath, fakeFirefoxPath,
-  withTempAddonDir, runCommand, reportRunCommandError,
+  withTempAddonDir, runCommand, reportProgramErrors,
 } from './common';
 
 const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
@@ -30,14 +30,14 @@ describe('web-ext run', () => {
 
          return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
            if (stdout.indexOf(EXPECTED_MESSAGE) < 0) {
-             reportRunCommandError({
+             reportProgramErrors({
                argv,
                exitCode,
                stdout,
                stderr,
              }, 'The fake Firefox binary has not been executed');
            } else if (exitCode !== 0) {
-             reportRunCommandError({
+             reportProgramErrors({
                argv,
                exitCode,
                stdout,

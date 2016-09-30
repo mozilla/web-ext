@@ -3,7 +3,7 @@ import {describe, it} from 'mocha';
 
 import {
   webExt, addonPath,
-  withTempAddonDir, runCommand, reportRunCommandError,
+  withTempAddonDir, runCommand, reportProgramErrors,
 } from './common';
 
 describe('web-ext lint', () => {
@@ -14,7 +14,7 @@ describe('web-ext lint', () => {
 
        return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
          if (exitCode !== 0) {
-           reportRunCommandError({
+           reportProgramErrors({
              argv,
              exitCode,
              stdout,

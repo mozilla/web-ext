@@ -4,7 +4,7 @@ import {describe, it, beforeEach, afterEach} from 'mocha';
 
 import {
   webExt, addonPath, fakeServerPath,
-  withTempAddonDir, runCommand, reportRunCommandError,
+  withTempAddonDir, runCommand, reportProgramErrors,
 } from './common';
 
 describe('web-ext sign', () => {
@@ -33,7 +33,7 @@ describe('web-ext sign', () => {
 
        return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
          if (exitCode !== 0) {
-           reportRunCommandError({
+           reportProgramErrors({
              argv,
              exitCode,
              stdout,

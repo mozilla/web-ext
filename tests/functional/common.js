@@ -54,9 +54,9 @@ export function withTempAddonDir(
 }
 
 
-// reportRunCommandError helper
+// reportProgramErrors helper
 
-export function reportRunCommandError(obj: Object, msg: ?string) {
+export function reportProgramErrors(obj: Object, msg: ?string) {
   const errorMessage = msg || 'Unexpected web-ext functional test result';
   const formattedErrorData = JSON.stringify(obj, null, 2);
   const error = new Error(`${errorMessage}: ${formattedErrorData}`);
