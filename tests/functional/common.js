@@ -66,11 +66,13 @@ export function reportProgramErrors(obj: Object, msg: ?string) {
   console.error(errorMessage);
 
   if (obj.stdout) {
+    obj.stdout = obj.stdout.replace('\\n', '\n');
     console.error('\nCommand stdout: ', obj.stdout);
   }
 
   if (obj.stderr) {
-    console.error('\nCommand stdout: ', obj.stderr);
+    obj.stderr = obj.stderr.replace('\\n', '\n');
+    console.error('\nCommand stderr: ', obj.stderr);
   }
   /* eslint-enable no-console */
 
