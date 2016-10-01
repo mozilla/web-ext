@@ -15,10 +15,10 @@ import {ConsoleStream} from '../../src/util/logger';
 
 describe('program.Program', () => {
 
-  function run(program, options = {}) {
+  function execWebExt(program, options = {}) {
     let fakeProcess = fake(process);
     let absolutePackageDir = path.join(__dirname, '..', '..');
-    return program.run(
+    return program.execWebExt(
       absolutePackageDir, {
         systemProcess: fakeProcess,
         shouldExitProgram: false,
@@ -30,7 +30,7 @@ describe('program.Program', () => {
     let thing = spy(() => Promise.resolve());
     let program = new Program(['thing'])
       .command('thing', 'does a thing', thing);
-    return run(program)
+    return execWebExt(program)
       .then(() => {
         assert.equal(thing.called, true);
       });
@@ -38,7 +38,7 @@ describe('program.Program', () => {
 
   it('reports unknown commands', () => {
     let program = new Program(['thing']);
-    return run(program)
+    return execWebExt(program)
       .then(makeSureItFails())
       .catch(onlyInstancesOf(UsageError, (error) => {
         assert.match(error.message, /Unknown command: thing/);
@@ -47,7 +47,7 @@ describe('program.Program', () => {
 
   it('reports missing command', () => {
     let program = new Program([]);
-    return run(program)
+    return execWebExt(program)
       .then(makeSureItFails())
       .catch(onlyInstancesOf(UsageError, (error) => {
         assert.match(error.message, /No sub-command was specified/);
@@ -60,7 +60,8 @@ describe('program.Program', () => {
       .command('cmd', 'some command', () => {
         throw new Error('this is an error from a command handler');
       });
-    return run(program, {systemProcess: fakeProcess, shouldExitProgram: true})
+    return execWebExt(program, {systemProcess: fakeProcess,
+                                  shouldExitProgram: true})
       .then(() => {
         assert.equal(fakeProcess.exit.called, true);
         assert.equal(fakeProcess.exit.firstCall.args[0], 1);
@@ -70,7 +71,7 @@ describe('program.Program', () => {
   it('throws an error if sub-command is given an argument', () => {
     const program = new Program(['thing', 'nope'])
       .command('thing', '', () => {});
-    return run(program)
+    return execWebExt(program)
       .then(makeSureItFails())
       .catch((error) => {
         assert.match(error.message, /This command does not take any arguments/);
@@ -94,7 +95,7 @@ describe('program.Program', () => {
       });
     // This is just a smoke test to make sure the error code doesn't
     // introduce an unexpected exception.
-    return run(program)
+    return execWebExt(program)
       .then(makeSureItFails())
       .catch((error) => {
         assert.match(error.message, /pretend this is a system error/);
@@ -109,7 +110,7 @@ describe('program.Program', () => {
           default: 'default value',
         },
       });
-    return run(program)
+    return execWebExt(program)
       .then(() => {
         assert.equal(handler.called, true);
         // This ensures that the default configuration for the option has
@@ -132,7 +133,7 @@ describe('program.Program', () => {
           default: 'default value',
         },
       });
-    return run(program)
+    return execWebExt(program)
       .then(() => {
         assert.equal(handler.called, true);
         // By checking the global default, it ensures that default configuration
@@ -154,7 +155,7 @@ describe('program.Program', () => {
           describe: 'example option',
         },
       });
-    return run(program, {shouldExitProgram: true})
+    return execWebExt(program, {shouldExitProgram: true})
       .then(() => {
         assert.equal(valueReceived, 'value');
         delete process.env.WEB_EXT_SOME_OPT;
@@ -172,7 +173,7 @@ describe('program.Program', () => {
     });
     program.command('thing', 'does a thing', () => {});
 
-    return run(program, {logStream})
+    return execWebExt(program, {logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
       });
@@ -187,7 +188,7 @@ describe('program.Program', () => {
       },
     });
     program.command('thing', 'does a thing', () => {});
-    return run(program, {getVersion: version})
+    return execWebExt(program, {getVersion: version})
       .then(() => {
         assert.equal(version.firstCall.args[0],
                      path.join(__dirname, '..', '..'));
@@ -202,14 +203,14 @@ describe('program.Program', () => {
         type: 'boolean',
       },
     });
-    return run(program, {logStream})
+    return execWebExt(program, {logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, false);
       });
   });
 
   it('throws an error about unknown commands', () => {
-    return run(new Program(['nope']))
+    return execWebExt(new Program(['nope']))
       .then(makeSureItFails())
       .catch((error) => {
         assert.match(error.message, /Unknown command: nope/);
@@ -217,7 +218,7 @@ describe('program.Program', () => {
   });
 
   it('throws an error about unknown options', () => {
-    return run(new Program(['--nope']))
+    return execWebExt(new Program(['--nope']))
       .then(makeSureItFails())
       .catch((error) => {
         // It's a bit weird that yargs calls this an argument rather
@@ -229,7 +230,7 @@ describe('program.Program', () => {
   it('throws an error about unknown sub-command options', () => {
     const program = new Program(['thing', '--nope'])
       .command('thing', '', () => {});
-    return run(program)
+    return execWebExt(program)
       .then(makeSureItFails())
       .catch((error) => {
         // Again, yargs calls this an argument not an option for some reason.
@@ -242,7 +243,7 @@ describe('program.Program', () => {
 
 describe('program.main', () => {
 
-  function run(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
+  function execWebExt(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
     const runOptions = {shouldExitProgram: false, systemProcess: fake(process)};
     return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
@@ -251,7 +252,7 @@ describe('program.main', () => {
     let fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
     });
-    return run(['build'], {commands: fakeCommands})
+    return execWebExt(['build'], {commands: fakeCommands})
       .then(() => {
         // This is a smoke test mainly to make sure main() configures
         // options with handlers. It does not extensively test the
@@ -268,7 +269,7 @@ describe('program.main', () => {
     const projectRoot = '/pretend/project/root';
     // For some reason, executing --version like this
     // requires a command. In the real CLI, it does not.
-    return run(['--version', 'build'],
+    return execWebExt(['--version', 'build'],
       {
         projectRoot,
         commands: fakeCommands,
@@ -284,7 +285,7 @@ describe('program.main', () => {
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
     });
-    return run(
+    return execWebExt(
       ['build', '--source-dir', '..'], {commands: fakeCommands})
       .then(() => {
         assert.equal(fakeCommands.build.called, true);
@@ -297,7 +298,7 @@ describe('program.main', () => {
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
     });
-    return run(
+    return execWebExt(
       // Add a double slash to the path, which will be fixed by normalization.
       ['build', '--artifacts-dir', process.cwd() + path.sep + path.sep],
       {commands: fakeCommands})
@@ -312,7 +313,7 @@ describe('program.main', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
-    return run(
+    return execWebExt(
       ['run', '--firefox-binary', '/path/to/firefox-binary'],
       {commands: fakeCommands})
       .then(() => {

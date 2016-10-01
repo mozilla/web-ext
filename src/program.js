@@ -76,7 +76,7 @@ export class Program {
     return this;
   }
 
-  async run(absolutePackageDir: string,
+  async execWebExt(absolutePackageDir: string,
       {systemProcess = process, logStream = defaultLogStream,
        getVersion = defaultVersionGetter, shouldExitProgram = true}
       : Object = {}): Promise<void> {
@@ -284,5 +284,5 @@ Example: $0 --help run.
       },
     });
 
-  return program.run(absolutePackageDir, runOptions);
+  return program.execWebExt(absolutePackageDir, runOptions);
 }
