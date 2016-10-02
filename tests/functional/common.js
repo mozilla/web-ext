@@ -54,9 +54,9 @@ export function withTempAddonDir(
 }
 
 
-// reportProgramErrors helper
+// reportCommandErrors helper
 
-export function reportProgramErrors(obj: Object, msg: ?string) {
+export function reportCommandErrors(obj: Object, msg: ?string) {
   const errorMessage = msg || 'Unexpected web-ext functional test result';
   const formattedErrorData = JSON.stringify(obj, null, 2);
   const error = new Error(`${errorMessage}: ${formattedErrorData}`);
@@ -66,13 +66,11 @@ export function reportProgramErrors(obj: Object, msg: ?string) {
   console.error(errorMessage);
 
   if (obj.stdout) {
-    obj.stdout = obj.stdout.replace('\\n', '\n');
-    console.error('\nCommand stdout: ', obj.stdout);
+    console.error('\nCommand stdout: ', obj.stdout.replace('\\n', '\n'));
   }
 
   if (obj.stderr) {
-    obj.stderr = obj.stderr.replace('\\n', '\n');
-    console.error('\nCommand stderr: ', obj.stderr);
+    console.error('\nCommand stderr: ', obj.stderr.replace('\\n', '\n'));
   }
   /* eslint-enable no-console */
 
@@ -80,7 +78,7 @@ export function reportProgramErrors(obj: Object, msg: ?string) {
   throw error;
 }
 
-// runCommand helper
+// execCommand helper
 
 export type RunCommandResult = {
   exitCode: number,
@@ -95,7 +93,7 @@ export type RunningCommand = {
   spawnedProcess: ChildProcess,
 };
 
-export function runCommand(
+export function execCommand(
   execPath: string, argv: Array<string>, spawnOptions: child_process$spawnOpts,
 ): RunningCommand {
   const spawnedProcess = spawn(execPath, argv, spawnOptions);
