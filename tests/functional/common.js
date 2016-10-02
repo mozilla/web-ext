@@ -3,6 +3,7 @@ import {ChildProcess, spawn} from 'child_process';
 import copyDir from 'copy-dir';
 import path from 'path';
 import promisify from 'es6-promisify';
+import prettyjson from 'prettyjson';
 
 
 import * as tmpDirUtils from '../../src/util/temp-dir';
@@ -58,7 +59,7 @@ export function withTempAddonDir(
 
 export function reportCommandErrors(obj: Object, msg: ?string) {
   const errorMessage = msg || 'Unexpected web-ext functional test result';
-  const formattedErrorData = JSON.stringify(obj, null, 2);
+  const formattedErrorData = prettyjson.render(obj).replace('\\n', '\n');
   const error = new Error(`${errorMessage}: ${formattedErrorData}`);
   /* eslint-disable no-console */
 
