@@ -2,6 +2,8 @@
 import path from 'path';
 import {fs} from 'mz';
 import defaultAddonSigner from 'sign-addon';
+import {httpFetchFile} from '../util/net';
+import url from 'url';
 
 import defaultBuilder from './build';
 import {withTempDir} from '../util/temp-dir';
@@ -32,6 +34,7 @@ export type SignParams = {
   apiSecret: string,
   apiUrlPrefix: string,
   timeout: number,
+  updateLink: string
 };
 
 export type SignOptions = {
@@ -49,7 +52,7 @@ export type SignResult = {
 export default function sign(
   {
     verbose, sourceDir, artifactsDir, apiKey, apiSecret,
-    apiUrlPrefix, id, timeout,
+    apiUrlPrefix, id, timeout, updateLink,
   }: SignParams,
   {
     build = defaultBuilder, signAddon = defaultAddonSigner,
@@ -107,6 +110,19 @@ export default function sign(
         downloadDir: artifactsDir,
       });
 
+      if (updateLink && updateLink.length > 0 && signingResult.success) {
+        let extensionID;
+        if (signingResult.id) {
+          extensionID = signingResult.id;
+        } else {
+          extensionID = id;
+        }
+        await generateNewUpdateManifest(
+          extensionID, manifestData.version, signingResult.downloadedFiles[0],
+          artifactsDir, manifestData, updateLink
+        );
+      }
+
       if (signingResult.id) {
         await saveIdToSourceDir(sourceDir, signingResult.id);
       }
@@ -125,6 +141,103 @@ export default function sign(
   );
 }
 
+async function generateNewUpdateManifest(
+  id: ?string, newVersion: string, XPIPath: string, artifactsDir,
+  manifestData: Object, updateLink: string
+) {
+  let oldUpdateManifest;
+  let oldUpdateManifestData: Object;
+  let statusCode;
+  let newUpdateManifest;
+  let updateManifestFileName = '';
+
+  if (manifestData !== undefined &&
+      manifestData.applications !== undefined &&
+      manifestData.applications.gecko !== undefined &&
+      manifestData.applications.gecko.update_url !== undefined) {
+    let parsed = url.parse(manifestData.applications.gecko.update_url);
+    if (parsed !== undefined && parsed.pathname !== undefined) {
+      updateManifestFileName = path.basename(parsed.pathname);
+    }
+
+    try {
+      [oldUpdateManifest, statusCode] = await httpFetchFile(
+        manifestData.applications.gecko.update_url);
+      if (statusCode < 200 || statusCode > 290) {
+        throw new WebExtError(
+          `Failed to retrieve ${updateManifestFileName}\n` +
+          `http statusCode error, server responded with: ${statusCode}`);
+      }
+    } catch (e) {
+      throw new WebExtError(
+        `Was unable to download ${updateManifestFileName}\nerror is: ${e}`);
+    }
+
+    try {
+      oldUpdateManifestData = JSON.parse(oldUpdateManifest);
+    } catch (e) {
+      throw new WebExtError(
+        `Unable to parse ${updateManifestFileName} file located at ` +
+        `${manifestData.applications.gecko.update_url}`);
+    }
+
+    if (updateLink.indexOf('{xpiFileName}') === -1) {
+      throw new WebExtError(
+        'Unable to parse --update-link url, please use {xpiFileName} ' +
+        'as a substitute for the XPI file');
+    }
+
+    let newVersion = {
+      version: manifestData.version,
+      update_link: updateLink.replace('{xpiFileName}', path.basename(XPIPath)),
+    };
+
+    if (oldUpdateManifestData) {
+      if (oldUpdateManifestData.addons === undefined) {
+        oldUpdateManifestData.addons = {};
+      }
+
+      if (id && oldUpdateManifestData.addons[id]) {
+        // append a new release to the updateManifest
+        if (oldUpdateManifestData.addons[id].updates) {
+          oldUpdateManifestData.addons[id].updates.push(newVersion);
+        }
+      } else {
+        // first release of this addon (or maybe the extension-id was botched? be careful!)
+        let addonName = manifestData.name || 'your application';
+        log.warn(`Creating first release of ${addonName}`);
+        log.warn(
+          'If this is not the actual first release, check your extension-id');
+        oldUpdateManifestData.addons[id] = {};
+        oldUpdateManifestData.addons[id].updates = [newVersion];
+      }
+
+      // the oldUpdateManifest has been updated, it's ready to be saved
+      newUpdateManifest = JSON.stringify(oldUpdateManifestData, null, 4);
+    } else {
+      throw new WebExtError('The .addons property is missing in the ' +
+        'retrieved updateManifest.json file');
+    }
+
+    return new Promise(function(resolve, reject) {
+      log.info('Saving to', path.join(artifactsDir, updateManifestFileName));
+      fs.writeFile(
+        path.join(artifactsDir, updateManifestFileName),
+        newUpdateManifest,
+        function(error) {
+          if (error) {
+            reject(error);
+          }
+          resolve();
+        });
+    });
+  } else {
+    throw new WebExtError(
+      'update-link was passed, but the manifest.json ' +
+      'does not have the applications.gecko.update_url property ' +
+      'therefore, no updateManifest could be generated');
+  }
+}
 
 export async function getIdFromSourceDir(
   sourceDir: string
@@ -160,7 +273,6 @@ export async function getIdFromSourceDir(
 
   return id;
 }
-
 
 export async function saveIdToSourceDir(sourceDir: string, id: string)
     : Promise<void> {

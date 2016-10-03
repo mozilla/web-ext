@@ -25,6 +25,7 @@ describe('sign', () => {
       apiSecret: 'AMO JWT secret',
       apiUrlPrefix: 'http://not-the-real-amo.com/api/v3',
       timeout: 999,
+      updateLink: '',
     };
 
     const buildResult = {

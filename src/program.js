@@ -215,6 +215,14 @@ Example: $0 --help run.
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },
+        'update-link': {
+          describe:
+            'A URL to where your XPI files will be hosted. ' +
+            'ex: https://example.com/plugins/{xpiFileName} ' +
+            'if you select this option, an updateManifest ' +
+            'file will be generated ' +
+            'in the web-ext-artifacts folder',
+        },
       })
     .command('run', 'Run the web extension', commands.run, {
       'firefox': {
