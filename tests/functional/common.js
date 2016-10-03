@@ -64,15 +64,7 @@ export function reportCommandErrors(obj: Object, msg: ?string) {
   /* eslint-disable no-console */
 
   // Make the error diagnostic info easier to read.
-  console.error(errorMessage);
-
-  if (obj.stdout) {
-    console.error('\nCommand stdout: ', obj.stdout.replace('\\n', '\n'));
-  }
-
-  if (obj.stderr) {
-    console.error('\nCommand stderr: ', obj.stderr.replace('\\n', '\n'));
-  }
+  console.error('This test failed. Please check the log below to debug.');
   /* eslint-enable no-console */
 
   // Make sure the test fails and error diagnostic fully reported in the failure.
