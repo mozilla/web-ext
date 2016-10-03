@@ -4,7 +4,7 @@
 # contributors.
 
 commit_msg=$1
-cat "$commit_msg" | npm run changelog-lint-from-stdin
+cat "$commit_msg" | npm run changelog-lint-from-stdin --silent
 exit_status=$?
 
 if [ $exit_status -ne 0 ]; then
