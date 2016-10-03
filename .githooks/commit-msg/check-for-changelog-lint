@@ -1,0 +1,29 @@
+#!/bin/bash
+# Because commits are hard to remove (unless you are a pro at interactive
+# rebasing), this commit hook script should make it easier for new
+# contributors.
+
+commit_msg=$1
+cat "$commit_msg" | npm run changelog-lint-from-stdin --silent
+exit_status=$?
+
+if [ $exit_status -ne 0 ]; then
+    echo
+    echo "Your unsaved commit message:"
+    echo
+    cat "$commit_msg"
+    echo
+    echo "--------------------------------------------------------------------"
+    echo "Your commit was not saved because the message was formatted incorrectly."
+    echo "See the error log above."
+    echo "--------------------------------------------------------------------"
+    echo
+    echo "For formatting instructions, see:"
+    echo "https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md#writing-commit-messages"
+    echo
+    echo "To bypass this check and commit anyway, use:"
+    echo "git commit --no-verify ..."
+    echo
+fi
+
+exit $exit_status
