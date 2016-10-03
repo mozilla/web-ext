@@ -3,7 +3,7 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import {RemoteTempInstallNotSupported, WebExtError, onlyInstancesOf}
+import {RemoteTempInstallNotSupported, UsageError, WebExtError, onlyInstancesOf}
   from '../../../src/errors';
 import {fakeFirefoxClient, makeSureItFails} from '../helpers';
 import {default as defaultConnector, RemoteFirefox}
@@ -196,7 +196,7 @@ describe('firefox.remote', () => {
 
         return conn.checkForAddonReloading(addon)
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(WebExtError, (error) => {
+          .catch(onlyInstancesOf(UsageError, (error) => {
             assert.match(error.message, /does not support add-on reloading/);
           }));
       });

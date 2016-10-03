@@ -6,7 +6,7 @@ import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
 import * as firefox from '../../../src/firefox';
-import {onlyInstancesOf, WebExtError} from '../../../src/errors';
+import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
 import {fs} from 'mz';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
@@ -395,7 +395,7 @@ describe('firefox', () => {
             extensionPath: data.extensionPath,
           })
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(WebExtError, (error) => {
+          .catch(onlyInstancesOf(UsageError, (error) => {
             assert.match(error.message,
                          /explicit extension ID is required/);
           }));

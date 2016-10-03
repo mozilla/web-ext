@@ -1,6 +1,10 @@
 /* @flow */
 import {createLogger} from '../util/logger';
-import {RemoteTempInstallNotSupported, WebExtError} from '../errors';
+import {
+  RemoteTempInstallNotSupported,
+  UsageError,
+  WebExtError,
+} from '../errors';
 import defaultFirefoxConnector from 'node-firefox-connect';
 
 
@@ -156,7 +160,7 @@ export class RemoteFirefox {
         let supportedRequestTypes = JSON.stringify(response.requestTypes);
         log.debug(
           `Remote Firefox only supports: ${supportedRequestTypes}`);
-        throw new WebExtError(
+        throw new UsageError(
           'This Firefox version does not support add-on reloading. ' +
           'Re-run with --no-reload');
       } else {

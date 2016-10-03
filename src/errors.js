@@ -13,9 +13,19 @@ export class WebExtError extends ExtendableError {
 
 
 /*
+ * The class for errors that can be fixed by the developer.
+ */
+export class UsageError extends WebExtError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+
+/*
  * The manifest for the extension is invalid (or missing).
  */
-export class InvalidManifest extends WebExtError {
+export class InvalidManifest extends UsageError {
   constructor(message: string) {
     super(message);
   }

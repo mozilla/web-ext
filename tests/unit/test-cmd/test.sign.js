@@ -7,7 +7,7 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 import promisify from 'es6-promisify';
 
-import {onlyInstancesOf, WebExtError} from '../../../src/errors';
+import {onlyInstancesOf, UsageError} from '../../../src/errors';
 import {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
@@ -172,7 +172,7 @@ describe('sign', () => {
           },
         })
         .then(makeSureItFails())
-        .catch(onlyInstancesOf(WebExtError, (error) => {
+        .catch(onlyInstancesOf(UsageError, (error) => {
           assert.match(error.message, /Cannot set custom ID some-custom-id/);
           assert.match(
             error.message,
@@ -350,7 +350,7 @@ describe('sign', () => {
         return fs.writeFile(path.join(sourceDir, extensionIdFile), '')
           .then(() => getIdFromSourceDir(sourceDir))
           .then(makeSureItFails())
-          .catch(onlyInstancesOf(WebExtError, (error) => {
+          .catch(onlyInstancesOf(UsageError, (error) => {
             assert.match(error.message, /No ID found in extension ID file/);
           }));
       }
