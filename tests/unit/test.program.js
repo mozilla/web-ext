@@ -60,8 +60,10 @@ describe('program.Program', () => {
       .command('cmd', 'some command', () => {
         throw new Error('this is an error from a command handler');
       });
-    return execProgram(program, {systemProcess: fakeProcess,
-                                shouldExitProgram: true})
+    return execProgram(program, {
+      systemProcess: fakeProcess,
+      shouldExitProgram: true,
+    })
       .then(() => {
         assert.equal(fakeProcess.exit.called, true);
         assert.equal(fakeProcess.exit.firstCall.args[0], 1);
