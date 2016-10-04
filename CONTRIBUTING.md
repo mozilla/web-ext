@@ -152,14 +152,6 @@ work (sorry!). You will need to commit to your branch using this command:
 
     git commit --no-verify
 
-## Squashing commits
-
-When fixing up a pull request based on code review comments,
-[squash all commits together](https://github.com/ginatrapani/todo.txt-android/wiki/Squash-All-Commits-Related-to-a-Single-Issue-into-a-Single-Commit)
-before merging. This will allow us to auto-generate a more concise
-changelog. If a pull request contains more than one feature or fix then
-it is okay to include each as a separate commit.
-
 ## Creating a release
 
 To release a new version of `web-ext`, follow these steps:
