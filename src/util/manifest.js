@@ -14,6 +14,11 @@ const log = createLogger(__filename);
 export type ExtensionManifest = {
   name: string,
   version: string,
+  applications: {
+    gecko: {
+      id: string
+    }
+  }
 };
 
 export default async function getValidatedManifest(
