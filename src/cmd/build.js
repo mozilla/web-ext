@@ -26,16 +26,14 @@ import type {ExtensionManifest} from '../util/manifest';
 
 // defaultPackageCreator types and implementation.
 
-export type ExtensionBuildResult = {
-  extensionPath: string,
-};
+export type ExtensionBuildResult = {| extensionPath: string |};
 
-export type PackageCreatorParams = {
+export type PackageCreatorParams = {|
   manifestData?: ExtensionManifest,
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
-};
+|};
 
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
@@ -72,18 +70,18 @@ async function defaultPackageCreator(
 
 // Build command types and implementation.
 
-export type BuildCmdParams = {
+export type BuildCmdParams = {|
   sourceDir: string,
   artifactsDir: string,
   asNeeded?: boolean,
-};
+|};
 
-export type BuildCmdOptions = {
+export type BuildCmdOptions = {|
   manifestData?: ExtensionManifest,
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
-};
+|};
 
 export default async function build(
   {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
@@ -123,9 +121,9 @@ export default async function build(
 
 // FileFilter types and implementation.
 
-export type FileFilterOptions = {
+export type FileFilterOptions = {|
   filesToIgnore?: Array<string>,
-};
+|};
 
 /*
  * Allows or ignores files when creating a ZIP archive.
