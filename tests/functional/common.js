@@ -59,8 +59,8 @@ export function withTempAddonDir(
 
 export function reportCommandErrors(obj: Object, msg: ?string) {
   const errorMessage = msg || 'Unexpected web-ext functional test result';
-  const formattedErrorData = prettyjson.render(obj).replace('\\n', '\n');
-  const error = new Error(`${errorMessage}: ${formattedErrorData}`);
+  const formattedErrorData = prettyjson.render(obj);
+  const error = new Error(`${errorMessage}: \n${formattedErrorData}`);
   /* eslint-disable no-console */
 
   // Make the error diagnostic info easier to read.
