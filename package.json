@@ -104,7 +104,7 @@
     "nsp": "2.6.1",
     "sinon": "1.17.6",
     "webpack": "1.13.2",
-    "webpack-dev-server": "1.16.1",
+    "webpack-dev-server": "1.16.2",
     "yauzl": "2.6.0"
   },
   "author": "Kumar McMillan",
