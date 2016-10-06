@@ -4,7 +4,7 @@ import {describe, it, beforeEach, afterEach} from 'mocha';
 
 import {
   webExt, addonPath, fakeServerPath,
-  withTempAddonDir, runCommand, reportRunCommandError,
+  withTempAddonDir, execCommand, reportCommandErrors,
 } from './common';
 
 describe('web-ext sign', () => {
@@ -29,11 +29,11 @@ describe('web-ext sign', () => {
          '--api-key', 'FAKEAPIKEY', '--api-secret', 'FAKEAPISECRET',
          '--source-dir', srcDir,
        ];
-       const cmd = runCommand(webExt, argv, {cwd: tmpDir});
+       const cmd = execCommand(webExt, argv, {cwd: tmpDir});
 
        return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
          if (exitCode !== 0) {
-           reportRunCommandError({
+           reportCommandErrors({
              argv,
              exitCode,
              stdout,

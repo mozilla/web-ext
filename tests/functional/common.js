@@ -3,6 +3,7 @@ import {ChildProcess, spawn} from 'child_process';
 import copyDir from 'copy-dir';
 import path from 'path';
 import promisify from 'es6-promisify';
+import prettyjson from 'prettyjson';
 
 
 import * as tmpDirUtils from '../../src/util/temp-dir';
@@ -54,31 +55,23 @@ export function withTempAddonDir(
 }
 
 
-// reportRunCommandError helper
+// reportCommandErrors helper
 
-export function reportRunCommandError(obj: Object, msg: ?string) {
+export function reportCommandErrors(obj: Object, msg: ?string) {
   const errorMessage = msg || 'Unexpected web-ext functional test result';
-  const formattedErrorData = JSON.stringify(obj, null, 2);
-  const error = new Error(`${errorMessage}: ${formattedErrorData}`);
+  const formattedErrorData = prettyjson.render(obj);
+  const error = new Error(`${errorMessage}: \n${formattedErrorData}`);
   /* eslint-disable no-console */
 
   // Make the error diagnostic info easier to read.
-  console.error(errorMessage);
-
-  if (obj.stdout) {
-    console.error('\nCommand stdout: ', obj.stdout);
-  }
-
-  if (obj.stderr) {
-    console.error('\nCommand stdout: ', obj.stderr);
-  }
+  console.error('This test failed. Please check the log below to debug.');
   /* eslint-enable no-console */
 
   // Make sure the test fails and error diagnostic fully reported in the failure.
   throw error;
 }
 
-// runCommand helper
+// execCommand helper
 
 export type RunCommandResult = {
   exitCode: number,
@@ -93,7 +86,7 @@ export type RunningCommand = {
   spawnedProcess: ChildProcess,
 };
 
-export function runCommand(
+export function execCommand(
   execPath: string, argv: Array<string>, spawnOptions: child_process$spawnOpts,
 ): RunningCommand {
   const spawnedProcess = spawn(execPath, argv, spawnOptions);
