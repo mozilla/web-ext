@@ -51,7 +51,7 @@ export async function getDefaultLocalizedName(
   {messageFile, manifestData}: LocalizedNameParams
 ): Promise<string> {
 
-  let messageData: any;
+  let messageData: string|Buffer;
   let extensionName: string = manifestData.name;
 
   try {
@@ -69,19 +69,17 @@ export async function getDefaultLocalizedName(
     throw new WebExtError(`The JSON file is malformed: ${err}`);
   }
   extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/g,
-                      (match, messageName) => {
-                        log.info(messageData[messageName]);
-                        if (!(messageData[messageName]
-                            && messageData[messageName].message)) {
-                          let error = new WebExtError
-                        ('The locale file does not have the correct format');
-                          log.info(error.message);
-                          throw error;
-                        }
-                        else {
-                          return messageData[messageName].message;
-                        }
-                      });
+    (match, messageName) => {
+      if (!(messageData[messageName]
+            && messageData[messageName].message)) {
+        const error = new WebExtError
+        ('The locale file does not have the correct format');
+        throw error;
+      }
+      else {
+        return messageData[messageName].message;
+      }
+    });
   return Promise.resolve(extensionName);
 }
 
@@ -105,11 +103,10 @@ async function defaultPackageCreator(
 
   if (manifestData.default_locale) {
     messageFile = path.join(sourceDir, '_locales',
-                                    manifestData.default_locale,
-                                    'messages.json');
+                            manifestData.default_locale, 'messages.json');
     log.info(messageFile);
-    extensionName = await getDefaultLocalizedName
-                                      ({messageFile, manifestData});
+    extensionName = await getDefaultLocalizedName(
+      {messageFile, manifestData});
   }
   let packageName = safeFileName(
     `${extensionName}-${manifestData.version}.zip`);

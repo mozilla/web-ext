@@ -21,16 +21,6 @@ export const basicManifest = {
   },
 };
 
-export const basicLocalizedManifest = {
-  name: '__MSG_name__',
-  version: '0.0.1',
-  applications: {
-    gecko: {
-      id: 'basic-manifest@web-ext-test-suite',
-    },
-  },
-};
-
 export const manifestWithoutApps = deepcopy(basicManifest);
 delete manifestWithoutApps.applications;
 

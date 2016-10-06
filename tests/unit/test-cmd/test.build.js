@@ -10,11 +10,20 @@ import build, {safeFileName, FileFilter,
 import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {basicManifest,
-  basicLocalizedManifest,
   manifestWithoutApps,
 } from '../test-util/test.manifest';
 import {WebExtError} from '../../../src/errors';
 import {createLogger} from '../../../src/util/logger';
+
+const basicLocalizedManifest = {
+  name: '__MSG_extensionName__',
+  version: '0.0.1',
+  applications: {
+    gecko: {
+      id: 'basic-manifest@web-ext-test-suite',
+    },
+  },
+};
 
 const log = createLogger(__filename);
 
@@ -44,21 +53,6 @@ describe('build', () => {
     );
   });
 
-  it('gives the correct name to an extension that is not localized', () => {
-    return withTempDir(
-      (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        })
-        .then((buildResult) => {
-          assert.match(buildResult.extensionPath,
-                       /minimal_extension-1\.0\.zip$/);
-          return buildResult.extensionPath;
-        })
-    );
-  });
-
   it('gives the correct name to a localized extension', () => {
     return withTempDir(
       (tmpDir) =>
@@ -79,17 +73,16 @@ describe('build', () => {
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
         fs.writeFileSync(messageFileName,
-                '{"simulated:" "json syntax error"');
+          '{"simulated:" "json syntax error"');
         return getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: manifestWithoutApps,
         })
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(
-            error instanceof WebExtError, true);
-          assert.match(error.message, /The JSON file is malformed/);
-        });
+          .then(makeSureItFails())
+          .catch((error) => {
+            assert.instanceOf(error, WebExtError);
+            assert.match(error.message, /The JSON file is malformed/);
+          });
       }
     );
   });
@@ -98,8 +91,9 @@ describe('build', () => {
     return withTempDir(
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        //This is missing the 'message' key
         fs.writeFileSync(messageFileName,
-          `{"extensionName": { 
+          `{"extensionname": { 
               "description": "example extension"
               }
           }`);
@@ -107,13 +101,13 @@ describe('build', () => {
           messageFile: messageFileName,
           manifestData: basicLocalizedManifest,
         })
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(
-            error instanceof WebExtError, true);
-          assert.match(
-            error.message, /The locale file does not have the correct format/);
-        });
+          .then(makeSureItFails())
+          .catch((error) => {
+            assert.instanceOf(error, WebExtError);
+            assert.match(
+              error.message,
+              /The locale file does not have the correct format/);
+          });
       }
     );
   });
@@ -126,8 +120,7 @@ describe('build', () => {
     .then(makeSureItFails())
     .catch((error) => {
       log.info(error);
-      assert.equal(
-      error instanceof WebExtError, true);
+      assert.instanceOf(error, WebExtError);
       assert.match(error.message, /ENOENT: no such file or directory/);
     });
   });
