@@ -5,11 +5,21 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import build, {safeFileName, FileFilter} from '../../../src/cmd/build';
+import build, {
+  safeFileName,
+  FileFilter,
+  getDefaultLocalizedName,
+} from '../../../src/cmd/build';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
-import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
+import {
+  basicManifest,
+  manifestWithoutApps,
+} from '../test-util/test.manifest';
+import {UsageError} from '../../../src/errors';
+import {createLogger} from '../../../src/util/logger';
 
+const log = createLogger(__filename);
 
 describe('build', () => {
 
@@ -35,6 +45,113 @@ describe('build', () => {
                            ['background-script.js', 'manifest.json']);
         })
     );
+  });
+
+  it('gives the correct name to a localized extension', () => {
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('minimal-localizable-web-ext'),
+          artifactsDir: tmpDir.path(),
+        })
+        .then((buildResult) => {
+          assert.match(buildResult.extensionPath,
+                       /name_of_the_extension-1\.0\.zip$/);
+          return buildResult.extensionPath;
+        })
+    );
+  });
+
+  it('handles repeating localization keys', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        fs.writeFileSync(messageFileName,
+          `{"extensionName": {
+              "message": "example extension",
+              "description": "example description"
+            }
+          }`);
+
+        const manifestWithRepeatingPattern = {
+          name: '__MSG_extensionName__ __MSG_extensionName__',
+          version: '0.0.1',
+        };
+
+        return getDefaultLocalizedName({
+          messageFile: messageFileName,
+          manifestData: manifestWithRepeatingPattern,
+        })
+          .then((result) => {
+            assert.match(result, /example extension example extension/);
+          });
+      }
+    );
+  });
+
+  it('checks locale file for malformed json', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        fs.writeFileSync(messageFileName,
+          '{"simulated:" "json syntax error"');
+        return getDefaultLocalizedName({
+          messageFile: messageFileName,
+          manifestData: manifestWithoutApps,
+        })
+          .then(makeSureItFails())
+          .catch((error) => {
+            assert.instanceOf(error, UsageError);
+            assert.match(
+              error.message,
+              /Error .* file .*messages\.json: SyntaxError: Unexpected string/);
+          });
+      }
+    );
+  });
+
+  it('checks locale file for incorrect format', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        //This is missing the 'message' key
+        fs.writeFileSync(messageFileName,
+          `{"extensionName": {
+              "description": "example extension"
+              }
+          }`);
+        const basicLocalizedManifest = {
+          name: '__MSG_extensionName__',
+          version: '0.0.1',
+        };
+        return getDefaultLocalizedName({
+          messageFile: messageFileName,
+          manifestData: basicLocalizedManifest,
+        })
+          .then(makeSureItFails())
+          .catch((error) => {
+            assert.instanceOf(error, UsageError);
+            assert.match(
+              error.message,
+              /The locale file .*messages\.json is missing key: extensionName/);
+          });
+      }
+    );
+  });
+
+  it('throws an error if the locale file does not exist', () => {
+    return getDefaultLocalizedName({
+      messageFile: '/path/to/non-existent-dir/messages.json',
+      manifestData: manifestWithoutApps,
+    })
+      .then(makeSureItFails())
+      .catch((error) => {
+        log.info(error);
+        assert.instanceOf(error, UsageError);
+        assert.match(
+          error.message,
+          /Error .* file .*messages\.json: .*: no such file or directory/);
+      });
   });
 
   it('can build an extension without an ID', () => {

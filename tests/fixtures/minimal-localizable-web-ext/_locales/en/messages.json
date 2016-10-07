@@ -1,0 +1,6 @@
+{
+  "extensionName": {
+    "message": "Name of the extension",
+    "description": "This is an example of a minimal extension that does nothing"
+  }
+}

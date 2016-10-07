@@ -3,12 +3,14 @@ import path from 'path';
 import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
+import {fs} from 'mz';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
+import {UsageError} from '../errors';
 
 
 const log = createLogger(__filename);
@@ -37,6 +39,41 @@ export type PackageCreatorParams = {
   artifactsDir: string,
 };
 
+export type LocalizedNameParams = {
+  messageFile: string,
+  manifestData: ExtensionManifest,
+}
+
+export async function getDefaultLocalizedName(
+  {messageFile, manifestData}: LocalizedNameParams
+): Promise<string> {
+
+  let messageData: string|Buffer;
+  let extensionName: string = manifestData.name;
+
+  try {
+    messageData = JSON.parse(await fs.readFile(messageFile));
+  }
+  catch (error) {
+    throw new UsageError(
+      `Error reading or parsing file ${messageFile}: ${error}`);
+  }
+  extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/g,
+    (match, messageName) => {
+      if (!(messageData[messageName]
+            && messageData[messageName].message)) {
+        const error = new UsageError(
+          `The locale file ${messageFile} ` +
+            `is missing key: ${messageName}`);
+        throw error;
+      }
+      else {
+        return messageData[messageName].message;
+      }
+    });
+  return Promise.resolve(extensionName);
+}
+
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
@@ -44,7 +81,6 @@ async function defaultPackageCreator(
   {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
 ): Promise<ExtensionBuildResult> {
   let id;
-
   if (manifestData) {
     id = getManifestId(manifestData);
     log.debug(`Using manifest id=${id || '[not specified]'}`);
@@ -56,8 +92,17 @@ async function defaultPackageCreator(
     filter: (...args) => fileFilter.wantFile(...args),
   });
 
+  let extensionName: string = manifestData.name;
+
+  if (manifestData.default_locale) {
+    let messageFile = path.join(sourceDir, '_locales',
+      manifestData.default_locale, 'messages.json');
+    log.debug('Manifest declared default_locale, localizing extension name');
+    extensionName = await getDefaultLocalizedName(
+      {messageFile, manifestData});
+  }
   let packageName = safeFileName(
-    `${manifestData.name}-${manifestData.version}.zip`);
+    `${extensionName}-${manifestData.version}.zip`);
   let extensionPath = path.join(artifactsDir, packageName);
   let stream = createWriteStream(extensionPath);
 

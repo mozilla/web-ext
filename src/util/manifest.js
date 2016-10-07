@@ -14,6 +14,7 @@ const log = createLogger(__filename);
 export type ExtensionManifest = {
   name: string,
   version: string,
+  default_locale?: string,
 };
 
 export default async function getValidatedManifest(
