@@ -43,8 +43,9 @@ describe('build', () => {
         // Make sure a manifest without an ID doesn't throw an error.
         return build({
           sourceDir: fixturePath('minimal-web-ext'),
-          manifestData: manifestWithoutApps,
           artifactsDir: tmpDir.path(),
+        }, {
+          manifestData: manifestWithoutApps,
         });
       }
     );
