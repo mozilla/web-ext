@@ -25,6 +25,16 @@ const basicLocalizedManifest = {
   },
 };
 
+const basicLocalizedManifestWithRepeatingPattern = {
+  name: '__MSG_extensionName____MSG_extensionName__',
+  version: '0.0.1',
+  applications: {
+    gecko: {
+      id: 'basic-manifest@web-ext-test-suite',
+    },
+  },
+};
+
 const log = createLogger(__filename);
 
 describe('build', () => {
@@ -65,6 +75,29 @@ describe('build', () => {
                        /name_of_the_extension-1\.0\.zip$/);
           return buildResult.extensionPath;
         })
+    );
+  });
+
+  it('gives the correct name to a localized' +
+    'extension with repeating pattern in manifest', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        //This is missing the 'message' key
+        fs.writeFileSync(messageFileName,
+          `{"extensionName": {
+              "message": "example extension",
+              "description": "example extension"
+            }
+          }`);
+        return getDefaultLocalizedName({
+          messageFile: messageFileName,
+          manifestData: basicLocalizedManifestWithRepeatingPattern,
+        })
+          .then((result) => {
+            assert.match(result, /example extensionexample extension/);
+          });
+      }
     );
   });
 

@@ -105,7 +105,6 @@ async function defaultPackageCreator(
   if (manifestData.default_locale) {
     messageFile = path.join(sourceDir, '_locales',
                             manifestData.default_locale, 'messages.json');
-    log.info(messageFile);
     extensionName = await getDefaultLocalizedName(
       {messageFile, manifestData});
   }
