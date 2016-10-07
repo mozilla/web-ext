@@ -10,12 +10,12 @@ process of contributing patches, have a read through these
 
 # Installation
 
-To get started, first install `web-ext` from [source](README.md#installation-from-source).
+To get started on a patch, first install `web-ext` from [source](README.md#installation-from-source).
 
 ## Develop all the things
 
 Your one stop command to continuously build, run tests, check for
-syntax errors, and check for [flow] errors is this:
+JavaScript syntax problems, and check for [Flow] errors is this:
 
     npm start
 
@@ -27,8 +27,10 @@ To run the entire suite of tests once and exit, type:
 
     npm test
 
-This is the same as the `develop` command but it won't re-run automatically as
+This is the same as the `npm start` command but it won't re-run automatically as
 you edit files. It's also a little slower because there's no caching.
+Unlike `npm start`, it will execute the functional tests which may
+reveal unexpected breakage.
 
 ### Run a single test
 
@@ -56,7 +58,7 @@ breakpoint.
 
 Type `npm run build` to build a new version of the libraries used by the
 `./bin/web-ext` command. When successful, you will see newly built files in
-the `./dist/` directory.
+the `./dist/` directory. This is done automatically by `npm start`.
 
 ## Check for lint
 
@@ -71,24 +73,25 @@ the test suite without lint checks:
 
 ## Check for Flow errors
 
-This project relies on [flow] to ensure functions and
-classes are used correctly. Run all flow checks with `npm run flow-check`.
+This project relies on [Flow] to ensure functions and
+classes are used correctly. Run all Flow checks with `npm run flow-check`.
 
 ## Code Coverage
 
-You can generate Code Coverage reports every time you run the test suite
-by setting `$COVERAGE` in the environment. Here is an example of running
-the test suite on the instrumented source code:
+You can generate code coverage reports every time you run the test suite
+by setting `$COVERAGE` in the environment. This will show you if you forgot
+to add a test to cover a new part of the program.
+Here is an example of running the test suite with code coverage:
 
     COVERAGE=y npm test
 
-or even when the test suite re-runs automatically as you edit files:
+You can also generate coverage reports continously as you edit files:
 
     COVERAGE=y npm start
 
-Once the report has been generated, it can be found in the `./coverage` directory.
+Once a report has been generated, it can be found in the `./coverage` directory.
 
-## Developing on `web-ext sign`
+## Working on `web-ext sign`
 
 When you are developing a fix or feature for the `web-ext sign` command it's wise
 to use a development version of the
@@ -153,9 +156,8 @@ If you want to use scopes then it would look more like:
 
 ### Checking commit message formatting
 
-Because editing git history is difficult for many developers,
-the commit message formatting described above is automatically enforced
-each time you commit to your work branch.
+The commit message formatting described above is automatically enforced
+each time you commit to your work branch to make continuous integration smoother.
 
 **If you're on Windows**, the commit message verification currently doesn't
 work (sorry!). You will need to commit to your branch using this command:
@@ -189,4 +191,4 @@ To release a new version of `web-ext`, follow these steps:
   need updating.
 
 
-[flow]: http://flowtype.org/
+[Flow]: http://flowtype.org/
