@@ -10,7 +10,7 @@ import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
-import {WebExtError} from '../errors';
+import {UsageError} from '../errors';
 
 
 const log = createLogger(__filename);
@@ -44,9 +44,6 @@ export type LocalizedNameParams = {
   manifestData: ExtensionManifest,
 }
 
-export type PackageCreatorFn =
-    (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
-
 export async function getDefaultLocalizedName(
   {messageFile, manifestData}: LocalizedNameParams
 ): Promise<string> {
@@ -55,26 +52,19 @@ export async function getDefaultLocalizedName(
   let extensionName: string = manifestData.name;
 
   try {
-    messageData = await fs.readFile(messageFile);
+    messageData = JSON.parse(await fs.readFile(messageFile));
   }
-  catch (err) {
-    log.info(err);
-    throw new WebExtError(`${err}`);
-  }
-
-  try {
-    messageData = JSON.parse(messageData);
-  }
-  catch (err) {
-    throw new WebExtError(`The JSON file is malformed: ${err}`);
+  catch (error) {
+    throw new UsageError(
+      `Error reading or parsing file ${messageFile}: ${error}`);
   }
   extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/g,
     (match, messageName) => {
       if (!(messageData[messageName]
             && messageData[messageName].message)) {
-        const error = new WebExtError
-          ('The locale file messages.json ' +
-            `for key: ${messageName}`);
+        const error = new UsageError(
+          'The locale file messages.json ' +
+            `is missing key: ${messageName}`);
         throw error;
       }
       else {
@@ -83,6 +73,9 @@ export async function getDefaultLocalizedName(
     });
   return Promise.resolve(extensionName);
 }
+
+export type PackageCreatorFn =
+    (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
 async function defaultPackageCreator(
   {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
@@ -99,11 +92,10 @@ async function defaultPackageCreator(
     filter: (...args) => fileFilter.wantFile(...args),
   });
 
-  let messageFile: string;
   let extensionName: string = manifestData.name;
 
   if (manifestData.default_locale) {
-    messageFile = path.join(sourceDir, '_locales',
+    let messageFile = path.join(sourceDir, '_locales',
                             manifestData.default_locale, 'messages.json');
     extensionName = await getDefaultLocalizedName(
       {messageFile, manifestData});

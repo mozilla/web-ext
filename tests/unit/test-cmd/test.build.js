@@ -12,28 +12,8 @@ import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {basicManifest,
   manifestWithoutApps,
 } from '../test-util/test.manifest';
-import {WebExtError} from '../../../src/errors';
+import {WebExtError, UsageError} from '../../../src/errors';
 import {createLogger} from '../../../src/util/logger';
-
-const basicLocalizedManifest = {
-  name: '__MSG_extensionName__',
-  version: '0.0.1',
-  applications: {
-    gecko: {
-      id: 'basic-manifest@web-ext-test-suite',
-    },
-  },
-};
-
-const basicLocalizedManifestWithRepeatingPattern = {
-  name: '__MSG_extensionName____MSG_extensionName__',
-  version: '0.0.1',
-  applications: {
-    gecko: {
-      id: 'basic-manifest@web-ext-test-suite',
-    },
-  },
-};
 
 const log = createLogger(__filename);
 
@@ -78,24 +58,29 @@ describe('build', () => {
     );
   });
 
-  it('gives the correct name to a localized' +
-    'extension with repeating pattern in manifest', () => {
+  it('handles repeating localization keys', () => {
     return withTempDir(
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
         //This is missing the 'message' key
         fs.writeFileSync(messageFileName,
           `{"extensionName": {
-              "message": "example extension",
-              "description": "example extension"
+              "message": "example extension ",
+              "description": "example description"
             }
           }`);
+
+        const basicLocalizedManifestWithRepeatingPattern = {
+          name: '__MSG_extensionName____MSG_extensionName__',
+          version: '0.0.1',
+        };
+
         return getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: basicLocalizedManifestWithRepeatingPattern,
         })
           .then((result) => {
-            assert.match(result, /example extensionexample extension/);
+            assert.match(result, /example extension example extension/);
           });
       }
     );
@@ -113,10 +98,10 @@ describe('build', () => {
         })
           .then(makeSureItFails())
           .catch((error) => {
-            assert.instanceOf(error, WebExtError);
+            assert.instanceOf(error, UsageError);
             assert.match(
               error.message,
-              /The JSON file is malformed: SyntaxError: Unexpected string/);
+              /Error .* file .*messages\.json: SyntaxError: Unexpected string/);
           });
       }
     );
@@ -132,32 +117,36 @@ describe('build', () => {
               "description": "example extension"
               }
           }`);
+        const basicLocalizedManifest = {
+          name: '__MSG_extensionName__',
+          version: '0.0.1',
+        };
         return getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: basicLocalizedManifest,
         })
           .then(makeSureItFails())
           .catch((error) => {
-            assert.instanceOf(error, WebExtError);
+            assert.instanceOf(error, UsageError);
             assert.match(
               error.message,
-              /The locale file .*messages\.json .* key: extensionName/);
+              /The locale file .*messages\.json is missing key: extensionName/);
           });
       }
     );
   });
 
-  it('throws an error if the locale file doesn\'t exist', () => {
+  it('throws an error if the locale file does not exist', () => {
     return getDefaultLocalizedName({
       messageFile: '/path/to/non-existent-dir/messages.json',
       manifestData: manifestWithoutApps,
     })
-    .then(makeSureItFails())
-    .catch((error) => {
-      log.info(error);
-      assert.instanceOf(error, WebExtError);
-      assert.match(error.message, /ENOENT: no such file or directory/);
-    });
+      .then(makeSureItFails())
+      .catch((error) => {
+        log.info(error);
+        assert.instanceOf(error, WebExtError);
+        assert.match(error.message, /ENOENT: no such file or directory/);
+      });
   });
 
   it('can build an extension without an ID', () => {
