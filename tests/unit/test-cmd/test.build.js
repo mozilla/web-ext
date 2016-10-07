@@ -81,7 +81,9 @@ describe('build', () => {
           .then(makeSureItFails())
           .catch((error) => {
             assert.instanceOf(error, WebExtError);
-            assert.match(error.message, /The JSON file is malformed/);
+            assert.match(
+              error.message,
+              /The JSON file is malformed: SyntaxError: Unexpected string/);
           });
       }
     );
@@ -93,7 +95,7 @@ describe('build', () => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
         //This is missing the 'message' key
         fs.writeFileSync(messageFileName,
-          `{"extensionname": { 
+          `{"extensionName": {
               "description": "example extension"
               }
           }`);
@@ -106,7 +108,7 @@ describe('build', () => {
             assert.instanceOf(error, WebExtError);
             assert.match(
               error.message,
-              /The locale file does not have the correct format/);
+              /The locale file .*messages\.json .* key: extensionName/);
           });
       }
     );

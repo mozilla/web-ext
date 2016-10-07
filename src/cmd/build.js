@@ -73,7 +73,8 @@ export async function getDefaultLocalizedName(
       if (!(messageData[messageName]
             && messageData[messageName].message)) {
         const error = new WebExtError
-        ('The locale file does not have the correct format');
+          ('The locale file messages.json ' +
+            `for key: ${messageName}`);
         throw error;
       }
       else {
