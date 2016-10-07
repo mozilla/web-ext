@@ -5,14 +5,18 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import build, {safeFileName, FileFilter,
-                getDefaultLocalizedName} from '../../../src/cmd/build';
+import build, {
+  safeFileName,
+  FileFilter,
+  getDefaultLocalizedName,
+} from '../../../src/cmd/build';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
-import {basicManifest,
+import {
+  basicManifest,
   manifestWithoutApps,
 } from '../test-util/test.manifest';
-import {WebExtError, UsageError} from '../../../src/errors';
+import {UsageError} from '../../../src/errors';
 import {createLogger} from '../../../src/util/logger';
 
 const log = createLogger(__filename);
@@ -62,22 +66,21 @@ describe('build', () => {
     return withTempDir(
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        //This is missing the 'message' key
         fs.writeFileSync(messageFileName,
           `{"extensionName": {
-              "message": "example extension ",
+              "message": "example extension",
               "description": "example description"
             }
           }`);
 
-        const basicLocalizedManifestWithRepeatingPattern = {
-          name: '__MSG_extensionName____MSG_extensionName__',
+        const manifestWithRepeatingPattern = {
+          name: '__MSG_extensionName__ __MSG_extensionName__',
           version: '0.0.1',
         };
 
         return getDefaultLocalizedName({
           messageFile: messageFileName,
-          manifestData: basicLocalizedManifestWithRepeatingPattern,
+          manifestData: manifestWithRepeatingPattern,
         })
           .then((result) => {
             assert.match(result, /example extension example extension/);
@@ -144,8 +147,10 @@ describe('build', () => {
       .then(makeSureItFails())
       .catch((error) => {
         log.info(error);
-        assert.instanceOf(error, WebExtError);
-        assert.match(error.message, /ENOENT: no such file or directory/);
+        assert.instanceOf(error, UsageError);
+        assert.match(
+          error.message,
+          /Error .* file .*messages\.json: .*: no such file or directory/);
       });
   });
 

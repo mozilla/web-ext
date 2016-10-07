@@ -63,7 +63,7 @@ export async function getDefaultLocalizedName(
       if (!(messageData[messageName]
             && messageData[messageName].message)) {
         const error = new UsageError(
-          'The locale file messages.json ' +
+          `The locale file ${messageFile} ` +
             `is missing key: ${messageName}`);
         throw error;
       }
@@ -96,7 +96,8 @@ async function defaultPackageCreator(
 
   if (manifestData.default_locale) {
     let messageFile = path.join(sourceDir, '_locales',
-                            manifestData.default_locale, 'messages.json');
+      manifestData.default_locale, 'messages.json');
+    log.debug('Manifest declared default_locale, localizing extension name');
     extensionName = await getDefaultLocalizedName(
       {messageFile, manifestData});
   }
