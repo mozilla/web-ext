@@ -1,11 +1,21 @@
 # Development of web-ext
 
-To get started, first install it from [source](README.md#installation-from-source).
+Hi! Thanks for your interest in helping make
+[WebExtension](https://developer.mozilla.org/en-US/Add-ons/WebExtensions)
+development more awesome by contributing to the `web-ext` tool.
+
+If you're looking for a small task to work on so you can get familiar with the
+process of contributing patches, have a read through these
+[good first bugs](https://github.com/mozilla/web-ext/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+bug%22).
+
+# Installation
+
+To get started, first install `web-ext` from [source](README.md#installation-from-source).
 
 ## Develop all the things
 
 Your one stop command to continuously build, run tests, check for
-syntax errors, and check for flow errors is this:
+syntax errors, and check for [flow] errors is this:
 
     npm start
 
@@ -61,7 +71,7 @@ the test suite without lint checks:
 
 ## Check for Flow errors
 
-This project relies on [flow](http://flowtype.org/) to ensure functions and
+This project relies on [flow] to ensure functions and
 classes are used correctly. Run all flow checks with `npm run flow-check`.
 
 ## Code Coverage
@@ -177,3 +187,6 @@ To release a new version of `web-ext`, follow these steps:
   label to see if
   [the user docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
   need updating.
+
+
+[flow]: http://flowtype.org/
