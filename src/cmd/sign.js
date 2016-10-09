@@ -31,6 +31,7 @@ export type SignParams = {
   apiKey: string,
   apiSecret: string,
   apiUrlPrefix: string,
+  apiProxy: string,
   timeout: number,
 };
 
@@ -49,7 +50,7 @@ export type SignResult = {
 export default function sign(
   {
     verbose, sourceDir, artifactsDir, apiKey, apiSecret,
-    apiUrlPrefix, id, timeout,
+    apiUrlPrefix, apiProxy, id, timeout,
   }: SignParams,
   {
     build = defaultBuilder, signAddon = defaultAddonSigner,
@@ -99,6 +100,7 @@ export default function sign(
         apiKey,
         apiSecret,
         apiUrlPrefix,
+        apiProxy,
         timeout,
         verbose,
         id,
