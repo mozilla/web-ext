@@ -59,6 +59,10 @@ breakpoint.
 Type `npm run build` to build a new version of the libraries used by the
 `./bin/web-ext` command. When successful, you will see newly built files in
 the `./dist/` directory. This is done automatically by `npm start`.
+By default, npm run build creates a development build of web-ext. To create a
+production build, use the NODE_ENV variable like this:
+
+    NODE_ENV=production npm run build
 
 ## Check for lint
 
