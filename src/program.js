@@ -10,6 +10,8 @@ import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
 
+import git from 'git-rev-sync';
+
 
 /*
  * The command line program.
@@ -124,10 +126,19 @@ export class Program {
 }
 
 
-export function defaultVersionGetter(absolutePackageDir: string): string {
-  let packageData: any = readFileSync(
-    path.join(absolutePackageDir, 'package.json'));
-  return JSON.parse(packageData).version;
+export function defaultVersionGetter(
+  absolutePackageDir: string,
+  localProcess: Object = process
+): string {
+  if (localProcess.env.NODE_ENV === 'production') {
+    log.debug('Getting the version from package.json');
+    let packageData: any = readFileSync(
+      path.join(absolutePackageDir, 'package.json'));
+    return JSON.parse(packageData).version;
+  } else {
+    log.debug('Getting version from the git revision');
+    return `${git.branch()}-${git.long()}`;
+  }
 }
 
 
