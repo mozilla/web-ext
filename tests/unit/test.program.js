@@ -332,16 +332,16 @@ describe('program.main', () => {
 
 describe('program.defaultVersionGetter', () => {
   let root = path.join(__dirname, '..', '..');
+  let testProcess = {
+    env: {
+      NODE_ENV: 'production',
+    },
+  };
 
   it('returns the package version in production', () => {
     let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
     .then((pkgData) => {
-      const testProcess = {
-        env: {
-          NODE_ENV: 'production',
-        },
-      };
       assert.equal(defaultVersionGetter(root, testProcess),
                    JSON.parse(pkgData).version);
     });
@@ -349,7 +349,8 @@ describe('program.defaultVersionGetter', () => {
 
   it('returns git commit information in development', () => {
     const commit = `${git.branch()}-${git.long()}`;
-    assert.equal(defaultVersionGetter(root),
+    testProcess.env.NODE_ENV = undefined;
+    assert.equal(defaultVersionGetter(root, testProcess),
                  commit);
   });
 
