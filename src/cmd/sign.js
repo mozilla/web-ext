@@ -106,7 +106,6 @@ export default function sign(
         oldUpdateManifestData = await fetchUpdateManifest(manifestData);
       }
 
-
       let signingResult = await signAddon({
         apiKey,
         apiSecret,
@@ -119,19 +118,22 @@ export default function sign(
         downloadDir: artifactsDir,
       });
 
-
-      if (updateLink && signingResult.success) {
+      if (updateLink) {
         let extensionID;
         if (signingResult.id) {
           extensionID = signingResult.id;
         } else {
           extensionID = id;
         }
-        // id, XPIPath, artifactsDir,
-        // manifestData, updateLink, oldUpdateManifestData
+        // flow thinks that oldUpdateManifestData can be potentially undefined
+        // this is wrong however, the if-case guarding both the `oldUpdateManifestData = `
+        // statement and this function call are both checking the exact same thing, which doesn't change
+        // anywhere in the code. Basically, `if (A) then define B` and later on `if (A) then use B`
+        // which flow doesn't seem to understand
+        let oldUpdateManifestDataMakeFlowHappy = oldUpdateManifestData == null? {} : oldUpdateManifestData;
         await generateNewUpdateManifest(
           extensionID, signingResult.downloadedFiles[0], artifactsDir,
-          manifestData, updateLink, oldUpdateManifestData,
+          manifestData, updateLink, oldUpdateManifestDataMakeFlowHappy,
         );
       }
 
@@ -160,6 +162,15 @@ function fetchUpdateManifest(manifestData: Object): Object {
   return new Promise(async function (resolve, reject) {
     let oldUpdateManifest;
     let statusCode;
+
+    let parsed = url.parse(manifestData.applications.gecko.update_url);
+    let updateManifestFileName = "";
+    // these will never be null, since parsed and parsed.pathname
+    // are already validated in an earlier function
+    // the `if` is only to please flow
+    if (parsed != null && parsed.pathname != null) {
+      updateManifestFileName = path.basename(parsed.pathname);
+    }
 
     try {
       [oldUpdateManifest, statusCode] = await httpFetchFile(
@@ -206,10 +217,14 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
     // check if the update_url property contains a usable URL
     let parsed = url.parse(manifestData.applications.gecko.update_url);
     if (parsed == null || parsed.pathname == null) {
+      // the most elaborate flow workaround
+      let applications = manifestData.applications == null ? {gecko: manifestData.applications.gecko} : manifestData.applications;
+      let gecko = applications.gecko == null ? {gecko: applications.gecko} : manifestData.applications.gecko;
+      let update_url = gecko.update_url == null ? gecko.update_url : gecko.update_url; // flow please
       throw new WebExtError(
         'Was unable to parse manifest.applications.gecko.update_url ' +
         'please check this property in your manifest: ' +
-        `${manifestData.applications.gecko.update_url}`)
+        `${update_url}`)
     }
   }
 
@@ -241,11 +256,15 @@ async function generateNewUpdateManifest(
   id: ?string, XPIPath: string, artifactsDir,
   manifestData: Object, updateLink: string, oldUpdateManifestData: Object
 ) {
-  let updateManifestFileName;
+  let updateManifestFileName = "";
   let newUpdateManifest;
 
+  let addonName = manifestData.name || 'your application';
+
   let parsed = url.parse(manifestData.applications.gecko.update_url);
-  if (parsed !== undefined && parsed.pathname !== undefined) {
+  // these if's are really only here to make flow happy
+  // it doesn't seem to accept that path.basename returns a string
+  if (parsed != null && parsed.pathname != null) {
     updateManifestFileName = path.basename(parsed.pathname);
   }
 
@@ -271,7 +290,6 @@ async function generateNewUpdateManifest(
     // this can mean either that this is the first release of an extension
     // OR that the extensionID changed,
     // we'll warn the user about the second scenario just to be sure.
-    let addonName = manifestData.name || 'your application';
     log.warn(`Creating first release of ${addonName}`);
     log.warn(
       'If this is not the actual first release, check your extension-id');
