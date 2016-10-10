@@ -76,6 +76,7 @@ export default function sign(
         getIdFromSourceDir(sourceDir),
       ]);
 
+      console.log(1);
       const manifestId = getManifestId(manifestData);
 
       if (id && manifestId) {
@@ -98,8 +99,13 @@ export default function sign(
         log.warn('No extension ID specified (it will be auto-generated)');
       }
 
-      let oldUpdateManifestData = await fetchUpdateManifest(manifestData);
-      prevalidateUpdateManifestParams(manifestData, updateLink);
+      let oldUpdateManifestData;
+
+      if (updateLink) {
+        prevalidateUpdateManifestParams(manifestData, updateLink);
+        oldUpdateManifestData = await fetchUpdateManifest(manifestData);
+      }
+
 
       let signingResult = await signAddon({
         apiKey,
@@ -112,6 +118,7 @@ export default function sign(
         version: manifestData.version,
         downloadDir: artifactsDir,
       });
+
 
       if (updateLink && signingResult.success) {
         let extensionID;
@@ -161,12 +168,10 @@ function fetchUpdateManifest(manifestData: Object): Object {
         throw new WebExtError(
           `Failed to retrieve ${updateManifestFileName}\n` +
           `http statusCode error, server responded with: ${statusCode}`);
-        reject();
       }
     } catch (e) {
       throw new WebExtError(
         `Was unable to download ${updateManifestFileName}\nerror is: ${e}`);
-      reject();
     }
 
     try {
@@ -175,7 +180,6 @@ function fetchUpdateManifest(manifestData: Object): Object {
       throw new WebExtError(
         `Unable to parse ${updateManifestFileName} file located at ` +
         `${manifestData.applications.gecko.update_url}`);
-      reject();
     }
   });
 }
@@ -198,7 +202,6 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
       'update-link was passed, but the manifest.json ' +
       'is missing the .applications.gecko.update_url property. ' +
       'therefore, no updateManifest could be generated');
-  return false;
   } else {
     // check if the update_url property contains a usable URL
     let parsed = url.parse(manifestData.applications.gecko.update_url);
@@ -207,7 +210,6 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
         'Was unable to parse manifest.applications.gecko.update_url ' +
         'please check this property in your manifest: ' +
         `${manifestData.applications.gecko.update_url}`)
-      return false;
     }
   }
 
@@ -217,7 +219,6 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
       'update-link was passed but the manifest.json ' +
       'is missing the .name property. ' +
       'therefore, no updateManifest could be generated');
-    return false;
   }
 
   // ..lastly check if the passed updateLink parameter is correct
@@ -225,7 +226,6 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
     throw new WebExtError(
       'Unable to parse --update-link url, please use {xpiFileName} ' +
       'as a substitute for the XPI file');
-    return false;
   }
 
   return true;
