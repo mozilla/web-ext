@@ -76,7 +76,6 @@ export default function sign(
         getIdFromSourceDir(sourceDir),
       ]);
 
-      console.log(1);
       const manifestId = getManifestId(manifestData);
 
       if (id && manifestId) {
@@ -127,11 +126,13 @@ export default function sign(
         }
         // flow thinks that oldUpdateManifestData can be potentially undefined
         // this is wrong however, the if-case guarding both the `oldUpdateManifestData = `
-        // statement and this function call are both checking the exact same thing, which doesn't change
+        // statement and this function call are both checking
+        // the exact same thing, which doesn't change
         // anywhere in the code. Basically, `if (A) then define B` and later on `if (A) then use B`
         // which flow doesn't seem to understand
-        let oldUpdateManifestDataMakeFlowHappy = oldUpdateManifestData == null? {} : oldUpdateManifestData;
-        await generateNewUpdateManifest(
+        let oldUpdateManifestDataMakeFlowHappy =
+          oldUpdateManifestData == null ? {} : oldUpdateManifestData;
+        await createNewUpdateManifest(
           extensionID, signingResult.downloadedFiles[0], artifactsDir,
           manifestData, updateLink, oldUpdateManifestDataMakeFlowHappy,
         );
@@ -159,12 +160,12 @@ export default function sign(
  * Fetches an updateManifest.json file from a remote web server
  */
 function fetchUpdateManifest(manifestData: Object): Object {
-  return new Promise(async function (resolve, reject) {
+  return new Promise(async function (resolve, /*reject*/) {
     let oldUpdateManifest;
     let statusCode;
 
     let parsed = url.parse(manifestData.applications.gecko.update_url);
-    let updateManifestFileName = "";
+    let updateManifestFileName = '';
     // these will never be null, since parsed and parsed.pathname
     // are already validated in an earlier function
     // the `if` is only to please flow
@@ -218,13 +219,19 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
     let parsed = url.parse(manifestData.applications.gecko.update_url);
     if (parsed == null || parsed.pathname == null) {
       // the most elaborate flow workaround
-      let applications = manifestData.applications == null ? {gecko: manifestData.applications.gecko} : manifestData.applications;
-      let gecko = applications.gecko == null ? {gecko: applications.gecko} : manifestData.applications.gecko;
-      let update_url = gecko.update_url == null ? gecko.update_url : gecko.update_url; // flow please
+      let applications =
+        manifestData.applications == null ?
+        {gecko: manifestData.applications.gecko} : manifestData.applications;
+      let gecko =
+        applications.gecko == null ?
+        {gecko: applications.gecko} : manifestData.applications.gecko;
+      let update_url =
+        gecko.update_url == null ?
+        gecko.update_url : gecko.update_url; // flow please
       throw new WebExtError(
         'Was unable to parse manifest.applications.gecko.update_url ' +
         'please check this property in your manifest: ' +
-        `${update_url}`)
+        `${update_url}`);
     }
   }
 
@@ -252,11 +259,13 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
  * for each generated XPI file.
  * The result will be stored in the artifacts directory
  */
-async function generateNewUpdateManifest(
+// jslint incorrectly reports that this return statement should be a yield.
+// eslint-disable-next-line
+async function createNewUpdateManifest(
   id: ?string, XPIPath: string, artifactsDir,
   manifestData: Object, updateLink: string, oldUpdateManifestData: Object
 ) {
-  let updateManifestFileName = "";
+  let updateManifestFileName = '';
   let newUpdateManifest;
 
   let addonName = manifestData.name || 'your application';
@@ -270,7 +279,7 @@ async function generateNewUpdateManifest(
 
   let newVersion = {
     version: manifestData.version,
-    update_link: updateLink.replace('{xpiFileName}', path.basename(XPIPath))
+    update_link: updateLink.replace('{xpiFileName}', path.basename(XPIPath)),
   };
 
   if (oldUpdateManifestData.addons == null) {
@@ -307,10 +316,9 @@ async function generateNewUpdateManifest(
     function(error) {
       if (error) {
         throw new WebExtError(
-          `Was unable to write updated ${addonName}\n` +
-          error);
+          `Was unable to write updated ${addonName}\n ${error}`);
       }
-  });
+    });
 }
 
 export async function getIdFromSourceDir(
