@@ -99,7 +99,7 @@
     "grunt-webpack": "1.0.17",
     "load-grunt-configs": "1.0.0",
     "load-grunt-tasks": "3.5.2",
-    "mocha": "3.1.0",
+    "mocha": "3.1.1",
     "mocha-multi": "0.9.1",
     "nsp": "2.6.1",
     "prettyjson": "1.1.3",
