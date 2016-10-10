@@ -86,7 +86,7 @@
     "eslint-plugin-flowtype": "2.20.0",
     "firefox-client": "0.3.0",
     "flow-bin": "0.33.0",
-    "git-hooks": "1.1.1",
+    "git-hooks-win": "1.1.11",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "1.0.0",
