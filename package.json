@@ -52,6 +52,7 @@
     "es6-promisify": "5.0.0",
     "firefox-profile": "0.4.2",
     "fx-runner": "1.0.5",
+    "git-rev-sync": "1.6.0",
     "minimatch": "3.0.3",
     "mz": "2.4.0",
     "node-firefox-connect": "1.2.0",
