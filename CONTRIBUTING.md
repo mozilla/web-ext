@@ -159,11 +159,6 @@ If you want to use scopes then it would look more like:
 The commit message formatting described above is automatically enforced
 each time you commit to your work branch to make continuous integration smoother.
 
-**If you're on Windows**, the commit message verification currently doesn't
-work (sorry!). You will need to commit to your branch using this command:
-
-    git commit --no-verify
-
 ## Creating a release
 
 To release a new version of `web-ext`, follow these steps:
