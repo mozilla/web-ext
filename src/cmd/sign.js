@@ -98,6 +98,9 @@ export default function sign(
         log.warn('No extension ID specified (it will be auto-generated)');
       }
 
+      let oldUpdateManifestData = await fetchUpdateManifest(manifestData);
+      prevalidateUpdateManifestParams(manifestData, updateLink);
+
       let signingResult = await signAddon({
         apiKey,
         apiSecret,
@@ -110,16 +113,18 @@ export default function sign(
         downloadDir: artifactsDir,
       });
 
-      if (updateLink && updateLink.length > 0 && signingResult.success) {
+      if (updateLink && signingResult.success) {
         let extensionID;
         if (signingResult.id) {
           extensionID = signingResult.id;
         } else {
           extensionID = id;
         }
+        // id, XPIPath, artifactsDir,
+        // manifestData, updateLink, oldUpdateManifestData
         await generateNewUpdateManifest(
-          extensionID, manifestData.version, signingResult.downloadedFiles[0],
-          artifactsDir, manifestData, updateLink
+          extensionID, signingResult.downloadedFiles[0], artifactsDir,
+          manifestData, updateLink, oldUpdateManifestData,
         );
       }
 
@@ -141,24 +146,13 @@ export default function sign(
   );
 }
 
-async function generateNewUpdateManifest(
-  id: ?string, newVersion: string, XPIPath: string, artifactsDir,
-  manifestData: Object, updateLink: string
-) {
-  let oldUpdateManifest;
-  let oldUpdateManifestData: Object;
-  let statusCode;
-  let newUpdateManifest;
-  let updateManifestFileName = '';
-
-  if (manifestData !== undefined &&
-      manifestData.applications !== undefined &&
-      manifestData.applications.gecko !== undefined &&
-      manifestData.applications.gecko.update_url !== undefined) {
-    let parsed = url.parse(manifestData.applications.gecko.update_url);
-    if (parsed !== undefined && parsed.pathname !== undefined) {
-      updateManifestFileName = path.basename(parsed.pathname);
-    }
+/**
+ * Fetches an updateManifest.json file from a remote web server
+ */
+function fetchUpdateManifest(manifestData: Object): Object {
+  return new Promise(async function (resolve, reject) {
+    let oldUpdateManifest;
+    let statusCode;
 
     try {
       [oldUpdateManifest, statusCode] = await httpFetchFile(
@@ -167,76 +161,138 @@ async function generateNewUpdateManifest(
         throw new WebExtError(
           `Failed to retrieve ${updateManifestFileName}\n` +
           `http statusCode error, server responded with: ${statusCode}`);
+        reject();
       }
     } catch (e) {
       throw new WebExtError(
         `Was unable to download ${updateManifestFileName}\nerror is: ${e}`);
+      reject();
     }
 
     try {
-      oldUpdateManifestData = JSON.parse(oldUpdateManifest);
+      resolve(JSON.parse(oldUpdateManifest));
     } catch (e) {
       throw new WebExtError(
         `Unable to parse ${updateManifestFileName} file located at ` +
         `${manifestData.applications.gecko.update_url}`);
+      reject();
     }
+  });
+}
 
-    if (updateLink.indexOf('{xpiFileName}') === -1) {
-      throw new WebExtError(
-        'Unable to parse --update-link url, please use {xpiFileName} ' +
-        'as a substitute for the XPI file');
-    }
-
-    let newVersion = {
-      version: manifestData.version,
-      update_link: updateLink.replace('{xpiFileName}', path.basename(XPIPath)),
-    };
-
-    if (oldUpdateManifestData) {
-      if (oldUpdateManifestData.addons === undefined) {
-        oldUpdateManifestData.addons = {};
-      }
-
-      if (id && oldUpdateManifestData.addons[id]) {
-        // append a new release to the updateManifest
-        if (oldUpdateManifestData.addons[id].updates) {
-          oldUpdateManifestData.addons[id].updates.push(newVersion);
-        }
-      } else {
-        // first release of this addon (or maybe the extension-id was botched? be careful!)
-        let addonName = manifestData.name || 'your application';
-        log.warn(`Creating first release of ${addonName}`);
-        log.warn(
-          'If this is not the actual first release, check your extension-id');
-        oldUpdateManifestData.addons[id] = {};
-        oldUpdateManifestData.addons[id].updates = [newVersion];
-      }
-
-      // the oldUpdateManifest has been updated, it's ready to be saved
-      newUpdateManifest = JSON.stringify(oldUpdateManifestData, null, 4);
-    } else {
-      throw new WebExtError('The .addons property is missing in the ' +
-        'retrieved updateManifest.json file');
-    }
-
-    return new Promise(function(resolve, reject) {
-      log.info('Saving to', path.join(artifactsDir, updateManifestFileName));
-      fs.writeFile(
-        path.join(artifactsDir, updateManifestFileName),
-        newUpdateManifest,
-        function(error) {
-          if (error) {
-            reject(error);
-          }
-          resolve();
-        });
-    });
-  } else {
+/**
+ * Validates all data needed to generate a new updatemanifest
+ * if some data is missing/corrupt, the manifest can't be generated
+ */
+function prevalidateUpdateManifestParams(manifestData, updateLink) {
+  // ..first validate if the manifest has the right properties
+  // manifestData.applications.gecko.updateUrl
+  // note: `var == null` is equal to
+  // `(variable === undefined || variable === null)`
+  // see: https://stackoverflow.com/questions/2647867
+  if (manifestData == null ||
+      manifestData.applications == null ||
+      manifestData.applications.gecko == null ||
+      manifestData.applications.gecko.update_url == null) {
     throw new WebExtError(
       'update-link was passed, but the manifest.json ' +
-      'does not have the applications.gecko.update_url property ' +
+      'is missing the .applications.gecko.update_url property. ' +
       'therefore, no updateManifest could be generated');
+  return false;
+  } else {
+    // check if the update_url property contains a usable URL
+    let parsed = url.parse(manifestData.applications.gecko.update_url);
+    if (parsed == null || parsed.pathname == null) {
+      throw new WebExtError(
+        'Was unable to parse manifest.applications.gecko.update_url ' +
+        'please check this property in your manifest: ' +
+        `${manifestData.applications.gecko.update_url}`)
+      return false;
+    }
   }
+
+  // manifestData.version
+  if (manifestData.name == null) {
+    throw new WebExtError(
+      'update-link was passed but the manifest.json ' +
+      'is missing the .name property. ' +
+      'therefore, no updateManifest could be generated');
+    return false;
+  }
+
+  // ..lastly check if the passed updateLink parameter is correct
+  if (updateLink.indexOf('{xpiFileName}') === -1) {
+    throw new WebExtError(
+      'Unable to parse --update-link url, please use {xpiFileName} ' +
+      'as a substitute for the XPI file');
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Generates a new updateManifest.json file
+ * It will add an entry to a previously fetched updateManifest.json file
+ * for each generated XPI file.
+ * The result will be stored in the artifacts directory
+ */
+async function generateNewUpdateManifest(
+  id: ?string, XPIPath: string, artifactsDir,
+  manifestData: Object, updateLink: string, oldUpdateManifestData: Object
+) {
+  let updateManifestFileName;
+  let newUpdateManifest;
+
+  let parsed = url.parse(manifestData.applications.gecko.update_url);
+  if (parsed !== undefined && parsed.pathname !== undefined) {
+    updateManifestFileName = path.basename(parsed.pathname);
+  }
+
+  let newVersion = {
+    version: manifestData.version,
+    update_link: updateLink.replace('{xpiFileName}', path.basename(XPIPath))
+  };
+
+  if (oldUpdateManifestData.addons == null) {
+    // if the addons property did not exist,
+    // it means that the updateManifest is completely new.
+    // In case the developer forgot to add .addons, do it here automatically
+    oldUpdateManifestData.addons = {};
+  }
+
+  if (id && oldUpdateManifestData.addons[id]) {
+    // append a new release to the updateManifest
+    if (oldUpdateManifestData.addons[id].updates) {
+      oldUpdateManifestData.addons[id].updates.push(newVersion);
+    }
+  } else {
+    // the extensionID was not found in the .addons property
+    // this can mean either that this is the first release of an extension
+    // OR that the extensionID changed,
+    // we'll warn the user about the second scenario just to be sure.
+    let addonName = manifestData.name || 'your application';
+    log.warn(`Creating first release of ${addonName}`);
+    log.warn(
+      'If this is not the actual first release, check your extension-id');
+    oldUpdateManifestData.addons[id] = {};
+    oldUpdateManifestData.addons[id].updates = [newVersion];
+  }
+
+  // the oldUpdateManifest has been updated, it's ready to be saved
+  // prettify it so it's readable to the maintainers
+  newUpdateManifest = JSON.stringify(oldUpdateManifestData, null, 4);
+
+  return fs.writeFile(
+    path.join(artifactsDir, updateManifestFileName),
+    newUpdateManifest,
+    function(error) {
+      if (error) {
+        throw new WebExtError(
+          `Was unable to write updated ${addonName}\n` +
+          error);
+      }
+  });
 }
 
 export async function getIdFromSourceDir(
