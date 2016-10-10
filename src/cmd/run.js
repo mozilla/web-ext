@@ -239,7 +239,7 @@ export default async function run(
         );
       }
 
-      log.debug(
+      log.info(
         `Reloading extension when the source changes; id=${addonId}`);
       reloadStrategy({
         firefoxProcess: runningFirefox,
