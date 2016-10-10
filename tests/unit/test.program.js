@@ -349,7 +349,7 @@ describe('program.defaultVersionGetter', () => {
 
   it('returns git commit information in development', () => {
     const commit = `${git.branch()}-${git.long()}`;
-    testProcess.env.NODE_ENV = undefined;
+    testProcess.env.NODE_ENV = 'development';
     assert.equal(defaultVersionGetter(root, testProcess),
                  commit);
   });
