@@ -92,8 +92,8 @@ export class Program {
     let runCommand = this.commands[cmd];
 
     if (argv.verbose) {
-      log.info('Version:', getVersion(absolutePackageDir));
       logStream.makeVerbose();
+      log.info('Version:', getVersion(absolutePackageDir));
     }
 
     try {
@@ -125,12 +125,13 @@ export class Program {
   }
 }
 
+declare var WEBEXT_BUILD_ENV: string;
 
 export function defaultVersionGetter(
   absolutePackageDir: string,
-  localProcess: Object = process
+  localEnv: string = WEBEXT_BUILD_ENV
 ): string {
-  if (localProcess.env.NODE_ENV === 'production') {
+  if (localEnv === 'production') {
     log.debug('Getting the version from package.json');
     let packageData: any = readFileSync(
       path.join(absolutePackageDir, 'package.json'));

@@ -57,6 +57,11 @@ module.exports = {
     // This seems necessary to work with the 'when' module, which is
     // required by some things such as fx-runner.
     new webpack.IgnorePlugin(/vertx/),
+    // Global variables are necessary to print either verson number or
+    // git commit information for custom builds
+    new webpack.DefinePlugin({
+      WEBEXT_BUILD_ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+    }),
   ],
   resolve: {
     extensions: ['', '.js', '.json'],
