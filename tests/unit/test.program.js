@@ -168,7 +168,6 @@ describe('program.Program', () => {
 
   it('configures the logger when verbose', () => {
     const logStream = fake(new ConsoleStream());
-    let version = spy();
 
     let program = new Program(['--verbose', 'thing']);
     program.setGlobalOptions({
@@ -178,7 +177,7 @@ describe('program.Program', () => {
     });
     program.command('thing', 'does a thing', () => {});
 
-    return execProgram(program, {getVersion: version, logStream})
+    return execProgram(program, {getVersion: spy(), logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
       });
@@ -337,11 +336,11 @@ describe('program.defaultVersionGetter', () => {
   it('returns the package version in production', () => {
     let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
-    .then((pkgData) => {
-      const testBuildEnv = 'production';
-      assert.equal(defaultVersionGetter(root, testBuildEnv),
+      .then((pkgData) => {
+        const testBuildEnv = 'production';
+        assert.equal(defaultVersionGetter(root, testBuildEnv),
                    JSON.parse(pkgData).version);
-    });
+      });
   });
 
   it('returns git commit information in development', () => {
