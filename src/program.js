@@ -211,7 +211,7 @@ Example: $0 --help run.
           type: 'string',
         },
         'api-proxy': {
-          describe: 
+          describe:
             'Use a proxy to access the signing API. ' +
             'Example: https://yourproxy:6000',
           demand: false,
