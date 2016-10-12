@@ -210,6 +210,13 @@ Example: $0 --help run.
           demand: true,
           type: 'string',
         },
+        'api-proxy': {
+          describe:
+            'Use a proxy to access the signing API. ' +
+            'Example: https://yourproxy:6000 ',
+          demand: false,
+          type: 'string',
+        },
         'id': {
           describe:
             'A custom ID for the extension. This has no effect if the ' +
