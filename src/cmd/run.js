@@ -135,7 +135,7 @@ export function defaultFirefoxClient(
     throw lastError;
   }
 
-  log.info('Connecting to the remote Firefox debugger');
+  log.debug('Connecting to the remote Firefox debugger');
   return establishConnection();
 }
 
@@ -231,7 +231,7 @@ export default async function run(
     }
 
     if (noReload) {
-      log.debug('Extension auto-reloading has been disabled');
+      log.info('Automatic extension reloading has been disabled');
     } else {
       if (!addonId) {
         throw new WebExtError(
@@ -239,8 +239,7 @@ export default async function run(
         );
       }
 
-      log.info(
-        `Reloading extension when the source changes; id=${addonId}`);
+      log.info('The extension will reload if any source file changes');
       reloadStrategy({
         firefoxProcess: runningFirefox,
         profile, client, sourceDir, artifactsDir, addonId,

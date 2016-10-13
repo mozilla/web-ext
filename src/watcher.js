@@ -71,7 +71,7 @@ export function proxyFileChanges(
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
     log.debug(`Ignoring change to: ${filePath}`);
   } else {
-    log.info(`Changed: ${filePath}`);
+    log.debug(`Changed: ${filePath}`);
     log.debug(`Last change detection: ${(new Date()).toTimeString()}`);
     onChange();
   }
