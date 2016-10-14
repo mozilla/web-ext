@@ -1,6 +1,8 @@
 /* @flow */
 import path from 'path';
 import {readFileSync} from 'fs';
+
+import git from 'git-rev-sync';
 import yargs from 'yargs';
 
 import defaultCommands from './cmd';
@@ -9,8 +11,6 @@ import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
-
-import git from 'git-rev-sync';
 
 
 /*
