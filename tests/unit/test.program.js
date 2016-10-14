@@ -12,6 +12,8 @@ import {onlyInstancesOf, UsageError} from '../../src/errors';
 import {fake, makeSureItFails} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
 
+import git from 'git-rev-sync';
+
 
 describe('program.Program', () => {
 
@@ -175,7 +177,7 @@ describe('program.Program', () => {
     });
     program.command('thing', 'does a thing', () => {});
 
-    return execProgram(program, {logStream})
+    return execProgram(program, {getVersion: spy(), logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
       });
@@ -329,15 +331,23 @@ describe('program.main', () => {
 
 
 describe('program.defaultVersionGetter', () => {
+  let root = path.join(__dirname, '..', '..');
 
-  it('returns the package version', () => {
-    let root = path.join(__dirname, '..', '..');
+  it('returns the package version in production', () => {
     let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
-        assert.equal(defaultVersionGetter(root),
-                     JSON.parse(pkgData).version);
+        const testBuildEnv = {localEnv: 'production'};
+        assert.equal(defaultVersionGetter(root, testBuildEnv),
+                   JSON.parse(pkgData).version);
       });
+  });
+
+  it('returns git commit information in development', () => {
+    const commit = `${git.branch()}-${git.long()}`;
+    const testBuildEnv = {localEnv: 'development'};
+    assert.equal(defaultVersionGetter(root, testBuildEnv),
+                 commit);
   });
 
 });
