@@ -337,7 +337,7 @@ describe('program.defaultVersionGetter', () => {
     let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
-        const testBuildEnv = 'production';
+        const testBuildEnv = {localEnv: 'production'};
         assert.equal(defaultVersionGetter(root, testBuildEnv),
                    JSON.parse(pkgData).version);
       });
@@ -345,7 +345,7 @@ describe('program.defaultVersionGetter', () => {
 
   it('returns git commit information in development', () => {
     const commit = `${git.branch()}-${git.long()}`;
-    const testBuildEnv = 'development';
+    const testBuildEnv = {localEnv: 'development'};
     assert.equal(defaultVersionGetter(root, testBuildEnv),
                  commit);
   });
