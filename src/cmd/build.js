@@ -79,9 +79,8 @@ export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
 async function defaultPackageCreator(
-  {manifestData, sourceDir, fileFilter, artifactsDir,
-    showReadyMessage}: PackageCreatorParams
-): Promise<ExtensionBuildResult> {
+  {manifestData, sourceDir, fileFilter, artifactsDir, showReadyMessage,
+}: PackageCreatorParams): Promise<ExtensionBuildResult> {
   let id;
   if (manifestData) {
     id = getManifestId(manifestData);
