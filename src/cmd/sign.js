@@ -69,8 +69,8 @@ export default function sign(
       }
 
       let [buildResult, idFromSourceDir] = await Promise.all([
-        build({sourceDir, artifactsDir: tmpDir.path()}, {manifestData,
-          showReadyMessage: false}),
+        build({sourceDir, artifactsDir: tmpDir.path()},
+              {manifestData, showReadyMessage: false}),
         getIdFromSourceDir(sourceDir),
       ]);
 
