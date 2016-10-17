@@ -39,7 +39,20 @@
     "dot-notation": [2, {"allowKeywords": true}],
     "eqeqeq": [2, "allow-null"],
     "guard-for-in": 0,
-    "indent": [2, 2],
+    "indent": [2, 2, {
+      "SwitchCase": 1,
+      "VariableDeclarator": 1,
+      "outerIIFEBody": 1,
+      "MemberExpression": 1,
+      "FunctionDeclaration": {
+        "parameters": 1,
+        "body": 1
+      },
+      "FunctionExpression": {
+        "parameters": 1,
+        "body": 1
+      }
+    }],
     "keyword-spacing": 2,
     "max-len": [2, 80, 2, {"ignoreComments": true}],
     "new-cap": [2, {"capIsNewExceptions": ["Deferred"]}],

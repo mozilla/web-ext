@@ -56,7 +56,8 @@ export class RemoteTempInstallNotSupported extends WebExtError {
  *
  */
 export function onlyInstancesOf(
-    predicate: Function, errorHandler: Function): Function {
+  predicate: Function, errorHandler: Function
+): Function {
   return (error) => {
     if (error instanceof predicate) {
       return errorHandler(error);
@@ -88,8 +89,9 @@ export function onlyInstancesOf(
  *
  */
 export function onlyErrorsWithCode(
-    codeWanted: (string|number) | Array<string|number>,
-      errorHandler: Function): Function {
+  codeWanted: (string|number) | Array<string|number>,
+  errorHandler: Function
+): Function {
   return (error) => {
     let throwError = true;
 

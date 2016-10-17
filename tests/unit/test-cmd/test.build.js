@@ -28,37 +28,39 @@ describe('build', () => {
 
     return withTempDir(
       (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        })
-        .then((buildResult) => {
-          assert.match(buildResult.extensionPath,
-                       /minimal_extension-1\.0\.zip$/);
-          return buildResult.extensionPath;
-        })
-        .then((extensionPath) => zipFile.open(extensionPath))
-        .then(() => zipFile.extractFilenames())
-        .then((fileNames) => {
-          fileNames.sort();
-          assert.deepEqual(fileNames,
-                           ['background-script.js', 'manifest.json']);
-        })
+        build(
+          {
+            sourceDir: fixturePath('minimal-web-ext'),
+            artifactsDir: tmpDir.path(),
+          })
+          .then((buildResult) => {
+            assert.match(buildResult.extensionPath,
+                         /minimal_extension-1\.0\.zip$/);
+            return buildResult.extensionPath;
+          })
+          .then((extensionPath) => zipFile.open(extensionPath))
+          .then(() => zipFile.extractFilenames())
+          .then((fileNames) => {
+            fileNames.sort();
+            assert.deepEqual(fileNames,
+                             ['background-script.js', 'manifest.json']);
+          })
     );
   });
 
   it('gives the correct name to a localized extension', () => {
     return withTempDir(
       (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-localizable-web-ext'),
-          artifactsDir: tmpDir.path(),
-        })
-        .then((buildResult) => {
-          assert.match(buildResult.extensionPath,
-                       /name_of_the_extension-1\.0\.zip$/);
-          return buildResult.extensionPath;
-        })
+        build(
+          {
+            sourceDir: fixturePath('minimal-localizable-web-ext'),
+            artifactsDir: tmpDir.path(),
+          })
+          .then((buildResult) => {
+            assert.match(buildResult.extensionPath,
+                         /name_of_the_extension-1\.0\.zip$/);
+            return buildResult.extensionPath;
+          })
     );
   });
 
@@ -184,17 +186,18 @@ describe('build', () => {
 
   it('lets you specify a manifest', () => withTempDir(
     (tmpDir) =>
-      build({
-        sourceDir: fixturePath('minimal-web-ext'),
-        artifactsDir: tmpDir.path(),
-      }, {
-        manifestData: basicManifest,
-      })
-      .then((buildResult) => {
-        assert.match(buildResult.extensionPath,
-                     /the_extension-0\.0\.1\.zip$/);
-        return buildResult.extensionPath;
-      })
+      build(
+        {
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+        }, {
+          manifestData: basicManifest,
+        })
+        .then((buildResult) => {
+          assert.match(buildResult.extensionPath,
+                       /the_extension-0\.0\.1\.zip$/);
+          return buildResult.extensionPath;
+        })
   ));
 
   it('asks FileFilter what files to include in the ZIP', () => {
@@ -205,15 +208,16 @@ describe('build', () => {
 
     return withTempDir(
       (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        }, {fileFilter})
-        .then((buildResult) => zipFile.open(buildResult.extensionPath))
-        .then(() => zipFile.extractFilenames())
-        .then((fileNames) => {
-          assert.notInclude(fileNames, 'background-script.js');
-        })
+        build(
+          {
+            sourceDir: fixturePath('minimal-web-ext'),
+            artifactsDir: tmpDir.path(),
+          }, {fileFilter})
+          .then((buildResult) => zipFile.open(buildResult.extensionPath))
+          .then(() => zipFile.extractFilenames())
+          .then((fileNames) => {
+            assert.notInclude(fileNames, 'background-script.js');
+          })
     );
   });
 
