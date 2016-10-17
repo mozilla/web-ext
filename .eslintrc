@@ -31,6 +31,7 @@
   "rules": {
     "arrow-parens": 2,
     "block-scoped-var": 0,
+    "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
     "camelcase": 0,
     "comma-dangle": [2, "always-multiline"],
     "comma-spacing": 2,

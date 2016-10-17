@@ -111,8 +111,7 @@ export class Program {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
         log.error(`\n${prefix}${error.stack}\n`);
-      }
-      else {
+      } else {
         log.error(`\n${prefix}${error}\n`);
       }
       if (error.code) {

@@ -54,8 +54,7 @@ export async function getDefaultLocalizedName(
 
   try {
     messageData = JSON.parse(await fs.readFile(messageFile));
-  }
-  catch (error) {
+  } catch (error) {
     throw new UsageError(
       `Error reading or parsing file ${messageFile}: ${error}`);
   }
@@ -67,8 +66,7 @@ export async function getDefaultLocalizedName(
           `The locale file ${messageFile} ` +
             `is missing key: ${messageName}`);
         throw error;
-      }
-      else {
+      } else {
         return messageData[messageName].message;
       }
     });

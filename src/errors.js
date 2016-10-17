@@ -100,8 +100,7 @@ export function onlyErrorsWithCode(
           codeWanted.indexOf(error.errno) !== -1) {
         throwError = false;
       }
-    }
-    else if (error.code === codeWanted || error.errno === codeWanted) {
+    } else if (error.code === codeWanted || error.errno === codeWanted) {
       throwError = false;
     }
 
