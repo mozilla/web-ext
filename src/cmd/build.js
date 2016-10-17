@@ -37,6 +37,7 @@ export type PackageCreatorParams = {
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
+  showReadyMessage: boolean
 };
 
 export type LocalizedNameParams = {
@@ -78,8 +79,8 @@ export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
 async function defaultPackageCreator(
-  {manifestData, sourceDir, fileFilter, artifactsDir}: PackageCreatorParams
-): Promise<ExtensionBuildResult> {
+  {manifestData, sourceDir, fileFilter, artifactsDir, showReadyMessage,
+}: PackageCreatorParams): Promise<ExtensionBuildResult> {
   let id;
   if (manifestData) {
     id = getManifestId(manifestData);
@@ -110,7 +111,9 @@ async function defaultPackageCreator(
 
   await streamToPromise(stream);
 
-  log.info(`Your web extension is ready: ${extensionPath}`);
+  if (showReadyMessage) {
+    log.info(`Your web extension is ready: ${extensionPath}`);
+  }
   return {extensionPath};
 }
 
@@ -128,6 +131,7 @@ export type BuildCmdOptions = {
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
+  showReadyMessage?: boolean
 };
 
 export default async function build(
@@ -136,13 +140,14 @@ export default async function build(
     manifestData, fileFilter = new FileFilter(),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
+    showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
   const createPackage = () => packageCreator({
-    manifestData, sourceDir, fileFilter, artifactsDir,
+    manifestData, sourceDir, fileFilter, artifactsDir, showReadyMessage,
   });
 
   await prepareArtifactsDir(artifactsDir);
