@@ -120,6 +120,8 @@ export default function sign(
         log.info('SUCCESS');
       } else {
         log.info('FAIL');
+        throw new UsageError(
+            'Add on could not be signed, exiting with status 1');
       }
 
       return signingResult;

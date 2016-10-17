@@ -248,8 +248,11 @@ describe('sign', () => {
             success: false,
           }),
         })
-        .then((result) => {
-          assert.equal(result.success, false);
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.instanceOf(error, UsageError);
+          assert.match(error.message,
+            /Add on could not be signed, exiting with status 1/);
         });
     }
   ));
