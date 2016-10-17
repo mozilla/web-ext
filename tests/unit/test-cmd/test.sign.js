@@ -7,7 +7,7 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 import promisify from 'es6-promisify';
 
-import {onlyInstancesOf, UsageError} from '../../../src/errors';
+import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
 import {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
@@ -248,8 +248,11 @@ describe('sign', () => {
             success: false,
           }),
         })
-        .then((result) => {
-          assert.equal(result.success, false);
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.instanceOf(error, WebExtError);
+          assert.match(error.message,
+            /The WebExtension could not be signed/);
         });
     }
   ));
