@@ -5,7 +5,7 @@ import defaultAddonSigner from 'sign-addon';
 
 import defaultBuilder from './build';
 import {withTempDir} from '../util/temp-dir';
-import {isErrorWithCode, UsageError} from '../errors';
+import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
@@ -120,8 +120,8 @@ export default function sign(
         log.info('SUCCESS');
       } else {
         log.info('FAIL');
-        throw new UsageError(
-            'Add on could not be signed, exiting with status 1');
+        throw new WebExtError(
+          'The WebExtension could not be signed');
       }
 
       return signingResult;
