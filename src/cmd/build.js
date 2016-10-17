@@ -104,7 +104,7 @@ async function defaultPackageCreator(
   let packageName = safeFileName(
     `${extensionName}-${manifestData.version}.zip`);
   let extensionPath = path.join(artifactsDir, packageName);
-  let stream = createWriteStream(extensionPath);
+  let stream = createWriteStream(extensionPath, {flags:'wx'});
 
   stream.write(buffer, () => stream.end());
 
