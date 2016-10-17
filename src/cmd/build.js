@@ -156,7 +156,8 @@ export default async function build(
   if (rebuildAsNeeded) {
     log.info('Rebuilding when files change...');
     onSourceChange({
-      sourceDir, artifactsDir,
+      sourceDir,
+      artifactsDir,
       onChange: () => {
         return createPackage().catch((error) => {
           log.error(error.stack);

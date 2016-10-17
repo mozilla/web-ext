@@ -89,6 +89,9 @@
     "no-underscore-dangle": 0,
     "no-unused-vars": 2,
     "no-with": 2,
+    "object-property-newline": ["error", {
+      "allowMultiplePropertiesPerLine": true
+    }],
     "one-var": [2, "never"],
     "prefer-template": 2,
     "quote-props": [1, "consistent-as-needed"],

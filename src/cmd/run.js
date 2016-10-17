@@ -47,7 +47,9 @@ export function defaultWatcherCreator(
   }: WatcherCreatorParams
  ): Watchpack {
   return onSourceChange({
-    sourceDir, artifactsDir, onChange: () => {
+    sourceDir,
+    artifactsDir,
+    onChange: () => {
       log.debug(`Reloading add-on ID ${addonId}`);
       return client.reloadAddon(addonId)
         .catch((error) => {
@@ -242,7 +244,11 @@ export default async function run(
       log.info('The extension will reload if any source file changes');
       reloadStrategy({
         firefoxProcess: runningFirefox,
-        profile, client, sourceDir, artifactsDir, addonId,
+        profile,
+        client,
+        sourceDir,
+        artifactsDir,
+        addonId,
       });
     }
   }
