@@ -82,8 +82,10 @@ export class Program {
 
   async execute(
     absolutePackageDir: string,
-    {systemProcess = process, logStream = defaultLogStream,
-     getVersion = defaultVersionGetter, shouldExitProgram = true}: Object = {}
+    {
+      systemProcess = process, logStream = defaultLogStream,
+      getVersion = defaultVersionGetter, shouldExitProgram = true,
+    }: Object = {}
   ): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
@@ -153,8 +155,10 @@ export function defaultVersionGetter(
 
 export function main(
   absolutePackageDir: string,
-  {getVersion = defaultVersionGetter, commands = defaultCommands, argv,
-   runOptions = {}}: Object = {}
+  {
+    getVersion = defaultVersionGetter, commands = defaultCommands, argv,
+    runOptions = {},
+  }: Object = {}
 ): Promise<any> {
   let program = new Program(argv, {absolutePackageDir});
   // yargs uses magic camel case expansion to expose options on the

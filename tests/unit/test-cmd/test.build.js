@@ -28,11 +28,10 @@ describe('build', () => {
 
     return withTempDir(
       (tmpDir) =>
-        build(
-          {
-            sourceDir: fixturePath('minimal-web-ext'),
-            artifactsDir: tmpDir.path(),
-          })
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+        })
           .then((buildResult) => {
             assert.match(buildResult.extensionPath,
                          /minimal_extension-1\.0\.zip$/);
@@ -51,11 +50,10 @@ describe('build', () => {
   it('gives the correct name to a localized extension', () => {
     return withTempDir(
       (tmpDir) =>
-        build(
-          {
-            sourceDir: fixturePath('minimal-localizable-web-ext'),
-            artifactsDir: tmpDir.path(),
-          })
+        build({
+          sourceDir: fixturePath('minimal-localizable-web-ext'),
+          artifactsDir: tmpDir.path(),
+        })
           .then((buildResult) => {
             assert.match(buildResult.extensionPath,
                          /name_of_the_extension-1\.0\.zip$/);
@@ -172,11 +170,10 @@ describe('build', () => {
   it('prepares the artifacts dir', () => withTempDir(
     (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'artifacts');
-      return build(
-        {
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir,
-        })
+      return build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir,
+      })
         .then(() => fs.stat(artifactsDir))
         .then((stats) => {
           assert.equal(stats.isDirectory(), true);
@@ -186,13 +183,12 @@ describe('build', () => {
 
   it('lets you specify a manifest', () => withTempDir(
     (tmpDir) =>
-      build(
-        {
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        }, {
-          manifestData: basicManifest,
-        })
+      build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir: tmpDir.path(),
+      }, {
+        manifestData: basicManifest,
+      })
         .then((buildResult) => {
           assert.match(buildResult.extensionPath,
                        /the_extension-0\.0\.1\.zip$/);
@@ -208,11 +204,10 @@ describe('build', () => {
 
     return withTempDir(
       (tmpDir) =>
-        build(
-          {
-            sourceDir: fixturePath('minimal-web-ext'),
-            artifactsDir: tmpDir.path(),
-          }, {fileFilter})
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+        }, {fileFilter})
           .then((buildResult) => zipFile.open(buildResult.extensionPath))
           .then(() => zipFile.extractFilenames())
           .then((fileNames) => {
@@ -228,9 +223,11 @@ describe('build', () => {
       const onSourceChange = sinon.spy(() => {});
       const sourceDir = fixturePath('minimal-web-ext');
       const artifactsDir = tmpDir.path();
-      return build(
-        {sourceDir, artifactsDir, asNeeded: true},
-        {manifestData: basicManifest, onSourceChange, fileFilter})
+      return build({
+        sourceDir, artifactsDir, asNeeded: true,
+      }, {
+        manifestData: basicManifest, onSourceChange, fileFilter,
+      })
         .then((buildResult) => {
           // Make sure we still have a build result.
           assert.match(buildResult.extensionPath, /\.zip$/);
@@ -270,13 +267,13 @@ describe('build', () => {
       var packageResult = Promise.resolve({});
       const packageCreator = sinon.spy(() => packageResult);
       const onSourceChange = sinon.spy(() => {});
-      return build(
-        {
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-          asNeeded: true,
-        },
-        {manifestData: basicManifest, onSourceChange, packageCreator})
+      return build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir: tmpDir.path(),
+        asNeeded: true,
+      }, {
+        manifestData: basicManifest, onSourceChange, packageCreator
+      })
         .then(() => {
           assert.equal(onSourceChange.called, true);
           assert.equal(packageCreator.callCount, 1);
