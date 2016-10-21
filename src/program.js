@@ -245,7 +245,7 @@ Example: $0 --help run.
           demand: false,
           type: 'string',
         },
-        'timeout' : {
+        'timeout': {
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },

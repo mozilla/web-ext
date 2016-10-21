@@ -54,6 +54,7 @@
         "body": 1
       }
     }],
+    "key-spacing": 2,
     "keyword-spacing": 2,
     "max-len": [2, 80, 2, {"ignoreComments": true}],
     "new-cap": [2, {"capIsNewExceptions": ["Deferred"]}],
