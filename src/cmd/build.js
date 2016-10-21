@@ -4,6 +4,7 @@ import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
 import streamToPromise from 'stream-to-promise';
 import {fs} from 'mz';
+import parseJson from 'parse-json';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
@@ -62,10 +63,11 @@ export async function getDefaultLocalizedName(
   let extensionName: string = manifestData.name;
 
   try {
-    messageData = JSON.parse(await fs.readFile(messageFile));
-  } catch (error) {
-    throw new UsageError(
-      `Error reading or parsing file ${messageFile}: ${error}`);
+    messageData = parseJson(await fs.readFile(messageFile));
+  }
+  catch (error) {
+    error.fileName = messageFile;
+    throw new UsageError(error);
   }
   extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/g,
     (match, messageName) => {

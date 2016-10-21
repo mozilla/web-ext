@@ -104,7 +104,7 @@ describe('build', () => {
             assert.instanceOf(error, UsageError);
             assert.match(
               error.message,
-              /Error .* file .*messages\.json: SyntaxError: Unexpected string/);
+              /Unexpected token '"' .* in .*messages.json/);
           });
       }
     );
@@ -150,7 +150,7 @@ describe('build', () => {
         assert.instanceOf(error, UsageError);
         assert.match(
           error.message,
-          /Error .* file .*messages\.json: .*: no such file or directory/);
+          /Error: ENOENT: no such file or directory, open .*messages.json/);
       });
   });
 
