@@ -31,7 +31,7 @@
   "rules": {
     "arrow-parens": 2,
     "block-scoped-var": 0,
-    "brace-style": ["error", "1tbs", {"allowSingleLine": false}],
+    "brace-style": [2, "1tbs", {"allowSingleLine": false}],
     "camelcase": 0,
     "comma-dangle": [2, "always-multiline"],
     "comma-spacing": 2,
@@ -90,7 +90,7 @@
     "no-underscore-dangle": 0,
     "no-unused-vars": 2,
     "no-with": 2,
-    "object-property-newline": ["error", {
+    "object-property-newline": [2, {
       "allowMultiplePropertiesPerLine": true
     }],
     "one-var": [2, "never"],
