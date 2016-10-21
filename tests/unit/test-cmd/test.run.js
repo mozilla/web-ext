@@ -52,7 +52,8 @@ describe('run', () => {
     };
 
     return {
-      argv, options,
+      argv,
+      options,
       run: (customArgv = {}, customOpt = {}) => run(
         {...argv, ...customArgv},
         {...options, ...customOpt}

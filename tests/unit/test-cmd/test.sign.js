@@ -54,8 +54,9 @@ describe('sign', () => {
    * Run the sign command with stubs for all dependencies.
    */
   function sign(
-      tmpDir: Object, stubs: Object,
-      {extraArgs = {}, extraOptions = {}}: Object = {}): Promise<*> {
+    tmpDir: Object, stubs: Object,
+    {extraArgs = {}, extraOptions = {}}: Object = {}
+  ): Promise<*> {
     return completeSignCommand({
       verbose: false,
       artifactsDir: path.join(tmpDir.path(), 'artifacts-dir'),

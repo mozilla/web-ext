@@ -512,8 +512,7 @@ describe('firefox', () => {
         return new Promise((resolve, reject) => {
           if (callCount === 2) {
             reject(new TCPConnectError('port is free'));
-          }
-          else {
+          } else {
             resolve(client);
           }
         });

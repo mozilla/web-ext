@@ -26,10 +26,10 @@ describe('prepareArtifactsDir', () => {
   it('ignores existing artifacts dir', () => withTempDir(
     (tmpDir) =>
       prepareArtifactsDir(tmpDir.path())
-      .then(() => {
-        // Make sure everything is still cool with this path.
-        return fs.stat(tmpDir.path());
-      })
+        .then(() => {
+          // Make sure everything is still cool with this path.
+          return fs.stat(tmpDir.path());
+        })
   ));
 
   it('ensures the path is really a directory', () => withTempDir(

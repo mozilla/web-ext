@@ -32,19 +32,19 @@ describe('util/manifest', () => {
     it('returns a valid manifest', () => withTempDir(
       (tmpDir) =>
         writeManifest(tmpDir.path(), basicManifest)
-        .then(() => getValidatedManifest(tmpDir.path()))
-        .then((manifestData) => {
-          assert.deepEqual(manifestData, basicManifest);
-        })
+          .then(() => getValidatedManifest(tmpDir.path()))
+          .then((manifestData) => {
+            assert.deepEqual(manifestData, basicManifest);
+          })
     ));
 
     it('allows manifests without an applications property', () => withTempDir(
       (tmpDir) =>
         writeManifest(tmpDir.path(), manifestWithoutApps)
-        .then(() => getValidatedManifest(tmpDir.path()))
-        .then((manifestData) => {
-          assert.deepEqual(manifestData, manifestWithoutApps);
-        })
+          .then(() => getValidatedManifest(tmpDir.path()))
+          .then((manifestData) => {
+            assert.deepEqual(manifestData, manifestWithoutApps);
+          })
     ));
 
     it('reports an error for a missing manifest file', () => {

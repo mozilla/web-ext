@@ -34,7 +34,9 @@ describe('logger', () => {
     // NOTE: create a fake process that makes flow happy.
     function fakeProcess() {
       class FakeWritableStream extends WriteStream {
-        write(): boolean { return true; }
+        write(): boolean {
+          return true;
+        }
       }
 
       let fakeWritableStream = new FakeWritableStream();
