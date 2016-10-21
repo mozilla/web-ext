@@ -64,8 +64,7 @@ export async function getDefaultLocalizedName(
 
   try {
     messageData = parseJson(await fs.readFile(messageFile));
-  }
-  catch (error) {
+  } catch (error) {
     error.fileName = messageFile;
     throw new UsageError(error);
   }
