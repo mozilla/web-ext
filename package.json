@@ -56,8 +56,10 @@
     "git-rev-sync": "1.8.0",
     "minimatch": "3.0.3",
     "mz": "2.6.0",
-    "node-firefox-connect": "1.2.0",
+    "node-firefox-connect": "1.2.0",< HEAD
     "regenerator-runtime": "0.10.0",
+    "parse-json": "2.2.0",
+    "regenerator-runtime": "0.9.5",ded parse-json package to package.json
     "sign-addon": "0.2.0",
     "source-map-support": "0.4.6",
     "stream-to-promise": "2.2.0",
