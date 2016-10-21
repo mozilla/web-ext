@@ -16,6 +16,8 @@ before_script:
 script:
 - COVERAGE=y NODE_ENV=production npm test
 - npm run changelog-lint
+# Run a minimal set of smoke tests in production mode (npm install --production)
+- ./tests/smoke-test-production.sh
 
 after_script: npm run publish-coverage
 
