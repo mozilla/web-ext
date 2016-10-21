@@ -272,7 +272,7 @@ describe('build', () => {
         artifactsDir: tmpDir.path(),
         asNeeded: true,
       }, {
-        manifestData: basicManifest, onSourceChange, packageCreator
+        manifestData: basicManifest, onSourceChange, packageCreator,
       })
         .then(() => {
           assert.equal(onSourceChange.called, true);
