@@ -207,6 +207,10 @@ Example: $0 --help run.
           describe: 'Watch for file changes and re-build as needed',
           type: 'boolean',
         },
+        'overwrite-dest': {
+          describe: 'Overwrite destination package if exists',
+          type: 'boolean',
+        },
       })
     .command(
       'sign',
