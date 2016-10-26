@@ -65,6 +65,22 @@ describe('lint', () => {
     });
   });
 
+  it('passes warningsAsErrors to the linter', () => {
+    const {lint, createLinter} = setUp();
+    return lint({warningsAsErrors: true}).then(() => {
+      const config = createLinter.firstCall.args[0].config;
+      assert.equal(config.warningsAsErrors, true);
+    });
+  });
+
+  it('passes warningsAsErrors undefined to the linter', () => {
+    const {lint, createLinter} = setUp();
+    return lint({}).then(() => {
+      const config = createLinter.firstCall.args[0].config;
+      assert.equal(config.warningsAsErrors, undefined);
+    });
+  });
+
   it('configures the linter when verbose', () => {
     const {lint, createLinter} = setUp();
     return lint({verbose: true}).then(() => {
