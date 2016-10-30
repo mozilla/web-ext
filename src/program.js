@@ -43,8 +43,10 @@ export class Program {
     this.commands = {};
   }
 
-  command(name: string, description: string, executor: Function,
-          commandOptions: Object = {}): Program {
+  command(
+    name: string, description: string, executor: Function,
+    commandOptions: Object = {}
+  ): Program {
     this.yargs.command(name, description, (yargs) => {
       if (!commandOptions) {
         return;
@@ -78,10 +80,13 @@ export class Program {
     return this;
   }
 
-  async execute(absolutePackageDir: string,
-      {systemProcess = process, logStream = defaultLogStream,
-       getVersion = defaultVersionGetter, shouldExitProgram = true}
-      : Object = {}): Promise<void> {
+  async execute(
+    absolutePackageDir: string,
+    {
+      systemProcess = process, logStream = defaultLogStream,
+      getVersion = defaultVersionGetter, shouldExitProgram = true,
+    }: Object = {}
+  ): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
@@ -108,8 +113,7 @@ export class Program {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
         log.error(`\n${prefix}${error.stack}\n`);
-      }
-      else {
+      } else {
         log.error(`\n${prefix}${error}\n`);
       }
       if (error.code) {
@@ -150,9 +154,12 @@ export function defaultVersionGetter(
 
 
 export function main(
-    absolutePackageDir: string,
-    {getVersion = defaultVersionGetter, commands = defaultCommands, argv,
-     runOptions = {}}: Object = {}): Promise<any> {
+  absolutePackageDir: string,
+  {
+    getVersion = defaultVersionGetter, commands = defaultCommands, argv,
+    runOptions = {},
+  }: Object = {}
+): Promise<any> {
   let program = new Program(argv, {absolutePackageDir});
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
@@ -246,7 +253,7 @@ Example: $0 --help run.
           demand: false,
           type: 'string',
         },
-        'timeout' : {
+        'timeout': {
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },

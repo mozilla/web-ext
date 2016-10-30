@@ -37,7 +37,8 @@ export type PackageCreatorParams = {
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
-  overwriteDest: boolean
+  overwriteDest: boolean,
+  showReadyMessage: boolean
 };
 
 export type LocalizedNameParams = {
@@ -54,8 +55,7 @@ export async function getDefaultLocalizedName(
 
   try {
     messageData = JSON.parse(await fs.readFile(messageFile));
-  }
-  catch (error) {
+  } catch (error) {
     throw new UsageError(
       `Error reading or parsing file ${messageFile}: ${error}`);
   }
@@ -67,8 +67,7 @@ export async function getDefaultLocalizedName(
           `The locale file ${messageFile} ` +
             `is missing key: ${messageName}`);
         throw error;
-      }
-      else {
+      } else {
         return messageData[messageName].message;
       }
     });
@@ -85,6 +84,7 @@ async function defaultPackageCreator(
     fileFilter,
     artifactsDir,
     overwriteDest,
+    showReadyMessage,
   }: PackageCreatorParams
 ): Promise<ExtensionBuildResult> {
   let id;
@@ -113,8 +113,13 @@ async function defaultPackageCreator(
   let extensionPath = path.join(artifactsDir, packageName);
 
   let destinationFileExists = await fs.stat(extensionPath)
-    .then((stat)=>{ return stat.isFile(); })
-    .catch(()=>{return false;});
+    .then((stat)=>{
+      return stat.isFile();
+    })
+    .catch(()=>{
+      return false;
+    })
+  ;
 
   function throwExtensionExists() {
     throw new UsageError(
@@ -132,11 +137,17 @@ async function defaultPackageCreator(
 
   let stream = overwriteDest ?
 	createWriteStream(extensionPath)
-	: createWriteStream(extensionPath, {flags:'wx'}); // double-check if destination file exists
+	: createWriteStream(extensionPath, {flags: 'wx'}); // double-check if destination file exists
 
   let streamPromise = streamToPromise(stream)
-    .then(() => { log.info(`Your web extension is ready: ${extensionPath}`); })
-    .catch( onlyErrorsWithCode('EEXIST', () => {throwExtensionExists();} ) )
+    .then(() => {
+      if (showReadyMessage) {
+        log.info(`Your web extension is ready: ${extensionPath}`);
+      }
+    })
+    .catch( onlyErrorsWithCode('EEXIST', () => {
+      throwExtensionExists();
+    } ) )
   ;
 
   stream.write(buffer, () => stream.end());
@@ -161,6 +172,7 @@ export type BuildCmdOptions = {
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
+  showReadyMessage?: boolean
 };
 
 export default async function build(
@@ -174,13 +186,19 @@ export default async function build(
     manifestData, fileFilter = new FileFilter(),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
+    showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
   const createPackage = () => packageCreator({
-    manifestData, sourceDir, fileFilter, artifactsDir, overwriteDest,
+    manifestData,
+    sourceDir,
+    fileFilter,
+    artifactsDir,
+    overwriteDest,
+    showReadyMessage,
   });
 
   await prepareArtifactsDir(artifactsDir);
@@ -189,7 +207,8 @@ export default async function build(
   if (rebuildAsNeeded) {
     log.info('Rebuilding when files change...');
     onSourceChange({
-      sourceDir, artifactsDir,
+      sourceDir,
+      artifactsDir,
       onChange: () => {
         return createPackage().catch((error) => {
           log.error(error.stack);
