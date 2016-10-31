@@ -47,7 +47,7 @@
     "addons-linter": "0.15.6",
     "babel-polyfill": "6.16.0",
     "babel-runtime": "6.11.6",
-    "bunyan": "1.8.2",
+    "bunyan": "1.8.4",
     "debounce": "1.0.0",
     "es6-error": "4.0.0",
     "es6-promisify": "5.0.0",
