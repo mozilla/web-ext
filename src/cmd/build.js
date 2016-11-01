@@ -164,7 +164,6 @@ export type BuildCmdParams = {
   sourceDir: string,
   artifactsDir: string,
   asNeeded?: boolean,
-  overwriteDest?: boolean,
 };
 
 export type BuildCmdOptions = {
@@ -172,6 +171,7 @@ export type BuildCmdOptions = {
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
+  overwriteDest?: boolean,
   showReadyMessage?: boolean
 };
 
@@ -180,12 +180,12 @@ export default async function build(
     sourceDir,
     artifactsDir,
     asNeeded = false,
-    overwriteDest = false,
   }: BuildCmdParams,
   {
     manifestData, fileFilter = new FileFilter(),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
+    overwriteDest = false,
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
