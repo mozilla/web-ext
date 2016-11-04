@@ -87,7 +87,7 @@
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "2.25.0",
     "firefox-client": "0.3.0",
-    "flow-bin": "0.33.0",
+    "flow-bin": "0.34.0",
     "git-hooks-win": "1.1.11",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
