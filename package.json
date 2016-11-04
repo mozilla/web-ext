@@ -44,7 +44,7 @@
     "opera"
   ],
   "dependencies": {
-    "addons-linter": "0.15.6",
+    "addons-linter": "0.15.8",
     "babel-polyfill": "6.16.0",
     "babel-runtime": "6.11.6",
     "bunyan": "1.8.4",
