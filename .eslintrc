@@ -30,6 +30,7 @@
   },
   "rules": {
     "arrow-parens": 2,
+    "arrow-spacing": 2,
     "block-scoped-var": 0,
     "brace-style": [2, "1tbs", {"allowSingleLine": false}],
     "camelcase": 0,
