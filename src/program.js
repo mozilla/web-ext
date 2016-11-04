@@ -215,7 +215,7 @@ Example: $0 --help run.
           type: 'boolean',
         },
         'overwrite-dest': {
-          describe: 'Overwrite destination package if exists',
+          describe: 'Overwrite destination package if it exists',
           type: 'boolean',
         },
       })
