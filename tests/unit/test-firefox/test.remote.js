@@ -270,8 +270,10 @@ describe('firefox.remote', () => {
             addonsActor: 'addons1.actor.conn',
           },
           // installTemporaryAddon response:
-          makeRequestError: {error: 'install error',
-                             message: 'error message'},
+          makeRequestError: {
+            error: 'install error',
+            message: 'error message',
+          },
         });
         const conn = makeInstance(client);
         return conn.installTemporaryAddon('/path/to/addon')
