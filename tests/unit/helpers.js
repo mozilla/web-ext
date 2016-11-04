@@ -141,12 +141,9 @@ export function fake<T>(original: Object, methods: Object = {}): T {
   // Provide stubs for all original members:
   var props = [];
   var obj = original;
-  while (true) {
+  while (obj) {
     props = props.concat(Object.getOwnPropertyNames(obj));
     obj = Object.getPrototypeOf(obj);
-    if (!obj) {
-      break;
-    }
   }
 
   var proto = Object.getPrototypeOf(original);
