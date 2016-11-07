@@ -133,7 +133,7 @@ export default function sign(
 
 export async function getIdFromSourceDir(
   sourceDir: string
-): Promise<string|void> {
+): Promise<string | void> {
   const filePath = path.join(sourceDir, extensionIdFile);
 
   let content;
@@ -167,8 +167,9 @@ export async function getIdFromSourceDir(
 }
 
 
-export async function saveIdToSourceDir(sourceDir: string, id: string)
-    : Promise<void> {
+export async function saveIdToSourceDir(
+  sourceDir: string, id: string
+): Promise<void> {
   const filePath = path.join(sourceDir, extensionIdFile);
   await fs.writeFile(filePath, [
     '# This file was created by https://github.com/mozilla/web-ext',

@@ -68,7 +68,7 @@ export default async function getValidatedManifest(
 }
 
 
-export function getManifestId(manifestData: ExtensionManifest): string|void {
+export function getManifestId(manifestData: ExtensionManifest): string | void {
   return manifestData.applications ?
     manifestData.applications.gecko.id : undefined;
 }

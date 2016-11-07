@@ -306,7 +306,7 @@ export class ExtensionRunner {
     return client.installTemporaryAddon(this.sourceDir);
   }
 
-  installAsProxy(profile: FirefoxProfile): Promise<string|void> {
+  installAsProxy(profile: FirefoxProfile): Promise<string | void> {
     const {firefoxApp, sourceDir, manifestData} = this;
     return firefoxApp.installExtension(
       {

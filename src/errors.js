@@ -89,7 +89,7 @@ export function onlyInstancesOf(
  *
  */
 export function onlyErrorsWithCode(
-  codeWanted: (string|number) | Array<string|number>,
+  codeWanted: (string | number) | Array<string | number>,
   errorHandler: Function
 ): Function {
   return (error) => {

@@ -14,7 +14,7 @@ import {onlyErrorsWithCode} from '../errors';
  *  });
  *
  * */
-export default function isDirectory(path: string): Promise<bool> {
+export default function isDirectory(path: string): Promise<boolean> {
   return fs.stat(path)
     .then((stats) => stats.isDirectory())
     .catch(onlyErrorsWithCode(['ENOENT', 'ENOTDIR'], () => {
