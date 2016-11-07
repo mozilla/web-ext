@@ -5,7 +5,7 @@ import {WebExtError} from '../errors';
 // Flow Types
 
 export type FirefoxPreferences = {
-  [key: string]: bool | string | number,
+  [key: string]: boolean | string | number,
 };
 
 export type PreferencesAppName = 'firefox' | 'fennec';
