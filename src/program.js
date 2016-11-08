@@ -301,7 +301,7 @@ Example: $0 --help run.
         default: false,
       },
       'warnings-as-errors': {
-        describe: 'Treat warnings as errors',
+        describe: 'Exit non-zero if there are warnings',
         alias: 'w',
         type: 'boolean',
         default: false,
