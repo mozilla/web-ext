@@ -16,6 +16,7 @@ export type LinterCreatorParams = {
     logLevel: 'debug' | 'fatal',
     stack: boolean,
     pretty?: boolean,
+    warningsAsErrors?: boolean,
     metadata?: boolean,
     output?: LinterOutputType,
     boring?: boolean,
@@ -42,6 +43,7 @@ export type LintCmdParams = {
   output?: LinterOutputType,
   metadata?: boolean,
   pretty?: boolean,
+  warningsAsErrors?: boolean,
 };
 
 export type LintCmdOptions = {
@@ -52,7 +54,7 @@ export type LintCmdOptions = {
 export default function lint(
   {
     verbose, sourceDir, selfHosted, boring, output,
-    metadata, pretty,
+    metadata, pretty, warningsAsErrors,
   }: LintCmdParams,
   {
     createLinter = defaultLinterCreator,
@@ -65,6 +67,7 @@ export default function lint(
       logLevel: verbose ? 'debug' : 'fatal',
       stack: Boolean(verbose),
       pretty,
+      warningsAsErrors,
       metadata,
       output,
       boring,

@@ -300,6 +300,12 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
+      'warnings-as-errors': {
+        describe: 'Treat warnings as errors',
+        alias: 'w',
+        type: 'boolean',
+        default: false,
+      },
       'pretty': {
         describe: 'Prettify JSON output',
         type: 'boolean',
