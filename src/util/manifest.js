@@ -15,6 +15,14 @@ export type ExtensionManifest = {
   name: string,
   version: string,
   default_locale?: string,
+  applications?: {
+    gecko: {
+      id?: string,
+      strict_min_version?: string,
+      strict_max_version?: string,
+      update_url?: string,
+    },
+  },
 };
 
 export default async function getValidatedManifest(

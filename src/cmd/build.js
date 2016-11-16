@@ -45,11 +45,20 @@ export type LocalizedNameParams = {
   manifestData: ExtensionManifest,
 }
 
+// This defines the _locales/messages.json type. See:
+// https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Internationalization#Providing_localized_strings_in__locales
+type LocalizedMessageData = {
+  [messageName: string]: {
+    description: string,
+    message: string,
+  },
+}
+
 export async function getDefaultLocalizedName(
   {messageFile, manifestData}: LocalizedNameParams
 ): Promise<string> {
 
-  let messageData: string | Buffer;
+  let messageData: LocalizedMessageData;
   let extensionName: string = manifestData.name;
 
   try {

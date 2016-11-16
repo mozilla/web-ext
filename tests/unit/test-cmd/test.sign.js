@@ -278,8 +278,10 @@ describe('sign', () => {
                        stubs.signingConfig.timeout);
           assert.equal(signedAddonCall.xpiPath,
                        stubs.buildResult.extensionPath);
-          assert.equal(signedAddonCall.id,
-                       stubs.preValidatedManifest.applications.gecko.id);
+
+          const applications = stubs.preValidatedManifest.applications || {};
+          assert.equal(signedAddonCall.id, applications.gecko.id);
+
           assert.equal(signedAddonCall.version,
                        stubs.preValidatedManifest.version);
           assert.equal(signedAddonCall.downloadDir, artifactsDir);

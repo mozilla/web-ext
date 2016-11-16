@@ -1,6 +1,6 @@
 /* @flow */
 import path from 'path';
-import {EventEmitter} from 'events';
+import EventEmitter from 'events';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -300,6 +300,11 @@ describe('run', () => {
 
   describe('defaultReloadStrategy', () => {
 
+    class StubChildProcess extends EventEmitter {
+      stderr = new EventEmitter();
+      stdout = new EventEmitter();
+    }
+
     function prepare() {
       const client = new RemoteFirefox(fakeFirefoxClient());
       const watcher = {
@@ -308,8 +313,7 @@ describe('run', () => {
       const args = {
         addonId: 'some-addon@test-suite',
         client,
-        // $FLOW_IGNORE: fake a Firefox ChildProcess using an EventEmitter for testing reasons.
-        firefoxProcess: new EventEmitter(),
+        firefoxProcess: new StubChildProcess(),
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
