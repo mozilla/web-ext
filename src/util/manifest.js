@@ -11,19 +11,21 @@ const log = createLogger(__filename);
 
 // getValidatedManifest helper types and implementation
 
-export type ExtensionManifest = {
+export type ExtensionManifestApplications = {|
+  gecko: {|
+    id?: string,
+    strict_min_version?: string,
+    strict_max_version?: string,
+    update_url?: string,
+  |},
+|};
+
+export type ExtensionManifest = {|
   name: string,
   version: string,
   default_locale?: string,
-  applications?: {
-    gecko: {
-      id?: string,
-      strict_min_version?: string,
-      strict_max_version?: string,
-      update_url?: string,
-    },
-  },
-};
+  applications?: ExtensionManifestApplications,
+|};
 
 export default async function getValidatedManifest(
   sourceDir: string
