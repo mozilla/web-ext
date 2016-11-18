@@ -16,6 +16,7 @@ import completeSignCommand, {
 } from '../../../src/cmd/sign';
 import {makeSureItFails, fixturePath} from '../helpers';
 
+import type {ExtensionManifestApplications} from '../../../src/util/manifest';
 
 describe('sign', () => {
 
@@ -278,8 +279,11 @@ describe('sign', () => {
                        stubs.signingConfig.timeout);
           assert.equal(signedAddonCall.xpiPath,
                        stubs.buildResult.extensionPath);
-          assert.equal(signedAddonCall.id,
-                       stubs.preValidatedManifest.applications.gecko.id);
+
+          const applications: ExtensionManifestApplications =
+            stubs.preValidatedManifest.applications || {gecko: {}};
+          assert.equal(signedAddonCall.id, applications.gecko.id);
+
           assert.equal(signedAddonCall.version,
                        stubs.preValidatedManifest.version);
           assert.equal(signedAddonCall.downloadDir, artifactsDir);

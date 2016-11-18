@@ -27,7 +27,6 @@ export const defaultFirefoxEnv = {
 // Import flow types.
 
 import type {FirefoxConnectorFn} from './remote';
-import type {ChildProcess} from 'child_process';
 import type {
   PreferencesAppName,
   PreferencesGetterFn,
@@ -97,14 +96,16 @@ export type FirefoxRunnerParams = {
   'verbose'?: boolean,
 };
 
-// NOTE: alias FirefoxProcess to a node ChildProcess type
-export type FirefoxProcess = ChildProcess;
+export interface FirefoxProcess extends events$EventEmitter {
+  stderr: events$EventEmitter;
+  stdout: events$EventEmitter;
+}
 
 export type FirefoxRunnerResults = {
   process: FirefoxProcess,
   binary: string,
   args: Array<string>,
-};
+}
 
 export type FirefoxRunnerFn =
   (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
