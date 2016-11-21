@@ -57,7 +57,7 @@
     "minimatch": "3.0.3",
     "mz": "2.5.0",
     "node-firefox-connect": "1.2.0",
-    "regenerator-runtime": "0.9.6",
+    "regenerator-runtime": "0.10.0",
     "sign-addon": "0.2.0",
     "source-map-support": "0.4.6",
     "stream-to-promise": "2.2.0",
