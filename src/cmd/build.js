@@ -60,7 +60,7 @@ export async function getDefaultLocalizedName(
 ): Promise<string> {
 
   let messageData: LocalizedMessageData;
-  let messageContents: string|Buffer;
+  let messageContents: string | Buffer;
   let extensionName: string = manifestData.name;
 
   try {
