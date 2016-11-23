@@ -4,7 +4,7 @@ import path from 'path';
 import {fs} from 'mz';
 import {InvalidManifest} from '../errors';
 import {createLogger} from './logger';
-import parseJson from 'parse-json';
+import parseJSON from 'parse-json';
 
 
 const log = createLogger(__filename);
@@ -46,7 +46,7 @@ export default async function getValidatedManifest(
   let manifestData;
 
   try {
-    manifestData = parseJson(manifestContents);
+    manifestData = parseJSON(manifestContents, manifestFile);
   } catch (error) {
     error.fileName = manifestFile;
     throw new InvalidManifest(
