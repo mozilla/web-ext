@@ -103,6 +103,7 @@ describe('build', () => {
           .catch((error) => {
             assert.instanceOf(error, UsageError);
             assert.match(error.message, /Unexpected token '"' at 1:15/);
+            assert.match(error.message, /^Error parsing messages.json/);
             assert.include(error.message, messageFileName);
           });
       }
@@ -150,6 +151,9 @@ describe('build', () => {
         assert.match(
           error.message,
           /Error: ENOENT: no such file or directory, open .*messages.json/);
+        assert.match(error.message, /^Error reading messages.json/);
+        assert.include(error.message,
+          '/path/to/non-existent-dir/messages.json');
       });
   });
 

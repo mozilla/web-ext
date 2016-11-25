@@ -48,7 +48,6 @@ export default async function getValidatedManifest(
   try {
     manifestData = parseJSON(manifestContents, manifestFile);
   } catch (error) {
-    error.fileName = manifestFile;
     throw new InvalidManifest(
       `Error parsing manifest.json at ${manifestFile}: ${error}`);
   }

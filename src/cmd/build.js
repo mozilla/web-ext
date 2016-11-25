@@ -67,14 +67,14 @@ export async function getDefaultLocalizedName(
     messageContents = await fs.readFile(messageFile);
   } catch (error) {
     throw new UsageError(
-      `Could not read messages.json file at ${messageFile}: ${error}`);
+      `Error reading messages.json file at ${messageFile}: ${error}`);
   }
 
   try {
     messageData = parseJSON(messageContents, messageFile);
   } catch (error) {
     throw new UsageError(
-      `Error parsing manifest.json at ${messageFile}: ${error}`);
+      `Error parsing messages.json ${error}`);
   }
 
   extensionName = manifestData.name.replace(/__MSG_([A-Za-z0-9@_]+?)__/g,
