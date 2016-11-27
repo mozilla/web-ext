@@ -12,6 +12,8 @@ import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
 
+var open = require('open');
+
 
 /*
  * The command line program.
@@ -323,6 +325,10 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
+    })
+    .command('docs', 'Open the web-ext documentation', function() {
+      open('https://developer.mozilla.org/en-US/Add-ons' +
+        '/WebExtensions/Getting_started_with_web-ext');
     });
 
   return program.execute(absolutePackageDir, runOptions);
