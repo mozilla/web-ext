@@ -8,12 +8,10 @@ import yargs from 'yargs';
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
+import open from 'open';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
-
-var open = require('open');
-
 
 /*
  * The command line program.
