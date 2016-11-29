@@ -94,6 +94,7 @@
     "no-trailing-spaces": [2, {"skipBlankLines": false}],
     "no-undef": 2,
     "no-underscore-dangle": 0,
+    "no-unneeded-ternary": 2,
     "no-unused-vars": 2,
     "no-with": 2,
     "object-property-newline": [2, {
