@@ -70,7 +70,8 @@ describe('util/manifest', () => {
           .then(() => getValidatedManifest(tmpDir.path()))
           .then(makeSureItFails())
           .catch(onlyInstancesOf(InvalidManifest, (error) => {
-            assert.match(error.message, /Error parsing manifest\.json/);
+            assert.match(error.message, /Error parsing manifest\.json at /);
+            assert.include(error.message, 'Unexpected token \' \' at 2:49');
             assert.include(error.message, manifestFile);
           }));
       }
