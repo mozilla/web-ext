@@ -86,7 +86,7 @@
     "coveralls": "2.11.15",
     "deepcopy": "0.6.3",
     "eslint-plugin-async-await": "0.0.0",
-    "eslint-plugin-flowtype": "2.29.0",
+    "eslint-plugin-flowtype": "2.29.1",
     "firefox-client": "0.3.0",
     "flow-bin": "0.36.0",
     "git-hooks-win": "1.1.11",
