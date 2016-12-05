@@ -174,7 +174,7 @@ describe('firefox', () => {
         baseProfile.setPreference('webext.customSetting', true);
         baseProfile.updatePreferences();
 
-        return firefox.copyProfile(baseProfile.path(),
+        return firefox.copyProfile(baseProfile.path(), {},
           {configureThisProfile: (profile) => Promise.resolve(profile)})
           .then((profile) => fs.readFile(profile.userPrefs))
           .then((userPrefs) => {
@@ -190,7 +190,7 @@ describe('firefox', () => {
       let copyFromUserProfile = sinon.spy(
         (config, cb) => cb(new Error('simulated: could not find profile')));
 
-      return firefox.copyProfile('/dev/null/non_existent_path',
+      return firefox.copyProfile('/dev/null/non_existent_path', {},
         {
           copyFromUserProfile,
           configureThisProfile: (profile) => Promise.resolve(profile),
@@ -215,7 +215,7 @@ describe('firefox', () => {
       let copyFromUserProfile = sinon.spy(
         (config, callback) => callback(null, profileToCopy));
 
-      return firefox.copyProfile(name,
+      return firefox.copyProfile(name, {},
         {
           copyFromUserProfile,
           configureThisProfile: (profile) => Promise.resolve(profile),
@@ -231,15 +231,18 @@ describe('firefox', () => {
     it('configures the copied profile', () => withBaseProfile(
       (baseProfile) => {
         let app = 'fennec';
+        let customs = {};
         let configureThisProfile =
-          sinon.spy((profile) => Promise.resolve(profile));
+          sinon.spy((profile, customs) => Promise.resolve(profile, customs));
 
-        return firefox.copyProfile(baseProfile.path(),
+        return firefox.copyProfile(baseProfile.path(), customs,
           {configureThisProfile, app})
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
-            assert.equal(configureThisProfile.firstCall.args[1].app, app);
+            // assert.equal(configureThisProfile.firstCall.args[1].app, customs);
+            // TODO better testing option
+            assert.equal(configureThisProfile.firstCall.args[2].app, app);
           });
       }
     ));
@@ -249,7 +252,7 @@ describe('firefox', () => {
   describe('createProfile', () => {
 
     it('resolves with a profile object', () => {
-      return firefox.createProfile(
+      return firefox.createProfile({},
         {configureThisProfile: (profile) => Promise.resolve(profile)})
         .then((profile) => {
           assert.instanceOf(profile, FirefoxProfile);
@@ -259,7 +262,7 @@ describe('firefox', () => {
     it('creates a Firefox profile', () => {
       // This is a quick and paranoid sanity check that the FirefoxProfile
       // object is real and has some preferences.
-      return firefox.createProfile(
+      return firefox.createProfile({},
         {configureThisProfile: (profile) => Promise.resolve(profile)})
         .then((profile) => {
           profile.updatePreferences();
@@ -276,11 +279,13 @@ describe('firefox', () => {
       let configureThisProfile =
         sinon.spy((profile) => Promise.resolve(profile));
       let app = 'fennec';
-      return firefox.createProfile({app, configureThisProfile})
+      let customs = {};
+      return firefox.createProfile(customs, {app, configureThisProfile})
         .then((profile) => {
           assert.equal(configureThisProfile.called, true);
           assert.equal(configureThisProfile.firstCall.args[0], profile);
-          assert.equal(configureThisProfile.firstCall.args[1].app, app);
+          assert.equal(configureThisProfile.firstCall.args[1], customs);
+          assert.equal(configureThisProfile.firstCall.args[2].app, app);
         });
     });
 
@@ -300,7 +305,7 @@ describe('firefox', () => {
     it('resolves with a profile', () => withTempProfile(
       (profile) => {
         let fakePrefGetter = sinon.stub().returns({});
-        return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
+        return firefox.configureProfile(profile, {}, {getPrefs: fakePrefGetter})
           .then((profile) => {
             assert.instanceOf(profile, FirefoxProfile);
           });
@@ -310,7 +315,7 @@ describe('firefox', () => {
     it('sets Firefox preferences', () => withTempProfile(
       (profile) => {
         let fakePrefGetter = sinon.stub().returns({});
-        return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
+        return firefox.configureProfile(profile, {}, {getPrefs: fakePrefGetter})
           .then(() => {
             assert.equal(fakePrefGetter.firstCall.args[0], 'firefox');
           });
@@ -321,7 +326,7 @@ describe('firefox', () => {
       (profile) => {
         let fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(
-          profile, {
+          profile, {}, {
             getPrefs: fakePrefGetter,
             app: 'fennec',
           })
@@ -335,7 +340,7 @@ describe('firefox', () => {
       (profile) => {
         // This is a quick sanity check that real preferences were
         // written to disk.
-        return firefox.configureProfile(profile)
+        return firefox.configureProfile(profile, {})
           .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
           .then((prefFile) => {
             // Check for some pref set by configureProfile().
@@ -344,6 +349,7 @@ describe('firefox', () => {
           });
       }
     ));
+//TODO custom preferences test
 
   });
 

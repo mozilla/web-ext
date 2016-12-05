@@ -286,6 +286,12 @@ Example: $0 --help run.
         demand: false,
         type: 'boolean',
       },
+      'pref': {
+        describe: 'Launch firefox with custom preferences. Lightweight ' +
+                  'alternative to creating custom profile.',
+        demand: false,
+        type: 'object',
+      },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {
       'output': {

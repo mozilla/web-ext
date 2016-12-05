@@ -194,6 +194,7 @@ export type ConfigureProfileOptions = {
 
 export type ConfigureProfileFn = (
   profile: FirefoxProfile,
+  customs: {},
   options?: ConfigureProfileOptions
 ) => Promise<FirefoxProfile>;
 
@@ -205,10 +206,11 @@ export type ConfigureProfileFn = (
  */
 export function configureProfile(
   profile: FirefoxProfile,
+  customs: {},
   {
     app = 'firefox',
     getPrefs = defaultPrefGetter,
-  }: ConfigureProfileOptions = {}
+  }: ConfigureProfileOptions = {},
 ): Promise<FirefoxProfile> {
   // Set default preferences. Some of these are required for the add-on to
   // operate, such as disabling signatures.
@@ -218,6 +220,11 @@ export function configureProfile(
   Object.keys(prefs).forEach((pref) => {
     profile.setPreference(pref, prefs[pref]);
   });
+  // Object.keys(customs).forEach((custom) => {
+  //   profile.setPreference(custom, customs[custom]);
+  // });
+  //TODO this is how
+  log.info('check', customs.toString());
   profile.updatePreferences();
   return Promise.resolve(profile);
 }
@@ -236,10 +243,11 @@ export type CreateProfileParams = {
  * The profile will be deleted when the system process exits.
  */
 export async function createProfile(
-  {app, configureThisProfile = configureProfile}: CreateProfileParams = {}
+  custom: {},
+  {app, configureThisProfile = configureProfile}: CreateProfileParams = {},
 ): Promise<FirefoxProfile> {
   const profile = new FirefoxProfile();
-  return await configureThisProfile(profile, {app});
+  return await configureThisProfile(profile, custom, {app});
 }
 
 
@@ -265,11 +273,12 @@ export type CopyProfileOptions = {
  */
 export async function copyProfile(
   profileDirectory: string,
+  custom: {},
   {
     copyFromUserProfile = defaultUserProfileCopier,
     configureThisProfile = configureProfile,
     app,
-  }: CopyProfileOptions = {}
+  }: CopyProfileOptions = {},
 ): Promise<FirefoxProfile> {
 
   let copy = promisify(FirefoxProfile.copy);
@@ -288,7 +297,7 @@ export async function copyProfile(
       profile = await copyByName({name: profileDirectory});
     }
 
-    return configureThisProfile(profile, {app});
+    return configureThisProfile(profile, custom, {app});
   } catch (error) {
     throw new WebExtError(
       `Could not copy Firefox profile from ${profileDirectory}: ${error}`);
