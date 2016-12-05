@@ -51,7 +51,7 @@
     "debounce": "1.0.0",
     "es6-error": "4.0.0",
     "es6-promisify": "5.0.0",
-    "firefox-profile": "0.4.3",
+    "firefox-profile": "0.4.4",
     "fx-runner": "1.0.6",
     "git-rev-sync": "1.8.0",
     "minimatch": "3.0.3",
