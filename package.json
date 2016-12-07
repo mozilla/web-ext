@@ -107,7 +107,7 @@
     "nsp": "2.6.2",
     "prettyjson": "1.2.1",
     "sinon": "1.17.6",
-    "webpack": "1.13.3",
+    "webpack": "1.14.0",
     "webpack-dev-server": "1.16.2",
     "yauzl": "2.7.0"
   },
