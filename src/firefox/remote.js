@@ -157,7 +157,7 @@ export class RemoteFirefox {
       const response = await this.addonRequest(addon, 'requestTypes');
 
       if (response.requestTypes.indexOf('reload') === -1) {
-        let supportedRequestTypes = JSON.stringify(response.requestTypes);
+        const supportedRequestTypes = JSON.stringify(response.requestTypes);
         log.debug(
           `Remote Firefox only supports: ${supportedRequestTypes}`);
         throw new UsageError(
