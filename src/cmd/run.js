@@ -12,6 +12,9 @@ import {
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
+import {NotificationCenter as NC} from 'node-notifier';
+
+
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
@@ -25,6 +28,9 @@ import type {
 import type {ExtensionManifest} from '../util/manifest';
 
 const log = createLogger(__filename);
+const notifier = new NC({
+  withFallback: true,
+});
 
 // defaultWatcherCreator types and implementation.
 
@@ -34,6 +40,7 @@ export type WatcherCreatorParams = {
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
+  messenger?: NC,
 };
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
@@ -42,6 +49,7 @@ export function defaultWatcherCreator(
   {
     addonId, client, sourceDir, artifactsDir,
     onSourceChange = defaultSourceWatcher,
+    messenger = notifier,
   }: WatcherCreatorParams
  ): Watchpack {
   return onSourceChange({
@@ -49,9 +57,20 @@ export function defaultWatcherCreator(
     artifactsDir,
     onChange: () => {
       log.debug(`Reloading add-on ID ${addonId}`);
+      var notifier = new NC({
+        withFallback: true,
+      });
+      messenger.notify({
+        title: 'Started reloading',
+        message: `Reloading add-on ID ${addonId}`,
+      });
       return client.reloadAddon(addonId)
         .catch((error) => {
           log.error(error.stack);
+          messenger.notify({
+            title: 'Error occured',
+            message: error.message,
+          });
           throw error;
         });
     },

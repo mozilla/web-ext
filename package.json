@@ -57,6 +57,7 @@
     "minimatch": "3.0.3",
     "mz": "2.6.0",
     "node-firefox-connect": "1.2.0",
+    "node-notifier": "4.6.1",
     "regenerator-runtime": "0.10.1",
     "parse-json": "2.2.0",
     "sign-addon": "0.2.0",
