@@ -8,6 +8,7 @@ import yargs from 'yargs';
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
+import {coerceCLICustomPreference} from './firefox/preferences';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -93,6 +94,10 @@ export class Program {
 
     const argv = this.yargs.argv;
     const cmd = argv._[0];
+
+    if (Array.isArray(argv.customPrefs)) {
+      argv.customPrefs = Object.assign(...argv.customPrefs);
+    }
 
     let runCommand = this.commands[cmd];
 
@@ -286,11 +291,14 @@ Example: $0 --help run.
         demand: false,
         type: 'boolean',
       },
-      'pref': {
+      'custom-prefs': {
+        alias: 'c',
         describe: 'Launch firefox with custom preferences. Lightweight ' +
                   'alternative to creating custom profile.',
         demand: false,
-        type: 'object',
+        requiresArg: true,
+        type: 'string',
+        coerce: coerceCLICustomPreference,
       },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {

@@ -16,6 +16,7 @@ const log = createLogger(__filename);
 
 // Import objects that are only used as Flow types.
 import type FirefoxProfile from 'firefox-profile';
+import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
 import type Watchpack from 'watchpack';
 import type {
@@ -151,7 +152,7 @@ export type CmdRunParams = {
   firefoxProfile: string,
   preInstall: boolean,
   noReload: boolean,
-  pref: {},
+  customPrefs?: FirefoxPreferences,
 };
 
 export type CmdRunOptions = {
@@ -163,7 +164,8 @@ export type CmdRunOptions = {
 export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
-    preInstall = false, noReload = false, pref = {},
+    preInstall = false, noReload = false,
+    customPrefs,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -189,7 +191,6 @@ export default async function run(
   let addonId;
 
   let manifestData = await getValidatedManifest(sourceDir);
-  let custom = pref;//TODO is not such a good idea maybe
 
   runner = new ExtensionRunner({
     sourceDir,
@@ -197,7 +198,7 @@ export default async function run(
     firefox,
     manifestData,
     profilePath: firefoxProfile,
-    custom,
+    customPrefs,
   });
 
   profile = await runner.getProfile();
@@ -256,7 +257,6 @@ export default async function run(
     }
   }
 
-  log.info(pref.toString()); //TODO don't need
   return firefoxApp;
 }
 
@@ -269,7 +269,7 @@ export type ExtensionRunnerParams = {
   profilePath: string,
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
-  custom : {},
+  customPrefs?: FirefoxPreferences,
 };
 
 export class ExtensionRunner {
@@ -278,12 +278,12 @@ export class ExtensionRunner {
   profilePath: string;
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
-  custom: {};
+  customPrefs: FirefoxPreferences;
 
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, custom,
+      profilePath, firefox, customPrefs,
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
@@ -291,18 +291,20 @@ export class ExtensionRunner {
     this.profilePath = profilePath;
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
-    this.custom = custom;
+    if (customPrefs) {
+      this.customPrefs = customPrefs;
+    }
   }
 
   getProfile(): Promise<FirefoxProfile> {
-    const {firefoxApp, profilePath, custom} = this;
+    const {firefoxApp, profilePath, customPrefs} = this;
     return new Promise((resolve) => {
       if (profilePath) {
         log.debug(`Copying Firefox profile from ${profilePath}`);
-        resolve(firefoxApp.copyProfile(profilePath, custom));
+        resolve(firefoxApp.copyProfile(profilePath, customPrefs));
       } else {
         log.debug('Creating new Firefox profile');
-        resolve(firefoxApp.createProfile(custom));
+        resolve(firefoxApp.createProfile({customPrefs}));
       }
     });
   }

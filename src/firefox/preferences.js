@@ -1,6 +1,6 @@
 /* @flow */
 import {WebExtError} from '../errors';
-
+import {UsageError} from '../errors';
 
 // Flow Types
 
@@ -116,4 +116,24 @@ export function getPrefs(
     ...prefsCommon,
     ...appPrefs,
   };
+}
+
+// Yargs coerce function for run command custom-prefs
+export function coerceCLICustomPreference(prefs: string) {
+
+  let [key, value] = prefs.split('=');
+
+  //check the property
+  let propRegEx = /^[a-z]+\.[A-Za-z\d\.*,_-]+/;
+  if (!propRegEx.test(key)) {
+    throw new UsageError('Invalid Preference...');
+  }
+
+  if (value === `${parseInt(value)}`) {
+    value = parseInt(value, 10);
+  } else if (value === Boolean(value)) {
+    value = Boolean(value, 10);
+  }
+
+  return {[`${key}`]: value};
 }

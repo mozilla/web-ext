@@ -231,18 +231,18 @@ describe('firefox', () => {
     it('configures the copied profile', () => withBaseProfile(
       (baseProfile) => {
         let app = 'fennec';
-        let customs = {};
+        let customPrefs = {};
         let configureThisProfile =
-          sinon.spy((profile, customs) => Promise.resolve(profile, customs));
+          sinon.spy((profile) => Promise.resolve(profile));
 
-        return firefox.copyProfile(baseProfile.path(), customs,
+        return firefox.copyProfile(baseProfile.path(), customPrefs,
           {configureThisProfile, app})
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
-            // assert.equal(configureThisProfile.firstCall.args[1].app, customs);
-            // TODO better testing option
-            assert.equal(configureThisProfile.firstCall.args[2].app, app);
+            assert.equal(
+              configureThisProfile.firstCall.args[1].customPrefs, customPrefs);
+            assert.equal(configureThisProfile.firstCall.args[1].app, app);
           });
       }
     ));
@@ -279,13 +279,14 @@ describe('firefox', () => {
       let configureThisProfile =
         sinon.spy((profile) => Promise.resolve(profile));
       let app = 'fennec';
-      let customs = {};
-      return firefox.createProfile(customs, {app, configureThisProfile})
+      let customPrefs = {};
+      return firefox.createProfile({app, configureThisProfile, customPrefs})
         .then((profile) => {
           assert.equal(configureThisProfile.called, true);
           assert.equal(configureThisProfile.firstCall.args[0], profile);
-          assert.equal(configureThisProfile.firstCall.args[1], customs);
-          assert.equal(configureThisProfile.firstCall.args[2].app, app);
+          assert.equal(
+            configureThisProfile.firstCall.args[1].customPrefs, customPrefs);
+          assert.equal(configureThisProfile.firstCall.args[1].app, app);
         });
     });
 
@@ -315,7 +316,7 @@ describe('firefox', () => {
     it('sets Firefox preferences', () => withTempProfile(
       (profile) => {
         let fakePrefGetter = sinon.stub().returns({});
-        return firefox.configureProfile(profile, {}, {getPrefs: fakePrefGetter})
+        return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
           .then(() => {
             assert.equal(fakePrefGetter.firstCall.args[0], 'firefox');
           });
@@ -326,9 +327,10 @@ describe('firefox', () => {
       (profile) => {
         let fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(
-          profile, {}, {
+          profile, {
             getPrefs: fakePrefGetter,
             app: 'fennec',
+            customPrefs: {},
           })
           .then(() => {
             assert.equal(fakePrefGetter.firstCall.args[0], 'fennec');
@@ -349,7 +351,22 @@ describe('firefox', () => {
           });
       }
     ));
-//TODO custom preferences test
+
+    it('writes custom preferences', () => withTempProfile(
+      (profile) => {
+        // This is a quick sanity check that real preferences were
+        // written to disk.
+        return firefox.configureProfile(
+          profile,
+          {'devtools.debugger.remote-enabled': true})
+          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((prefFile) => {
+            // Check for some pref set by configureProfile().
+            assert.include(prefFile.toString(),
+                           '"devtools.debugger.remote-enabled", true');
+          });
+      }
+    ));
 
   });
 
