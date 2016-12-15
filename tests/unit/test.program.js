@@ -7,7 +7,12 @@ import {fs} from 'mz';
 import sinon, {spy} from 'sinon';
 import {assert} from 'chai';
 
-import {defaultVersionGetter, main, Program} from '../../src/program';
+import {
+  defaultVersionGetter,
+  main,
+  Program,
+  checkForAutomaticUpdates,
+} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
 import {fake, makeSureItFails} from './helpers';
@@ -239,6 +244,14 @@ describe('program.Program', () => {
         // Again, yargs calls this an argument not an option for some reason.
         assert.match(error.message, /Unknown argument: nope/);
       });
+  });
+
+  it('checks for automatic updates', () => {
+   checkForAutomaticUpdates ({
+        name: 'web-ext',
+        version: '1.0.0',
+        updateCheckInterval: 0,
+    });
   });
 
 });
