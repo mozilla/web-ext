@@ -174,7 +174,7 @@ describe('firefox', () => {
         baseProfile.setPreference('webext.customSetting', true);
         baseProfile.updatePreferences();
 
-        return firefox.copyProfile(baseProfile.path(), {},
+        return firefox.copyProfile(baseProfile.path(),
           {configureThisProfile: (profile) => Promise.resolve(profile)})
           .then((profile) => fs.readFile(profile.userPrefs))
           .then((userPrefs) => {
@@ -190,7 +190,7 @@ describe('firefox', () => {
       let copyFromUserProfile = sinon.spy(
         (config, cb) => cb(new Error('simulated: could not find profile')));
 
-      return firefox.copyProfile('/dev/null/non_existent_path', {},
+      return firefox.copyProfile('/dev/null/non_existent_path',
         {
           copyFromUserProfile,
           configureThisProfile: (profile) => Promise.resolve(profile),
@@ -215,7 +215,7 @@ describe('firefox', () => {
       let copyFromUserProfile = sinon.spy(
         (config, callback) => callback(null, profileToCopy));
 
-      return firefox.copyProfile(name, {},
+      return firefox.copyProfile(name,
         {
           copyFromUserProfile,
           configureThisProfile: (profile) => Promise.resolve(profile),
@@ -235,8 +235,8 @@ describe('firefox', () => {
         let configureThisProfile =
           sinon.spy((profile) => Promise.resolve(profile));
 
-        return firefox.copyProfile(baseProfile.path(), customPrefs,
-          {configureThisProfile, app})
+        return firefox.copyProfile(baseProfile.path(),
+          {app, customPrefs, configureThisProfile})
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
@@ -330,7 +330,6 @@ describe('firefox', () => {
           profile, {
             getPrefs: fakePrefGetter,
             app: 'fennec',
-            customPrefs: {},
           })
           .then(() => {
             assert.equal(fakePrefGetter.firstCall.args[0], 'fennec');
@@ -354,16 +353,15 @@ describe('firefox', () => {
 
     it('writes custom preferences', () => withTempProfile(
       (profile) => {
-        // This is a quick sanity check that real preferences were
-        // written to disk.
+        let customPrefs = {'extensions.checkCompatibility.nightly': true};
         return firefox.configureProfile(
           profile,
-          {'devtools.debugger.remote-enabled': true})
-          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
-          .then((prefFile) => {
-            // Check for some pref set by configureProfile().
-            assert.include(prefFile.toString(),
-                           '"devtools.debugger.remote-enabled", true');
+          {customPrefs})
+          // .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then(() => {
+            // Check for custom pref set by configureProfile().
+            assert.include(JSON.stringify(profile),
+                           '"extensions.checkCompatibility.nightly":"true"');
           });
       }
     ));

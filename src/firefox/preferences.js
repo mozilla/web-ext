@@ -1,6 +1,6 @@
 /* @flow */
-import {WebExtError} from '../errors';
-import {UsageError} from '../errors';
+import {WebExtError, UsageError} from '../errors';
+
 
 // Flow Types
 
@@ -119,20 +119,21 @@ export function getPrefs(
 }
 
 // Yargs coerce function for run command custom-prefs
-export function coerceCLICustomPreference(prefs: string) {
+export function coerceCLICustomPreference(
+  pref: string
+): Object {
 
-  let [key, value] = prefs.split('=');
+  let [key, value] = pref.split('=');
 
   //check the property
-  let propRegEx = /^[a-z]+\.[A-Za-z\d\.*,_-]+/;
-  if (!propRegEx.test(key)) {
-    throw new UsageError('Invalid Preference...');
+  if (/[^\w{@}.-]/.test(key)) {
+    throw new UsageError(`Invalid custom preference name: ${key}`);
   }
 
   if (value === `${parseInt(value)}`) {
     value = parseInt(value, 10);
-  } else if (value === Boolean(value)) {
-    value = Boolean(value, 10);
+  } else if (value === 'true' || value === 'false') {
+    value = (value === 'true');
   }
 
   return {[`${key}`]: value};

@@ -283,7 +283,7 @@ export class ExtensionRunner {
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, customPrefs,
+      profilePath, firefox, customPrefs = {},
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
@@ -291,9 +291,7 @@ export class ExtensionRunner {
     this.profilePath = profilePath;
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
-    if (customPrefs) {
-      this.customPrefs = customPrefs;
-    }
+    this.customPrefs = customPrefs;
   }
 
   getProfile(): Promise<FirefoxProfile> {
@@ -301,7 +299,7 @@ export class ExtensionRunner {
     return new Promise((resolve) => {
       if (profilePath) {
         log.debug(`Copying Firefox profile from ${profilePath}`);
-        resolve(firefoxApp.copyProfile(profilePath, customPrefs));
+        resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
       } else {
         log.debug('Creating new Firefox profile');
         resolve(firefoxApp.createProfile({customPrefs}));

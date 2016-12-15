@@ -219,10 +219,13 @@ export function configureProfile(
   Object.keys(prefs).forEach((pref) => {
     profile.setPreference(pref, prefs[pref]);
   });
-  Object.keys(customPrefs).forEach((custom) => {
-    profile.setPreference(custom, customPrefs[custom]);
-  });
-  log.info(customPrefs ? JSON.stringify(customPrefs) : 'EMPTY');
+  if (Object.keys(customPrefs).length > 0) {
+    log.info(`Setting custom Firefox preferences:
+      ${JSON.stringify(customPrefs, null, ' ')}`);
+    Object.keys(customPrefs).forEach((custom) => {
+      profile.setPreference(custom, customPrefs[custom]);
+    });
+  }
   profile.updatePreferences();
   return Promise.resolve(profile);
 }
@@ -245,7 +248,7 @@ export async function createProfile(
   {
     app,
     configureThisProfile = configureProfile,
-    customPrefs,
+    customPrefs = {},
   }: CreateProfileParams = {},
 ): Promise<FirefoxProfile> {
   const profile = new FirefoxProfile();
@@ -257,8 +260,9 @@ export async function createProfile(
 
 export type CopyProfileOptions = {
   app?: PreferencesAppName,
-  copyFromUserProfile?: Function,
   configureThisProfile?: ConfigureProfileFn,
+  copyFromUserProfile?: Function,
+  customPrefs?: FirefoxPreferences,
 };
 
 /*
@@ -275,11 +279,11 @@ export type CopyProfileOptions = {
  */
 export async function copyProfile(
   profileDirectory: string,
-  customPrefs?: FirefoxPreferences,
   {
     app,
-    copyFromUserProfile = defaultUserProfileCopier,
     configureThisProfile = configureProfile,
+    copyFromUserProfile = defaultUserProfileCopier,
+    customPrefs = {},
   }: CopyProfileOptions = {},
 ): Promise<FirefoxProfile> {
 
