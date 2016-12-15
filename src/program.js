@@ -1,6 +1,7 @@
 /* @flow */
 import path from 'path';
 import {readFileSync} from 'fs';
+import updateNotifier from 'update-notifier';
 
 import git from 'git-rev-sync';
 import yargs from 'yargs';
@@ -113,6 +114,16 @@ export class Program {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
       await runCommand(argv);
+
+      let pkg = {
+        name: 'web-ext',
+        version: defaultVersionGetter(absolutePackageDir),
+      };
+
+      updateNotifier({
+        pkg,
+        updateCheckInterval: 1000 * 60 * 60 * 24 * 7, // 1 week
+      }).notify();
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
