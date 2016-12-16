@@ -11,7 +11,6 @@ import {
   defaultVersionGetter,
   main,
   Program,
-  checkForAutomaticUpdates,
 } from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
@@ -245,15 +244,6 @@ describe('program.Program', () => {
         assert.match(error.message, /Unknown argument: nope/);
       });
   });
-
-  it('checks for automatic updates', () => {
-   checkForAutomaticUpdates ({
-        name: 'web-ext',
-        version: '1.0.0',
-        updateCheckInterval: 0,
-    });
-  });
-
 });
 
 
