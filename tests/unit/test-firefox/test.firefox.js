@@ -236,7 +236,7 @@ describe('firefox', () => {
           sinon.spy((profile) => Promise.resolve(profile));
 
         return firefox.copyProfile(baseProfile.path(),
-          {app, customPrefs, configureThisProfile})
+          {app, configureThisProfile, customPrefs})
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
@@ -357,7 +357,6 @@ describe('firefox', () => {
         return firefox.configureProfile(
           profile,
           {customPrefs})
-          // .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
           .then(() => {
             // Check for custom pref set by configureProfile().
             assert.include(JSON.stringify(profile),

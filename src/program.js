@@ -95,10 +95,7 @@ export class Program {
     const argv = this.yargs.argv;
     const cmd = argv._[0];
 
-    if (Array.isArray(argv.prefs)) {
-      argv.customPrefs = Object.assign(...argv.prefs);
-    }
-    argv.customPrefs = argv.prefs;
+    argv.customPrefs = argv.pref;
 
     let runCommand = this.commands[cmd];
 
@@ -292,7 +289,7 @@ Example: $0 --help run.
         demand: false,
         type: 'boolean',
       },
-      'prefs': {
+      'pref': {
         describe: 'Launch firefox with custom preferences. Lightweight ' +
                   'alternative to creating custom profile.',
         demand: false,

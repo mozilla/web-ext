@@ -37,11 +37,19 @@ describe('firefox/preferences', () => {
 
   describe('coerceCLICustomPreference', () => {
 
-    it('convert the property from string to object', () => {
+    it('convert the preferences from string to object', () => {
       let prefs = coerceCLICustomPreference(
                   'valid.preference=true');
       assert.equal(typeof prefs, 'object');
       assert.equal(prefs['valid.preference'], true);
+    });
+
+    it('convert array of preferences into object', () => {
+      let prefs = coerceCLICustomPreference(
+                  'valid.preference=true', 'valid.preference2=false');
+      assert.equal(typeof prefs, 'object');
+      assert.equal(prefs['valid.preference'], true);
+      assert.equal(prefs['valid.preference2'], false);
     });
 
     it('converts boolean values', () => {
@@ -56,7 +64,7 @@ describe('firefox/preferences', () => {
       assert.equal(typeof prefs['valid.preference'], 'number');
     });
 
-    it('throws an error for invalid prefernce', () => {
+    it('throws an error for invalid prefernces', () => {
       assert.throws(() => coerceCLICustomPreference('*&%£=true'),
                     UsageError,
                     'UsageError: Invalid custom preference name: *&%£');

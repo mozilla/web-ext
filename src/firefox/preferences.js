@@ -120,21 +120,30 @@ export function getPrefs(
 
 // Yargs coerce function for run command custom-prefs
 export function coerceCLICustomPreference(
-  pref: string
+  pref: string | Array<string>
 ): Object {
-
-  let [key, value] = pref.split('=');
-
-  //check the property
-  if (/[^\w{@}.-]/.test(key)) {
-    throw new UsageError(`Invalid custom preference name: ${key}`);
+ console.log("DEBUG", pref, typeof pref);
+  if(Array.isArray(pref)) {
+    let between = pref.map(converter)
+    let converted = Object.assign(...between);
+    return converted;
+  } else {
+    return converter(pref);
   }
 
-  if (value === `${parseInt(value)}`) {
-    value = parseInt(value, 10);
-  } else if (value === 'true' || value === 'false') {
-    value = (value === 'true');
-  }
+  function converter(arg: string) : Object{
+    let [key, value] = arg.split('=');
+    //check the property
+    if (/[^\w{@}.-]/.test(key)) {
+      throw new UsageError(`Invalid custom preference name: ${key}`);
+    }
 
-  return {[`${key}`]: value};
+    if (value === `${parseInt(value)}`) {
+      value = parseInt(value, 10);
+    } else if (value === 'true' || value === 'false') {
+      value = (value === 'true');
+    }
+
+    return {[`${key}`]: value};
+  }
 }

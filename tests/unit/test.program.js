@@ -327,6 +327,21 @@ describe('program.main', () => {
       });
   });
 
+  it('converts custom prefernces into object', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return execProgram(
+        ['run', '--pref', 'prop=true', '--pref', 'prop2=value2'],
+      {commands: fakeCommands})
+      .then(() => {
+        assert.equal(typeof(fakeCommands.run.firstCall.args[0].customPrefs),
+                     'object');
+        assert.equal(typeof(fakeCommands.run.firstCall.args[0].customPrefs.prop),
+                                  true);
+      });
+  });
+
 });
 
 
