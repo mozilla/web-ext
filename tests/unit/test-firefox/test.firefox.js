@@ -15,7 +15,7 @@ import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import {RemoteFirefox} from '../../../src/firefox/remote';
 
-const defaultFirefoxEnv = firefox.defaultFirefoxEnv;
+const {defaultFirefoxEnv} = firefox;
 
 describe('firefox', () => {
 
