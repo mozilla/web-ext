@@ -13,7 +13,7 @@ import defaultSourceWatcher from '../watcher';
 
 const log = createLogger(__filename);
 
-
+/* eslint-disable import/imports-first, import/order, import/named */
 // Import objects that are only used as Flow types.
 import type FirefoxProfile from 'firefox-profile';
 import type {FirefoxPreferences} from '../firefox/preferences';
@@ -27,7 +27,7 @@ import type {
   FirefoxRDPResponseAddon,
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
-
+/* eslint-disable import/imports-first, import/order, import/named */
 
 // defaultWatcherCreator types and implementation.
 

@@ -1,9 +1,10 @@
 /* @flow */
 import path from 'path';
-import minimatch from 'minimatch';
 import {createWriteStream} from 'fs';
-import streamToPromise from 'stream-to-promise';
+
+import minimatch from 'minimatch';
 import {fs} from 'mz';
+import streamToPromise from 'stream-to-promise';
 import parseJSON from 'parse-json';
 
 import defaultSourceWatcher from '../watcher';
@@ -11,20 +12,20 @@ import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
-import {UsageError} from '../errors';
+import {UsageError} from '../errors'; //eslint-disable-line import/order
 
 
 const log = createLogger(__filename);
 
+/* eslint-disable import/order, import/imports-first */
+// Import flow types.
+import type {OnSourceChangeFn} from '../watcher';
+import type {ExtensionManifest} from '../util/manifest';
+/* eslint-disable import/order, import/imports-first */
+
 export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
 }
-
-
-// Import flow types.
-
-import type {OnSourceChangeFn} from '../watcher';
-import type {ExtensionManifest} from '../util/manifest';
 
 
 // defaultPackageCreator types and implementation.

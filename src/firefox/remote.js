@@ -1,12 +1,12 @@
 /* @flow */
+import defaultFirefoxConnector from 'node-firefox-connect';
+
 import {createLogger} from '../util/logger';
 import {
   RemoteTempInstallNotSupported,
   UsageError,
   WebExtError,
 } from '../errors';
-import defaultFirefoxConnector from 'node-firefox-connect';
-
 
 const log = createLogger(__filename);
 
@@ -16,11 +16,13 @@ export const REMOTE_PORT = 6005;
 
 
 // RemoteFirefox types and implementation
-
+/* eslint-disable import/order, import/imports-first, import/no-extraneous-dependencies */
+//This is related to Flow and will be stripped in production hence won't be treated as a dependency at all
 import type FirefoxClient from 'firefox-client';
 
 export type FirefoxConnectorFn =
   (port?: number) => Promise<FirefoxClient>;
+/* eslint-disable import/order, import/imports-first */
 
 export type FirefoxRDPAddonActor = {
   id: string,

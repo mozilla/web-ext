@@ -1,6 +1,7 @@
 /* @flow */
 import nodeFs from 'fs';
 import path from 'path';
+
 import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
@@ -14,6 +15,13 @@ import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
+import type {FirefoxConnectorFn} from './remote';
+import type {
+  PreferencesAppName,
+  PreferencesGetterFn,
+  FirefoxPreferences,
+} from './preferences';
+import type {ExtensionManifest} from '../util/manifest';
 
 
 const log = createLogger(__filename);
@@ -22,20 +30,6 @@ export const defaultFirefoxEnv = {
   XPCOM_DEBUG_BREAK: 'stack',
   NS_TRACE_MALLOC_DISABLE_STACKS: '1',
 };
-
-
-// Import flow types.
-
-import type {FirefoxConnectorFn} from './remote';
-import type {
-  PreferencesAppName,
-  PreferencesGetterFn,
-} from './preferences';
-
-import type {ExtensionManifest} from '../util/manifest';
-import type {FirefoxPreferences} from '../firefox/preferences';
-
-
 // defaultRemotePortFinder types and implementation.
 
 export type RemotePortFinderParams = {

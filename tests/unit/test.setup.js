@@ -1,5 +1,6 @@
 /* @flow */
 import {beforeEach, afterEach} from 'mocha';
+
 import {consoleStream} from '../../src/util/logger';
 
 beforeEach(function() {

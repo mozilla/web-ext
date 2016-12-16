@@ -1,5 +1,6 @@
 /* @flow */
 import path from 'path';
+
 import copyDir from 'copy-dir';
 import {fs} from 'mz';
 import {describe, it} from 'mocha';
@@ -15,7 +16,7 @@ import completeSignCommand, {
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
 } from '../../../src/cmd/sign';
 import {makeSureItFails, fixturePath} from '../helpers';
-
+//Import flow type
 import type {ExtensionManifestApplications} from '../../../src/util/manifest';
 
 describe('sign', () => {

@@ -1,25 +1,25 @@
 /* @flow */
 import path from 'path';
+
 import {fs} from 'mz';
 import defaultAddonSigner from 'sign-addon';
 
 import defaultBuilder from './build';
+import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {withTempDir} from '../util/temp-dir';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
-import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
-import {createLogger} from '../util/logger';
+import {createLogger} from '../util/logger';//eslint-disable-line import/order
 
 
 const log = createLogger(__filename);
 
 export const extensionIdFile = '.web-extension-id';
 
-
+/* eslint-disable import/order */
 // Import flow types.
-
-import type {ExtensionManifest} from '../util/manifest';
-
+import type {ExtensionManifest} from '../util/manifest'; //eslint-disable-line
+/* eslint-enable import/order */
 
 // Sign command types and implementation.
 
