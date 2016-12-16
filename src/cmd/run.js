@@ -1,4 +1,7 @@
 /* @flow */
+import type FirefoxProfile from 'firefox-profile';
+import type Watchpack from 'watchpack';
+
 import * as defaultFirefoxApp from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
 import {
@@ -9,25 +12,19 @@ import {
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
-
-
-const log = createLogger(__filename);
-
-/* eslint-disable import/imports-first, import/order, import/named */
 // Import objects that are only used as Flow types.
-import type FirefoxProfile from 'firefox-profile';
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
-import type Watchpack from 'watchpack';
 import type {
-  FirefoxProcess,
+  FirefoxProcess, //eslint-disable-line import/named
 } from '../firefox/index';
 import type {
   FirefoxConnectorFn, RemoteFirefox,
   FirefoxRDPResponseAddon,
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
-/* eslint-disable import/imports-first, import/order, import/named */
+
+const log = createLogger(__filename);
 
 // defaultWatcherCreator types and implementation.
 

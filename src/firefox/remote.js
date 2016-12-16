@@ -1,5 +1,7 @@
 /* @flow */
 import defaultFirefoxConnector from 'node-firefox-connect';
+// RemoteFirefox types and implementation
+import type FirefoxClient from 'firefox-client'; //eslint-disable-line import/no-extraneous-dependencies
 
 import {createLogger} from '../util/logger';
 import {
@@ -14,15 +16,8 @@ const log = createLogger(__filename);
 // client will connect to.
 export const REMOTE_PORT = 6005;
 
-
-// RemoteFirefox types and implementation
-/* eslint-disable import/order, import/imports-first, import/no-extraneous-dependencies */
-//This is related to Flow and will be stripped in production hence won't be treated as a dependency at all
-import type FirefoxClient from 'firefox-client';
-
 export type FirefoxConnectorFn =
   (port?: number) => Promise<FirefoxClient>;
-/* eslint-disable import/order, import/imports-first */
 
 export type FirefoxRDPAddonActor = {
   id: string,

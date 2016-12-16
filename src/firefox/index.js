@@ -15,6 +15,7 @@ import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
+//Import flow types
 import type {FirefoxConnectorFn} from './remote';
 import type {
   PreferencesAppName,
@@ -30,6 +31,7 @@ export const defaultFirefoxEnv = {
   XPCOM_DEBUG_BREAK: 'stack',
   NS_TRACE_MALLOC_DISABLE_STACKS: '1',
 };
+
 // defaultRemotePortFinder types and implementation.
 
 export type RemotePortFinderParams = {

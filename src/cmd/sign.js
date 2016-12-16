@@ -9,17 +9,13 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {withTempDir} from '../util/temp-dir';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {prepareArtifactsDir} from '../util/artifacts';
-import {createLogger} from '../util/logger';//eslint-disable-line import/order
+import {createLogger} from '../util/logger';
+import type {ExtensionManifest} from '../util/manifest';
 
 
 const log = createLogger(__filename);
 
 export const extensionIdFile = '.web-extension-id';
-
-/* eslint-disable import/order */
-// Import flow types.
-import type {ExtensionManifest} from '../util/manifest'; //eslint-disable-line
-/* eslint-enable import/order */
 
 // Sign command types and implementation.
 

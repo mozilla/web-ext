@@ -2,7 +2,7 @@
 var path = require('path');
 var fs = require('fs');
 
-var webpack = require('webpack'); //eslint-disable-line import/no-extraneous-dependencies
+var webpack = require('webpack');
 
 var nodeModules = {};
 

@@ -9,9 +9,9 @@ module.exports = function(grunt) {
 
 
   // This loads all grunt tasks matching the grunt-*, @*/grunt-* patterns.
-  require('load-grunt-tasks')(grunt); //eslint-disable-line import/no-extraneous-dependencies
+  require('load-grunt-tasks')(grunt);
 
-  var configs = require('load-grunt-configs')(grunt, { //eslint-disable-line import/no-extraneous-dependencies
+  var configs = require('load-grunt-configs')(grunt, {
     config: {
       src: 'tasks/*.js',
     },

@@ -12,16 +12,13 @@ import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
-import {UsageError} from '../errors'; //eslint-disable-line import/order
-
-
-const log = createLogger(__filename);
-
-/* eslint-disable import/order, import/imports-first */
+import {UsageError} from '../errors';
 // Import flow types.
 import type {OnSourceChangeFn} from '../watcher';
 import type {ExtensionManifest} from '../util/manifest';
-/* eslint-disable import/order, import/imports-first */
+
+const log = createLogger(__filename);
+
 
 export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9\.-]+/g, '_');
