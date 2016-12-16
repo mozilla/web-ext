@@ -13,8 +13,6 @@ import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
 import {NotificationCenter as NC} from 'node-notifier';
-
-
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
@@ -57,9 +55,6 @@ export function defaultWatcherCreator(
     artifactsDir,
     onChange: () => {
       log.debug(`Reloading add-on ID ${addonId}`);
-      var notifier = new NC({
-        withFallback: true,
-      });
       messenger.notify({
         title: 'Started reloading',
         message: `Reloading add-on ID ${addonId}`,

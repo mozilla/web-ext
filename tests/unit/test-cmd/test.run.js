@@ -16,6 +16,7 @@ import {RemoteFirefox} from '../../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
 import {createLogger} from '../../../src/util/logger';
+import {NotificationCenter as NC} from 'node-notifier';
 
 const log = createLogger(__filename);
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
@@ -241,6 +242,9 @@ describe('run', () => {
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
+        messenger: fake(NC.prototype, {
+          notify: () => Promise.resolve(),
+        }),
       };
       return {
         config,
@@ -280,6 +284,36 @@ describe('run', () => {
           const reloadArgs = config.client.reloadAddon.firstCall.args;
           assert.ok(config.addonId);
           assert.equal(reloadArgs[0], config.addonId);
+        });
+    });
+
+    it('notifies user on reload', () => {
+      const {config, createWatcher} = prepare();
+      createWatcher();
+
+      const callArgs = config.onSourceChange.firstCall.args[0];
+      assert.equal(config.onSourceChange.called, true);
+      return callArgs.onChange()
+        .then(() => {
+          assert.equal(config.messenger.notify.called, true);
+          assert.equal(config.messenger.notify.firstCall.args[0].title,
+                       'Started reloading');
+        });
+    });
+
+    it('notifies user on error from source change handler', () => {
+      const {config, createWatcher} = prepare();
+      config.client.reloadAddon = () => Promise.reject(new Error('an error'));
+      createWatcher();
+
+      assert.equal(config.onSourceChange.called, true);
+      // Simulate executing the handler when a source file changes.
+      return config.onSourceChange.firstCall.args[0].onChange()
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(config.messenger.notify.called, true);
+          assert.equal(config.messenger.notify.lastCall.args[0].message,
+                       error.message);
         });
     });
 
