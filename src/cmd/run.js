@@ -182,6 +182,7 @@ export default async function run(
   // connection to Firefox.
   const requiresRemote = !preInstall;
   let installed = false;
+  const manifestData = await getValidatedManifest(sourceDir);
 
   const runner = new ExtensionRunner({
     sourceDir,
@@ -195,7 +196,6 @@ export default async function run(
   const runningFirefox = await runner.run(profile);
   let addonId;
 
-  const manifestData = await getValidatedManifest(sourceDir);
 
   if (!preInstall) {
     log.debug('Deferring extension installation until after ' +
