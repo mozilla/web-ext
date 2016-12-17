@@ -220,8 +220,8 @@ export function configureProfile(
     profile.setPreference(pref, prefs[pref]);
   });
   if (Object.keys(customPrefs).length > 0) {
-    log.info(`Setting custom Firefox preferences:
-      ${JSON.stringify(customPrefs, null, ' ')}`);
+    const customPrefsStr = JSON.stringify(customPrefs, null, 2);
+    log.info(`Setting custom Firefox preferences: ${customPrefsStr}`);
     Object.keys(customPrefs).forEach((custom) => {
       profile.setPreference(custom, customPrefs[custom]);
     });

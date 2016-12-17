@@ -332,13 +332,12 @@ describe('program.main', () => {
       run: () => Promise.resolve(),
     });
     return execProgram(
-        ['run', '--pref', 'prop=true', '--pref', 'prop2=value2'],
+      ['run', '--pref', 'prop=true', '--pref', 'prop2=value2'],
       {commands: fakeCommands})
       .then(() => {
-        assert.equal(typeof(fakeCommands.run.firstCall.args[0].customPrefs),
-                     'object');
-        assert.equal(typeof(fakeCommands.run.firstCall.args[0].customPrefs.prop),
-                                  true);
+        const {customPrefs} = fakeCommands.run.firstCall.args[0];
+        assert.isObject(customPrefs);
+        assert.equal(customPrefs.prop, true);
       });
   });
 

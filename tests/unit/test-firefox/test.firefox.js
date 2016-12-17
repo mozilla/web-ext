@@ -240,8 +240,6 @@ describe('firefox', () => {
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
-            assert.equal(
-              configureThisProfile.firstCall.args[1].customPrefs, customPrefs);
             assert.equal(configureThisProfile.firstCall.args[1].app, app);
           });
       }
@@ -252,7 +250,7 @@ describe('firefox', () => {
   describe('createProfile', () => {
 
     it('resolves with a profile object', () => {
-      return firefox.createProfile({},
+      return firefox.createProfile(
         {configureThisProfile: (profile) => Promise.resolve(profile)})
         .then((profile) => {
           assert.instanceOf(profile, FirefoxProfile);
@@ -262,7 +260,7 @@ describe('firefox', () => {
     it('creates a Firefox profile', () => {
       // This is a quick and paranoid sanity check that the FirefoxProfile
       // object is real and has some preferences.
-      return firefox.createProfile({},
+      return firefox.createProfile(
         {configureThisProfile: (profile) => Promise.resolve(profile)})
         .then((profile) => {
           profile.updatePreferences();
@@ -279,13 +277,10 @@ describe('firefox', () => {
       let configureThisProfile =
         sinon.spy((profile) => Promise.resolve(profile));
       let app = 'fennec';
-      let customPrefs = {};
-      return firefox.createProfile({app, configureThisProfile, customPrefs})
+      return firefox.createProfile({app, configureThisProfile})
         .then((profile) => {
           assert.equal(configureThisProfile.called, true);
           assert.equal(configureThisProfile.firstCall.args[0], profile);
-          assert.equal(
-            configureThisProfile.firstCall.args[1].customPrefs, customPrefs);
           assert.equal(configureThisProfile.firstCall.args[1].app, app);
         });
     });
@@ -306,7 +301,7 @@ describe('firefox', () => {
     it('resolves with a profile', () => withTempProfile(
       (profile) => {
         let fakePrefGetter = sinon.stub().returns({});
-        return firefox.configureProfile(profile, {}, {getPrefs: fakePrefGetter})
+        return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
           .then((profile) => {
             assert.instanceOf(profile, FirefoxProfile);
           });
@@ -341,7 +336,7 @@ describe('firefox', () => {
       (profile) => {
         // This is a quick sanity check that real preferences were
         // written to disk.
-        return firefox.configureProfile(profile, {})
+        return firefox.configureProfile(profile)
           .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
           .then((prefFile) => {
             // Check for some pref set by configureProfile().
@@ -353,14 +348,13 @@ describe('firefox', () => {
 
     it('writes custom preferences', () => withTempProfile(
       (profile) => {
-        let customPrefs = {'extensions.checkCompatibility.nightly': true};
-        return firefox.configureProfile(
-          profile,
-          {customPrefs})
-          .then(() => {
+        const customPrefs = {'extensions.checkCompatibility.nightly': true};
+        return firefox.configureProfile(profile, {customPrefs})
+          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((prefFile) => {
             // Check for custom pref set by configureProfile().
-            assert.include(JSON.stringify(profile),
-                           '"extensions.checkCompatibility.nightly":"true"');
+            assert.include(prefFile.toString(),
+                           '"extensions.checkCompatibility.nightly", true');
           });
       }
     ));

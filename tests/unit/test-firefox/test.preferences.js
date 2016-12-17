@@ -3,8 +3,9 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
 import {WebExtError, UsageError} from '../../../src/errors';
-import {getPrefs, coerceCLICustomPreference}
-  from '../../../src/firefox/preferences';
+import {
+  getPrefs, coerceCLICustomPreference,
+} from '../../../src/firefox/preferences';
 
 
 describe('firefox/preferences', () => {
@@ -38,33 +39,36 @@ describe('firefox/preferences', () => {
   describe('coerceCLICustomPreference', () => {
 
     it('convert the preferences from string to object', () => {
-      let prefs = coerceCLICustomPreference(
-                  'valid.preference=true');
-      assert.equal(typeof prefs, 'object');
+      const prefs = coerceCLICustomPreference('valid.preference=true');
+      assert.isObject(prefs);
       assert.equal(prefs['valid.preference'], true);
     });
 
     it('convert array of preferences into object', () => {
-      let prefs = coerceCLICustomPreference(
-                  'valid.preference=true', 'valid.preference2=false');
-      assert.equal(typeof prefs, 'object');
+      const prefs = coerceCLICustomPreference([
+        'valid.preference=true', 'valid.preference2=false',
+      ]);
+      assert.isObject(prefs);
       assert.equal(prefs['valid.preference'], true);
       assert.equal(prefs['valid.preference2'], false);
     });
 
     it('converts boolean values', () => {
-      let prefs = coerceCLICustomPreference(
-                  'valid.preference=true');
-      assert.equal(typeof prefs['valid.preference'], 'boolean');
+      const prefs = coerceCLICustomPreference('valid.preference=true');
+      assert.equal(prefs['valid.preference'], true);
     });
 
     it('converts number values', () => {
-      let prefs = coerceCLICustomPreference(
-                  'valid.preference=455');
+      const prefs = coerceCLICustomPreference('valid.preference=455');
       assert.equal(typeof prefs['valid.preference'], 'number');
     });
 
-    it('throws an error for invalid prefernces', () => {
+    it('converts float values', () => {
+      const prefs = coerceCLICustomPreference('valid.preference=4.55');
+      assert.equal(prefs['valid.preference'], '4.55');
+    });
+
+    it('throws an error for invalid preferences', () => {
       assert.throws(() => coerceCLICustomPreference('*&%£=true'),
                     UsageError,
                     'UsageError: Invalid custom preference name: *&%£');

@@ -119,21 +119,19 @@ export function getPrefs(
 }
 
 // Yargs coerce function for run command custom-prefs
+
 export function coerceCLICustomPreference(
-  pref: string | Array<string>
-): Object {
- console.log("DEBUG", pref, typeof pref);
-  if(Array.isArray(pref)) {
-    let between = pref.map(converter)
-    let converted = Object.assign(...between);
-    return converted;
-  } else {
-    return converter(pref);
+  cliPrefs: string | Array<string>
+): FirefoxPreferences {
+  let customPrefs = {};
+
+  if (!Array.isArray(cliPrefs)) {
+    cliPrefs = [cliPrefs];
   }
 
-  function converter(arg: string) : Object{
-    let [key, value] = arg.split('=');
-    //check the property
+  for (let pref of cliPrefs) {
+    let [key, value] = pref.split('=');
+    // Check the property key.
     if (/[^\w{@}.-]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
     }
@@ -144,6 +142,8 @@ export function coerceCLICustomPreference(
       value = (value === 'true');
     }
 
-    return {[`${key}`]: value};
+    customPrefs[`${key}`] = value;
   }
+
+  return customPrefs;
 }
