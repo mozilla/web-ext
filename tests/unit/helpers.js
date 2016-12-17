@@ -147,11 +147,11 @@ export function fake<T>(original: Object, methods: Object = {}): T {
   }
 
   var proto = Object.getPrototypeOf(original);
-  for (let key of props) {
+  for (const key of props) {
     if (!original.hasOwnProperty(key) && !proto.hasOwnProperty(key)) {
       continue;
     }
-    let definition = original[key] || proto[key];
+    const definition = original[key] || proto[key];
     if (typeof definition === 'function') {
       stub[key] = () => {
         log.warn(`Running stubbed function ${key} (default implementation)`);
