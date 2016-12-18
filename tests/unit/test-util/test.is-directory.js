@@ -28,7 +28,7 @@ describe('util.isDirectory', () => {
 
   it('resolves false for non-directory paths', () => withTempDir(
     (tmpDir) => {
-      const filePath = path.join(tmpDir.path(), 'some.txt');
+      let filePath = path.join(tmpDir.path(), 'some.txt');
       return fs.writeFile(filePath, 'some text')
         .then(() => isDirectory(filePath))
         .then((dirExists) => {

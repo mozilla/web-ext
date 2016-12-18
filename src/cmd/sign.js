@@ -69,7 +69,7 @@ export default function sign(
         manifestData = await getValidatedManifest(sourceDir);
       }
 
-      const [buildResult, idFromSourceDir] = await Promise.all([
+      let [buildResult, idFromSourceDir] = await Promise.all([
         build({sourceDir, artifactsDir: tmpDir.path()},
               {manifestData, showReadyMessage: false}),
         getIdFromSourceDir(sourceDir),
@@ -97,7 +97,7 @@ export default function sign(
         log.warn('No extension ID specified (it will be auto-generated)');
       }
 
-      const signingResult = await signAddon({
+      let signingResult = await signAddon({
         apiKey,
         apiSecret,
         apiUrlPrefix,
@@ -156,7 +156,7 @@ export async function getIdFromSourceDir(
     }
   });
 
-  const id = lines[0];
+  let id = lines[0];
   log.debug(`Found extension ID ${id} in ${filePath}`);
 
   if (!id) {

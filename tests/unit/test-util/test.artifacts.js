@@ -14,7 +14,7 @@ describe('prepareArtifactsDir', () => {
 
   it('creates an artifacts dir if needed', () => withTempDir(
     (tmpDir) => {
-      const artifactsDir = path.join(tmpDir.path(), 'build');
+      let artifactsDir = path.join(tmpDir.path(), 'build');
       return prepareArtifactsDir(artifactsDir)
         .then(() => {
           // This should not throw an error if created properly.
@@ -34,7 +34,7 @@ describe('prepareArtifactsDir', () => {
 
   it('ensures the path is really a directory', () => withTempDir(
     (tmpDir) => {
-      const someFile = path.join(tmpDir.path(), 'some-file.txt');
+      let someFile = path.join(tmpDir.path(), 'some-file.txt');
       return fs.writeFile(someFile, 'some content')
         .then(() => prepareArtifactsDir(someFile))
         .then(makeSureItFails())

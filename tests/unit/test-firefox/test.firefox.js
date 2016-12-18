@@ -35,7 +35,7 @@ describe('firefox', () => {
     };
 
     function createFakeFxRunner(firefoxOverrides = {}) {
-      const firefox = {
+      let firefox = {
         ...deepcopy(fakeFirefoxProcess),
         ...firefoxOverrides,
       };
@@ -87,13 +87,13 @@ describe('firefox', () => {
     });
 
     it('sets up a Firefox process environment', () => {
-      const runner = createFakeFxRunner();
+      let runner = createFakeFxRunner();
       // Make sure it passes through process environment variables.
       process.env._WEB_EXT_FIREFOX_ENV_TEST = 'thing';
       return runFirefox({fxRunner: runner})
         .then(() => {
-          const declaredEnv = runner.firstCall.args[0].env;
-          for (const key in defaultFirefoxEnv) {
+          let declaredEnv = runner.firstCall.args[0].env;
+          for (let key in defaultFirefoxEnv) {
             assert.equal(declaredEnv[key], defaultFirefoxEnv[key]);
           }
           assert.equal(declaredEnv._WEB_EXT_FIREFOX_ENV_TEST, 'thing');
@@ -101,8 +101,8 @@ describe('firefox', () => {
     });
 
     it('fails on a firefox error', () => {
-      const someError = new Error('some internal firefox error');
-      const runner = createFakeFxRunner({
+      let someError = new Error('some internal firefox error');
+      let runner = createFakeFxRunner({
         on: (eventName, callback) => {
           if (eventName === 'error') {
             // Immediately "emit" an error event.
@@ -119,8 +119,8 @@ describe('firefox', () => {
     });
 
     it('passes a custom Firefox binary when specified', () => {
-      const runner = createFakeFxRunner();
-      const firefoxBinary = '/pretend/path/to/firefox-bin';
+      let runner = createFakeFxRunner();
+      let firefoxBinary = '/pretend/path/to/firefox-bin';
       return runFirefox({fxRunner: runner, firefoxBinary})
         .then(() => {
           assert.equal(runner.called, true);
@@ -161,7 +161,7 @@ describe('firefox', () => {
     function withBaseProfile(callback) {
       return withTempDir(
         (tmpDir) => {
-          const baseProfile = new FirefoxProfile({
+          let baseProfile = new FirefoxProfile({
             destinationDirectory: tmpDir.path(),
           });
           return callback(baseProfile);
@@ -187,7 +187,7 @@ describe('firefox', () => {
       // This stubs out the code that looks for a named
       // profile because on Travis CI there will not be a Firefox
       // user directory.
-      const copyFromUserProfile = sinon.spy(
+      let copyFromUserProfile = sinon.spy(
         (config, cb) => cb(new Error('simulated: could not find profile')));
 
       return firefox.copyProfile('/dev/null/non_existent_path',
@@ -205,14 +205,14 @@ describe('firefox', () => {
     });
 
     it('can copy a profile by name', () => {
-      const name = 'some-fake-firefox-profile-name';
+      let name = 'some-fake-firefox-profile-name';
       // Fake profile object:
-      const profileToCopy = {
+      let profileToCopy = {
         defaultPreferences: {
           thing: 'value',
         },
       };
-      const copyFromUserProfile = sinon.spy(
+      let copyFromUserProfile = sinon.spy(
         (config, callback) => callback(null, profileToCopy));
 
       return firefox.copyProfile(name,
@@ -230,8 +230,8 @@ describe('firefox', () => {
 
     it('configures the copied profile', () => withBaseProfile(
       (baseProfile) => {
-        const app = 'fennec';
-        const configureThisProfile =
+        let app = 'fennec';
+        let configureThisProfile =
           sinon.spy((profile) => Promise.resolve(profile));
 
         return firefox.copyProfile(baseProfile.path(),
@@ -273,9 +273,9 @@ describe('firefox', () => {
     });
 
     it('configures a profile', () => {
-      const configureThisProfile =
+      let configureThisProfile =
         sinon.spy((profile) => Promise.resolve(profile));
-      const app = 'fennec';
+      let app = 'fennec';
       return firefox.createProfile({app, configureThisProfile})
         .then((profile) => {
           assert.equal(configureThisProfile.called, true);
@@ -290,7 +290,7 @@ describe('firefox', () => {
 
     function withTempProfile(callback) {
       return withTempDir((tmpDir) => {
-        const profile = new FirefoxProfile({
+        let profile = new FirefoxProfile({
           destinationDirectory: tmpDir.path(),
         });
         return callback(profile);
@@ -299,7 +299,7 @@ describe('firefox', () => {
 
     it('resolves with a profile', () => withTempProfile(
       (profile) => {
-        const fakePrefGetter = sinon.stub().returns({});
+        let fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
           .then((profile) => {
             assert.instanceOf(profile, FirefoxProfile);
@@ -309,7 +309,7 @@ describe('firefox', () => {
 
     it('sets Firefox preferences', () => withTempProfile(
       (profile) => {
-        const fakePrefGetter = sinon.stub().returns({});
+        let fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
           .then(() => {
             assert.equal(fakePrefGetter.firstCall.args[0], 'firefox');
@@ -319,7 +319,7 @@ describe('firefox', () => {
 
     it('sets Fennec preferences', () => withTempProfile(
       (profile) => {
-        const fakePrefGetter = sinon.stub().returns({});
+        let fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(
           profile, {
             getPrefs: fakePrefGetter,
@@ -352,7 +352,7 @@ describe('firefox', () => {
     function setUp(testPromise: Function) {
       return withTempDir(
         (tmpDir) => {
-          const data = {
+          let data = {
             extensionPath: fixturePath('minimal_extension-1.0.zip'),
             profile: undefined,
             profileDir: path.join(tmpDir.path(), 'profile'),

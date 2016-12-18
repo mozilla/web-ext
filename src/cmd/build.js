@@ -106,23 +106,23 @@ async function defaultPackageCreator({
     manifestData = await getValidatedManifest(sourceDir);
   }
 
-  const buffer = await zipDir(sourceDir, {
+  let buffer = await zipDir(sourceDir, {
     filter: (...args) => fileFilter.wantFile(...args),
   });
 
   let extensionName: string = manifestData.name;
 
   if (manifestData.default_locale) {
-    const messageFile = path.join(sourceDir, '_locales',
+    let messageFile = path.join(sourceDir, '_locales',
       manifestData.default_locale, 'messages.json');
     log.debug('Manifest declared default_locale, localizing extension name');
     extensionName = await getDefaultLocalizedName(
       {messageFile, manifestData});
   }
-  const packageName = safeFileName(
+  let packageName = safeFileName(
     `${extensionName}-${manifestData.version}.zip`);
-  const extensionPath = path.join(artifactsDir, packageName);
-  const stream = createWriteStream(extensionPath);
+  let extensionPath = path.join(artifactsDir, packageName);
+  let stream = createWriteStream(extensionPath);
 
   stream.write(buffer, () => stream.end());
 
@@ -168,7 +168,7 @@ export default async function build(
   });
 
   await prepareArtifactsDir(artifactsDir);
-  const result = await createPackage();
+  let result = await createPackage();
 
   if (rebuildAsNeeded) {
     log.info('Rebuilding when files change...');

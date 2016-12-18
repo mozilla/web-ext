@@ -31,12 +31,12 @@ describe('run', () => {
 
   function prepareRun(fakeInstallResult) {
     const sourceDir = fixturePath('minimal-web-ext');
-    const argv = {
+    let argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
     };
-    const options = {
+    let options = {
       firefoxApp: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(fake(RemoteFirefox.prototype, {
@@ -62,8 +62,8 @@ describe('run', () => {
   }
 
   function getFakeFirefox(implementations = {}) {
-    const profile = {}; // empty object just to avoid errors.
-    const allImplementations = {
+    let profile = {}; // empty object just to avoid errors.
+    let allImplementations = {
       createProfile: () => Promise.resolve(profile),
       copyProfile: () => Promise.resolve(profile),
       installExtension: () => Promise.resolve(),
@@ -75,7 +75,7 @@ describe('run', () => {
 
   it('installs and runs the extension', () => {
 
-    const profile = {};
+    let profile = {};
 
     const cmd = prepareRun();
     const {firefoxApp} = cmd.options;

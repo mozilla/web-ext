@@ -18,8 +18,8 @@ import git from 'git-rev-sync';
 describe('program.Program', () => {
 
   function execProgram(program, options = {}) {
-    const fakeProcess = fake(process);
-    const absolutePackageDir = path.join(__dirname, '..', '..');
+    let fakeProcess = fake(process);
+    let absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
         systemProcess: fakeProcess,
@@ -29,8 +29,8 @@ describe('program.Program', () => {
   }
 
   it('executes a command callback', () => {
-    const thing = spy(() => Promise.resolve());
-    const program = new Program(['thing'])
+    let thing = spy(() => Promise.resolve());
+    let program = new Program(['thing'])
       .command('thing', 'does a thing', thing);
     return execProgram(program)
       .then(() => {
@@ -39,7 +39,7 @@ describe('program.Program', () => {
   });
 
   it('reports unknown commands', () => {
-    const program = new Program(['thing']);
+    let program = new Program(['thing']);
     return execProgram(program)
       .then(makeSureItFails())
       .catch(onlyInstancesOf(UsageError, (error) => {
@@ -48,7 +48,7 @@ describe('program.Program', () => {
   });
 
   it('reports missing command', () => {
-    const program = new Program([]);
+    let program = new Program([]);
     return execProgram(program)
       .then(makeSureItFails())
       .catch(onlyInstancesOf(UsageError, (error) => {
@@ -57,8 +57,8 @@ describe('program.Program', () => {
   });
 
   it('exits 1 on a thrown error', () => {
-    const fakeProcess = fake(process);
-    const program = new Program(['cmd'])
+    let fakeProcess = fake(process);
+    let program = new Program(['cmd'])
       .command('cmd', 'some command', () => {
         throw new Error('this is an error from a command handler');
       });
@@ -92,9 +92,9 @@ describe('program.Program', () => {
       }
     }
 
-    const program = new Program(['cmd'])
+    let program = new Program(['cmd'])
       .command('cmd', 'some command', () => {
-        const error = new ErrorWithCode();
+        let error = new ErrorWithCode();
         throw error;
       });
     // This is just a smoke test to make sure the error code doesn't
@@ -107,8 +107,8 @@ describe('program.Program', () => {
   });
 
   it('lets commands define options', () => {
-    const handler = spy(() => Promise.resolve());
-    const program = new Program(['cmd'])
+    let handler = spy(() => Promise.resolve());
+    let program = new Program(['cmd'])
       .command('cmd', 'some command', handler, {
         'some-option': {
           default: 'default value',
@@ -124,8 +124,8 @@ describe('program.Program', () => {
   });
 
   it('preserves global option configuration', () => {
-    const handler = spy(() => Promise.resolve());
-    const program = new Program(['cmd'])
+    let handler = spy(() => Promise.resolve());
+    let program = new Program(['cmd'])
       .setGlobalOptions({
         'global-option': {
           type: 'string',
@@ -169,7 +169,7 @@ describe('program.Program', () => {
   it('configures the logger when verbose', () => {
     const logStream = fake(new ConsoleStream());
 
-    const program = new Program(['--verbose', 'thing']);
+    let program = new Program(['--verbose', 'thing']);
     program.setGlobalOptions({
       verbose: {
         type: 'boolean',
@@ -184,8 +184,8 @@ describe('program.Program', () => {
   });
 
   it('checks the version when verbose', () => {
-    const version = spy();
-    const program = new Program(['--verbose', 'thing']);
+    let version = spy();
+    let program = new Program(['--verbose', 'thing']);
     program.setGlobalOptions({
       verbose: {
         type: 'boolean',
@@ -201,7 +201,7 @@ describe('program.Program', () => {
 
   it('does not configure the logger unless verbose', () => {
     const logStream = fake(new ConsoleStream());
-    const program = new Program(['thing']).command('thing', '', () => {});
+    let program = new Program(['thing']).command('thing', '', () => {});
     program.setGlobalOptions({
       verbose: {
         type: 'boolean',
@@ -253,7 +253,7 @@ describe('program.main', () => {
   }
 
   it('executes a command handler', () => {
-    const fakeCommands = fake(commands, {
+    let fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
     });
     return execProgram(['build'], {commands: fakeCommands})
@@ -331,10 +331,10 @@ describe('program.main', () => {
 
 
 describe('program.defaultVersionGetter', () => {
-  const root = path.join(__dirname, '..', '..');
+  let root = path.join(__dirname, '..', '..');
 
   it('returns the package version in production', () => {
-    const pkgFile = path.join(root, 'package.json');
+    let pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
         const testBuildEnv = {localEnv: 'production'};

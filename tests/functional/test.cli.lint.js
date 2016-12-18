@@ -10,7 +10,7 @@ describe('web-ext lint', () => {
   it('should accept: --source-dir SRCDIR',
      () => withTempAddonDir({addonPath}, (srcDir, tmpDir) => {
        const argv = ['lint', '--source-dir', srcDir, '--verbose'];
-       const cmd = execCommand(webExt, argv, {cwd: tmpDir});
+       let cmd = execCommand(webExt, argv, {cwd: tmpDir});
 
        return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
          if (exitCode !== 0) {

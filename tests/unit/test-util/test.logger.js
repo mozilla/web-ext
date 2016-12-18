@@ -39,7 +39,7 @@ describe('logger', () => {
         }
       }
 
-      const fakeWritableStream = new FakeWritableStream();
+      let fakeWritableStream = new FakeWritableStream();
       sinon.spy(fakeWritableStream, 'write');
 
       return {

@@ -214,7 +214,7 @@ export function configureProfile(
   // operate, such as disabling signatures.
   // TODO: support custom preferences.
   // https://github.com/mozilla/web-ext/issues/88
-  const prefs = getPrefs(app);
+  let prefs = getPrefs(app);
   Object.keys(prefs).forEach((pref) => {
     profile.setPreference(pref, prefs[pref]);
   });
@@ -272,8 +272,8 @@ export async function copyProfile(
   }: CopyProfileOptions = {}
 ): Promise<FirefoxProfile> {
 
-  const copy = promisify(FirefoxProfile.copy);
-  const copyByName = promisify(copyFromUserProfile);
+  let copy = promisify(FirefoxProfile.copy);
+  let copyByName = promisify(copyFromUserProfile);
 
   try {
     const dirExists = await isDirectory(profileDirectory);
