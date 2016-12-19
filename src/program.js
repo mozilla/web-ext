@@ -31,7 +31,7 @@ export class Program {
       checkForAutomaticUpdates = defaultUpdateChecker,
     }: {
       absolutePackageDir?: string,
-      checkForAutomaticUpdates: typeof defaultUpdateChecker,
+      checkForAutomaticUpdates?: typeof defaultUpdateChecker,
     } = {}
   ) {
     // This allows us to override the process argv which is useful for
@@ -93,13 +93,15 @@ export class Program {
   async execute(
     absolutePackageDir: string,
     {
-      systemProcess = process, logStream = defaultLogStream,
-      getVersion = defaultVersionGetter, shouldExitProgram = true,
+      checkForUpdates = defaultUpdateChecker, systemProcess = process,
+      logStream = defaultLogStream, getVersion = defaultVersionGetter,
+      shouldExitProgram = true,
     }: Object = {}
   ): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
+    this.checkForUpdates = checkForUpdates;
 
     const argv = this.yargs.argv;
     const cmd = argv._[0];
@@ -122,10 +124,11 @@ export class Program {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
       await runCommand(argv);
+
       this.checkForUpdates ({
         name: 'web-ext',
         version: getVersion(absolutePackageDir),
-        updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+        updateCheckInterval: 1000 * 60 * 60 * 24 * 7, //1 week
         updateNotifier: defaultUpdateChecker,
       });
 

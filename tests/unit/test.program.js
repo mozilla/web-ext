@@ -26,6 +26,7 @@ describe('program.Program', () => {
     return program.execute(
       absolutePackageDir, {
         systemProcess: fakeProcess,
+        checkForUpdates: fakeProcess,
         shouldExitProgram: false,
         ...options,
       });
@@ -35,7 +36,9 @@ describe('program.Program', () => {
     const thing = spy(() => Promise.resolve());
     const program = new Program(['thing'])
       .command('thing', 'does a thing', thing);
-    return execProgram(program)
+    return execProgram(program, {
+      checkForUpdates: spy(),
+    })
       .then(() => {
         assert.equal(thing.called, true);
       });
@@ -117,7 +120,9 @@ describe('program.Program', () => {
           default: 'default value',
         },
       });
-    return execProgram(program)
+    return execProgram(program, {
+      checkForUpdates: spy(),
+    })
       .then(() => {
         assert.equal(handler.called, true);
         // This ensures that the default configuration for the option has
@@ -140,7 +145,9 @@ describe('program.Program', () => {
           default: 'default value',
         },
       });
-    return execProgram(program)
+    return execProgram(program, {
+      checkForUpdates: spy(),
+    })
       .then(() => {
         assert.equal(handler.called, true);
         // By checking the global default, it ensures that default configuration
@@ -180,7 +187,11 @@ describe('program.Program', () => {
     });
     program.command('thing', 'does a thing', () => {});
 
-    return execProgram(program, {getVersion: spy(), logStream})
+    return execProgram(program, {
+      getVersion: spy(),
+      logStream,
+      checkForUpdates: spy(),
+    })
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
       });
@@ -195,7 +206,7 @@ describe('program.Program', () => {
       },
     });
     program.command('thing', 'does a thing', () => {});
-    return execProgram(program, {getVersion: version})
+    return execProgram(program, {getVersion: version, checkForUpdates: spy()})
       .then(() => {
         assert.equal(version.firstCall.args[0],
                      path.join(__dirname, '..', '..'));
@@ -210,7 +221,7 @@ describe('program.Program', () => {
         type: 'boolean',
       },
     });
-    return execProgram(program, {logStream})
+    return execProgram(program, {logStream, checkForUpdates: spy()})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, false);
       });
@@ -250,7 +261,11 @@ describe('program.Program', () => {
 describe('program.main', () => {
 
   function execProgram(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
-    const runOptions = {shouldExitProgram: false, systemProcess: fake(process)};
+    const runOptions = {
+      checkForUpdates: spy(),
+      shouldExitProgram: false,
+      systemProcess: fake(process),
+    };
     return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
 
