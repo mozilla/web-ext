@@ -38,13 +38,13 @@ describe('firefox/preferences', () => {
 
   describe('coerceCLICustomPreference', () => {
 
-    it('convert the preferences from string to object', () => {
+    it('converts a single --pref cli option from string to object', () => {
       const prefs = coerceCLICustomPreference('valid.preference=true');
       assert.isObject(prefs);
       assert.equal(prefs['valid.preference'], true);
     });
 
-    it('convert array of preferences into object', () => {
+    it('converts array of --pref cli option values into object', () => {
       const prefs = coerceCLICustomPreference([
         'valid.preference=true', 'valid.preference2=false',
       ]);
@@ -66,6 +66,11 @@ describe('firefox/preferences', () => {
     it('converts float values', () => {
       const prefs = coerceCLICustomPreference('valid.preference=4.55');
       assert.equal(prefs['valid.preference'], '4.55');
+    });
+
+    it('does not allow certain default preferences to be customized', () => {
+      const prefs = coerceCLICustomPreference('xpinstall.signatures.required');
+      assert.equal(typeof(prefs['xpinstall.signatures.required']), 'undefined');
     });
 
     it('throws an error for invalid preferences', () => {

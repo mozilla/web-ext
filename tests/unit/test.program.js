@@ -338,6 +338,7 @@ describe('program.main', () => {
         const {customPrefs} = fakeCommands.run.firstCall.args[0];
         assert.isObject(customPrefs);
         assert.equal(customPrefs.prop, true);
+        assert.equal(customPrefs.prop2, 'value2');
       });
   });
 

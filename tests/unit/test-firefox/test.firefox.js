@@ -231,12 +231,11 @@ describe('firefox', () => {
     it('configures the copied profile', () => withBaseProfile(
       (baseProfile) => {
         let app = 'fennec';
-        let customPrefs = {};
         let configureThisProfile =
           sinon.spy((profile) => Promise.resolve(profile));
 
         return firefox.copyProfile(baseProfile.path(),
-          {app, configureThisProfile, customPrefs})
+          {app, configureThisProfile})
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
@@ -355,6 +354,9 @@ describe('firefox', () => {
             // Check for custom pref set by configureProfile().
             assert.include(prefFile.toString(),
                            '"extensions.checkCompatibility.nightly", true');
+            // Check that one of the default preferences is set as well
+            assert.include(prefFile.toString(),
+                           '"devtools.debugger.remote-enabled", true');
           });
       }
     ));

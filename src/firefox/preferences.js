@@ -1,6 +1,8 @@
 /* @flow */
 import {WebExtError, UsageError} from '../errors';
+import {createLogger} from '../util/logger';
 
+const log = createLogger(__filename);
 
 // Flow Types
 
@@ -118,8 +120,6 @@ export function getPrefs(
   };
 }
 
-// Yargs coerce function for run command custom-prefs
-
 export function coerceCLICustomPreference(
   cliPrefs: string | Array<string>
 ): FirefoxPreferences {
@@ -131,7 +131,7 @@ export function coerceCLICustomPreference(
 
   for (let pref of cliPrefs) {
     let [key, value] = pref.split('=');
-    // Check the property key.
+
     if (/[^\w{@}.-]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
     }
@@ -142,7 +142,14 @@ export function coerceCLICustomPreference(
       value = (value === 'true');
     }
 
-    customPrefs[`${key}`] = value;
+    let defaultProps = ['devtools.debugger.remote-enabled',
+      'devtools.debugger.prompt-connection', 'xpinstall.signatures.required'];
+    if (defaultProps.includes(key)) {
+      log.info(`Setting '${key}' is important for the work of WebExtensions` +
+               ' and can not be customized');
+    } else {
+      customPrefs[`${key}`] = value;
+    }
   }
 
   return customPrefs;
