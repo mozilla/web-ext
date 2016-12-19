@@ -1,19 +1,21 @@
 /* @flow */
-import updateNotifier from 'update-notifier';
+import defaultUpdateNotifier from 'update-notifier';
 
 type checkForAutomaticUpdatesParams = {
   name: string,
   version: string,
-  updateCheckInterval: number,
+  updateCheckInterval?: number,
+  updateNotifier: typeof defaultUpdateNotifier,
 };
 
 export function checkForAutomaticUpdates({
   name,
   version,
   updateCheckInterval,
+  updateNotifier = defaultUpdateNotifier,
 }: checkForAutomaticUpdatesParams
 ) {
-  let pkg = {
+  const pkg = {
     name: name,
     version: version,
   };

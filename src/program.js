@@ -9,7 +9,7 @@ import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
-import {checkForAutomaticUpdates} from './util/updates';
+import {checkForAutomaticUpdates as defaultUpdateChecker} from './util/updates';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -22,14 +22,16 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
-  checkForUpdates: typeof checkForAutomaticUpdates;
+  checkForUpdates: typeof defaultUpdateChecker;
 
   constructor(
     argv: ?Array<string>,
     {
       absolutePackageDir = process.cwd(),
+      checkForAutomaticUpdates = defaultUpdateChecker,
     }: {
       absolutePackageDir?: string,
+      checkForAutomaticUpdates: typeof defaultUpdateChecker,
     } = {}
   ) {
     // This allows us to override the process argv which is useful for
@@ -119,13 +121,13 @@ export class Program {
       if (!runCommand) {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
-
+      await runCommand(argv);
       this.checkForUpdates ({
         name: 'web-ext',
-        version: defaultVersionGetter(absolutePackageDir),
+        version: getVersion(absolutePackageDir),
         updateCheckInterval: 1000 * 60 * 60 * 24 * 7,
+        updateNotifier: defaultUpdateChecker,
       });
-      await runCommand(argv);
 
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
@@ -180,6 +182,7 @@ export function main(
 ): Promise<any> {
 
   const program = new Program(argv, {absolutePackageDir});
+
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.
