@@ -26,7 +26,6 @@ describe('program.Program', () => {
     return program.execute(
       absolutePackageDir, {
         systemProcess: fakeProcess,
-        checkForUpdates: fakeProcess,
         shouldExitProgram: false,
         ...options,
       });
@@ -253,6 +252,27 @@ describe('program.Program', () => {
       .catch((error) => {
         // Again, yargs calls this an argument not an option for some reason.
         assert.match(error.message, /Unknown argument: nope/);
+      });
+  });
+
+  it('checks for updates automatically', () => {
+    const root = path.join(__dirname, '..', '..');
+    const handler = spy();
+    const checkForAutomaticUpdates = sinon.stub();
+    const program = new Program(['run'])
+    .command('run', 'some command', handler);
+    return execProgram(program, {
+      checkForUpdates: checkForAutomaticUpdates,
+    })
+      .then(() => {
+        assert.equal(checkForAutomaticUpdates.firstCall.args[0].name,
+                      'web-ext');
+        let pkgFile = path.join(root, 'package.json');
+        return fs.readFile(pkgFile)
+          .then((pkgData) => {
+            assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
+                          JSON.parse(pkgData).version);
+          });
       });
   });
 });

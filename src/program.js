@@ -28,10 +28,8 @@ export class Program {
     argv: ?Array<string>,
     {
       absolutePackageDir = process.cwd(),
-      checkForAutomaticUpdates = defaultUpdateChecker,
     }: {
       absolutePackageDir?: string,
-      checkForAutomaticUpdates?: typeof defaultUpdateChecker,
     } = {}
   ) {
     // This allows us to override the process argv which is useful for
@@ -45,7 +43,6 @@ export class Program {
     // config (See web-ext#469 for rationale).
     const yargsInstance = yargs(argv, absolutePackageDir);
 
-    this.checkForUpdates = checkForAutomaticUpdates;
     this.shouldExitProgram = true;
     this.yargs = yargsInstance;
     this.yargs.strict();
