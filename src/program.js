@@ -94,7 +94,8 @@ export class Program {
 
     const argv = this.yargs.argv;
     const cmd = argv._[0];
-    //Command line option (pref) renamed for internal use (customPref)
+
+    // Command line option (pref) renamed for internal use (customPref).
     argv.customPrefs = argv.pref;
 
     let runCommand = this.commands[cmd];

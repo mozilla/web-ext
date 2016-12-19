@@ -327,7 +327,7 @@ describe('program.main', () => {
       });
   });
 
-  it('converts custom prefernces into object', () => {
+  it('converts custom preferences into an object', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });

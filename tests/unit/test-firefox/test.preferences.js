@@ -4,7 +4,7 @@ import {assert} from 'chai';
 
 import {WebExtError, UsageError} from '../../../src/errors';
 import {
-  getPrefs, coerceCLICustomPreference,
+  getPrefs, coerceCLICustomPreference, nonOverridablePreferences,
 } from '../../../src/firefox/preferences';
 
 
@@ -69,8 +69,13 @@ describe('firefox/preferences', () => {
     });
 
     it('does not allow certain default preferences to be customized', () => {
-      const prefs = coerceCLICustomPreference('xpinstall.signatures.required');
-      assert.equal(typeof(prefs['xpinstall.signatures.required']), 'undefined');
+      const nonChangeablePrefs = nonOverridablePreferences.map((prop) => {
+        return prop += '=true';
+      });
+      const prefs = coerceCLICustomPreference(nonChangeablePrefs);
+      for (var pref of nonChangeablePrefs) {
+        assert.equal(typeof(prefs[pref]), 'undefined');
+      }
     });
 
     it('throws an error for invalid preferences', () => {

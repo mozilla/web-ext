@@ -3,6 +3,10 @@ import {WebExtError, UsageError} from '../errors';
 import {createLogger} from '../util/logger';
 
 const log = createLogger(__filename);
+export const nonOverridablePreferences = [
+  'devtools.debugger.remote-enabled', 'devtools.debugger.prompt-connection',
+  'xpinstall.signatures.required',
+];
 
 // Flow Types
 
@@ -142,14 +146,11 @@ export function coerceCLICustomPreference(
       value = (value === 'true');
     }
 
-    let defaultProps = ['devtools.debugger.remote-enabled',
-      'devtools.debugger.prompt-connection', 'xpinstall.signatures.required'];
-    if (defaultProps.includes(key)) {
-      log.info(`Setting '${key}' is important for the work of WebExtensions` +
-               ' and can not be customized');
-    } else {
-      customPrefs[`${key}`] = value;
+    if (nonOverridablePreferences.includes(key)) {
+      log.warn(`'${key}' preference cannot be customized.`);
+      continue;
     }
+    customPrefs[`${key}`] = value;
   }
 
   return customPrefs;
