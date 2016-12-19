@@ -60,7 +60,7 @@ describe('firefox/preferences', () => {
 
     it('converts number values', () => {
       const prefs = coerceCLICustomPreference('valid.preference=455');
-      assert.equal(typeof prefs['valid.preference'], 'number');
+      assert.equal(prefs['valid.preference'], 455);
     });
 
     it('converts float values', () => {
@@ -73,8 +73,8 @@ describe('firefox/preferences', () => {
         return prop += '=true';
       });
       const prefs = coerceCLICustomPreference(nonChangeablePrefs);
-      for (var pref of nonChangeablePrefs) {
-        assert.equal(typeof(prefs[pref]), 'undefined');
+      for (let pref of nonChangeablePrefs) {
+        assert.isUndefined(prefs[pref], `${pref} should be undefined`);
       }
     });
 
