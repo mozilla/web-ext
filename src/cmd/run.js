@@ -84,14 +84,16 @@ export function defaultReloadStrategy(
     createWatcher = defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
-  let watcher: Watchpack;
+  const watcher: Watchpack = (
+  createWatcher({addonId, client, sourceDir, artifactsDir})
+);
 
   firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
   });
 
-  watcher = createWatcher({addonId, client, sourceDir, artifactsDir});
+
 }
 
 
@@ -180,24 +182,20 @@ export default async function run(
   // connection to Firefox.
   const requiresRemote = !preInstall;
   let installed = false;
+  const manifestData = await getValidatedManifest(sourceDir);
 
-  let runner;
-  let profile;
-  let client;
-  let runningFirefox;
-  let addonId;
-
-  let manifestData = await getValidatedManifest(sourceDir);
-
-  runner = new ExtensionRunner({
+  const runner = new ExtensionRunner({
     sourceDir,
     firefoxApp,
     firefox,
     manifestData,
     profilePath: firefoxProfile,
   });
+  const profile = await runner.getProfile();
+  let client;
+  const runningFirefox = await runner.run(profile);
+  let addonId;
 
-  profile = await runner.getProfile();
 
   if (!preInstall) {
     log.debug('Deferring extension installation until after ' +
@@ -208,7 +206,7 @@ export default async function run(
     installed = true;
   }
 
-  runningFirefox = await runner.run(profile);
+  runningFirefox ;
 
   if (installed) {
     log.debug('Not installing as temporary add-on because the ' +
