@@ -16,6 +16,7 @@ const log = createLogger(__filename);
 
 // Import objects that are only used as Flow types.
 import type FirefoxProfile from 'firefox-profile';
+import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
 import type Watchpack from 'watchpack';
 import type {
@@ -151,6 +152,7 @@ export type CmdRunParams = {
   firefoxProfile: string,
   preInstall: boolean,
   noReload: boolean,
+  customPrefs?: FirefoxPreferences,
 };
 
 export type CmdRunOptions = {
@@ -163,6 +165,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
+    customPrefs,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -195,6 +198,7 @@ export default async function run(
     firefox,
     manifestData,
     profilePath: firefoxProfile,
+    customPrefs,
   });
 
   profile = await runner.getProfile();
@@ -265,6 +269,7 @@ export type ExtensionRunnerParams = {
   profilePath: string,
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
+  customPrefs?: FirefoxPreferences,
 };
 
 export class ExtensionRunner {
@@ -273,11 +278,12 @@ export class ExtensionRunner {
   profilePath: string;
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
+  customPrefs: FirefoxPreferences;
 
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox,
+      profilePath, firefox, customPrefs = {},
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
@@ -285,17 +291,18 @@ export class ExtensionRunner {
     this.profilePath = profilePath;
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
+    this.customPrefs = customPrefs;
   }
 
   getProfile(): Promise<FirefoxProfile> {
-    const {firefoxApp, profilePath} = this;
+    const {firefoxApp, profilePath, customPrefs} = this;
     return new Promise((resolve) => {
       if (profilePath) {
         log.debug(`Copying Firefox profile from ${profilePath}`);
-        resolve(firefoxApp.copyProfile(profilePath));
+        resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
       } else {
         log.debug('Creating new Firefox profile');
-        resolve(firefoxApp.createProfile());
+        resolve(firefoxApp.createProfile({customPrefs}));
       }
     });
   }
