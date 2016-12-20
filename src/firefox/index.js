@@ -15,7 +15,7 @@ import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
-//Import flow types
+// Import flow types
 import type {FirefoxConnectorFn} from './remote';
 import type {
   PreferencesAppName,

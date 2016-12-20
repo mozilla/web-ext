@@ -16,7 +16,7 @@ import defaultSourceWatcher from '../watcher';
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
 import type {
-  FirefoxProcess, //eslint-disable-line import/named
+  FirefoxProcess, // eslint-disable-line import/named
 } from '../firefox/index';
 import type {
   FirefoxConnectorFn, RemoteFirefox,

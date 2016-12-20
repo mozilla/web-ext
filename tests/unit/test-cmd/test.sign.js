@@ -16,7 +16,7 @@ import completeSignCommand, {
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
 } from '../../../src/cmd/sign';
 import {makeSureItFails, fixturePath} from '../helpers';
-//Import flow type
+// Import flow type
 import type {ExtensionManifestApplications} from '../../../src/util/manifest';
 
 describe('sign', () => {

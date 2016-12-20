@@ -9,17 +9,6 @@
     "flowtype": {
       "onlyFilesWithFlowAnnotation": true
     },
-    "import/ignore": [
-      // Because of CommonJS incompatibility, we can't
-      // check for bad imports in node_modules.
-      "node_modules", 
-    ],
-    "import/resolver": {
-      "node": {
-        // This adds ./src for relative imports.
-        "moduleDirectory": ["node_modules", "src"]
-      }
-    }
   },
   "env": {
     "node": true,
