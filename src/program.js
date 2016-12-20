@@ -9,7 +9,7 @@ import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
-import {checkForAutomaticUpdates as defaultUpdateChecker} from './util/updates';
+import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -22,7 +22,6 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
-  checkForUpdates: typeof defaultUpdateChecker;
 
   constructor(
     argv: ?Array<string>,
@@ -98,7 +97,6 @@ export class Program {
 
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
-    this.checkForUpdates = checkForUpdates;
 
     const argv = this.yargs.argv;
     const cmd = argv._[0];
@@ -122,10 +120,10 @@ export class Program {
       }
       await runCommand(argv);
 
-      this.checkForUpdates ({
+      checkForUpdates ({
         name: 'web-ext',
         version: getVersion(absolutePackageDir),
-        updateCheckInterval: 1000 * 60 * 60 * 24 * 7, //1 week
+        updateCheckInterval: 1000 * 60 * 60 * 24 * 7, // 1 week
         updateNotifier: defaultUpdateChecker,
       });
 

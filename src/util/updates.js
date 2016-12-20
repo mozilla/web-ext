@@ -1,27 +1,24 @@
 /* @flow */
 import defaultUpdateNotifier from 'update-notifier';
 
-type checkForAutomaticUpdatesParams = {
+type checkForUpdatesParams = {
   name: string,
   version: string,
   updateCheckInterval?: number,
-  updateNotifier: typeof defaultUpdateNotifier,
+  updateNotifier?: typeof defaultUpdateNotifier,
 };
 
-export function checkForAutomaticUpdates({
+export function checkForUpdates({
   name,
   version,
   updateCheckInterval,
   updateNotifier = defaultUpdateNotifier,
-}: checkForAutomaticUpdatesParams
+}: checkForUpdatesParams
 ) {
-  const pkg = {
-    name: name,
-    version: version,
-  };
+  const pkg = {name: 'web-ext', version};
 
   updateNotifier({
     pkg,
-    updateCheckInterval: updateCheckInterval,
+    updateCheckInterval: 1000 * 60 * 60 * 24 * 7, // 1 week,
   }).notify();
 }

@@ -7,11 +7,7 @@ import {fs} from 'mz';
 import sinon, {spy} from 'sinon';
 import {assert} from 'chai';
 
-import {
-  defaultVersionGetter,
-  main,
-  Program,
-} from '../../src/program';
+import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
 import {fake, makeSureItFails} from './helpers';
@@ -25,6 +21,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
+        checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
         ...options,
@@ -35,9 +32,7 @@ describe('program.Program', () => {
     const thing = spy(() => Promise.resolve());
     const program = new Program(['thing'])
       .command('thing', 'does a thing', thing);
-    return execProgram(program, {
-      checkForUpdates: spy(),
-    })
+    return execProgram(program)
       .then(() => {
         assert.equal(thing.called, true);
       });
@@ -119,9 +114,7 @@ describe('program.Program', () => {
           default: 'default value',
         },
       });
-    return execProgram(program, {
-      checkForUpdates: spy(),
-    })
+    return execProgram(program)
       .then(() => {
         assert.equal(handler.called, true);
         // This ensures that the default configuration for the option has
@@ -144,9 +137,7 @@ describe('program.Program', () => {
           default: 'default value',
         },
       });
-    return execProgram(program, {
-      checkForUpdates: spy(),
-    })
+    return execProgram(program)
       .then(() => {
         assert.equal(handler.called, true);
         // By checking the global default, it ensures that default configuration
@@ -189,7 +180,6 @@ describe('program.Program', () => {
     return execProgram(program, {
       getVersion: spy(),
       logStream,
-      checkForUpdates: spy(),
     })
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
@@ -205,7 +195,7 @@ describe('program.Program', () => {
       },
     });
     program.command('thing', 'does a thing', () => {});
-    return execProgram(program, {getVersion: version, checkForUpdates: spy()})
+    return execProgram(program, {getVersion: version})
       .then(() => {
         assert.equal(version.firstCall.args[0],
                      path.join(__dirname, '..', '..'));
@@ -220,7 +210,7 @@ describe('program.Program', () => {
         type: 'boolean',
       },
     });
-    return execProgram(program, {logStream, checkForUpdates: spy()})
+    return execProgram(program, {logStream})
       .then(() => {
         assert.equal(logStream.makeVerbose.called, false);
       });
@@ -257,24 +247,24 @@ describe('program.Program', () => {
 
   it('checks for updates automatically', () => {
     const root = path.join(__dirname, '..', '..');
+    const pkgFile = path.join(root, 'package.json');
     const handler = spy();
     const checkForAutomaticUpdates = sinon.stub();
     const program = new Program(['run'])
-    .command('run', 'some command', handler);
+      .command('run', 'some command', handler);
     return execProgram(program, {
       checkForUpdates: checkForAutomaticUpdates,
     })
       .then(() => {
         assert.equal(checkForAutomaticUpdates.firstCall.args[0].name,
                       'web-ext');
-        let pkgFile = path.join(root, 'package.json');
         return fs.readFile(pkgFile)
-          .then((pkgData) => {
-            assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
+      })
+      .then((pkgData) => {
+          assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
                           JSON.parse(pkgData).version);
-          });
       });
-  });
+    });
 });
 
 
