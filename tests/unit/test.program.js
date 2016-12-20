@@ -258,13 +258,13 @@ describe('program.Program', () => {
       .then(() => {
         assert.equal(checkForAutomaticUpdates.firstCall.args[0].name,
                       'web-ext');
-        return fs.readFile(pkgFile)
+        return fs.readFile(pkgFile);
       })
       .then((pkgData) => {
-          assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
+        assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
                           JSON.parse(pkgData).version);
       });
-    });
+  });
 });
 
 

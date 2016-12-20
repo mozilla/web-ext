@@ -121,9 +121,7 @@ export class Program {
       await runCommand(argv);
 
       checkForUpdates ({
-        name: 'web-ext',
         version: getVersion(absolutePackageDir),
-        updateCheckInterval: 1000 * 60 * 60 * 24 * 7, // 1 week
         updateNotifier: defaultUpdateChecker,
       });
 
