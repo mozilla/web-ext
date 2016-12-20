@@ -2,10 +2,10 @@
 import path from 'path';
 
 import {fs} from 'mz';
-import {InvalidManifest} from '../errors';
-import {createLogger} from './logger';
 import parseJSON from 'parse-json';
 
+import {InvalidManifest} from '../errors';
+import {createLogger} from './logger';
 
 const log = createLogger(__filename);
 

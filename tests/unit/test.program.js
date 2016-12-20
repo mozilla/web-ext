@@ -1,18 +1,17 @@
 /* @flow */
-import {describe, it} from 'mocha';
 import path from 'path';
+
+import {describe, it} from 'mocha';
+import git from 'git-rev-sync';
 import {fs} from 'mz';
-import sinon from 'sinon';
+import sinon, {spy} from 'sinon';
 import {assert} from 'chai';
-import {spy} from 'sinon';
 
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
 import {fake, makeSureItFails} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
-
-import git from 'git-rev-sync';
 
 
 describe('program.Program', () => {

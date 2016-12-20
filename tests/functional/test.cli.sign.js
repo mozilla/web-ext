@@ -1,5 +1,6 @@
 /* @flow */
 import {spawn} from 'child_process';
+
 import {describe, it, beforeEach, afterEach} from 'mocha';
 
 import {
