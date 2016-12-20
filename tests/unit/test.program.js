@@ -252,17 +252,13 @@ describe('program.Program', () => {
     const checkForAutomaticUpdates = sinon.stub();
     const program = new Program(['run'])
       .command('run', 'some command', handler);
-    return execProgram(program, {
+    execProgram(program, {
       checkForUpdates: checkForAutomaticUpdates,
-    })
-      .then(() => {
-        assert.equal(checkForAutomaticUpdates.firstCall.args[0].name,
-                      'web-ext');
-        return fs.readFile(pkgFile);
-      })
+    });
+    return fs.readFile(pkgFile)
       .then((pkgData) => {
         assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
-                          JSON.parse(pkgData).version);
+                        JSON.parse(pkgData).version);
       });
   });
 });

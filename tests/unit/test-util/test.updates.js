@@ -8,16 +8,14 @@ import {checkForUpdates} from '../../../src/util/updates';
 describe('util/updates', () => {
   describe('checkForUpdates()', () => {
     it('calls the notifier with the correct parameters', () => {
-      let updateNotifierStub = sinon.spy(() => {
+      const updateNotifierStub = sinon.spy(() => {
         return {
           notify: sinon.spy(),
         };
       });
 
       checkForUpdates({
-        name: 'web-ext',
         version: '1.0.0',
-        updateCheckInterval: 0,
         updateNotifier: updateNotifierStub,
       });
       assert.equal(updateNotifierStub.called, true);

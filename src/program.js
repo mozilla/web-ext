@@ -122,7 +122,6 @@ export class Program {
 
       checkForUpdates ({
         version: getVersion(absolutePackageDir),
-        updateNotifier: defaultUpdateChecker,
       });
 
     } catch (error) {
