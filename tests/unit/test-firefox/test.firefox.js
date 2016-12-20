@@ -449,7 +449,7 @@ describe('firefox', () => {
           {
             manifestData: basicManifest,
             profile: data.profile,
-            extensionPath: extensionPath,
+            extensionPath,
             asProxy: true,
           })
           .then(makeSureItFails())

@@ -41,7 +41,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   module: {
-    preLoaders: preLoaders,
+    preLoaders,
     loaders: [
       {
         exclude: /(node_modules|bower_components)/,
