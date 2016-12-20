@@ -11,7 +11,7 @@ import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
-import {UsageError} from '../errors';
+import {UsageError, onlyErrorsWithCode} from '../errors';
 
 
 const log = createLogger(__filename);
@@ -38,6 +38,7 @@ export type PackageCreatorParams = {
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
+  overwriteDest: boolean,
   showReadyMessage: boolean
 };
 
@@ -95,9 +96,16 @@ export async function getDefaultLocalizedName(
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
-async function defaultPackageCreator({
-  manifestData, sourceDir, fileFilter, artifactsDir, showReadyMessage,
-}: PackageCreatorParams): Promise<ExtensionBuildResult> {
+async function defaultPackageCreator(
+  {
+    manifestData,
+    sourceDir,
+    fileFilter,
+    artifactsDir,
+    overwriteDest,
+    showReadyMessage,
+  }: PackageCreatorParams
+): Promise<ExtensionBuildResult> {
   let id;
   if (manifestData) {
     id = getManifestId(manifestData);
@@ -122,15 +130,49 @@ async function defaultPackageCreator({
   let packageName = safeFileName(
     `${extensionName}-${manifestData.version}.zip`);
   let extensionPath = path.join(artifactsDir, packageName);
-  let stream = createWriteStream(extensionPath);
+
+  let destinationFileExists = await fs.stat(extensionPath)
+    .then((stat)=>{
+      return stat.isFile();
+    })
+    .catch(()=>{
+      return false;
+    })
+  ;
+
+  function throwExtensionExists() {
+    throw new UsageError(
+        `Extension exists at the destination path: ${extensionPath}\n` +
+        'Use --overwrite-dest to enable overwriting.');
+  }
+
+  if (destinationFileExists) {
+    if (overwriteDest) {
+      log.info(`Destination exists, overwriting: ${extensionPath}`);
+    } else {
+      throwExtensionExists();
+    }
+  }
+
+  let stream = overwriteDest ?
+	createWriteStream(extensionPath)
+	: createWriteStream(extensionPath, {flags: 'wx'}); // double-check if destination file exists
+
+  let streamPromise = streamToPromise(stream)
+    .then(() => {
+      if (showReadyMessage) {
+        log.info(`Your web extension is ready: ${extensionPath}`);
+      }
+    })
+    .catch( onlyErrorsWithCode('EEXIST', () => {
+      throwExtensionExists();
+    } ) )
+  ;
 
   stream.write(buffer, () => stream.end());
 
-  await streamToPromise(stream);
+  await streamPromise;
 
-  if (showReadyMessage) {
-    log.info(`Your web extension is ready: ${extensionPath}`);
-  }
   return {extensionPath};
 }
 
@@ -148,15 +190,21 @@ export type BuildCmdOptions = {
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
+  overwriteDest?: boolean,
   showReadyMessage?: boolean
 };
 
 export default async function build(
-  {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
+  {
+    sourceDir,
+    artifactsDir,
+    asNeeded = false,
+  }: BuildCmdParams,
   {
     manifestData, fileFilter = new FileFilter(),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
+    overwriteDest = false,
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
@@ -164,7 +212,12 @@ export default async function build(
   log.info(`Building web extension from ${sourceDir}`);
 
   const createPackage = () => packageCreator({
-    manifestData, sourceDir, fileFilter, artifactsDir, showReadyMessage,
+    manifestData,
+    sourceDir,
+    fileFilter,
+    artifactsDir,
+    overwriteDest,
+    showReadyMessage,
   });
 
   await prepareArtifactsDir(artifactsDir);
