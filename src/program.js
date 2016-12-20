@@ -8,6 +8,7 @@ import yargs from 'yargs';
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
+import {coerceCLICustomPreference} from './firefox/preferences';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -94,6 +95,9 @@ export class Program {
     const argv = this.yargs.argv;
     const cmd = argv._[0];
 
+    // Command line option (pref) renamed for internal use (customPref).
+    argv.customPrefs = argv.pref;
+
     let runCommand = this.commands[cmd];
 
     if (argv.verbose) {
@@ -148,7 +152,7 @@ export function defaultVersionGetter(
     return JSON.parse(packageData).version;
   } else {
     log.debug('Getting version from the git revision');
-    return `${git.branch()}-${git.long()}`;
+    return `${git.branch(absolutePackageDir)}-${git.long(absolutePackageDir)}`;
   }
 }
 
@@ -285,6 +289,14 @@ Example: $0 --help run.
                   'of Firefox.',
         demand: false,
         type: 'boolean',
+      },
+      'pref': {
+        describe: 'Launch firefox with custom preferences. Lightweight ' +
+                  'alternative to creating custom profile.',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+        coerce: coerceCLICustomPreference,
       },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {

@@ -1,18 +1,17 @@
 /* @flow */
-import {describe, it} from 'mocha';
 import path from 'path';
+
+import {describe, it} from 'mocha';
+import git from 'git-rev-sync';
 import {fs} from 'mz';
-import sinon from 'sinon';
+import sinon, {spy} from 'sinon';
 import {assert} from 'chai';
-import {spy} from 'sinon';
 
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
 import {fake, makeSureItFails} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
-
-import git from 'git-rev-sync';
 
 
 describe('program.Program', () => {
@@ -324,6 +323,21 @@ describe('program.main', () => {
         assert.equal(fakeCommands.run.called, true);
         assert.equal(fakeCommands.run.firstCall.args[0].firefox,
                      '/path/to/firefox-binary');
+      });
+  });
+
+  it('converts custom preferences into an object', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return execProgram(
+      ['run', '--pref', 'prop=true', '--pref', 'prop2=value2'],
+      {commands: fakeCommands})
+      .then(() => {
+        const {customPrefs} = fakeCommands.run.firstCall.args[0];
+        assert.isObject(customPrefs);
+        assert.equal(customPrefs.prop, true);
+        assert.equal(customPrefs.prop2, 'value2');
       });
   });
 

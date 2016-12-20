@@ -1,9 +1,11 @@
 {
   "env": {
-    "mocha": true,
     "node": true,
   },
   "rules": {
-    "strict": [2, "never"],
+    "import/no-extraneous-dependencies": ["error", {
+      // Allow dev-dependencies in this directory.
+      "devDependencies": true
+    }],
   }
 }

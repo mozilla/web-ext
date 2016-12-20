@@ -1,23 +1,20 @@
 /* @flow */
+import defaultFirefoxConnector from 'node-firefox-connect';
+// RemoteFirefox types and implementation
+import type FirefoxClient from 'firefox-client'; //eslint-disable-line import/no-extraneous-dependencies
+
 import {createLogger} from '../util/logger';
 import {
   RemoteTempInstallNotSupported,
   UsageError,
   WebExtError,
 } from '../errors';
-import defaultFirefoxConnector from 'node-firefox-connect';
-
 
 const log = createLogger(__filename);
 
 // The default port that Firefox's remote debugger will listen on and the
 // client will connect to.
 export const REMOTE_PORT = 6005;
-
-
-// RemoteFirefox types and implementation
-
-import type FirefoxClient from 'firefox-client';
 
 export type FirefoxConnectorFn =
   (port?: number) => Promise<FirefoxClient>;
