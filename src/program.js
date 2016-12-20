@@ -152,7 +152,7 @@ export function defaultVersionGetter(
     return JSON.parse(packageData).version;
   } else {
     log.debug('Getting version from the git revision');
-    return `${git.branch()}-${git.long()}`;
+    return `${git.branch(absolutePackageDir)}-${git.long(absolutePackageDir)}`;
   }
 }
 
