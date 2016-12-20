@@ -101,6 +101,7 @@
     "object-property-newline": [2, {
       "allowMultiplePropertiesPerLine": true
     }],
+    "object-shorthand": 2,
     "one-var": [2, "never"],
     "prefer-template": 2,
     "quote-props": [1, "consistent-as-needed"],
