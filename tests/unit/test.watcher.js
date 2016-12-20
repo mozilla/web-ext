@@ -1,5 +1,6 @@
 /* @flow */
 import path from 'path';
+
 import {it, describe} from 'mocha';
 import {fs} from 'mz';
 import sinon from 'sinon';

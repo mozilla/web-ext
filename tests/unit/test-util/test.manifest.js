@@ -1,11 +1,12 @@
 /* @flow */
-import {describe, it} from 'mocha';
 import path from 'path';
+
+import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import deepcopy from 'deepcopy';
+import {fs} from 'mz';
 
 import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
-import {fs} from 'mz';
 import getValidatedManifest, {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {makeSureItFails} from '../helpers';

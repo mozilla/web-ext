@@ -235,7 +235,7 @@ describe('firefox', () => {
           sinon.spy((profile) => Promise.resolve(profile));
 
         return firefox.copyProfile(baseProfile.path(),
-          {configureThisProfile, app})
+          {app, configureThisProfile})
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
@@ -339,6 +339,22 @@ describe('firefox', () => {
           .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
           .then((prefFile) => {
             // Check for some pref set by configureProfile().
+            assert.include(prefFile.toString(),
+                           '"devtools.debugger.remote-enabled", true');
+          });
+      }
+    ));
+
+    it('writes custom preferences', () => withTempProfile(
+      (profile) => {
+        const customPrefs = {'extensions.checkCompatibility.nightly': true};
+        return firefox.configureProfile(profile, {customPrefs})
+          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((prefFile) => {
+            // Check for custom pref set by configureProfile().
+            assert.include(prefFile.toString(),
+                           '"extensions.checkCompatibility.nightly", true');
+            // Check that one of the default preferences is set as well
             assert.include(prefFile.toString(),
                            '"devtools.debugger.remote-enabled", true');
           });

@@ -1,5 +1,6 @@
 /* @flow */
 import {fs} from 'mz';
+
 import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';
 

@@ -8,6 +8,7 @@ import yargs from 'yargs';
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
+import {coerceCLICustomPreference} from './firefox/preferences';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -285,6 +286,14 @@ Example: $0 --help run.
                   'of Firefox.',
         demand: false,
         type: 'boolean',
+      },
+      'pref': {
+        describe: 'Launch firefox with custom preferences. Lightweight ' +
+                  'alternative to creating custom profile.',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+        coerce: coerceCLICustomPreference,
       },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {
