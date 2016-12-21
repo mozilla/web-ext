@@ -247,18 +247,16 @@ describe('program.Program', () => {
 
   it('checks for updates automatically', () => {
     const root = path.join(__dirname, '..', '..');
-    const pkgFile = path.join(root, 'package.json');
     const handler = spy();
     const checkForAutomaticUpdates = sinon.stub();
     const program = new Program(['run'])
       .command('run', 'some command', handler);
-    execProgram(program, {
+    return execProgram(program, {
       checkForUpdates: checkForAutomaticUpdates,
-    });
-    return fs.readFile(pkgFile)
-      .then((pkgData) => {
+    })
+      .then(() => {
         assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
-                        JSON.parse(pkgData).version);
+                          defaultVersionGetter(root));
       });
   });
 });

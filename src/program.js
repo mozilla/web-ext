@@ -14,6 +14,9 @@ import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
 
+type ProgramOptions = {
+  absolutePackageDir?: string,
+}
 
 /*
  * The command line program.
@@ -27,9 +30,7 @@ export class Program {
     argv: ?Array<string>,
     {
       absolutePackageDir = process.cwd(),
-    }: {
-      absolutePackageDir?: string,
-    } = {}
+    }: ProgramOptions = {}
   ) {
     // This allows us to override the process argv which is useful for
     // testing.
