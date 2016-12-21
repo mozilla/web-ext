@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 
 import copyDir from 'copy-dir';
 import {fs} from 'mz';
 import {describe, it} from 'mocha';
+=======
+/* @flow */
+import path from 'path';
+
+import copyDir from 'copy-dir';
+import {fs} from 'mz';
+import {describe, it} from 'mocha';
+>>>>>>> refs/remotes/origin/master
 import {assert} from 'chai';
 import sinon from 'sinon';
 import promisify from 'es6-promisify';
@@ -13,6 +22,7 @@ import {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import completeSignCommand, {
+<<<<<<< HEAD
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
 } from '../../../src/cmd/sign';
 import {makeSureItFails, fixturePath} from '../helpers';
@@ -20,6 +30,15 @@ import {makeSureItFails, fixturePath} from '../helpers';
 import type {ExtensionManifestApplications} from '../../../src/util/manifest';
 
 describe('sign', () => {
+=======
+  extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
+} from '../../../src/cmd/sign';
+import {makeSureItFails, fixturePath} from '../helpers';
+// Import flow type
+import type {ExtensionManifestApplications} from '../../../src/util/manifest';
+
+describe('sign', () => {
+>>>>>>> refs/remotes/origin/master
 
   function getStubs() {
     const signingConfig = {

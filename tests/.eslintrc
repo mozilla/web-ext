@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "env": {
     "node": true,
@@ -9,3 +10,16 @@
     }],
   }
 }
+=======
+{
+  "env": {
+    "node": true,
+  },
+  "rules": {
+    "import/no-extraneous-dependencies": ["error", {
+      // Allow dev-dependencies in this directory.
+      "devDependencies": true
+    }],
+  }
+}
+>>>>>>> refs/remotes/origin/master

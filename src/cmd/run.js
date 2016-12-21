@@ -1,4 +1,7 @@
 /* @flow */
+import type FirefoxProfile from 'firefox-profile';
+import type Watchpack from 'watchpack';
+
 import * as defaultFirefoxApp from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
 import {
@@ -9,6 +12,7 @@ import {
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
+<<<<<<< HEAD
 
 
 const log = createLogger(__filename);
@@ -21,6 +25,13 @@ import type {OnSourceChangeFn} from '../watcher';
 import type Watchpack from 'watchpack';
 import type {
   FirefoxProcess,
+=======
+// Import objects that are only used as Flow types.
+import type {FirefoxPreferences} from '../firefox/preferences';
+import type {OnSourceChangeFn} from '../watcher';
+import type {
+  FirefoxProcess, // eslint-disable-line import/named
+>>>>>>> refs/remotes/origin/master
 } from '../firefox/index';
 import type {
   FirefoxConnectorFn, RemoteFirefox,
@@ -28,6 +39,7 @@ import type {
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
 
+const log = createLogger(__filename);
 
 // defaultWatcherCreator types and implementation.
 
@@ -146,6 +158,7 @@ export type CmdRunParams = {
   sourceDir: string,
   artifactsDir: string,
   firefox: string,
+<<<<<<< HEAD
   firefoxProfile: string,
   preInstall: boolean,
   noReload: boolean,
@@ -153,12 +166,22 @@ export type CmdRunParams = {
 };
 
 export type CmdRunOptions = {
+=======
+  firefoxProfile: string,
+  preInstall: boolean,
+  noReload: boolean,
+  customPrefs?: FirefoxPreferences,
+};
+
+export type CmdRunOptions = {
+>>>>>>> refs/remotes/origin/master
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
 };
 
 export default async function run(
+<<<<<<< HEAD
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
@@ -166,6 +189,15 @@ export default async function run(
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
+=======
+  {
+    sourceDir, artifactsDir, firefox, firefoxProfile,
+    preInstall = false, noReload = false,
+    customPrefs,
+  }: CmdRunParams,
+  {
+    firefoxApp = defaultFirefoxApp,
+>>>>>>> refs/remotes/origin/master
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
   }: CmdRunOptions = {}): Promise<Object> {
@@ -188,12 +220,21 @@ export default async function run(
     sourceDir,
     firefoxApp,
     firefox,
+<<<<<<< HEAD
     manifestData,
     profilePath: firefoxProfile,
     customPrefs,
   });
 
   const profile = await runner.getProfile();
+=======
+    manifestData,
+    profilePath: firefoxProfile,
+    customPrefs,
+  });
+
+  profile = await runner.getProfile();
+>>>>>>> refs/remotes/origin/master
 
   if (!preInstall) {
     log.debug('Deferring extension installation until after ' +
@@ -258,6 +299,7 @@ export default async function run(
 export type ExtensionRunnerParams = {
   sourceDir: string,
   manifestData: ExtensionManifest,
+<<<<<<< HEAD
   profilePath: string,
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
@@ -298,6 +340,48 @@ export class ExtensionRunner {
       }
     });
   }
+=======
+  profilePath: string,
+  firefoxApp: typeof defaultFirefoxApp,
+  firefox: string,
+  customPrefs?: FirefoxPreferences,
+};
+
+export class ExtensionRunner {
+  sourceDir: string;
+  manifestData: ExtensionManifest;
+  profilePath: string;
+  firefoxApp: typeof defaultFirefoxApp;
+  firefox: string;
+  customPrefs: FirefoxPreferences;
+
+  constructor(
+    {
+      firefoxApp, sourceDir, manifestData,
+      profilePath, firefox, customPrefs = {},
+    }: ExtensionRunnerParams
+  ) {
+    this.sourceDir = sourceDir;
+    this.manifestData = manifestData;
+    this.profilePath = profilePath;
+    this.firefoxApp = firefoxApp;
+    this.firefox = firefox;
+    this.customPrefs = customPrefs;
+  }
+
+  getProfile(): Promise<FirefoxProfile> {
+    const {firefoxApp, profilePath, customPrefs} = this;
+    return new Promise((resolve) => {
+      if (profilePath) {
+        log.debug(`Copying Firefox profile from ${profilePath}`);
+        resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
+      } else {
+        log.debug('Creating new Firefox profile');
+        resolve(firefoxApp.createProfile({customPrefs}));
+      }
+    });
+  }
+>>>>>>> refs/remotes/origin/master
 
   installAsTemporaryAddon(
     client: RemoteFirefox

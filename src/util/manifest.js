@@ -1,4 +1,5 @@
 /* @flow */
+<<<<<<< HEAD
 import path from 'path';
 
 import {fs} from 'mz';
@@ -9,6 +10,18 @@ import {createLogger} from './logger';
 
 const log = createLogger(__filename);
 
+=======
+import path from 'path';
+
+import {fs} from 'mz';
+import parseJSON from 'parse-json';
+
+import {InvalidManifest} from '../errors';
+import {createLogger} from './logger';
+
+const log = createLogger(__filename);
+
+>>>>>>> refs/remotes/origin/master
 
 // getValidatedManifest helper types and implementation
 

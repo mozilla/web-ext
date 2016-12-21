@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 
 import {fs} from 'mz';
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
+=======
+/* @flow */
+import path from 'path';
+
+import {fs} from 'mz';
+import {assert} from 'chai';
+import {describe, it} from 'mocha';
+>>>>>>> refs/remotes/origin/master
 
 import isDirectory from '../../../src/util/is-directory';
 import {withTempDir} from '../../../src/util/temp-dir';

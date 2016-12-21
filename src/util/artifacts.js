@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /* @flow */
 import {fs} from 'mz';
 
 import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';
 
+=======
+/* @flow */
+import {fs} from 'mz';
+
+import {UsageError, isErrorWithCode} from '../errors';
+import {createLogger} from './logger';
+
+>>>>>>> refs/remotes/origin/master
 const log = createLogger(__filename);
 
 

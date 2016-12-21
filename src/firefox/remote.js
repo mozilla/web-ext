@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import defaultFirefoxConnector from 'node-firefox-connect';
 // RemoteFirefox types and implementation
@@ -19,6 +20,29 @@ export const REMOTE_PORT = 6005;
 export type FirefoxConnectorFn =
   (port?: number) => Promise<FirefoxClient>;
 
+=======
+/* @flow */
+import defaultFirefoxConnector from 'node-firefox-connect';
+// RemoteFirefox types and implementation
+import type FirefoxClient from 'firefox-client'; //eslint-disable-line import/no-extraneous-dependencies
+
+import {createLogger} from '../util/logger';
+import {
+  RemoteTempInstallNotSupported,
+  UsageError,
+  WebExtError,
+} from '../errors';
+
+const log = createLogger(__filename);
+
+// The default port that Firefox's remote debugger will listen on and the
+// client will connect to.
+export const REMOTE_PORT = 6005;
+
+export type FirefoxConnectorFn =
+  (port?: number) => Promise<FirefoxClient>;
+
+>>>>>>> refs/remotes/origin/master
 export type FirefoxRDPAddonActor = {
   id: string,
   actor: string,
@@ -171,8 +195,13 @@ export class RemoteFirefox {
     const addon = await this.getInstalledAddon(addonId);
     await this.checkForAddonReloading(addon);
     await this.addonRequest(addon, 'reload');
+<<<<<<< HEAD
     log.info(
 	  `${(new Date()).toTimeString()}: Reloaded extension: ${addon.id}`);
+=======
+      process.stdout.write(`${'\r' +
+      'Last extension reload: '}${ (new Date()).toTimeString()}`);
+>>>>>>> refs/remotes/origin/master
   }
 }
 

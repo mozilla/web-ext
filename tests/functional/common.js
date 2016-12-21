@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 import {ChildProcess, spawn} from 'child_process';
@@ -11,6 +12,21 @@ import * as tmpDirUtils from '../../src/util/temp-dir';
 export const withTempDir = tmpDirUtils.withTempDir;
 
 
+=======
+/* @flow */
+import path from 'path';
+import {ChildProcess, spawn} from 'child_process';
+
+import copyDir from 'copy-dir';
+import promisify from 'es6-promisify';
+import prettyjson from 'prettyjson';
+
+import * as tmpDirUtils from '../../src/util/temp-dir';
+
+export const withTempDir = tmpDirUtils.withTempDir;
+
+
+>>>>>>> refs/remotes/origin/master
 export const functionalTestsDir = path.resolve(__dirname);
 export const projectDir = path.join(functionalTestsDir, '..', '..');
 export const webExt = path.join(projectDir, 'bin', 'web-ext');

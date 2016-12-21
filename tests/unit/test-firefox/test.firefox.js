@@ -1,19 +1,21 @@
 /* @flow */
 import path from 'path';
-import {describe, it} from 'mocha';
-import {assert} from 'chai';
+
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
+import {describe, it} from 'mocha';
+import {assert} from 'chai';
+import {fs} from 'mz';
+
 import * as firefox from '../../../src/firefox';
 import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
-import {fs} from 'mz';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
-import {defaultFirefoxEnv} from '../../../src/firefox/';
 import {RemoteFirefox} from '../../../src/firefox/remote';
 
+const {defaultFirefoxEnv} = firefox;
 
 describe('firefox', () => {
 
@@ -230,6 +232,7 @@ describe('firefox', () => {
 
     it('configures the copied profile', () => withBaseProfile(
       (baseProfile) => {
+<<<<<<< HEAD
         const app = 'fennec';
         const configureThisProfile =
           sinon.spy((profile) => Promise.resolve(profile));
@@ -239,6 +242,17 @@ describe('firefox', () => {
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);
+=======
+        let app = 'fennec';
+        let configureThisProfile =
+          sinon.spy((profile) => Promise.resolve(profile));
+
+        return firefox.copyProfile(baseProfile.path(),
+          {app, configureThisProfile})
+          .then((profile) => {
+            assert.equal(configureThisProfile.called, true);
+            assert.equal(configureThisProfile.firstCall.args[0], profile);
+>>>>>>> refs/remotes/origin/master
             assert.equal(configureThisProfile.firstCall.args[1].app, app);
           });
       }
@@ -342,6 +356,7 @@ describe('firefox', () => {
             assert.include(prefFile.toString(),
                            '"devtools.debugger.remote-enabled", true');
           });
+<<<<<<< HEAD
       }
     ));
 
@@ -364,6 +379,30 @@ describe('firefox', () => {
   });
 
   describe('installExtension', () => {
+=======
+      }
+    ));
+
+    it('writes custom preferences', () => withTempProfile(
+      (profile) => {
+        const customPrefs = {'extensions.checkCompatibility.nightly': true};
+        return firefox.configureProfile(profile, {customPrefs})
+          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((prefFile) => {
+            // Check for custom pref set by configureProfile().
+            assert.include(prefFile.toString(),
+                           '"extensions.checkCompatibility.nightly", true');
+            // Check that one of the default preferences is set as well
+            assert.include(prefFile.toString(),
+                           '"devtools.debugger.remote-enabled", true');
+          });
+      }
+    ));
+
+  });
+
+  describe('installExtension', () => {
+>>>>>>> refs/remotes/origin/master
 
     function setUp(testPromise: Function) {
       return withTempDir(
@@ -447,7 +486,7 @@ describe('firefox', () => {
           {
             manifestData: basicManifest,
             profile: data.profile,
-            extensionPath: extensionPath,
+            extensionPath,
             asProxy: true,
           })
           .then(makeSureItFails())

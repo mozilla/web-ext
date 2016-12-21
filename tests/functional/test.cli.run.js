@@ -8,6 +8,7 @@ import {
 
 const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 
+<<<<<<< HEAD
 describe('web-ext run', () => {
   it('should accept: --no-reload --source-dir SRCDIR --firefox FXPATH',
      () => withTempAddonDir(
@@ -25,6 +26,25 @@ describe('web-ext run', () => {
              addonPath: srcDir,
            },
          };
+=======
+describe('web-ext run', () => {
+  it('should accept: --no-reload --source-dir SRCDIR --firefox FXPATH',
+     () => withTempAddonDir(
+       {addonPath},
+       (srcDir) => {
+         const argv = [
+           'run', '--verbose', '--no-reload',
+           '--source-dir', srcDir,
+           '--firefox', fakeFirefoxPath,
+         ];
+         const spawnOptions = {
+           env: {
+             PATH: process.env.PATH,
+             EXPECTED_MESSAGE,
+             addonPath: srcDir,
+           },
+         };
+>>>>>>> refs/remotes/origin/master
 
          const cmd = execCommand(webExt, argv, spawnOptions);
 

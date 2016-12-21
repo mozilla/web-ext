@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 
 import {it, describe} from 'mocha';
 import {fs} from 'mz';
 import sinon from 'sinon';
+=======
+/* @flow */
+import path from 'path';
+
+import {it, describe} from 'mocha';
+import {fs} from 'mz';
+import sinon from 'sinon';
+>>>>>>> refs/remotes/origin/master
 import {assert} from 'chai';
 
 import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';

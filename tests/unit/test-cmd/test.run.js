@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 import EventEmitter from 'events';
@@ -5,6 +6,15 @@ import EventEmitter from 'events';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+=======
+/* @flow */
+import path from 'path';
+import EventEmitter from 'events';
+
+import {describe, it} from 'mocha';
+import {assert} from 'chai';
+import sinon from 'sinon';
+>>>>>>> refs/remotes/origin/master
 
 import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';

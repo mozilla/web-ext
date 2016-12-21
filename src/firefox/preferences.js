@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import {WebExtError, UsageError} from '../errors';
 import {createLogger} from '../util/logger';
@@ -10,6 +11,20 @@ export const nonOverridablePreferences = [
 
 // Flow Types
 
+=======
+/* @flow */
+import {WebExtError, UsageError} from '../errors';
+import {createLogger} from '../util/logger';
+
+const log = createLogger(__filename);
+export const nonOverridablePreferences = [
+  'devtools.debugger.remote-enabled', 'devtools.debugger.prompt-connection',
+  'xpinstall.signatures.required',
+];
+
+// Flow Types
+
+>>>>>>> refs/remotes/origin/master
 export type FirefoxPreferences = {
   [key: string]: boolean | string | number,
 };
@@ -120,6 +135,7 @@ export function getPrefs(
   }
   return {
     ...prefsCommon,
+<<<<<<< HEAD
     ...appPrefs,
   };
 }
@@ -155,3 +171,40 @@ export function coerceCLICustomPreference(
 
   return customPrefs;
 }
+=======
+    ...appPrefs,
+  };
+}
+
+export function coerceCLICustomPreference(
+  cliPrefs: string | Array<string>
+): FirefoxPreferences {
+  let customPrefs = {};
+
+  if (!Array.isArray(cliPrefs)) {
+    cliPrefs = [cliPrefs];
+  }
+
+  for (let pref of cliPrefs) {
+    let [key, value] = pref.split('=');
+
+    if (/[^\w{@}.-]/.test(key)) {
+      throw new UsageError(`Invalid custom preference name: ${key}`);
+    }
+
+    if (value === `${parseInt(value)}`) {
+      value = parseInt(value, 10);
+    } else if (value === 'true' || value === 'false') {
+      value = (value === 'true');
+    }
+
+    if (nonOverridablePreferences.includes(key)) {
+      log.warn(`'${key}' preference cannot be customized.`);
+      continue;
+    }
+    customPrefs[`${key}`] = value;
+  }
+
+  return customPrefs;
+}
+>>>>>>> refs/remotes/origin/master

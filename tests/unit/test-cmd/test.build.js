@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 
@@ -5,6 +6,15 @@ import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+=======
+/* @flow */
+import path from 'path';
+
+import {fs} from 'mz';
+import {it, describe} from 'mocha';
+import {assert} from 'chai';
+import sinon from 'sinon';
+>>>>>>> refs/remotes/origin/master
 
 import build, {
   safeFileName,

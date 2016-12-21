@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import {WriteStream} from 'tty';
 
@@ -8,6 +9,18 @@ import {assert} from 'chai';
 
 import {createLogger, ConsoleStream} from '../../../src/util/logger';
 
+=======
+/* @flow */
+import {WriteStream} from 'tty';
+
+import bunyan from 'bunyan';
+import sinon from 'sinon';
+import {it, describe} from 'mocha';
+import {assert} from 'chai';
+
+import {createLogger, ConsoleStream} from '../../../src/util/logger';
+
+>>>>>>> refs/remotes/origin/master
 
 describe('logger', () => {
 

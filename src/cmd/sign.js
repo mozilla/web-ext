@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 
@@ -20,6 +21,30 @@ export const extensionIdFile = '.web-extension-id';
 // Sign command types and implementation.
 
 export type SignParams = {
+=======
+/* @flow */
+import path from 'path';
+
+import {fs} from 'mz';
+import defaultAddonSigner from 'sign-addon';
+
+import defaultBuilder from './build';
+import getValidatedManifest, {getManifestId} from '../util/manifest';
+import {withTempDir} from '../util/temp-dir';
+import {isErrorWithCode, UsageError, WebExtError} from '../errors';
+import {prepareArtifactsDir} from '../util/artifacts';
+import {createLogger} from '../util/logger';
+import type {ExtensionManifest} from '../util/manifest';
+
+
+const log = createLogger(__filename);
+
+export const extensionIdFile = '.web-extension-id';
+
+// Sign command types and implementation.
+
+export type SignParams = {
+>>>>>>> refs/remotes/origin/master
   id?: string,
   verbose?: boolean,
   sourceDir: string,

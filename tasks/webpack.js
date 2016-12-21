@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 var path = require('path');
 
 var webpackConfig = require('../webpack.config.js');
 
 
+=======
+var path = require('path');
+
+var webpackConfig = require('../webpack.config.js');
+
+
+>>>>>>> refs/remotes/origin/master
 module.exports = {
   options: webpackConfig,
   build: {},
