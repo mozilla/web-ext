@@ -21,6 +21,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
+        getVersion: () => 'not-a-real-version',
         checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
@@ -246,17 +247,18 @@ describe('program.Program', () => {
   });
 
   it('checks for updates automatically', () => {
-    const root = path.join(__dirname, '..', '..');
     const handler = spy();
-    const checkForAutomaticUpdates = sinon.stub();
+    const getVersion = () => 'some-package-version';
+    const checkForUpdates = sinon.stub();
     const program = new Program(['run'])
       .command('run', 'some command', handler);
     return execProgram(program, {
-      checkForUpdates: checkForAutomaticUpdates,
+      checkForUpdates,
+      getVersion,
     })
       .then(() => {
-        assert.equal(checkForAutomaticUpdates.firstCall.args[0].version,
-                          defaultVersionGetter(root));
+        assert.equal(checkForUpdates.firstCall.args[0].version,
+                    'some-package-version');
       });
   });
 });
@@ -266,6 +268,7 @@ describe('program.main', () => {
 
   function execProgram(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
     const runOptions = {
+      getVersion: () => 'not-a-real-version',
       checkForUpdates: spy(),
       shouldExitProgram: false,
       systemProcess: fake(process),

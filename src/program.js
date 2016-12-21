@@ -14,9 +14,9 @@ import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
 
-type ProgramOptions = {
+type ProgramOptions = {|
   absolutePackageDir?: string,
-}
+|}
 
 /*
  * The command line program.
@@ -119,11 +119,12 @@ export class Program {
       if (!runCommand) {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
-      await runCommand(argv);
 
       checkForUpdates ({
         version: getVersion(absolutePackageDir),
       });
+
+      await runCommand(argv);
 
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';

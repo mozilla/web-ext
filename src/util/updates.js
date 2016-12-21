@@ -10,7 +10,7 @@ export function checkForUpdates(
   {
     version,
     updateNotifier = defaultUpdateNotifier,
-	}: checkForUpdatesParams
+  }: checkForUpdatesParams
 ) {
   const pkg = {name: 'web-ext', version};
 
