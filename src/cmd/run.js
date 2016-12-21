@@ -83,8 +83,8 @@ export function defaultReloadStrategy(
   }: ReloadStrategyOptions = {}
 ): void {
   const watcher: Watchpack = (
-      createWatcher({addonId, client, sourceDir, artifactsDir})
-    );
+    createWatcher({addonId, client, sourceDir, artifactsDir})
+  );
 
   firefoxProcess.on('close', () => {
     client.disconnect();
