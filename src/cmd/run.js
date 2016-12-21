@@ -182,10 +182,7 @@ export default async function run(
   const requiresRemote = !preInstall;
   let installed = false;
 
-  let runner;
-  let profile;
   let client;
-  let runningFirefox;
   let addonId;
 
   const manifestData = await getValidatedManifest(sourceDir);
