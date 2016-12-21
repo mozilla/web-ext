@@ -5,6 +5,7 @@ import {readFileSync} from 'fs';
 import git from 'git-rev-sync';
 import yargs from 'yargs';
 
+<<<<<<< HEAD
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
@@ -12,6 +13,15 @@ import {coerceCLICustomPreference} from './firefox/preferences';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
+=======
+import defaultCommands from './cmd';
+import {UsageError} from './errors';
+import {createLogger, consoleStream as defaultLogStream} from './util/logger';
+import {coerceCLICustomPreference} from './firefox/preferences';
+
+const log = createLogger(__filename);
+const envPrefix = 'WEB_EXT';
+>>>>>>> refs/remotes/origin/master
 
 
 /*
@@ -95,10 +105,14 @@ export class Program {
     const argv = this.yargs.argv;
     const cmd = argv._[0];
 
+<<<<<<< HEAD
+    const runCommand = this.commands[cmd];
+=======
     // Command line option (pref) renamed for internal use (customPref).
     argv.customPrefs = argv.pref;
 
     let runCommand = this.commands[cmd];
+>>>>>>> refs/remotes/origin/master
 
     if (argv.verbose) {
       logStream.makeVerbose();
@@ -147,7 +161,7 @@ export function defaultVersionGetter(
 ): string {
   if (localEnv === 'production') {
     log.debug('Getting the version from package.json');
-    let packageData: any = readFileSync(
+    const packageData: any = readFileSync(
       path.join(absolutePackageDir, 'package.json'));
     return JSON.parse(packageData).version;
   } else {
@@ -164,7 +178,7 @@ export function main(
     runOptions = {},
   }: Object = {}
 ): Promise<any> {
-  let program = new Program(argv, {absolutePackageDir});
+  const program = new Program(argv, {absolutePackageDir});
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.
@@ -287,6 +301,7 @@ Example: $0 --help run.
         describe: 'Pre-install the extension into the profile before ' +
                   'startup. This is only needed to support older versions ' +
                   'of Firefox.',
+<<<<<<< HEAD
         demand: false,
         type: 'boolean',
       },
@@ -301,6 +316,22 @@ Example: $0 --help run.
     })
     .command('lint', 'Validate the web extension source', commands.lint, {
       'output': {
+=======
+        demand: false,
+        type: 'boolean',
+      },
+      'pref': {
+        describe: 'Launch firefox with custom preferences. Lightweight ' +
+                  'alternative to creating custom profile.',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+        coerce: coerceCLICustomPreference,
+      },
+    })
+    .command('lint', 'Validate the web extension source', commands.lint, {
+      'output': {
+>>>>>>> refs/remotes/origin/master
         alias: 'o',
         describe: 'The type of output to generate',
         type: 'string',

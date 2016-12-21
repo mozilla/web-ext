@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 
@@ -9,6 +10,19 @@ import promisify from 'es6-promisify';
 import {createLogger} from '../../src/util/logger';
 
 const log = createLogger(__filename);
+=======
+/* @flow */
+import path from 'path';
+
+import sinon from 'sinon';
+import yauzl from 'yauzl';
+import ExtendableError from 'es6-error';
+import promisify from 'es6-promisify';
+
+import {createLogger} from '../../src/util/logger';
+
+const log = createLogger(__filename);
+>>>>>>> refs/remotes/origin/master
 
 
 /*
@@ -148,11 +162,11 @@ export function fake<T>(original: Object, methods: Object = {}): T {
   }
 
   var proto = Object.getPrototypeOf(original);
-  for (let key of props) {
+  for (const key of props) {
     if (!original.hasOwnProperty(key) && !proto.hasOwnProperty(key)) {
       continue;
     }
-    let definition = original[key] || proto[key];
+    const definition = original[key] || proto[key];
     if (typeof definition === 'function') {
       stub[key] = () => {
         log.warn(`Running stubbed function ${key} (default implementation)`);

@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /* @flow */
 import {beforeEach, afterEach} from 'mocha';
 
 import {consoleStream} from '../../src/util/logger';
 
 beforeEach(function() {
+=======
+/* @flow */
+import {beforeEach, afterEach} from 'mocha';
+
+import {consoleStream} from '../../src/util/logger';
+
+beforeEach(function() {
+>>>>>>> refs/remotes/origin/master
   consoleStream.makeVerbose();
   consoleStream.startCapturing();
 });

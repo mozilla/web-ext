@@ -48,6 +48,7 @@
     "babel-polyfill": "6.16.0",
     "babel-runtime": "6.18.0",
     "bunyan": "1.8.5",
+<<<<<<< HEAD
     "debounce": "1.0.0",
     "es6-error": "4.0.0",
     "es6-promisify": "5.0.0",
@@ -55,6 +56,15 @@
     "fx-runner": "1.0.6",
     "git-rev-sync": "1.8.0",
     "minimatch": "3.0.3",
+=======
+    "debounce": "1.0.0",
+    "es6-error": "4.0.0",
+    "es6-promisify": "5.0.0",
+    "firefox-profile": "0.4.5",
+    "fx-runner": "1.0.6",
+    "git-rev-sync": "1.8.0",
+    "minimatch": "3.0.3",
+>>>>>>> refs/remotes/origin/master
     "mz": "2.6.0",
     "node-firefox-connect": "1.2.0",
     "regenerator-runtime": "0.10.1",

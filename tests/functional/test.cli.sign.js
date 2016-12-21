@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /* @flow */
 import {spawn} from 'child_process';
 
 import {describe, it, beforeEach, afterEach} from 'mocha';
 
 import {
+=======
+/* @flow */
+import {spawn} from 'child_process';
+
+import {describe, it, beforeEach, afterEach} from 'mocha';
+
+import {
+>>>>>>> refs/remotes/origin/master
   webExt, addonPath, fakeServerPath,
   withTempAddonDir, execCommand, reportCommandErrors,
 } from './common';

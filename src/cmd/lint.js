@@ -1,9 +1,18 @@
+<<<<<<< HEAD
 /* @flow */
 import {createInstance as defaultLinterCreator} from 'addons-linter';
 
 import {createLogger} from '../util/logger';
 import {FileFilter} from './build';
 
+=======
+/* @flow */
+import {createInstance as defaultLinterCreator} from 'addons-linter';
+
+import {createLogger} from '../util/logger';
+import {FileFilter} from './build';
+
+>>>>>>> refs/remotes/origin/master
 
 const log = createLogger(__filename);
 

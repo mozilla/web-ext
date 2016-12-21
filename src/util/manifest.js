@@ -1,4 +1,5 @@
 /* @flow */
+<<<<<<< HEAD
 import path from 'path';
 
 import {fs} from 'mz';
@@ -9,6 +10,18 @@ import {createLogger} from './logger';
 
 const log = createLogger(__filename);
 
+=======
+import path from 'path';
+
+import {fs} from 'mz';
+import parseJSON from 'parse-json';
+
+import {InvalidManifest} from '../errors';
+import {createLogger} from './logger';
+
+const log = createLogger(__filename);
+
+>>>>>>> refs/remotes/origin/master
 
 // getValidatedManifest helper types and implementation
 
@@ -31,7 +44,7 @@ export type ExtensionManifest = {|
 export default async function getValidatedManifest(
   sourceDir: string
 ): Promise<ExtensionManifest> {
-  let manifestFile = path.join(sourceDir, 'manifest.json');
+  const manifestFile = path.join(sourceDir, 'manifest.json');
   log.debug(`Validating manifest at ${manifestFile}`);
 
   let manifestContents;
@@ -52,7 +65,7 @@ export default async function getValidatedManifest(
       `Error parsing manifest.json at ${manifestFile}: ${error}`);
   }
 
-  let errors = [];
+  const errors = [];
   // This is just some basic validation of what web-ext needs, not
   // what Firefox will need to run the extension.
   // TODO: integrate with the addons-linter for actual validation.

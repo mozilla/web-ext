@@ -1,6 +1,7 @@
 # Development of web-ext
 
 Hi! Thanks for your interest in helping make
+<<<<<<< HEAD
 [WebExtension](https://developer.mozilla.org/en-US/Add-ons/WebExtensions)
 development more awesome by contributing to the `web-ext` tool.
 
@@ -16,6 +17,23 @@ If you'd like to work on a bug, please comment on it to let the maintainers know
 # Installation
 
 To get started on a patch, first install `web-ext` from [source](README.md#installation-from-source).
+=======
+[WebExtension](https://developer.mozilla.org/en-US/Add-ons/WebExtensions)
+development more awesome by contributing to the `web-ext` tool.
+
+#Picking an issue
+
+If you're looking for a small task to work on so you can get familiar with the
+process of contributing patches, have a read through these
+[good first bugs](https://github.com/mozilla/web-ext/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+bug%22).
+
+If you'd like to work on a bug, please comment on it to let the maintainers know. If someone else has already commented and taken up that bug, please refrain from working on it and submitting a PR without asking the maintainers as it leads to unnecessary duplication of effort.
+
+
+# Installation
+
+To get started on a patch, first install `web-ext` from [source](README.md#installation-from-source).
+>>>>>>> refs/remotes/origin/master
 
 ## Develop all the things
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 import EventEmitter from 'events';
@@ -5,6 +6,15 @@ import EventEmitter from 'events';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+=======
+/* @flow */
+import path from 'path';
+import EventEmitter from 'events';
+
+import {describe, it} from 'mocha';
+import {assert} from 'chai';
+import sinon from 'sinon';
+>>>>>>> refs/remotes/origin/master
 
 import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
@@ -32,12 +42,12 @@ describe('run', () => {
 
   function prepareRun(fakeInstallResult) {
     const sourceDir = fixturePath('minimal-web-ext');
-    let argv = {
+    const argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
     };
-    let options = {
+    const options = {
       firefoxApp: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(fake(RemoteFirefox.prototype, {
@@ -63,8 +73,8 @@ describe('run', () => {
   }
 
   function getFakeFirefox(implementations = {}) {
-    let profile = {}; // empty object just to avoid errors.
-    let allImplementations = {
+    const profile = {}; // empty object just to avoid errors.
+    const allImplementations = {
       createProfile: () => Promise.resolve(profile),
       copyProfile: () => Promise.resolve(profile),
       installExtension: () => Promise.resolve(),
@@ -76,7 +86,7 @@ describe('run', () => {
 
   it('installs and runs the extension', () => {
 
-    let profile = {};
+    const profile = {};
 
     const cmd = prepareRun();
     const {firefoxApp} = cmd.options;

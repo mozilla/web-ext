@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*eslint prefer-template: 0*/
 var path = require('path');
 var fs = require('fs');
@@ -7,6 +8,17 @@ var webpack = require('webpack');
 var nodeModules = {};
 
 // This is to filter out node_modules as we don't want them
+=======
+/*eslint prefer-template: 0*/
+var path = require('path');
+var fs = require('fs');
+
+var webpack = require('webpack');
+
+var nodeModules = {};
+
+// This is to filter out node_modules as we don't want them
+>>>>>>> refs/remotes/origin/master
 // to be made part of any bundles.
 fs.readdirSync('node_modules')
   .filter(function(x) {

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import {fs} from 'mz';
 
@@ -5,6 +6,15 @@ import {onlyErrorsWithCode} from '../errors';
 
 /*
  * Resolves true if the path is a readable directory.
+=======
+/* @flow */
+import {fs} from 'mz';
+
+import {onlyErrorsWithCode} from '../errors';
+
+/*
+ * Resolves true if the path is a readable directory.
+>>>>>>> refs/remotes/origin/master
  *
  * Usage:
  *

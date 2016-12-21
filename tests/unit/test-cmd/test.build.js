@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* @flow */
 import path from 'path';
 
@@ -5,6 +6,15 @@ import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+=======
+/* @flow */
+import path from 'path';
+
+import {fs} from 'mz';
+import {it, describe} from 'mocha';
+import {assert} from 'chai';
+import sinon from 'sinon';
+>>>>>>> refs/remotes/origin/master
 
 import build, {
   safeFileName,
@@ -25,7 +35,7 @@ const log = createLogger(__filename);
 describe('build', () => {
 
   it('zips a package', () => {
-    let zipFile = new ZipFile();
+    const zipFile = new ZipFile();
 
     return withTempDir(
       (tmpDir) =>
@@ -201,8 +211,8 @@ describe('build', () => {
   ));
 
   it('asks FileFilter what files to include in the ZIP', () => {
-    let zipFile = new ZipFile();
-    let fileFilter = new FileFilter({
+    const zipFile = new ZipFile();
+    const fileFilter = new FileFilter({
       filesToIgnore: ['**/background-script.js'],
     });
 
