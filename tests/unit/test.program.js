@@ -255,6 +255,7 @@ describe('program.Program', () => {
     return execProgram(program, {
       checkForUpdates,
       getVersion,
+      localEnv: 'production',
     })
       .then(() => {
         assert.equal(checkForUpdates.firstCall.args[0].version,

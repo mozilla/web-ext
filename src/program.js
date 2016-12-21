@@ -92,7 +92,7 @@ export class Program {
     {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
       logStream = defaultLogStream, getVersion = defaultVersionGetter,
-      shouldExitProgram = true,
+      shouldExitProgram = true, localEnv = 'development',
     }: Object = {}
   ): Promise<void> {
 
@@ -119,10 +119,11 @@ export class Program {
       if (!runCommand) {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
-
-      checkForUpdates ({
-        version: getVersion(absolutePackageDir),
-      });
+      if (localEnv === 'production') {
+        checkForUpdates ({
+          version: getVersion(absolutePackageDir),
+        });
+      }
 
       await runCommand(argv);
 
