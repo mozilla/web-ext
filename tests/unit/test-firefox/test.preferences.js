@@ -13,7 +13,7 @@ describe('firefox/preferences', () => {
   describe('getPrefs', () => {
 
     it('gets Firefox prefs with some defaults', () => {
-      let prefs = getPrefs();
+      const prefs = getPrefs();
       // This is a commonly shared pref.
       assert.equal(prefs['devtools.debugger.remote-enabled'], true);
       // This is a Firefox only pref.
@@ -21,7 +21,7 @@ describe('firefox/preferences', () => {
     });
 
     it('gets Fennec prefs with some defaults', () => {
-      let prefs = getPrefs('fennec');
+      const prefs = getPrefs('fennec');
       // This is a commonly shared pref.
       assert.equal(prefs['devtools.debugger.remote-enabled'], true);
       // This is a Fennec only pref.
@@ -73,7 +73,7 @@ describe('firefox/preferences', () => {
         return prop += '=true';
       });
       const prefs = coerceCLICustomPreference(nonChangeablePrefs);
-      for (let pref of nonChangeablePrefs) {
+      for (const pref of nonChangeablePrefs) {
         assert.isUndefined(prefs[pref], `${pref} should be undefined`);
       }
     });

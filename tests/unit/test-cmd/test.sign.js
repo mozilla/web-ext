@@ -234,7 +234,7 @@ describe('sign', () => {
 
   it('returns a signing result', () => withTempDir(
     (tmpDir) => {
-      let stubs = getStubs();
+      const stubs = getStubs();
       return sign(tmpDir, stubs)
         .then((realResult) => {
           assert.deepEqual(realResult, stubs.signingResult);
@@ -267,7 +267,7 @@ describe('sign', () => {
       return sign(tmpDir, stubs, {extraArgs: {artifactsDir}})
         .then(() => {
           assert.equal(stubs.signAddon.called, true);
-          let signedAddonCall = stubs.signAddon.firstCall.args[0];
+          const signedAddonCall = stubs.signAddon.firstCall.args[0];
           assert.equal(signedAddonCall.apiKey,
                        stubs.signingConfig.apiKey);
           assert.equal(signedAddonCall.apiSecret,
@@ -294,7 +294,7 @@ describe('sign', () => {
 
   it('passes the verbose flag to the signer', () => withTempDir(
     (tmpDir) => {
-      let stubs = getStubs();
+      const stubs = getStubs();
       return sign(tmpDir, stubs, {extraArgs: {verbose: true}})
         .then(() => {
           assert.equal(stubs.signAddon.called, true);
@@ -305,7 +305,7 @@ describe('sign', () => {
 
   it('passes through a signing exception', () => withTempDir(
     (tmpDir) => {
-      let stubs = getStubs();
+      const stubs = getStubs();
       stubs.signAddon = () => Promise.reject(new Error('some signing error'));
 
       return sign(tmpDir, stubs)

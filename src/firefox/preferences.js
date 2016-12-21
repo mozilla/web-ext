@@ -127,23 +127,23 @@ export function getPrefs(
 export function coerceCLICustomPreference(
   cliPrefs: string | Array<string>
 ): FirefoxPreferences {
-  let customPrefs = {};
+  const customPrefs = {};
 
   if (!Array.isArray(cliPrefs)) {
     cliPrefs = [cliPrefs];
   }
 
-  for (let pref of cliPrefs) {
-    let [key, value] = pref.split('=');
+  for (const pref of cliPrefs) {
+    const [key, value] = pref.split('=');
 
     if (/[^\w{@}.-]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
     }
 
     if (value === `${parseInt(value)}`) {
-      value = parseInt(value, 10);
+      const value = parseInt(value, 10);
     } else if (value === 'true' || value === 'false') {
-      value = (value === 'true');
+      const value = (value === 'true');
     }
 
     if (nonOverridablePreferences.includes(key)) {

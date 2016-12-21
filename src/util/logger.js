@@ -84,7 +84,7 @@ export class ConsoleStream {
   }
 
   flushCapturedLogs({localProcess = process}: ConsoleOptions = {}) {
-    for (let msg of this.capturedMessages) {
+    for (const msg of this.capturedMessages) {
       localProcess.stdout.write(msg);
     }
     this.capturedMessages = [];
