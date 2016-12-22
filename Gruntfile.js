@@ -51,4 +51,74 @@ module.exports = function(grunt) {
       ]);
     }
   });
+
+  grunt.registerTask(
+    'travisPullRequestTitleLinting',
+    'get the pull request title in a travis build', function() {
+      if (process.env.TRAVIS_PULL_REQUEST &&
+          process.env.TRAVIS_PULL_REQUEST !== 'false') {
+        var done = this.async();
+
+        // Install ES6/ES7 polyfills required to use changelog-lint programmatically.
+        if (!Object.values) {
+          require('object.values').shim();
+        }
+        if (!Object.entries) {
+          require('object.entries').shim();
+        }
+
+        var pullRequestURLPath = '/repos/' + process.env.TRAVIS_REPO_SLUG +
+          /pulls/ + process.env.TRAVIS_PULL_REQUEST + '.json';
+
+        grunt.log.writeln(
+          'Retrieving the pull request title from https://api.github.com' +
+          pullRequestURLPath
+        );
+
+        require('https').get({
+          host: 'api.github.com',
+          path: pullRequestURLPath,
+          headers: {
+            'User-Agent': 'mozilla web-ext grunt tasks',
+          },
+        }, function(response) {
+          var body = '';
+          response.on('data', function(data) {
+            body += data;
+          });
+          response.on('error', function(err) {
+            grunt.log.writeln('Failed during pull request title download: ' +
+                              err);
+
+            done(false);
+          });
+          response.on('end', function() {
+            var parsed = JSON.parse(body);
+
+            grunt.log.writeln('Retrieved pull request title: ' + parsed.title);
+
+            var changelogLintPkg = require('conventional-changelog-lint');
+            var changelogLint = changelogLintPkg.default;
+            var getPreset = changelogLintPkg.getPreset;
+            var getConfiguration = changelogLintPkg.getConfiguration;
+
+            Promise.all([
+              getPreset('angular'),
+              getConfiguration('.conventional-changelog-lintrc'),
+            ]).then(([preset, configuration]) => {
+              return changelogLint(parsed.title, {preset, configuration});
+            }).then((report) => {
+              grunt.log.writeln('changelog lint report: ' +
+                                JSON.stringify(report, null, 2));
+
+              done(report.valid);
+            }).catch((err) => {
+              grunt.log.writeln('Failed running changelog-lint: ' + err);
+
+              done(false);
+            });
+          });
+        });
+      }
+    });
 };
