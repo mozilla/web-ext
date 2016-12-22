@@ -133,17 +133,20 @@ export function coerceCLICustomPreference(
     cliPrefs = [cliPrefs];
   }
 
+
   for (const pref of cliPrefs) {
-    const [key, value] = pref.split('=');
+    const prefsAry = pref.split('=');
+    const key = prefsAry[0];
+    let value = prefsAry[1];
 
     if (/[^\w{@}.-]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
     }
 
     if (value === `${parseInt(value)}`) {
-      const value = parseInt(value, 10);
+      value = parseInt(value, 10);
     } else if (value === 'true' || value === 'false') {
-      const value = (value === 'true');
+      value = (value === 'true');
     }
 
     if (nonOverridablePreferences.includes(key)) {
