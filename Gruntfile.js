@@ -105,7 +105,10 @@ module.exports = function(grunt) {
             Promise.all([
               getPreset('angular'),
               getConfiguration('.conventional-changelog-lintrc'),
-            ]).then(([preset, configuration]) => {
+            ]).then((results) => {
+              var preset = results[0];
+              var configuration = results[1];
+
               return changelogLint(parsed.title, {preset, configuration});
             }).then((report) => {
               grunt.log.writeln('changelog lint report: ' +
