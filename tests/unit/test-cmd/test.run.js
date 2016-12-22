@@ -16,7 +16,6 @@ import {RemoteFirefox} from '../../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
 import {createLogger} from '../../../src/util/logger';
-import {NotificationCenter as NC} from 'node-notifier';
 
 const log = createLogger(__filename);
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
@@ -242,9 +241,7 @@ describe('run', () => {
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
-        messenger: fake(NC.prototype, {
-          notify: () => Promise.resolve(),
-        }),
+        desktopNotifications: sinon.spy(() => Promise.resolve()),
       };
       return {
         config,
@@ -295,9 +292,11 @@ describe('run', () => {
       assert.equal(config.onSourceChange.called, true);
       return callArgs.onChange()
         .then(() => {
-          assert.equal(config.messenger.notify.called, true);
-          assert.equal(config.messenger.notify.firstCall.args[0].title,
-                       'Started reloading');
+          assert.equal(config.desktopNotifications.called, true);
+          assert.equal(
+            config.desktopNotifications.firstCall.args[0].titleString,
+            'web-ext run: reload'
+          );
         });
     });
 
@@ -311,9 +310,11 @@ describe('run', () => {
       return config.onSourceChange.firstCall.args[0].onChange()
         .then(makeSureItFails())
         .catch((error) => {
-          assert.equal(config.messenger.notify.called, true);
-          assert.equal(config.messenger.notify.lastCall.args[0].message,
-                       error.message);
+          assert.equal(config.desktopNotifications.called, true);
+          assert.equal(
+            config.desktopNotifications.lastCall.args[0].messageString,
+            error.message
+          );
         });
     });
 
