@@ -92,7 +92,7 @@ export class Program {
     {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
       logStream = defaultLogStream, getVersion = defaultVersionGetter,
-      shouldExitProgram = true, localEnv = 'development',
+      shouldExitProgram = true, localEnv = WEBEXT_BUILD_ENV,
     }: Object = {}
   ): Promise<void> {
 

@@ -22,7 +22,7 @@ describe('util/updates', () => {
       assert.equal(updateNotifierStub.firstCall.args[0].pkg.name, 'web-ext');
       assert.equal(updateNotifierStub.firstCall.args[0].pkg.version, '1.0.0');
       assert.equal(updateNotifierStub.firstCall.args[0].updateCheckInterval,
-                  1000 * 60 * 60 * 24 * 7);
+                   1000 * 60 * 60 * 24 * 7);
     });
   });
 });

@@ -262,6 +262,22 @@ describe('program.Program', () => {
                     'some-package-version');
       });
   });
+
+  it('does not check for updates during development', () => {
+    const handler = spy();
+    const getVersion = () => 'some-package-version';
+    const checkForUpdates = sinon.stub();
+    const program = new Program(['run'])
+      .command('run', 'some command', handler);
+    return execProgram(program, {
+      checkForUpdates,
+      getVersion,
+      localEnv: 'development',
+    })
+      .then(() => {
+        assert.equal(checkForUpdates.called, false);
+      });
+  });
 });
 
 
