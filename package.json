@@ -19,10 +19,10 @@
     "test": "grunt test",
     "publish-coverage": "grunt coveralls",
     "nsp-check": "nsp check -o summary",
-    "travis-pullrequest-title-lint": "grunt travisPullRequestTitleLinting",
     "changelog": "conventional-changelog -p angular -u",
     "changelog-lint": "conventional-changelog-lint --from master",
-    "changelog-lint-from-stdin": "conventional-changelog-lint"
+    "changelog-lint-from-stdin": "conventional-changelog-lint",
+    "travis-pr-title-lint": "grunt travis-pr-title-lint"
   },
   "homepage": "https://github.com/mozilla/web-ext",
   "repository": {

@@ -10,7 +10,7 @@ before_script:
 
 script:
 - COVERAGE=y NODE_ENV=production npm test
-- npm run travis-pullrequest-title-lint
+- npm run travis-pr-title-lint
 
 after_script: npm run publish-coverage
 
