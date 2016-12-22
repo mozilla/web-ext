@@ -2,10 +2,10 @@
 import path from 'path';
 import {createWriteStream} from 'fs';
 
-import minimatch from 'minimatch';
 import {fs} from 'mz';
 import streamToPromise from 'stream-to-promise';
 import parseJSON from 'parse-json';
+import createIgnore from 'ignore';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
@@ -152,7 +152,7 @@ export type BuildCmdOptions = {
 export default async function build(
   {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
   {
-    manifestData, fileFilter = new FileFilter(),
+    manifestData, fileFilter = new FileFilter({ sourceDir }),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
     showReadyMessage = true,
@@ -191,21 +191,47 @@ export default async function build(
 
 export type FileFilterOptions = {
   filesToIgnore?: Array<string>,
+  sourceDir?: string
 };
 
 /*
  * Allows or ignores files when creating a ZIP archive.
  */
 export class FileFilter {
-  filesToIgnore: Array<string>;
+  _ignore: Object;
 
-  constructor({filesToIgnore}: FileFilterOptions = {}) {
-    this.filesToIgnore = filesToIgnore || [
-      '**/*.xpi',
-      '**/*.zip',
-      '**/.*', // any hidden file
-      '**/node_modules',
-    ];
+  constructor({filesToIgnore, sourceDir}: FileFilterOptions = {}) {
+    this._ignore = createIgnore();
+
+    // TODO if a xpiignore file is provided, then
+    // are defaults required?
+    this._ignore.add(filesToIgnore || [
+      '*.xpi',
+      '*.zip',
+      '.*', // any hidden file
+      'node_modules',
+    ]);
+
+    if (sourceDir) {
+      const ignoreFilePath = path.join(sourceDir, '.xpiignore');
+
+      if (fs.existsSync(ignoreFilePath)) {
+        try {
+          const text = fs.readFileSync(ignoreFilePath, 'utf8');
+          const filesToIgnore = text.split('\n');
+          this.add(filesToIgnore);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }
+
+  /*
+   * Add a new path to ignore
+   */
+  add(path: string | Array<string>) {
+    this._ignore.add(path);
   }
 
   /*
@@ -215,12 +241,11 @@ export class FileFilter {
    * file in the folder that is being archived.
    */
   wantFile(path: string): boolean {
-    for (const test of this.filesToIgnore) {
-      if (minimatch(path, test)) {
-        log.debug(`FileFilter: ignoring file ${path}`);
-        return false;
-      }
+    if (this._ignore.ignores(path)) {
+      log.debug(`FileFilter: ignoring file ${path}`);
+      return false;
     }
+
     return true;
   }
 }
