@@ -98,7 +98,7 @@ export class Program {
     // Command line option (pref) renamed for internal use (customPref).
     argv.customPrefs = argv.pref;
 
-    let runCommand = this.commands[cmd];
+    const runCommand = this.commands[cmd];
 
     if (argv.verbose) {
       logStream.makeVerbose();
@@ -147,7 +147,7 @@ export function defaultVersionGetter(
 ): string {
   if (localEnv === 'production') {
     log.debug('Getting the version from package.json');
-    let packageData: any = readFileSync(
+    const packageData: any = readFileSync(
       path.join(absolutePackageDir, 'package.json'));
     return JSON.parse(packageData).version;
   } else {
@@ -164,7 +164,7 @@ export function main(
     runOptions = {},
   }: Object = {}
 ): Promise<any> {
-  let program = new Program(argv, {absolutePackageDir});
+  const program = new Program(argv, {absolutePackageDir});
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.

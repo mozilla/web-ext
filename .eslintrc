@@ -103,6 +103,7 @@
     }],
     "object-shorthand": 2,
     "one-var": [2, "never"],
+    "prefer-const": 2,
     "prefer-template": 2,
     "quote-props": [1, "consistent-as-needed"],
     "quotes": [2, "single", "avoid-escape"],
