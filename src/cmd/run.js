@@ -322,6 +322,8 @@ export class ExtensionRunner {
 
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
     const {firefoxApp, firefox} = this;
-    return firefoxApp.run(profile, {firefoxBinary: firefox});
+    return firefoxApp.run(
+        profile, {firefoxBinary: firefox, binaryArgs: ['-jsconsole']}
+    );
   }
 }

@@ -36,6 +36,7 @@ describe('run', () => {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
+      jsconsole: true,
     };
     const options = {
       firefoxApp: getFakeFirefox(),
@@ -124,6 +125,18 @@ describe('run', () => {
       assert.equal(firefoxApp.run.called, true);
       assert.equal(firefoxApp.run.firstCall.args[1].firefoxBinary,
                    firefox);
+    });
+  });
+
+  it('passes --jsconsole when specified', () => {
+    const firefox = '/pretend/path/to/Firefox/firefox-bin';
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({firefox}).then(() => {
+      assert.equal(firefoxApp.run.called, true);
+      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs,
+              '-jsconsole');
     });
   });
 
