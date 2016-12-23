@@ -16,6 +16,6 @@ export function checkForUpdates(
 
   updateNotifier({
     pkg,
-    updateCheckInterval: 1000 * 60 * 60 * 24 * 7, // 1 week,
+    updateCheckInterval: 1000 * 60 * 60 * 24 * 3, // 3 days,
   }).notify();
 }

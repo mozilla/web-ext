@@ -92,7 +92,7 @@ export class Program {
     {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
       logStream = defaultLogStream, getVersion = defaultVersionGetter,
-      shouldExitProgram = true, localEnv = WEBEXT_BUILD_ENV,
+      shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
     }: Object = {}
   ): Promise<void> {
 
@@ -119,7 +119,7 @@ export class Program {
       if (!runCommand) {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
-      if (localEnv === 'production') {
+      if (globalEnv === 'production') {
         checkForUpdates ({
           version: getVersion(absolutePackageDir),
         });
@@ -152,14 +152,14 @@ declare var WEBEXT_BUILD_ENV: string;
 
 //A defintion of type of argument for defaultVersionGetter
 type versionGetterOptions = {
-  localEnv?: string,
+  globalEnv?: string,
 };
 
 export function defaultVersionGetter(
   absolutePackageDir: string,
-  {localEnv = WEBEXT_BUILD_ENV}: versionGetterOptions = {}
+  {globalEnv = WEBEXT_BUILD_ENV}: versionGetterOptions = {}
 ): string {
-  if (localEnv === 'production') {
+  if (globalEnv === 'production') {
     log.debug('Getting the version from package.json');
     const packageData: any = readFileSync(
       path.join(absolutePackageDir, 'package.json'));

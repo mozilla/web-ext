@@ -21,7 +21,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
-        getVersion: () => 'not-a-real-version',
+        getVersion: () => spy(),
         checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
@@ -255,7 +255,7 @@ describe('program.Program', () => {
     return execProgram(program, {
       checkForUpdates,
       getVersion,
-      localEnv: 'production',
+      globalEnv: 'production',
     })
       .then(() => {
         assert.equal(checkForUpdates.firstCall.args[0].version,
@@ -272,7 +272,7 @@ describe('program.Program', () => {
     return execProgram(program, {
       checkForUpdates,
       getVersion,
-      localEnv: 'development',
+      globalEnv: 'development',
     })
       .then(() => {
         assert.equal(checkForUpdates.called, false);
@@ -393,7 +393,7 @@ describe('program.defaultVersionGetter', () => {
     const pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
-        const testBuildEnv = {localEnv: 'production'};
+        const testBuildEnv = {globalEnv: 'production'};
         assert.equal(defaultVersionGetter(root, testBuildEnv),
                    JSON.parse(pkgData).version);
       });
@@ -401,7 +401,7 @@ describe('program.defaultVersionGetter', () => {
 
   it('returns git commit information in development', () => {
     const commit = `${git.branch()}-${git.long()}`;
-    const testBuildEnv = {localEnv: 'development'};
+    const testBuildEnv = {globalEnv: 'development'};
     assert.equal(defaultVersionGetter(root, testBuildEnv),
                  commit);
   });
