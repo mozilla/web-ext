@@ -6,6 +6,7 @@ module.exports = function(grunt) {
   // 1. this file :)
   // 2. ./node_modules/grunt-*<task_name>/
   // 3. ./tasks/<task_name>.js
+  // 4. ./tasks/config/<task_name>.js
 
 
   // This loads all grunt tasks matching the grunt-*, @*/grunt-* patterns.
