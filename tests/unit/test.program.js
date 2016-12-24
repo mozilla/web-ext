@@ -21,6 +21,8 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
+        getVersion: () => spy(),
+        checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
         ...options,
@@ -176,7 +178,10 @@ describe('program.Program', () => {
     });
     program.command('thing', 'does a thing', () => {});
 
-    return execProgram(program, {getVersion: spy(), logStream})
+    return execProgram(program, {
+      getVersion: spy(),
+      logStream,
+    })
       .then(() => {
         assert.equal(logStream.makeVerbose.called, true);
       });
@@ -241,13 +246,50 @@ describe('program.Program', () => {
       });
   });
 
+  it('checks for updates automatically', () => {
+    const handler = spy();
+    const getVersion = () => 'some-package-version';
+    const checkForUpdates = sinon.stub();
+    const program = new Program(['run'])
+      .command('run', 'some command', handler);
+    return execProgram(program, {
+      checkForUpdates,
+      getVersion,
+      globalEnv: 'production',
+    })
+      .then(() => {
+        assert.equal(checkForUpdates.firstCall.args[0].version,
+                    'some-package-version');
+      });
+  });
+
+  it('does not check for updates during development', () => {
+    const handler = spy();
+    const getVersion = () => 'some-package-version';
+    const checkForUpdates = sinon.stub();
+    const program = new Program(['run'])
+      .command('run', 'some command', handler);
+    return execProgram(program, {
+      checkForUpdates,
+      getVersion,
+      globalEnv: 'development',
+    })
+      .then(() => {
+        assert.equal(checkForUpdates.called, false);
+      });
+  });
 });
 
 
 describe('program.main', () => {
 
   function execProgram(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
-    const runOptions = {shouldExitProgram: false, systemProcess: fake(process)};
+    const runOptions = {
+      getVersion: () => 'not-a-real-version',
+      checkForUpdates: spy(),
+      shouldExitProgram: false,
+      systemProcess: fake(process),
+    };
     return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
 
@@ -351,7 +393,7 @@ describe('program.defaultVersionGetter', () => {
     const pkgFile = path.join(root, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
-        const testBuildEnv = {localEnv: 'production'};
+        const testBuildEnv = {globalEnv: 'production'};
         assert.equal(defaultVersionGetter(root, testBuildEnv),
                    JSON.parse(pkgData).version);
       });
@@ -359,7 +401,7 @@ describe('program.defaultVersionGetter', () => {
 
   it('returns git commit information in development', () => {
     const commit = `${git.branch()}-${git.long()}`;
-    const testBuildEnv = {localEnv: 'development'};
+    const testBuildEnv = {globalEnv: 'development'};
     assert.equal(defaultVersionGetter(root, testBuildEnv),
                  commit);
   });
