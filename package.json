@@ -91,7 +91,6 @@
     "eslint-plugin-import": "2.2.0",
     "firefox-client": "0.3.0",
     "flow-bin": "0.37.4",
-    "git-hooks-win": "1.1.11",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-copy": "1.0.0",
