@@ -298,6 +298,12 @@ Example: $0 --help run.
         type: 'string',
         coerce: coerceCLICustomPreference,
       },
+      'url': {
+        describe: 'Launch firefox at specified page',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+      },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {
       'output': {
