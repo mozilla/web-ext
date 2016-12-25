@@ -6,6 +6,14 @@ node_js:
 - '4'
 - '6'
 
+# Run on travis with both yarn enabled and disabled.
+env:
+- YARNPKG=true
+- YARNPKG=false
+before_install:
+- if [[ $YARNPKG != "true" ]]; then rm yarn.lock; fi
+cache: yarn
+
 before_script:
 # If this command fails and you can't fix it, file an issue and add an exception to .nsprc
 - npm run nsp-check
