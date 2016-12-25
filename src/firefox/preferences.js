@@ -127,14 +127,17 @@ export function getPrefs(
 export function coerceCLICustomPreference(
   cliPrefs: string | Array<string>
 ): FirefoxPreferences {
-  let customPrefs = {};
+  const customPrefs = {};
 
   if (!Array.isArray(cliPrefs)) {
     cliPrefs = [cliPrefs];
   }
 
-  for (let pref of cliPrefs) {
-    let [key, value] = pref.split('=');
+
+  for (const pref of cliPrefs) {
+    const prefsAry = pref.split('=');
+    const key = prefsAry[0];
+    let value = prefsAry[1];
 
     if (/[^\w{@}.-]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
