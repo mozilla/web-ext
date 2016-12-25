@@ -284,22 +284,6 @@ describe('run', () => {
         });
     });
 
-    it('notifies user on reload', () => {
-      const {config, createWatcher} = prepare();
-      createWatcher();
-
-      const callArgs = config.onSourceChange.firstCall.args[0];
-      assert.equal(config.onSourceChange.called, true);
-      return callArgs.onChange()
-        .then(() => {
-          assert.equal(config.desktopNotifications.called, true);
-          assert.equal(
-            config.desktopNotifications.firstCall.args[0].titleString,
-            'web-ext run: reload'
-          );
-        });
-    });
-
     it('notifies user on error from source change handler', () => {
       const {config, createWatcher} = prepare();
       config.client.reloadAddon = () => Promise.reject(new Error('an error'));

@@ -54,12 +54,6 @@ export function defaultWatcherCreator(
       log.debug(`Reloading add-on ID ${addonId}`);
 
       return client.reloadAddon(addonId)
-        .then(() => {
-          desktopNotifications({
-            titleString: 'web-ext run: reload',
-            messageString: `Reloaded add-on ID ${addonId}`,
-          });
-        })
         .catch((error) => {
           log.error(error.stack);
           desktopNotifications({
