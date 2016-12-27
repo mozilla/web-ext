@@ -298,10 +298,11 @@ Example: $0 --help run.
         type: 'string',
         coerce: coerceCLICustomPreference,
       },
-      'jsconsole': {
-        describe: 'Open web browser console.',
+      'browser-console': {
+        describe: 'Use --browser-console ' +
+                  'or open Tools > Web Developer > Browser Console.',
         demand: false,
-        type: 'string',
+        type: 'boolean',
       },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {
