@@ -315,8 +315,7 @@ Example: $0 --help run.
         coerce: coerceCLICustomPreference,
       },
       'browser-console': {
-        describe: 'Use --browser-console ' +
-                  'or open Tools > Web Developer > Browser Console.',
+        describe: 'Open the DevTools Browser Console.',
         demand: false,
         type: 'boolean',
       },

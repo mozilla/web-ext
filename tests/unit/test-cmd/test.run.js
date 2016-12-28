@@ -128,11 +128,10 @@ describe('run', () => {
   });
 
   it('passes -jsconsole when --browser-console is specified', () => {
-    const firefox = '/pretend/path/to/Firefox/firefox-bin';
     const cmd = prepareRun();
     const {firefoxApp} = cmd.options;
 
-    return cmd.run({firefox} && {browserConsole: true}).then(() => {
+    return cmd.run({browserConsole: true}).then(() => {
       assert.equal(firefoxApp.run.called, true);
       assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs,
                    '-jsconsole');

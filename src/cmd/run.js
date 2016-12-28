@@ -165,7 +165,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
-    customPrefs, browserConsole = false,
+    browserConsole = false, customPrefs,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -193,10 +193,10 @@ export default async function run(
     sourceDir,
     firefoxApp,
     firefox,
+    browserConsole,
     manifestData,
     profilePath: firefoxProfile,
     customPrefs,
-    browserConsole,
   });
 
   const profile = await runner.getProfile();
