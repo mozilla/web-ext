@@ -127,6 +127,19 @@ describe('run', () => {
     });
   });
 
+  it('passes url to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({startUrl: 'www.example.com'}).then(() => {
+      assert.equal(firefoxApp.run.called, true);
+      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs[0],
+                   '--url');
+      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs[1],
+                                'www.example.com');
+    });
+  });
+
   it('passes a custom Firefox profile when specified', () => {
     const firefoxProfile = '/pretend/path/to/firefox/profile';
     const cmd = prepareRun();

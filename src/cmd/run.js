@@ -150,7 +150,7 @@ export type CmdRunParams = {
   preInstall: boolean,
   noReload: boolean,
   customPrefs?: FirefoxPreferences,
-  url?: string,
+  startUrl?: string,
 };
 
 export type CmdRunOptions = {
@@ -163,7 +163,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
-    customPrefs, url,
+    customPrefs, startUrl,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -197,7 +197,7 @@ export default async function run(
     manifestData,
     profilePath: firefoxProfile,
     customPrefs,
-    url,
+    startUrl,
   });
 
   profile = await runner.getProfile();
@@ -269,7 +269,7 @@ export type ExtensionRunnerParams = {
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
   customPrefs?: FirefoxPreferences,
-  url?: string
+  startUrl?: string
 };
 
 export class ExtensionRunner {
@@ -279,12 +279,12 @@ export class ExtensionRunner {
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
   customPrefs: FirefoxPreferences;
-  url: string;
+  startUrl: string;
 
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, customPrefs = {}, url = '',
+      profilePath, firefox, customPrefs = {}, startUrl = '',
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
@@ -293,7 +293,7 @@ export class ExtensionRunner {
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
     this.customPrefs = customPrefs;
-    this.url = url;
+    this.startUrl = startUrl;
   }
 
   getProfile(): Promise<FirefoxProfile> {
@@ -328,9 +328,12 @@ export class ExtensionRunner {
   }
 
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
-    const {firefoxApp, firefox, url} = this;
-    const binaryArgsArray = ['--url', url];
+    const binaryArgs = [];
+    const {firefoxApp, firefox} = this;
+    if (this.startUrl) {
+      binaryArgs.push('--url', this.startUrl);
+    }
     return firefoxApp.run(profile,
-      {firefoxBinary: firefox, binaryArgs: binaryArgsArray});
+      {firefoxBinary: firefox, binaryArgs});
   }
 }

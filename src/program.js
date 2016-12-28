@@ -298,7 +298,7 @@ Example: $0 --help run.
         type: 'string',
         coerce: coerceCLICustomPreference,
       },
-      'url': {
+      'start-url': {
         describe: 'Launch firefox at specified page',
         demand: false,
         requiresArg: true,

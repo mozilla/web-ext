@@ -326,6 +326,20 @@ describe('program.main', () => {
       });
   });
 
+  it('passes the url of a firefox binary when specified', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return execProgram(
+      ['run', '--start-url', 'www.example.com'],
+      {commands: fakeCommands})
+      .then(() => {
+        assert.equal(fakeCommands.run.called, true);
+        assert.equal(fakeCommands.run.firstCall.args[0].startUrl,
+                     'www.example.com');
+      });
+  });
+
   it('converts custom preferences into an object', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
