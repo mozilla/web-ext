@@ -171,8 +171,9 @@ export class RemoteFirefox {
     const addon = await this.getInstalledAddon(addonId);
     await this.checkForAddonReloading(addon);
     await this.addonRequest(addon, 'reload');
-    log.info(
-      `${(new Date()).toTimeString()}: Reloaded extension: ${addon.id}`);
+    process.stdout.write(
+      `\rLast extension reload: ${(new Date()).toTimeString()}`);
+    log.debug('\n');
   }
 }
 

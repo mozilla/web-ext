@@ -9,10 +9,14 @@ import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
+import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
 
+type ProgramOptions = {|
+  absolutePackageDir?: string,
+|}
 
 /*
  * The command line program.
@@ -24,7 +28,9 @@ export class Program {
 
   constructor(
     argv: ?Array<string>,
-    {absolutePackageDir = process.cwd()}: {absolutePackageDir?: string} = {}
+    {
+      absolutePackageDir = process.cwd(),
+    }: ProgramOptions = {}
   ) {
     // This allows us to override the process argv which is useful for
     // testing.
@@ -84,8 +90,9 @@ export class Program {
   async execute(
     absolutePackageDir: string,
     {
-      systemProcess = process, logStream = defaultLogStream,
-      getVersion = defaultVersionGetter, shouldExitProgram = true,
+      checkForUpdates = defaultUpdateChecker, systemProcess = process,
+      logStream = defaultLogStream, getVersion = defaultVersionGetter,
+      shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
     }: Object = {}
   ): Promise<void> {
 
@@ -112,7 +119,14 @@ export class Program {
       if (!runCommand) {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
+      if (globalEnv === 'production') {
+        checkForUpdates ({
+          version: getVersion(absolutePackageDir),
+        });
+      }
+
       await runCommand(argv);
+
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -138,14 +152,14 @@ declare var WEBEXT_BUILD_ENV: string;
 
 //A defintion of type of argument for defaultVersionGetter
 type versionGetterOptions = {
-  localEnv?: string,
+  globalEnv?: string,
 };
 
 export function defaultVersionGetter(
   absolutePackageDir: string,
-  {localEnv = WEBEXT_BUILD_ENV}: versionGetterOptions = {}
+  {globalEnv = WEBEXT_BUILD_ENV}: versionGetterOptions = {}
 ): string {
-  if (localEnv === 'production') {
+  if (globalEnv === 'production') {
     log.debug('Getting the version from package.json');
     const packageData: any = readFileSync(
       path.join(absolutePackageDir, 'package.json'));
@@ -164,7 +178,9 @@ export function main(
     runOptions = {},
   }: Object = {}
 ): Promise<any> {
+
   const program = new Program(argv, {absolutePackageDir});
+
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.
