@@ -1,4 +1,4 @@
-/*eslint prefer-template: 0*/
+/* eslint prefer-template: 0, no-console: 0 */
 
 var exec = require('child_process').exec;
 var https = require('https');
@@ -18,25 +18,53 @@ var writeCommitMessagesDocURL =
   '/CONTRIBUTING.md#writing-commit-messages';
 
 module.exports = function(grunt) {
-  function countGitMergeCommits() {
+  function findMergeBase() {
     return new Promise(function(resolve, reject) {
-      exec('git rev-list --count HEAD ^master', function(err, stdout) {
+      exec('git merge-base HEAD master', function(err, stdout) {
         if (err) {
           reject(err);
         } else {
-          resolve(parseInt(stdout));
+          var baseCommit = stdout.trim();
+          if (process.env.VERBOSE === 'true') {
+            console.log('DEBUG findMergeBase:', baseCommit);
+          }
+          resolve(baseCommit);
         }
       });
     });
   }
 
-  function getGitLastCommitMessage() {
+  function getGitBranchCommits() {
     return new Promise(function(resolve, reject) {
-      exec('git show -s --format=%B HEAD', function(err, stdout) {
+      findMergeBase().then(function(baseCommit) {
+        var gitCommand = 'git rev-list --no-merges HEAD ^' + baseCommit;
+        exec(gitCommand, function(err, stdout) {
+          if (err) {
+            reject(err);
+          } else {
+            var commits = stdout.trim().split('\n');
+            if (process.env.VERBOSE === 'true') {
+              console.log('DEBUG getGitBranchCommits:', commits);
+            }
+            resolve(commits);
+          }
+        });
+      }, reject);
+    });
+  }
+
+  function getGitCommitMessage(commitSha1) {
+    return new Promise(function(resolve, reject) {
+      exec('git show -s --format=%B ' + commitSha1, function(err, stdout) {
         if (err) {
           reject(err);
         } else {
-          resolve(stdout);
+          var commitMessage = stdout.trim();
+          if (process.env.VERBOSE === 'true') {
+            console.log('DEBUG getGitCommitMessage:',
+                        '"' + commitMessage + '"');
+          }
+          resolve(commitMessage);
         }
       });
     });
@@ -73,7 +101,12 @@ module.exports = function(grunt) {
         });
         response.on('end', function() {
           try {
-            resolve(JSON.parse(body).title);
+            var prData = JSON.parse(body);
+            if (process.env.VERBOSE === 'true') {
+              console.log('DEBUG getPullRequestTitle:',
+                          JSON.stringify(prData, null, 2));
+            }
+            resolve(prData.title);
           } catch (err) {
             reject(err);
           }
@@ -135,20 +168,34 @@ module.exports = function(grunt) {
           objectEntries.shim();
         }
 
-        countGitMergeCommits()
-          .then(function(commitsCount) {
-            if (commitsCount === 1) {
+        getGitBranchCommits()
+          .then(function(commits) {
+            if (commits.length === 1) {
               grunt.log.writeln(
                 'There is only one commit in this pull request, ' +
                 'we are going to check the single commit message...'
               );
-              return getGitLastCommitMessage().then(lintMessage);
+              return getGitCommitMessage(commits[0]).then(lintMessage);
             } else {
               grunt.log.writeln(
                 'There is more than one commit in this pull request, ' +
                 'we are going to check the pull request title...'
               );
-              return getPullRequestTitle().then(lintMessage);
+
+              return getPullRequestTitle()
+                .then(function(pullRequestTitle) {
+                  if (!pullRequestTitle) {
+                    grunt.log.writeln(
+                      'Got an empty pull request title from the github API. ' +
+                      'Retrying one more time...'
+                    );
+
+                    return getPullRequestTitle();
+                  }
+
+                  return pullRequestTitle;
+                })
+                .then(lintMessage);
             }
           })
           .then(function() {
