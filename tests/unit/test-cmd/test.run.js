@@ -127,12 +127,28 @@ describe('run', () => {
     });
   });
 
-  it('passes url to Firefox when specified', () => {
+  it('passes single url parameter to Firefox when specified', () => {
     const cmd = prepareRun();
     const {firefoxApp} = cmd.options;
     const testArgs = ['--url', 'www.example.com'];
 
     return cmd.run({startUrl: 'www.example.com'}).then(() => {
+      assert.equal(firefoxApp.run.called, true);
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                   testArgs);
+    });
+  });
+
+  it('passes multiple url parameters to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+    const testArgs = [
+      '--url', 'www.one.com', '--url', 'www.two.com', '--url', 'www.three.com',
+    ];
+
+    return cmd.run({startUrl: [
+      'www.one.com', 'www.two.com', 'www.three.com',
+    ]}).then(() => {
       assert.equal(firefoxApp.run.called, true);
       assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
                    testArgs);

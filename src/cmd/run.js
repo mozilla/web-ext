@@ -150,7 +150,7 @@ export type CmdRunParams = {
   preInstall: boolean,
   noReload: boolean,
   customPrefs?: FirefoxPreferences,
-  startUrl?: string,
+  startUrl?: string | Array<string>,
 };
 
 export type CmdRunOptions = {
@@ -269,7 +269,7 @@ export type ExtensionRunnerParams = {
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
   customPrefs?: FirefoxPreferences,
-  startUrl?: string
+  startUrl?: string | Array<string>,
 };
 
 export class ExtensionRunner {
@@ -279,7 +279,7 @@ export class ExtensionRunner {
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
   customPrefs: FirefoxPreferences;
-  startUrl: ?string = null;
+  startUrl: ?string | ?Array<string>;
 
   constructor(
     {
@@ -329,9 +329,12 @@ export class ExtensionRunner {
 
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
     const binaryArgs = [];
-    const {firefoxApp, firefox} = this;
-    if (this.startUrl) {
-      binaryArgs.push('--url', this.startUrl);
+    const {firefoxApp, firefox, startUrl} = this;
+    if (startUrl) {
+      let urls = Array.isArray(startUrl) ? startUrl : [startUrl];
+      for (let url of urls) {
+        binaryArgs.push('--url', `${url}`);
+      }
     }
     return firefoxApp.run(profile, {
       firefoxBinary: firefox, binaryArgs,
