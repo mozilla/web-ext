@@ -331,8 +331,8 @@ export class ExtensionRunner {
     const binaryArgs = [];
     const {firefoxApp, firefox, startUrl} = this;
     if (startUrl) {
-      let urls = Array.isArray(startUrl) ? startUrl : [startUrl];
-      for (let url of urls) {
+      const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
+      for (const url of urls) {
         binaryArgs.push('--url', `${url}`);
       }
     }
