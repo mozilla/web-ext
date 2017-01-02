@@ -279,12 +279,12 @@ export class ExtensionRunner {
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
   customPrefs: FirefoxPreferences;
-  startUrl: string;
+  startUrl: ?string = null;
 
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, customPrefs = {}, startUrl = '',
+      profilePath, firefox, customPrefs = {}, startUrl,
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
@@ -333,7 +333,8 @@ export class ExtensionRunner {
     if (this.startUrl) {
       binaryArgs.push('--url', this.startUrl);
     }
-    return firefoxApp.run(profile,
-      {firefoxBinary: firefox, binaryArgs});
+    return firefoxApp.run(profile, {
+      firefoxBinary: firefox, binaryArgs,
+    });
   }
 }

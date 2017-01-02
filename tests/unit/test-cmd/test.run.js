@@ -130,13 +130,12 @@ describe('run', () => {
   it('passes url to Firefox when specified', () => {
     const cmd = prepareRun();
     const {firefoxApp} = cmd.options;
+    const testArgs = ['--url', 'www.example.com'];
 
     return cmd.run({startUrl: 'www.example.com'}).then(() => {
       assert.equal(firefoxApp.run.called, true);
-      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs[0],
-                   '--url');
-      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs[1],
-                                'www.example.com');
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                   testArgs);
     });
   });
 
