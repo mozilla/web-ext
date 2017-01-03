@@ -317,7 +317,7 @@ Example: $0 --help run.
         coerce: coerceCLICustomPreference,
       },
       'browser-console': {
-		alias: ['bc'],  
+        alias: ['bc'],
         describe: 'Open the DevTools Browser Console.',
         demand: false,
         type: 'boolean',
