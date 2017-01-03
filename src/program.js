@@ -307,8 +307,10 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'pref': {
-        describe: 'Launch firefox with custom preferences. Lightweight ' +
-                  'alternative to creating custom profile.',
+        describe: 'Launch firefox with a custom preference ' +
+                  '(example: --pref=general.useragent.locale=fr-FR). ' +
+                  'You can repeat this option to set more than one ' +
+                  'preference.',
         demand: false,
         requiresArg: true,
         type: 'string',
