@@ -2,7 +2,9 @@
 import type FirefoxProfile from 'firefox-profile';
 import type Watchpack from 'watchpack';
 
-import {desktopNotifications as notifier} from '../util/desktop-notifier';
+import {
+  desktopNotifications as defaultDesktopNotifications,
+} from '../util/desktop-notifier';
 import * as defaultFirefoxApp from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
 import {
@@ -35,7 +37,7 @@ export type WatcherCreatorParams = {
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
-  desktopNotifications?: typeof notifier,
+  desktopNotifications?: typeof defaultDesktopNotifications,
 };
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
@@ -44,7 +46,7 @@ export function defaultWatcherCreator(
   {
     addonId, client, sourceDir, artifactsDir,
     onSourceChange = defaultSourceWatcher,
-    desktopNotifications = notifier,
+    desktopNotifications = defaultDesktopNotifications,
   }: WatcherCreatorParams
  ): Watchpack {
   return onSourceChange({
@@ -57,8 +59,8 @@ export function defaultWatcherCreator(
         .catch((error) => {
           log.error(error.stack);
           desktopNotifications({
-            titleString: 'web-ext run: error occured',
-            messageString: error.message,
+            title: 'web-ext run: error occured',
+            message: error.message,
           });
           throw error;
         });

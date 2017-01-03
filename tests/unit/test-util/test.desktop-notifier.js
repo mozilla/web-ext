@@ -14,9 +14,9 @@ describe('util/desktop-notifier', () => {
 
       desktopNotifications(
         {
-          titleString: 'web-ext run: title',
-          messageString: 'message',
-          notifierSource: fakeNotifier,
+          title: 'web-ext run: title',
+          message: 'message',
+          notifier: fakeNotifier,
         });
       assert.equal(fakeNotifier.notify.called, true);
       assert.equal(

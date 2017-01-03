@@ -1,26 +1,22 @@
 /* @flow */
 import {NotificationCenter} from 'node-notifier';
 
-const notifier = new NotificationCenter({
+const defaultNotifier = new NotificationCenter({
   withFallback: true,
 });
 
 type desktopNotificationsParams = {
-  titleString: string,
-  messageString: string,
-  notifierSource?: NotificationCenter,
+  title: string,
+  message: string,
+  icon?: string,
+  notifier?: typeof NotificationCenter,
 };
 
 export function desktopNotifications(
   {
-    titleString,
-    messageString,
-    notifierSource = notifier,
+    title, message, icon, notifier = defaultNotifier,
   }: desktopNotificationsParams
 ): void {
 
-  notifierSource.notify({
-    title: titleString,
-    message: messageString,
-  });
+  notifier.notify({title, message, icon});
 }

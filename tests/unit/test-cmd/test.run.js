@@ -296,7 +296,7 @@ describe('run', () => {
         .catch((error) => {
           assert.equal(config.desktopNotifications.called, true);
           assert.equal(
-            config.desktopNotifications.lastCall.args[0].messageString,
+            config.desktopNotifications.lastCall.args[0].message,
             error.message
           );
         });
