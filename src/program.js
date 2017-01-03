@@ -307,8 +307,8 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'pref': {
-        describe: 'Launch firefox with a custom preference. Example: ' +
-                  '--pref=general.useragent.locale=fr-FR. ' +
+        describe: 'Launch firefox with a custom preference ' +
+                  '(example: --pref=general.useragent.locale=fr-FR). ' +
                   'You can repeat this option to set more than one ' +
                   'preference.',
         demand: false,
