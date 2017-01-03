@@ -106,6 +106,7 @@ export class Program {
     argv.customPrefs = argv.pref;
 
     const runCommand = this.commands[cmd];
+    const configOptions = require('./web-ext-config.js');
 
     if (argv.verbose) {
       logStream.makeVerbose();
@@ -124,9 +125,11 @@ export class Program {
           version: getVersion(absolutePackageDir),
         });
       }
-
-      await runCommand(argv);
-
+      if (configOptions) {
+        await runCommand({ ...argv, ...configOptions});
+      } else {
+        await runCommand(argv);
+      }
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -169,7 +172,6 @@ export function defaultVersionGetter(
     return `${git.branch(absolutePackageDir)}-${git.long(absolutePackageDir)}`;
   }
 }
-
 
 export function main(
   absolutePackageDir: string,
