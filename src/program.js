@@ -299,6 +299,7 @@ Example: $0 --help run.
         coerce: coerceCLICustomPreference,
       },
       'start-url': {
+        alias: ['u', 'url'],
         describe: 'Launch firefox at specified page',
         demand: false,
         requiresArg: true,
