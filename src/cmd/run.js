@@ -151,6 +151,7 @@ export type CmdRunParams = {
   firefoxProfile: string,
   preInstall: boolean,
   noReload: boolean,
+  browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
 };
 
@@ -164,7 +165,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
-    customPrefs,
+    browserConsole = false, customPrefs,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -192,6 +193,7 @@ export default async function run(
     sourceDir,
     firefoxApp,
     firefox,
+    browserConsole,
     manifestData,
     profilePath: firefoxProfile,
     customPrefs,
@@ -265,6 +267,7 @@ export type ExtensionRunnerParams = {
   profilePath: string,
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
+  browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
 };
 
@@ -274,12 +277,14 @@ export class ExtensionRunner {
   profilePath: string;
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
+  browserConsole: boolean;
   customPrefs: FirefoxPreferences;
 
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, customPrefs = {},
+      profilePath, firefox, browserConsole,
+      customPrefs = {},
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
@@ -287,6 +292,7 @@ export class ExtensionRunner {
     this.profilePath = profilePath;
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
+    this.browserConsole = browserConsole;
     this.customPrefs = customPrefs;
   }
 
@@ -322,7 +328,13 @@ export class ExtensionRunner {
   }
 
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
+    const binaryArgs = [];
     const {firefoxApp, firefox} = this;
-    return firefoxApp.run(profile, {firefoxBinary: firefox});
+    if (this.browserConsole) {
+      binaryArgs.push('-jsconsole');
+    }
+    return firefoxApp.run(
+      profile, {firefoxBinary: firefox, binaryArgs}
+    );
   }
 }

@@ -316,6 +316,12 @@ Example: $0 --help run.
         type: 'string',
         coerce: coerceCLICustomPreference,
       },
+      'browser-console': {
+        alias: ['bc'],
+        describe: 'Open the DevTools Browser Console.',
+        demand: false,
+        type: 'boolean',
+      },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {
       'output': {

@@ -127,6 +127,17 @@ describe('run', () => {
     });
   });
 
+  it('passes -jsconsole when --browser-console is specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({browserConsole: true}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs,
+                   '-jsconsole');
+    });
+  });
+
   it('passes a custom Firefox profile when specified', () => {
     const firefoxProfile = '/pretend/path/to/firefox/profile';
     const cmd = prepareRun();
