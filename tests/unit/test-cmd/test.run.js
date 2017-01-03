@@ -132,7 +132,7 @@ describe('run', () => {
     const {firefoxApp} = cmd.options;
 
     return cmd.run({browserConsole: true}).then(() => {
-      assert.equal(firefoxApp.run.called, true);
+      assert.ok(firefoxApp.run.called);
       assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs,
                    '-jsconsole');
     });
