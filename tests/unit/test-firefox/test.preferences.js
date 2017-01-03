@@ -68,6 +68,13 @@ describe('firefox/preferences', () => {
       assert.equal(prefs['valid.preference'], '4.55');
     });
 
+    it('supports string values with "=" chars', () => {
+      const prefs = coerceCLICustomPreference(
+        'valid.preference=value=withequals=chars'
+      );
+      assert.equal(prefs['valid.preference'], 'value=withequals=chars');
+    });
+
     it('does not allow certain default preferences to be customized', () => {
       const nonChangeablePrefs = nonOverridablePreferences.map((prop) => {
         return prop += '=true';
@@ -78,7 +85,14 @@ describe('firefox/preferences', () => {
       }
     });
 
-    it('throws an error for invalid preferences', () => {
+    it('throws an error for invalid or incomplete preferences', () => {
+      assert.throws(
+        () => coerceCLICustomPreference('test.invalid.prop'),
+        UsageError,
+        'UsageError: Incomplete custom preference: "test.invalid.prop". ' +
+        'Syntax expected: "prefname=prefvalue".'
+      );
+
       assert.throws(() => coerceCLICustomPreference('*&%£=true'),
                     UsageError,
                     'UsageError: Invalid custom preference name: *&%£');
