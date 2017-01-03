@@ -72,25 +72,64 @@ module.exports = function(grunt) {
 
   function getPullRequestTitle() {
     return new Promise(function(resolve, reject) {
-      var pullRequestURLPath = '/repos/' +
-        process.env.TRAVIS_REPO_SLUG + '/pulls/' +
-        process.env.TRAVIS_PULL_REQUEST + '.json';
+      var pullRequestURLPath = '/' +
+        process.env.TRAVIS_REPO_SLUG + '/pull/' +
+        process.env.TRAVIS_PULL_REQUEST;
 
       grunt.log.writeln(
-        'Retrieving the pull request title from https://api.github.com' +
+        'Retrieving the pull request title from https://github.com' +
         pullRequestURLPath
       );
 
-      https.get({
-        host: 'api.github.com',
+      var req = https.get({
+        host: 'github.com',
         path: pullRequestURLPath,
         headers: {
-          'User-Agent': 'mozilla web-ext grunt tasks',
+          'User-Agent': 'mozilla web-ext grunt tasks'
         },
       }, function(response) {
         var body = '';
         response.on('data', function(data) {
-          body += data;
+          try {
+            body += data;
+
+            // Once we get the closing title tag, we can read
+            // the pull request title and
+            if (body.includes('</title>')) {
+              response.removeAllListeners('data');
+              response.emit('end');
+
+              var titleStart = body.indexOf('<title>');
+              var titleEnd = body.indexOf('</title>');
+
+              // NOTE: page slice is going to be something like:
+              // "<title> PR title by author · Pull Request #NUM · mozilla/web-ext · GitHub"
+              var pageTitleParts = body.slice(titleStart, titleEnd)
+                  .replace('<title>', '')
+                  .split(' · ');
+
+              // Check that we have really got the title of a real pull request.
+              var expectedPart1 = 'Pull Request #' +
+                process.env.TRAVIS_PULL_REQUEST;
+
+              if (pageTitleParts[1] === expectedPart1) {
+                // NOTE: the extracted title still contains the
+                // "by author" part, but it should not affect the
+                // linting.
+                resolve(pageTitleParts[0]);
+              } else {
+                if (process.env.VERBOSE === 'true') {
+                  console.log('DEBUG getPullRequestTitle:', body);
+                }
+                reject(new Error('Unable to retrieve the pull request title'));
+              }
+
+              req.abort();
+            }
+          } catch (err) {
+            reject(err);
+            req.abort();
+          }
         });
         response.on('error', function(err) {
           grunt.log.writeln(
@@ -98,18 +137,6 @@ module.exports = function(grunt) {
             err
           );
           reject(err);
-        });
-        response.on('end', function() {
-          try {
-            var prData = JSON.parse(body);
-            if (process.env.VERBOSE === 'true') {
-              console.log('DEBUG getPullRequestTitle:',
-                          JSON.stringify(prData, null, 2));
-            }
-            resolve(prData.title);
-          } catch (err) {
-            reject(err);
-          }
         });
       });
     });
@@ -182,20 +209,7 @@ module.exports = function(grunt) {
                 'we are going to check the pull request title...'
               );
 
-              return getPullRequestTitle()
-                .then(function(pullRequestTitle) {
-                  if (!pullRequestTitle) {
-                    grunt.log.writeln(
-                      'Got an empty pull request title from the github API. ' +
-                      'Retrying one more time...'
-                    );
-
-                    return getPullRequestTitle();
-                  }
-
-                  return pullRequestTitle;
-                })
-                .then(lintMessage);
+              return getPullRequestTitle().then(lintMessage);
             }
           })
           .then(function() {
