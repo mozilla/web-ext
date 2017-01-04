@@ -85,11 +85,11 @@ module.exports = function(grunt) {
         host: 'github.com',
         path: pullRequestURLPath,
         headers: {
-          'User-Agent': 'mozilla web-ext grunt tasks'
+          'User-Agent': 'mozilla web-ext grunt tasks',
         },
       }, function(response) {
         if (response.statusCode < 200 || response.statusCode > 299) {
-          reject(new Error("Unexpected statusCode: " + response.statusCode));
+          reject(new Error('Unexpected statusCode: ' + response.statusCode));
           return;
         }
 
