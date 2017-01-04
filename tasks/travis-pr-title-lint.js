@@ -88,6 +88,11 @@ module.exports = function(grunt) {
           'User-Agent': 'mozilla web-ext grunt tasks'
         },
       }, function(response) {
+        if (response.statusCode < 200 || response.statusCode > 299) {
+          reject(new Error("Unexpected statusCode: " + response.statusCode));
+          return;
+        }
+
         var body = '';
         response.on('data', function(data) {
           try {
