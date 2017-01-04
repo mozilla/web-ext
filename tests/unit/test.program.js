@@ -306,6 +306,15 @@ describe('program.main', () => {
       });
   });
 
+  it('throws an error if no command is given', () => {
+    const fakeCommands = fake(commands, {});
+    return execProgram([], {commands: fakeCommands})
+      .then(makeSureItFails())
+      .catch((error) => {
+        assert.match(error.message, /You must specify a command/);
+      });
+  });
+
   it('can get the program version', () => {
     const fakeVersionGetter = sinon.spy(() => '<version>');
     const fakeCommands = fake(commands, {
