@@ -118,10 +118,9 @@ module.exports = function(grunt) {
                 process.env.TRAVIS_PULL_REQUEST;
 
               if (pageTitleParts[1] === expectedPart1) {
-                // NOTE: the extracted title still contains the
-                // "by author" part, but it should not affect the
-                // linting.
-                resolve(pageTitleParts[0]);
+                // Remove the "by author" part.
+                var prTitleEnd = pageTitleParts[0].lastIndexOf(' by ');
+                resolve(pageTitleParts[0].slice(0, prTitleEnd));
               } else {
                 if (process.env.VERBOSE === 'true') {
                   console.log('DEBUG getPullRequestTitle:', body);
