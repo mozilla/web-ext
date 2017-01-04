@@ -379,7 +379,7 @@ describe('program.main', () => {
         assert.equal(fakeCommands.run.called, true);
         assert.equal(fakeCommands.run.firstCall.args[0].startUrl,
                      'www.example.com');
-        });
+      });
   });
 
   it('opens browser console when --browser-console is specified', () => {

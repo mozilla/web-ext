@@ -152,6 +152,8 @@ describe('run', () => {
       assert.ok(firefoxApp.run.called);
       assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
                        expectedBinaryArgs);
+    });
+  });
 
   it('passes -jsconsole when --browser-console is specified', () => {
     const cmd = prepareRun();
