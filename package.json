@@ -105,7 +105,7 @@
     "load-grunt-configs": "1.0.0",
     "load-grunt-tasks": "3.5.2",
     "mocha": "3.2.0",
-    "mocha-multi": "0.9.1",
+    "mocha-multi": "0.10.0",
     "nsp": "2.6.2",
     "object.entries": "1.0.4",
     "object.values": "1.0.4",
