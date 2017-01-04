@@ -50,7 +50,7 @@
     "babel-runtime": "6.18.0",
     "bunyan": "1.8.5",
     "debounce": "1.0.0",
-    "es6-error": "4.0.0",
+    "es6-error": "4.0.1",
     "es6-promisify": "5.0.0",
     "firefox-profile": "0.4.5",
     "fx-runner": "1.0.6",
