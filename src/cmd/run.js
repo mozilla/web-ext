@@ -51,6 +51,7 @@ export function defaultWatcherCreator(
       log.debug(`Reloading add-on ID ${addonId}`);
       return client.reloadAddon(addonId)
         .catch((error) => {
+          log.error('\n');
           log.error(error.stack);
           throw error;
         });
@@ -82,14 +83,15 @@ export function defaultReloadStrategy(
     createWatcher = defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
-  let watcher: Watchpack;
+  const watcher: Watchpack = (
+    createWatcher({addonId, client, sourceDir, artifactsDir})
+  );
 
   firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
   });
 
-  watcher = createWatcher({addonId, client, sourceDir, artifactsDir});
 }
 
 
@@ -149,6 +151,7 @@ export type CmdRunParams = {
   firefoxProfile: string,
   preInstall: boolean,
   noReload: boolean,
+  browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
 };
@@ -163,7 +166,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
-    customPrefs, startUrl,
+    browserConsole = false, customPrefs, startUrl,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -182,25 +185,23 @@ export default async function run(
   const requiresRemote = !preInstall;
   let installed = false;
 
-  let runner;
-  let profile;
   let client;
-  let runningFirefox;
   let addonId;
 
-  let manifestData = await getValidatedManifest(sourceDir);
+  const manifestData = await getValidatedManifest(sourceDir);
 
-  runner = new ExtensionRunner({
+  const runner = new ExtensionRunner({
     sourceDir,
     firefoxApp,
     firefox,
+    browserConsole,
     manifestData,
     profilePath: firefoxProfile,
     customPrefs,
     startUrl,
   });
 
-  profile = await runner.getProfile();
+  const profile = await runner.getProfile();
 
   if (!preInstall) {
     log.debug('Deferring extension installation until after ' +
@@ -211,7 +212,7 @@ export default async function run(
     installed = true;
   }
 
-  runningFirefox = await runner.run(profile);
+  const runningFirefox = await runner.run(profile);
 
   if (installed) {
     log.debug('Not installing as temporary add-on because the ' +
@@ -268,6 +269,7 @@ export type ExtensionRunnerParams = {
   profilePath: string,
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
+  browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
 };
@@ -278,13 +280,15 @@ export class ExtensionRunner {
   profilePath: string;
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
+  browserConsole: boolean;
   customPrefs: FirefoxPreferences;
   startUrl: ?string | ?Array<string>;
 
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, customPrefs = {}, startUrl,
+      profilePath, firefox, browserConsole, startUrl,
+      customPrefs = {},
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
@@ -292,6 +296,7 @@ export class ExtensionRunner {
     this.profilePath = profilePath;
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
+    this.browserConsole = browserConsole;
     this.customPrefs = customPrefs;
     this.startUrl = startUrl;
   }
@@ -330,6 +335,9 @@ export class ExtensionRunner {
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
     const binaryArgs = [];
     const {firefoxApp, firefox, startUrl} = this;
+    if (this.browserConsole) {
+      binaryArgs.push('-jsconsole');
+    }
     if (startUrl) {
       const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
       for (const url of urls) {

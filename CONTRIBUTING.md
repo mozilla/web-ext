@@ -144,7 +144,7 @@ pull request is merged.
 
 ## Writing commit messages
 
-Commit messages must adhere to the Angular style of
+The subject of the pull requests and commit messages must adhere to the Angular style of
 [semantic messages](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit).
 This allows us to auto-generate a changelog without too much noise in it.
 Additionally, write the commit message in past tense so it will read

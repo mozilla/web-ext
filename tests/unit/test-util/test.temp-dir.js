@@ -54,7 +54,7 @@ describe('util.withTempDir', () => {
 describe('util.TempDir', () => {
 
   it('requires you to create the directory before accessing path()', () => {
-    let tmp = new TempDir();
+    const tmp = new TempDir();
     assert.throws(() => tmp.path(), /cannot access path.* before.* create/);
   });
 

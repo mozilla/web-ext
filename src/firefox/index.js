@@ -211,7 +211,7 @@ export function configureProfile(
 ): Promise<FirefoxProfile> {
   // Set default preferences. Some of these are required for the add-on to
   // operate, such as disabling signatures.
-  let prefs = getPrefs(app);
+  const prefs = getPrefs(app);
   Object.keys(prefs).forEach((pref) => {
     profile.setPreference(pref, prefs[pref]);
   });
@@ -283,8 +283,8 @@ export async function copyProfile(
   }: CopyProfileOptions = {},
 ): Promise<FirefoxProfile> {
 
-  let copy = promisify(FirefoxProfile.copy);
-  let copyByName = promisify(copyFromUserProfile);
+  const copy = promisify(FirefoxProfile.copy);
+  const copyByName = promisify(copyFromUserProfile);
 
   try {
     const dirExists = await isDirectory(profileDirectory);
