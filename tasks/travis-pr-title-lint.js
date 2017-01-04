@@ -1,4 +1,4 @@
-/*eslint prefer-template: 0*/
+/* eslint prefer-template: 0, no-console: 0 */
 
 var exec = require('child_process').exec;
 var https = require('https');
@@ -18,25 +18,53 @@ var writeCommitMessagesDocURL =
   '/CONTRIBUTING.md#writing-commit-messages';
 
 module.exports = function(grunt) {
-  function countGitMergeCommits() {
+  function findMergeBase() {
     return new Promise(function(resolve, reject) {
-      exec('git rev-list --count HEAD ^master', function(err, stdout) {
+      exec('git merge-base HEAD master', function(err, stdout) {
         if (err) {
           reject(err);
         } else {
-          resolve(parseInt(stdout));
+          var baseCommit = stdout.trim();
+          if (process.env.VERBOSE === 'true') {
+            console.log('DEBUG findMergeBase:', baseCommit);
+          }
+          resolve(baseCommit);
         }
       });
     });
   }
 
-  function getGitLastCommitMessage() {
+  function getGitBranchCommits() {
     return new Promise(function(resolve, reject) {
-      exec('git show -s --format=%B HEAD', function(err, stdout) {
+      findMergeBase().then(function(baseCommit) {
+        var gitCommand = 'git rev-list --no-merges HEAD ^' + baseCommit;
+        exec(gitCommand, function(err, stdout) {
+          if (err) {
+            reject(err);
+          } else {
+            var commits = stdout.trim().split('\n');
+            if (process.env.VERBOSE === 'true') {
+              console.log('DEBUG getGitBranchCommits:', commits);
+            }
+            resolve(commits);
+          }
+        });
+      }, reject);
+    });
+  }
+
+  function getGitCommitMessage(commitSha1) {
+    return new Promise(function(resolve, reject) {
+      exec('git show -s --format=%B ' + commitSha1, function(err, stdout) {
         if (err) {
           reject(err);
         } else {
-          resolve(stdout);
+          var commitMessage = stdout.trim();
+          if (process.env.VERBOSE === 'true') {
+            console.log('DEBUG getGitCommitMessage:',
+                        '"' + commitMessage + '"');
+          }
+          resolve(commitMessage);
         }
       });
     });
@@ -44,25 +72,67 @@ module.exports = function(grunt) {
 
   function getPullRequestTitle() {
     return new Promise(function(resolve, reject) {
-      var pullRequestURLPath = '/repos/' +
-        process.env.TRAVIS_REPO_SLUG + '/pulls/' +
-        process.env.TRAVIS_PULL_REQUEST + '.json';
+      var pullRequestURLPath = '/' +
+        process.env.TRAVIS_REPO_SLUG + '/pull/' +
+        process.env.TRAVIS_PULL_REQUEST;
 
       grunt.log.writeln(
-        'Retrieving the pull request title from https://api.github.com' +
+        'Retrieving the pull request title from https://github.com' +
         pullRequestURLPath
       );
 
-      https.get({
-        host: 'api.github.com',
+      var req = https.get({
+        host: 'github.com',
         path: pullRequestURLPath,
         headers: {
-          'User-Agent': 'mozilla web-ext grunt tasks',
+          'User-Agent': 'GitHub... your API can be very annoying ;-)',
         },
       }, function(response) {
+        if (response.statusCode < 200 || response.statusCode > 299) {
+          reject(new Error('Unexpected statusCode: ' + response.statusCode));
+          return;
+        }
+
         var body = '';
         response.on('data', function(data) {
-          body += data;
+          try {
+            body += data;
+
+            // Once we get the closing title tag, we can read
+            // the pull request title and
+            if (body.includes('</title>')) {
+              response.removeAllListeners('data');
+              response.emit('end');
+
+              var titleStart = body.indexOf('<title>');
+              var titleEnd = body.indexOf('</title>');
+
+              // NOTE: page slice is going to be something like:
+              // "<title> PR title by author · Pull Request #NUM · mozilla/web-ext · GitHub"
+              var pageTitleParts = body.slice(titleStart, titleEnd)
+                  .replace('<title>', '')
+                  .split(' · ');
+
+              // Check that we have really got the title of a real pull request.
+              var expectedPart1 = 'Pull Request #' +
+                process.env.TRAVIS_PULL_REQUEST;
+
+              if (pageTitleParts[1] === expectedPart1) {
+                // Remove the "by author" part.
+                var prTitleEnd = pageTitleParts[0].lastIndexOf(' by ');
+                resolve(pageTitleParts[0].slice(0, prTitleEnd));
+              } else {
+                console.log('DEBUG getPullRequestTitle response:', body);
+
+                reject(new Error('Unable to retrieve the pull request title'));
+              }
+
+              req.abort();
+            }
+          } catch (err) {
+            reject(err);
+            req.abort();
+          }
         });
         response.on('error', function(err) {
           grunt.log.writeln(
@@ -70,13 +140,6 @@ module.exports = function(grunt) {
             err
           );
           reject(err);
-        });
-        response.on('end', function() {
-          try {
-            resolve(JSON.parse(body).title);
-          } catch (err) {
-            reject(err);
-          }
         });
       });
     });
@@ -135,19 +198,20 @@ module.exports = function(grunt) {
           objectEntries.shim();
         }
 
-        countGitMergeCommits()
-          .then(function(commitsCount) {
-            if (commitsCount === 1) {
+        getGitBranchCommits()
+          .then(function(commits) {
+            if (commits.length === 1) {
               grunt.log.writeln(
                 'There is only one commit in this pull request, ' +
                 'we are going to check the single commit message...'
               );
-              return getGitLastCommitMessage().then(lintMessage);
+              return getGitCommitMessage(commits[0]).then(lintMessage);
             } else {
               grunt.log.writeln(
                 'There is more than one commit in this pull request, ' +
                 'we are going to check the pull request title...'
               );
+
               return getPullRequestTitle().then(lintMessage);
             }
           })

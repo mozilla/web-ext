@@ -127,6 +127,45 @@ describe('run', () => {
     });
   });
 
+  it('passes single url parameter to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+    const expectedBinaryArgs = ['--url', 'www.example.com'];
+
+    return cmd.run({startUrl: 'www.example.com'}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                       expectedBinaryArgs);
+    });
+  });
+
+  it('passes multiple url parameters to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+    const expectedBinaryArgs = [
+      '--url', 'www.one.com', '--url', 'www.two.com', '--url', 'www.three.com',
+    ];
+
+    return cmd.run({startUrl: [
+      'www.one.com', 'www.two.com', 'www.three.com',
+    ]}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                       expectedBinaryArgs);
+    });
+  });
+
+  it('passes -jsconsole when --browser-console is specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({browserConsole: true}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs,
+                   '-jsconsole');
+    });
+  });
+
   it('passes a custom Firefox profile when specified', () => {
     const firefoxProfile = '/pretend/path/to/firefox/profile';
     const cmd = prepareRun();

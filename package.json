@@ -1,6 +1,6 @@
 {
   "name": "web-ext",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
   "engines": {
@@ -45,14 +45,14 @@
     "opera"
   ],
   "dependencies": {
-    "addons-linter": "0.15.13",
+    "addons-linter": "0.15.14",
     "babel-polyfill": "6.16.0",
     "babel-runtime": "6.18.0",
     "bunyan": "1.8.5",
     "debounce": "1.0.0",
-    "es6-error": "4.0.0",
+    "es6-error": "4.0.1",
     "es6-promisify": "5.0.0",
-    "firefox-profile": "0.4.5",
+    "firefox-profile": "0.4.6",
     "fx-runner": "1.0.6",
     "git-rev-sync": "1.8.0",
     "minimatch": "3.0.3",
@@ -66,7 +66,7 @@
     "tmp": "0.0.30",
     "update-notifier": "1.0.3",
     "watchpack": "1.2.0",
-    "yargs": "6.5.0",
+    "yargs": "6.6.0",
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
@@ -88,7 +88,7 @@
     "coveralls": "2.11.15",
     "deepcopy": "0.6.3",
     "eslint-plugin-async-await": "0.0.0",
-    "eslint-plugin-flowtype": "2.29.1",
+    "eslint-plugin-flowtype": "2.29.2",
     "eslint-plugin-import": "2.2.0",
     "firefox-client": "0.3.0",
     "flow-bin": "0.37.4",
@@ -105,12 +105,12 @@
     "load-grunt-configs": "1.0.0",
     "load-grunt-tasks": "3.5.2",
     "mocha": "3.2.0",
-    "mocha-multi": "0.9.1",
+    "mocha-multi": "0.10.0",
     "nsp": "2.6.2",
     "object.entries": "1.0.4",
     "object.values": "1.0.4",
     "prettyjson": "1.2.1",
-    "sinon": "1.17.6",
+    "sinon": "1.17.7",
     "webpack": "1.14.0",
     "webpack-dev-server": "1.16.2",
     "yauzl": "2.7.0"

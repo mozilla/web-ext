@@ -136,8 +136,16 @@ export function coerceCLICustomPreference(
 
   for (const pref of cliPrefs) {
     const prefsAry = pref.split('=');
+
+    if (prefsAry.length < 2) {
+      throw new UsageError(
+        `Incomplete custom preference: "${pref}". ` +
+        'Syntax expected: "prefname=prefvalue".'
+      );
+    }
+
     const key = prefsAry[0];
-    let value = prefsAry[1];
+    let value = prefsAry.slice(1).join('=');
 
     if (/[^\w{@}.-]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
