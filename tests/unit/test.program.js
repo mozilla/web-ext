@@ -79,7 +79,9 @@ describe('program.Program', () => {
     return execProgram(program)
       .then(makeSureItFails())
       .catch((error) => {
-        assert.match(error.message, /This command does not take any arguments/);
+        assert.match(
+          error.message,
+          /Too many non-option arguments: got 1, maximum of 0/);
       });
   });
 
