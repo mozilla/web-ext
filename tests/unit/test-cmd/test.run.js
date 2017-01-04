@@ -133,7 +133,7 @@ describe('run', () => {
     const expectedBinaryArgs = ['--url', 'www.example.com'];
 
     return cmd.run({startUrl: 'www.example.com'}).then(() => {
-      assert.equal(firefoxApp.run.called, true);
+      assert.ok(firefoxApp.run.called);
       assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
                        expectedBinaryArgs);
     });
@@ -149,7 +149,7 @@ describe('run', () => {
     return cmd.run({startUrl: [
       'www.one.com', 'www.two.com', 'www.three.com',
     ]}).then(() => {
-      assert.equal(firefoxApp.run.called, true);
+      assert.ok(firefoxApp.run.called);
       assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
                        expectedBinaryArgs);
     });

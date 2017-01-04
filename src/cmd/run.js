@@ -333,7 +333,7 @@ export class ExtensionRunner {
     if (startUrl) {
       const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
       for (const url of urls) {
-        binaryArgs.push('--url', `${url}`);
+        binaryArgs.push('--url', url);
       }
     }
     return firefoxApp.run(profile, {
