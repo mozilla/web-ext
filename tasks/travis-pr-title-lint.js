@@ -85,7 +85,7 @@ module.exports = function(grunt) {
         host: 'github.com',
         path: pullRequestURLPath,
         headers: {
-          'User-Agent': 'mozilla web-ext grunt tasks',
+          'User-Agent': 'GitHub... your API can be very annoying ;-)',
         },
       }, function(response) {
         if (response.statusCode < 200 || response.statusCode > 299) {
@@ -122,9 +122,8 @@ module.exports = function(grunt) {
                 var prTitleEnd = pageTitleParts[0].lastIndexOf(' by ');
                 resolve(pageTitleParts[0].slice(0, prTitleEnd));
               } else {
-                if (process.env.VERBOSE === 'true') {
-                  console.log('DEBUG getPullRequestTitle:', body);
-                }
+                console.log('DEBUG getPullRequestTitle response:', body);
+
                 reject(new Error('Unable to retrieve the pull request title'));
               }
 
