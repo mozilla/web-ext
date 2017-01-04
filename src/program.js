@@ -316,6 +316,13 @@ Example: $0 --help run.
         type: 'string',
         coerce: coerceCLICustomPreference,
       },
+      'start-url': {
+        alias: ['u', 'url'],
+        describe: 'Launch firefox at specified page',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+      },
       'browser-console': {
         alias: ['bc'],
         describe: 'Open the DevTools Browser Console.',

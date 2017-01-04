@@ -153,6 +153,7 @@ export type CmdRunParams = {
   noReload: boolean,
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
+  startUrl?: string | Array<string>,
 };
 
 export type CmdRunOptions = {
@@ -165,7 +166,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
-    browserConsole = false, customPrefs,
+    browserConsole = false, customPrefs, startUrl,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -197,6 +198,7 @@ export default async function run(
     manifestData,
     profilePath: firefoxProfile,
     customPrefs,
+    startUrl,
   });
 
   const profile = await runner.getProfile();
@@ -269,6 +271,7 @@ export type ExtensionRunnerParams = {
   firefox: string,
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
+  startUrl?: string | Array<string>,
 };
 
 export class ExtensionRunner {
@@ -279,11 +282,12 @@ export class ExtensionRunner {
   firefox: string;
   browserConsole: boolean;
   customPrefs: FirefoxPreferences;
+  startUrl: ?string | ?Array<string>;
 
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, browserConsole,
+      profilePath, firefox, browserConsole, startUrl,
       customPrefs = {},
     }: ExtensionRunnerParams
   ) {
@@ -294,6 +298,7 @@ export class ExtensionRunner {
     this.firefox = firefox;
     this.browserConsole = browserConsole;
     this.customPrefs = customPrefs;
+    this.startUrl = startUrl;
   }
 
   getProfile(): Promise<FirefoxProfile> {
@@ -329,12 +334,18 @@ export class ExtensionRunner {
 
   run(profile: FirefoxProfile): Promise<FirefoxProcess> {
     const binaryArgs = [];
-    const {firefoxApp, firefox} = this;
+    const {firefoxApp, firefox, startUrl} = this;
     if (this.browserConsole) {
       binaryArgs.push('-jsconsole');
     }
-    return firefoxApp.run(
-      profile, {firefoxBinary: firefox, binaryArgs}
-    );
+    if (startUrl) {
+      const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
+      for (const url of urls) {
+        binaryArgs.push('--url', url);
+      }
+    }
+    return firefoxApp.run(profile, {
+      firefoxBinary: firefox, binaryArgs,
+    });
   }
 }

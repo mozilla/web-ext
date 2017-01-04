@@ -368,6 +368,20 @@ describe('program.main', () => {
       });
   });
 
+  it('passes the url of a firefox binary when specified', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return execProgram(
+      ['run', '--start-url', 'www.example.com'],
+      {commands: fakeCommands})
+      .then(() => {
+        assert.equal(fakeCommands.run.called, true);
+        assert.equal(fakeCommands.run.firstCall.args[0].startUrl,
+                     'www.example.com');
+      });
+  });
+
   it('opens browser console when --browser-console is specified', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
@@ -396,9 +410,7 @@ describe('program.main', () => {
         assert.equal(customPrefs.prop2, 'value2');
       });
   });
-
 });
-
 
 describe('program.defaultVersionGetter', () => {
   const root = path.join(__dirname, '..', '..');
