@@ -59,7 +59,11 @@ export class Program {
         return;
       }
       return yargs
-        .demand(0, 0, 'This command does not take any arguments')
+        // Make sure the user does not add any extra commands. For example,
+        // this would be a mistake because lint does not accept arguments:
+        // web-ext lint ./src/path/to/file.js
+        .demandCommand(0, 0, undefined,
+                       'This command does not take any arguments')
         .strict()
         .exitProcess(this.shouldExitProgram)
         // Calling env() will be unnecessary after
@@ -198,7 +202,7 @@ Example: $0 --help run.
     .alias('h', 'help')
     .env(envPrefix)
     .version(() => getVersion(absolutePackageDir))
-    .demand(1)
+    .demandCommand(1, 'You must specify a command')
     .strict();
 
   program.setGlobalOptions({
