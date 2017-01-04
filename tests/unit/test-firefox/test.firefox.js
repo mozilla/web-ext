@@ -47,7 +47,17 @@ describe('firefox', () => {
       }));
     }
 
-    function runFirefox({profile = fakeProfile, ...args}: Object = {}) {
+    type RunFirefoxOptions = {
+      profile?: typeof FirefoxProfile,
+      args?: Array<any>,
+    }
+
+    function runFirefox(
+      {
+        profile = fakeProfile,
+        ...args
+      }: RunFirefoxOptions = {},
+    ) {
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),
@@ -481,10 +491,13 @@ describe('firefox', () => {
     ));
 
   });
+  type FindRemotePortOptions = {
+    args?: Array<any>,
+  }
 
   describe('defaultRemotePortFinder', () => {
 
-    function findRemotePort({...args}: Object = {}) {
+    function findRemotePort({...args}: FindRemotePortOptions = {}) {
       return firefox.defaultRemotePortFinder({...args});
     }
 

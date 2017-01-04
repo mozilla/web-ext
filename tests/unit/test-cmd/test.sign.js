@@ -55,14 +55,14 @@ describe('sign', () => {
   /*
    * Run the sign command with stubs for all dependencies.
    */
-  type SignExtraParams = {
+  type SignOptions = {
     extraArgs?: Object,
     extraOptions?: Object,
   }
 
   function sign(
     tmpDir: Object, stubs: Object,
-    {extraArgs = {}, extraOptions = {}}: SignExtraParams = {}
+    {extraArgs = {}, extraOptions = {}}: SignOptions = {}
   ): Promise<*> {
     return completeSignCommand({
       verbose: false,

@@ -185,9 +185,9 @@ export function fake<T>(original: Object, methods: Object = {}): T {
 
 type FakeFirefoxClientParams = {
   requestResult?: Object,
-  requestError?: Object | void,
+  requestError?: Object,
   makeRequestResult?: Object,
-  makeRequestError?: Object | void,
+  makeRequestError?: Object,
 }
 export function fakeFirefoxClient({
   requestResult = {}, requestError,

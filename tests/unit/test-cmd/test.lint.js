@@ -11,6 +11,7 @@ type setUpParams = {
   createLinter?: Function,
   fileFilter?: Function,
 }
+
 describe('lint', () => {
 
   function setUp({createLinter, fileFilter}: setUpParams = {}) {

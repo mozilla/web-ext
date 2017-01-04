@@ -113,7 +113,7 @@ export type FirefoxRunnerFn =
 export type FirefoxRunOptions = {
   fxRunner?: FirefoxRunnerFn,
   findRemotePort?: RemotePortFinderFn,
-  firefoxBinary: ?string,
+  firefoxBinary?: string,
   binaryArgs?: Array<string>,
 };
 
