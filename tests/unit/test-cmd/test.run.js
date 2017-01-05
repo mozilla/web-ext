@@ -280,6 +280,7 @@ describe('run', () => {
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
+        desktopNotifications: sinon.spy(() => Promise.resolve()),
       };
       return {
         config,
@@ -319,6 +320,24 @@ describe('run', () => {
           const reloadArgs = config.client.reloadAddon.firstCall.args;
           assert.ok(config.addonId);
           assert.equal(reloadArgs[0], config.addonId);
+        });
+    });
+
+    it('notifies user on error from source change handler', () => {
+      const {config, createWatcher} = prepare();
+      config.client.reloadAddon = () => Promise.reject(new Error('an error'));
+      createWatcher();
+
+      assert.equal(config.onSourceChange.called, true);
+      // Simulate executing the handler when a source file changes.
+      return config.onSourceChange.firstCall.args[0].onChange()
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(config.desktopNotifications.called, true);
+          assert.equal(
+            config.desktopNotifications.lastCall.args[0].message,
+            error.message
+          );
         });
     });
 

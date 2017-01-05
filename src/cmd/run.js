@@ -2,6 +2,9 @@
 import type FirefoxProfile from 'firefox-profile';
 import type Watchpack from 'watchpack';
 
+import {
+  showDesktopNotification as defaultDesktopNotifications,
+} from '../util/desktop-notifier';
 import * as defaultFirefoxApp from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';
 import {
@@ -34,6 +37,7 @@ export type WatcherCreatorParams = {
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
+  desktopNotifications?: typeof defaultDesktopNotifications,
 };
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
@@ -42,6 +46,7 @@ export function defaultWatcherCreator(
   {
     addonId, client, sourceDir, artifactsDir,
     onSourceChange = defaultSourceWatcher,
+    desktopNotifications = defaultDesktopNotifications,
   }: WatcherCreatorParams
  ): Watchpack {
   return onSourceChange({
@@ -49,10 +54,15 @@ export function defaultWatcherCreator(
     artifactsDir,
     onChange: () => {
       log.debug(`Reloading add-on ID ${addonId}`);
+
       return client.reloadAddon(addonId)
         .catch((error) => {
           log.error('\n');
           log.error(error.stack);
+          desktopNotifications({
+            title: 'web-ext run: error occured',
+            message: error.message,
+          });
           throw error;
         });
     },
