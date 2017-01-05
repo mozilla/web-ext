@@ -1,22 +1,35 @@
 /* @flow */
-import {NotificationCenter} from 'node-notifier';
+import defaultNotifier from 'node-notifier';
 
-const defaultNotifier = new NotificationCenter({
-  withFallback: true,
-});
+import {createLogger} from './logger';
+
+const log = createLogger(__filename);
 
 type desktopNotificationsParams = {
   title: string,
   message: string,
   icon?: string,
-  notifier?: typeof NotificationCenter,
+};
+
+type desktopNotificationsOpts = {
+  notifier?: typeof defaultNotifier,
+  logger?: typeof log,
 };
 
 export function desktopNotifications(
   {
-    title, message, icon, notifier = defaultNotifier,
-  }: desktopNotificationsParams
+    title, message, icon,
+  }: desktopNotificationsParams,
+  {
+    notifier = defaultNotifier,
+    logger = log,
+  }: desktopNotificationsOpts = {}
 ): void {
 
-  notifier.notify({title, message, icon});
+  notifier.notify({title, message, icon}, (err, res) => {
+    if (err) {
+      logger.debug(`notifier error: ${err.message},` +
+                   ` response: ${res}`);
+    }
+  });
 }
