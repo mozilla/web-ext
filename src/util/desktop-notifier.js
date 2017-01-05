@@ -2,8 +2,9 @@
 import defaultNotifier from 'node-notifier';
 
 import {createLogger} from './logger';
+import type {Logger} from './logger';
 
-const log = createLogger(__filename);
+const defaultLog = createLogger(__filename);
 
 type desktopNotificationsParams = {
   title: string,
@@ -11,25 +12,30 @@ type desktopNotificationsParams = {
   icon?: string,
 };
 
-type desktopNotificationsOpts = {
+export type desktopNotificationsOptions = {
   notifier?: typeof defaultNotifier,
-  logger?: typeof log,
+  log?: Logger,
 };
 
-export function desktopNotifications(
+export function showDesktopNotification(
   {
     title, message, icon,
   }: desktopNotificationsParams,
   {
     notifier = defaultNotifier,
-    logger = log,
-  }: desktopNotificationsOpts = {}
-): void {
+    log = defaultLog,
+  }: desktopNotificationsOptions = {}
+): Promise<void> {
 
-  notifier.notify({title, message, icon}, (err, res) => {
-    if (err) {
-      logger.debug(`notifier error: ${err.message},` +
-                   ` response: ${res}`);
-    }
+  return new Promise((resolve, reject) => {
+    notifier.notify({title, message, icon}, (err, res) => {
+      if (err) {
+        log.debug(`Desktop notifier error: ${err.message},` +
+                 ` response: ${res}`);
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
   });
 }

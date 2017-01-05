@@ -3,7 +3,7 @@ import type FirefoxProfile from 'firefox-profile';
 import type Watchpack from 'watchpack';
 
 import {
-  desktopNotifications as defaultDesktopNotifications,
+  showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
 import * as defaultFirefoxApp from '../firefox';
 import defaultFirefoxConnector from '../firefox/remote';

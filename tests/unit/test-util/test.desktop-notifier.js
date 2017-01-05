@@ -3,8 +3,9 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import {desktopNotifications} from '../../../src/util/desktop-notifier';
+import {showDesktopNotification} from '../../../src/util/desktop-notifier';
 import {createLogger} from '../../../src/util/logger';
+import {makeSureItFails} from '../helpers';
 
 describe('util/desktop-notifier', () => {
   describe('desktopNotifications()', () => {
@@ -15,38 +16,43 @@ describe('util/desktop-notifier', () => {
 
     it('is called and creates a message with correct parameters', () => {
       const fakeNotifier = {
-        notify: sinon.spy(() => Promise.resolve()),
+        notify: sinon.spy((options, callback) => callback()),
       };
-      desktopNotifications(
-        expectedNotification, {
-          notifier: fakeNotifier,
+      return showDesktopNotification(expectedNotification, {
+        notifier: fakeNotifier,
+      })
+        .then(() => {
+          assert.ok(fakeNotifier.notify.called);
+          assert.equal(
+            fakeNotifier.notify.firstCall.args[0].title,
+            'web-ext run: title',
+          );
+          assert.equal(fakeNotifier.notify.firstCall.args[0].message,
+                      'message');
         });
-      assert.ok(fakeNotifier.notify.called);
-      assert.equal(
-        fakeNotifier.notify.firstCall.args[0].title,
-        'web-ext run: title',
-      );
-      assert.equal(fakeNotifier.notify.firstCall.args[0].message, 'message');
     });
 
     it('logs error when notifier fails', () => {
       const expectedError = new Error('an error');
-      const log = createLogger(__filename);
-      sinon.spy(log, 'debug');
+      const fakeLog = createLogger(__filename);
+      sinon.spy(fakeLog, 'debug');
       const fakeNotifier = {
         notify: (obj, callback) => {
           callback(expectedError, 'response');
         },
       };
 
-      desktopNotifications(
-        expectedNotification, {
-          notifier: fakeNotifier,
-          logger: log,
+      return showDesktopNotification(expectedNotification, {
+        notifier: fakeNotifier,
+        log: fakeLog,
+      })
+        .then(makeSureItFails())
+        .catch(() => {
+          assert.ok(fakeLog.debug.called);
+          assert.equal(fakeLog.debug.firstCall.args[0],
+                      `Desktop notifier error: ${expectedError.message}, ` +
+                      'response: response');
         });
-      assert.ok(log.debug.called);
-      assert.equal(log.debug.firstCall.args[0],
-                `notifier error: ${expectedError.message}, response: response`);
     });
 
   });
