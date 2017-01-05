@@ -29,10 +29,14 @@ export async function prepareArtifactsDir(
           throw mkdirErr;
         }
       }
+    } else if (isErrorWithCode('EACCES', error)) {
+      throw new UsageError(
+        `--artifacts-dir=${artifactsDir} (lack permissions)`);
     } else {
       throw error;
     }
   }
+
 
   return artifactsDir;
 }

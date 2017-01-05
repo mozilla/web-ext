@@ -13,6 +13,19 @@ import {makeSureItFails} from '../helpers';
 
 describe('prepareArtifactsDir', () => {
 
+  it('throws error when lacking writing permissions', () => withTempDir(
+    (tmpDir) => {
+      const tmpPath = path.join(tmpDir.path(), 'build');
+      return fs.mkdir(tmpPath, '0622').then(() => {
+        const artifactsDir = path.join(tmpPath, 'artifacts');
+        return prepareArtifactsDir(artifactsDir)
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(UsageError, (error) => {
+            assert.match(error.message, /lack permissions/);
+          }));
+      });
+    }));
+
   it('creates an artifacts dir if needed', () => withTempDir(
     (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'build');
