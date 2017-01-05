@@ -55,7 +55,7 @@
     "firefox-profile": "0.4.6",
     "fx-runner": "1.0.6",
     "git-rev-sync": "1.8.0",
-    "minimatch": "3.0.3",
+    "ignore": "3.2.0",
     "mz": "2.6.0",
     "node-firefox-connect": "1.2.0",
     "parse-json": "2.2.0",

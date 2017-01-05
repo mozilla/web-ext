@@ -59,7 +59,7 @@ export default function lint(
   }: LintCmdParams,
   {
     createLinter = defaultLinterCreator,
-    fileFilter = new FileFilter(),
+    fileFilter = new FileFilter({ sourceDir }),
   }: LintCmdOptions = {}
 ): Promise<void> {
   log.debug(`Running addons-linter on ${sourceDir}`);
