@@ -1,14 +1,19 @@
 /* @flow */
-import {fs} from 'mz';
+import {fs as defaultFS} from 'mz';
 
 import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';
 
 const log = createLogger(__filename);
 
+// type prepareArtifactsDirParamsv = {
+//   artifactsDir: string,
+//   fs?: typeof defaultFS,
+// };
 
 export async function prepareArtifactsDir(
-  artifactsDir: string
+  artifactsDir: string,
+  fs?: typeof defaultFS = defaultFS,
 ): Promise<string> {
   try {
     const stats = await fs.stat(artifactsDir);
@@ -36,7 +41,6 @@ export async function prepareArtifactsDir(
       throw error;
     }
   }
-
 
   return artifactsDir;
 }

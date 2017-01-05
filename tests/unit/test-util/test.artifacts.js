@@ -3,6 +3,7 @@ import path from 'path';
 
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
+import sinon from 'sinon';
 import {fs} from 'mz';
 
 import {onlyInstancesOf, UsageError} from '../../../src/errors';
@@ -12,19 +13,6 @@ import {makeSureItFails} from '../helpers';
 
 
 describe('prepareArtifactsDir', () => {
-
-  it('throws error when lacking writing permissions', () => withTempDir(
-    (tmpDir) => {
-      const tmpPath = path.join(tmpDir.path(), 'build');
-      return fs.mkdir(tmpPath, '0622').then(() => {
-        const artifactsDir = path.join(tmpPath, 'artifacts');
-        return prepareArtifactsDir(artifactsDir)
-          .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
-            assert.match(error.message, /lack permissions/);
-          }));
-      });
-    }));
 
   it('creates an artifacts dir if needed', () => withTempDir(
     (tmpDir) => {
@@ -67,5 +55,44 @@ describe('prepareArtifactsDir', () => {
         });
     }
   ));
+
+  it('throws error when checking the directory if lacks writing permissions',
+    () => withTempDir(
+    (tmpDir) => {
+      const tmpPath = path.join(tmpDir.path(), 'build');
+      return fs.mkdir(tmpPath, '0622').then(() => {
+        const artifactsDir = path.join(tmpPath, 'artifacts');
+        return prepareArtifactsDir(artifactsDir)
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(UsageError, (error) => {
+            assert.match(error.message, /lack permissions/);
+          }));
+      });
+    }
+  ));
+
+  it('throws error when creating a folder if lacks writing permissions',
+    () => withTempDir(
+    (tmpDir) => {
+      class ErrorWithCode extends Error {
+        code: string;
+        constructor(code) {
+          super('some error');
+          this.code = code;
+        }
+      }
+
+      const tmpPath = path.join(tmpDir.path(), 'build');
+      const fakeFS = {
+        mkdir: sinon.spy(() => Promise.reject(new ErrorWithCode('EACCES'))),
+        stat: sinon.spy(() => Promise.reject(new ErrorWithCode('ENOENT'))),
+      };
+      return prepareArtifactsDir(tmpPath, fakeFS)
+        .then(makeSureItFails())
+        .catch(onlyInstancesOf(UsageError, (error) => {
+          assert.match(error.message, /lack permissions/);
+        }));
+    }
+ ));
 
 });
