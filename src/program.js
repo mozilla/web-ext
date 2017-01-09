@@ -59,7 +59,11 @@ export class Program {
         return;
       }
       return yargs
-        .demand(0, 0, 'This command does not take any arguments')
+        // Make sure the user does not add any extra commands. For example,
+        // this would be a mistake because lint does not accept arguments:
+        // web-ext lint ./src/path/to/file.js
+        .demandCommand(0, 0, undefined,
+                       'This command does not take any arguments')
         .strict()
         .exitProcess(this.shouldExitProgram)
         // Calling env() will be unnecessary after
@@ -125,11 +129,13 @@ export class Program {
           version: getVersion(absolutePackageDir),
         });
       }
+
       if (configOptions) {
         await runCommand({ ...argv, ...configOptions});
       } else {
         await runCommand(argv);
       }
+
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -200,7 +206,7 @@ Example: $0 --help run.
     .alias('h', 'help')
     .env(envPrefix)
     .version(() => getVersion(absolutePackageDir))
-    .demand(1)
+    .demandCommand(1, 'You must specify a command')
     .strict();
 
   program.setGlobalOptions({
@@ -309,12 +315,27 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'pref': {
-        describe: 'Launch firefox with custom preferences. Lightweight ' +
-                  'alternative to creating custom profile.',
+        describe: 'Launch firefox with a custom preference ' +
+                  '(example: --pref=general.useragent.locale=fr-FR). ' +
+                  'You can repeat this option to set more than one ' +
+                  'preference.',
         demand: false,
         requiresArg: true,
         type: 'string',
         coerce: coerceCLICustomPreference,
+      },
+      'start-url': {
+        alias: ['u', 'url'],
+        describe: 'Launch firefox at specified page',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+      },
+      'browser-console': {
+        alias: ['bc'],
+        describe: 'Open the DevTools Browser Console.',
+        demand: false,
+        type: 'boolean',
       },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {

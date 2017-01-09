@@ -127,6 +127,45 @@ describe('run', () => {
     });
   });
 
+  it('passes single url parameter to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+    const expectedBinaryArgs = ['--url', 'www.example.com'];
+
+    return cmd.run({startUrl: 'www.example.com'}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                       expectedBinaryArgs);
+    });
+  });
+
+  it('passes multiple url parameters to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+    const expectedBinaryArgs = [
+      '--url', 'www.one.com', '--url', 'www.two.com', '--url', 'www.three.com',
+    ];
+
+    return cmd.run({startUrl: [
+      'www.one.com', 'www.two.com', 'www.three.com',
+    ]}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                       expectedBinaryArgs);
+    });
+  });
+
+  it('passes -jsconsole when --browser-console is specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({browserConsole: true}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs,
+                   '-jsconsole');
+    });
+  });
+
   it('passes a custom Firefox profile when specified', () => {
     const firefoxProfile = '/pretend/path/to/firefox/profile';
     const cmd = prepareRun();
@@ -241,6 +280,7 @@ describe('run', () => {
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
+        desktopNotifications: sinon.spy(() => Promise.resolve()),
       };
       return {
         config,
@@ -280,6 +320,24 @@ describe('run', () => {
           const reloadArgs = config.client.reloadAddon.firstCall.args;
           assert.ok(config.addonId);
           assert.equal(reloadArgs[0], config.addonId);
+        });
+    });
+
+    it('notifies user on error from source change handler', () => {
+      const {config, createWatcher} = prepare();
+      config.client.reloadAddon = () => Promise.reject(new Error('an error'));
+      createWatcher();
+
+      assert.equal(config.onSourceChange.called, true);
+      // Simulate executing the handler when a source file changes.
+      return config.onSourceChange.firstCall.args[0].onChange()
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(config.desktopNotifications.called, true);
+          assert.equal(
+            config.desktopNotifications.lastCall.args[0].message,
+            error.message
+          );
         });
     });
 

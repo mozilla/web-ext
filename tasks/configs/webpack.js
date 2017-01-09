@@ -1,6 +1,6 @@
 var path = require('path');
 
-var webpackConfig = require('../webpack.config.js');
+var webpackConfig = require('../../webpack.config.js');
 
 
 module.exports = {
@@ -9,14 +9,14 @@ module.exports = {
   unit_tests: {
     entry: './tests/unit/runner.js',
     output: {
-      path: path.join(__dirname, '../dist'),
+      path: path.join(__dirname, '../../dist'),
       filename: 'unit-tests.js',
     },
   },
   functional_tests: {
     entry: './tests/functional/runner.js',
     output: {
-      path: path.join(__dirname, '../dist'),
+      path: path.join(__dirname, '../../dist'),
       filename: 'functional-tests.js',
     },
   },
