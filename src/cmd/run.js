@@ -37,12 +37,9 @@ export type WatcherCreatorParams = {|
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
-<<<<<<< HEAD
   desktopNotifications?: typeof defaultDesktopNotifications,
-};
-=======
 |};
->>>>>>> refactor: added pipes for flow types
+
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
@@ -285,12 +282,8 @@ export type ExtensionRunnerParams = {|
   firefox: string,
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
-<<<<<<< HEAD
   startUrl?: string | Array<string>,
-};
-=======
 |};
->>>>>>> refactor: added pipes for flow types
 
 export class ExtensionRunner {
   sourceDir: string;
