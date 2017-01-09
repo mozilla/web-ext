@@ -183,12 +183,12 @@ export function fake<T>(original: Object, methods: Object = {}): T {
  * connect() of 'node-firefox-connect'
  */
 
-type FakeFirefoxClientParams = {
+type FakeFirefoxClientParams = {|
   requestResult?: Object,
   requestError?: Object,
   makeRequestResult?: Object,
   makeRequestError?: Object,
-}
+|}
 export function fakeFirefoxClient({
   requestResult = {}, requestError,
   makeRequestResult = {}, makeRequestError,

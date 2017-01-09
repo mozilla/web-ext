@@ -7,10 +7,10 @@ import defaultLintCommand from '../../../src/cmd/lint';
 import {FileFilter} from '../../../src/cmd/build';
 import {fake, makeSureItFails} from '../helpers';
 
-type setUpParams = {
+type setUpParams = {|
   createLinter?: Function,
   fileFilter?: Function,
-}
+|}
 
 describe('lint', () => {
 
