@@ -110,7 +110,11 @@ export class Program {
     argv.customPrefs = argv.pref;
 
     const runCommand = this.commands[cmd];
-    const configOptions = require('./web-ext-config.js');
+    const configFileName = argv.config;
+    if (configFileName) {
+      const configObj = loadJSConfigFile(configFileName);
+      log.info(configObj);
+    }
 
     if (argv.verbose) {
       logStream.makeVerbose();
@@ -129,13 +133,7 @@ export class Program {
           version: getVersion(absolutePackageDir),
         });
       }
-
-      if (configOptions) {
-        await runCommand({ ...argv, ...configOptions});
-      } else {
-        await runCommand(argv);
-      }
-
+      await runCommand(argv);
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -153,6 +151,18 @@ export class Program {
         throw error;
       }
     }
+  }
+}
+
+function loadJSConfigFile(filePath) {
+  log.debug(`Loading JS config file: ${filePath}`);
+  try {
+    /* $FLOW_IGNORE */
+    return require(filePath);
+  } catch (e) {
+    log.debug(`Error reading JavaScript file: ${filePath}`);
+    e.message = `Cannot read config file: ${filePath}\nError: ${e.message}`;
+    throw e;
   }
 }
 
@@ -230,6 +240,13 @@ Example: $0 --help run.
       alias: 'v',
       describe: 'Show verbose output',
       type: 'boolean',
+    },
+    'config': {
+      alias: 'c',
+      describe: 'Supply a custom configuration file',
+      type: 'string',
+      requiresArg: true,
+      demand: false,
     },
   });
 
