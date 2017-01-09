@@ -78,6 +78,9 @@ export default function sign(
           `Cannot set custom ID ${id} because manifest.json ` +
           `declares ID ${manifestId}`);
       }
+      if (id) {
+        log.debug(`Using custom ID declared as --id=${id}`);
+      }
 
       if (manifestId) {
         id = manifestId;
