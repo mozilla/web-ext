@@ -18,15 +18,6 @@ type ProgramOptions = {|
   absolutePackageDir?: string,
 |}
 
-type ExecuteOptions = {
-  checkForUpdates?: Function,
-  systemProcess?: typeof process,
-  logStream?: typeof defaultLogStream,
-  getVersion?: Function,
-  shouldExitProgram?: boolean,
-  globalEnv?: string,
-}
-
 /*
  * The command line program.
  */
@@ -106,7 +97,7 @@ export class Program {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
       logStream = defaultLogStream, getVersion = defaultVersionGetter,
       shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
-    }: ExecuteOptions = {}
+    }: Object = {}
   ): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
@@ -183,19 +174,13 @@ export function defaultVersionGetter(
   }
 }
 
-type MainParams = {
-  getVersion: Function,
-  commands: Object,
-  argv: Array<any>,
-  runOptions: Object,
-}
 
 export function main(
   absolutePackageDir: string,
   {
     getVersion = defaultVersionGetter, commands = defaultCommands, argv,
     runOptions = {},
-  }: MainParams = {}
+  }: Object = {}
 ): Promise<any> {
 
   const program = new Program(argv, {absolutePackageDir});

@@ -14,6 +14,7 @@ import {withTempDir} from '../../../src/util/temp-dir';
 import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import {RemoteFirefox} from '../../../src/firefox/remote';
+import type {RemotePortFinderParams} from '../../../src/firefox/index';
 
 const {defaultFirefoxEnv} = firefox;
 
@@ -491,13 +492,10 @@ describe('firefox', () => {
     ));
 
   });
-  type FindRemotePortOptions = {
-    args?: Array<any>,
-  }
 
   describe('defaultRemotePortFinder', () => {
 
-    function findRemotePort({...args}: FindRemotePortOptions = {}) {
+    function findRemotePort({...args}: RemotePortFinderParams = {}) {
       return firefox.defaultRemotePortFinder({...args});
     }
 

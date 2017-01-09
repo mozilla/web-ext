@@ -31,14 +31,18 @@ const log = createLogger(__filename);
 
 // defaultWatcherCreator types and implementation.
 
-export type WatcherCreatorParams = {
+export type WatcherCreatorParams = {|
   addonId: string,
   client: RemoteFirefox,
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
+<<<<<<< HEAD
   desktopNotifications?: typeof defaultDesktopNotifications,
 };
+=======
+|};
+>>>>>>> refactor: added pipes for flow types
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
@@ -72,18 +76,18 @@ export function defaultWatcherCreator(
 
 // defaultReloadStrategy types and implementation.
 
-export type ReloadStrategyParams = {
+export type ReloadStrategyParams = {|
   addonId: string,
   firefoxProcess: FirefoxProcess,
   client: RemoteFirefox,
   profile: FirefoxProfile,
   sourceDir: string,
   artifactsDir: string,
-};
+|};
 
-export type ReloadStrategyOptions = {
+export type ReloadStrategyOptions = {|
   createWatcher?: WatcherCreatorFn,
-};
+|};
 
 export function defaultReloadStrategy(
   {
@@ -107,11 +111,11 @@ export function defaultReloadStrategy(
 
 // defaultFirefoxClient types and implementation.
 
-export type CreateFirefoxClientParams = {
+export type CreateFirefoxClientParams = {|
   connectToFirefox?: FirefoxConnectorFn,
   maxRetries: number,
   retryInterval: number,
-};
+|};
 
 export function defaultFirefoxClient(
   {
@@ -154,7 +158,7 @@ export function defaultFirefoxClient(
 
 // Run command types and implementation.
 
-export type CmdRunParams = {
+export type CmdRunParams = {|
   sourceDir: string,
   artifactsDir: string,
   firefox: string,
@@ -164,13 +168,13 @@ export type CmdRunParams = {
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
-};
+|};
 
-export type CmdRunOptions = {
+export type CmdRunOptions = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
-};
+|};
 
 export default async function run(
   {
@@ -273,7 +277,7 @@ export default async function run(
 
 // ExtensionRunner types and implementation.
 
-export type ExtensionRunnerParams = {
+export type ExtensionRunnerParams = {|
   sourceDir: string,
   manifestData: ExtensionManifest,
   profilePath: string,
@@ -281,8 +285,12 @@ export type ExtensionRunnerParams = {
   firefox: string,
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
+<<<<<<< HEAD
   startUrl?: string | Array<string>,
 };
+=======
+|};
+>>>>>>> refactor: added pipes for flow types
 
 export class ExtensionRunner {
   sourceDir: string;

@@ -15,11 +15,11 @@ export type FATAL = 60;
 export type BunyanLogLevel =
   TRACE | DEBUG | INFO | WARN | ERROR | FATAL;
 
-export type BunyanLogEntry = {
+export type BunyanLogEntry = {|
   name: string,
   msg: string,
   level: BunyanLogLevel,
-};
+|};
 
 export type Logger = {
   debug: (msg: string) => void,
