@@ -48,11 +48,10 @@ describe('firefox', () => {
       }));
     }
 
-    // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
+    // TODO: This object should accept dynamic properties since those are passed to firefox.run()
 
     type RunFirefoxOptions = {
       profile?: typeof FirefoxProfile,
-      args?: Array<any>,
     }
 
     function runFirefox(

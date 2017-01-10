@@ -13,7 +13,7 @@ const log = createLogger(__filename);
 export type LinterOutputType = 'text' | 'json';
 
 export type LinterCreatorParams = {|
-  config: {
+  config: {|
     logLevel: 'debug' | 'fatal',
     stack: boolean,
     pretty?: boolean,
@@ -24,7 +24,7 @@ export type LinterCreatorParams = {|
     selfHosted?: boolean,
     shouldScanFile: (fileName: string) => boolean,
     _: Array<string>,
-  },
+  |},
   runAsBinary: boolean,
 |};
 
