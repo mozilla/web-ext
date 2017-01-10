@@ -188,10 +188,10 @@ export function defaultVersionGetter(
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 type MainParams = {
-  getVersion: Function,
-  commands: Object,
+  getVersion?: Function,
+  commands?: Object,
   argv: Array<any>,
-  runOptions: Object,
+  runOptions?: Object,
 }
 
 export function main(

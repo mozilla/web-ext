@@ -47,7 +47,7 @@ export type LocalizedNameParams = {|
 // This defines the _locales/messages.json type. See:
 // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Internationalization#Providing_localized_strings_in__locales
 type LocalizedMessageData = {|
-  messageName: {|
+  [messageName: string]: {|
     description: string,
     message: string,
   |},
