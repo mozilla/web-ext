@@ -14,6 +14,7 @@ import {withTempDir} from '../../../src/util/temp-dir';
 import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import {RemoteFirefox} from '../../../src/firefox/remote';
+import type {RemotePortFinderParams} from '../../../src/firefox/index';
 
 const {defaultFirefoxEnv} = firefox;
 
@@ -47,7 +48,18 @@ describe('firefox', () => {
       }));
     }
 
-    function runFirefox({profile = fakeProfile, ...args}: Object = {}) {
+    // TODO: This object should accept dynamic properties since those are passed to firefox.run()
+
+    type RunFirefoxOptions = {
+      profile?: typeof FirefoxProfile,
+    }
+
+    function runFirefox(
+      {
+        profile = fakeProfile,
+        ...args
+      }: RunFirefoxOptions = {},
+    ) {
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),
@@ -484,7 +496,7 @@ describe('firefox', () => {
 
   describe('defaultRemotePortFinder', () => {
 
-    function findRemotePort({...args}: Object = {}) {
+    function findRemotePort({...args}: RemotePortFinderParams = {}) {
       return firefox.defaultRemotePortFinder({...args});
     }
 

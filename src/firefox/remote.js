@@ -19,24 +19,24 @@ export const REMOTE_PORT = 6005;
 export type FirefoxConnectorFn =
   (port?: number) => Promise<FirefoxClient>;
 
-export type FirefoxRDPAddonActor = {
+export type FirefoxRDPAddonActor = {|
   id: string,
   actor: string,
-};
+|};
 
-export type FirefoxRDPResponseError = {
+export type FirefoxRDPResponseError = {|
   error: {
     message: string,
   },
-};
+|};
 
-export type FirefoxRDPResponseAddon = {
+export type FirefoxRDPResponseAddon = {|
   addon: FirefoxRDPAddonActor,
-};
+|};
 
-export type FirefoxRDPResponseRequestTypes = {
+export type FirefoxRDPResponseRequestTypes = {|
   requestTypes: Array<string>,
-};
+|};
 
 // NOTE: this type aliases Object to catch any other possible response.
 export type FirefoxRDPResponseAny = Object;
@@ -180,9 +180,9 @@ export class RemoteFirefox {
 
 // Connect types and implementation
 
-export type ConnectOptions = {
+export type ConnectOptions = {|
   connectToFirefox: FirefoxConnectorFn,
-};
+|};
 
 // NOTE: this fixes an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declaring the default export

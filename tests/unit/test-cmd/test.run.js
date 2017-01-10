@@ -273,7 +273,6 @@ describe('run', () => {
     function prepare() {
       const config = {
         addonId: 'some-addon@test-suite',
-        profile: {},
         client: fake(RemoteFirefox.prototype, {
           reloadAddon: () => Promise.resolve(),
         }),

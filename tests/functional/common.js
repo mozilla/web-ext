@@ -26,10 +26,10 @@ export const fakeServerPath = path.join(
 
 // withTempAddonDir helper
 
-export type TempAddonParams = {
+export type TempAddonParams = {|
   addonPath: string,
   runFromCwd?: boolean
-};
+|};
 
 export type TempAddonCallback =
   (tmpAddonDir: string, tmpDir: string) => Promise<any>
@@ -74,18 +74,18 @@ export function reportCommandErrors(obj: Object, msg: ?string) {
 
 // execCommand helper
 
-export type RunCommandResult = {
+export type RunCommandResult = {|
   exitCode: number,
   stderr: string,
   stdout: string,
-};
+|};
 
-export type RunningCommand = {
+export type RunningCommand = {|
   execPath: string,
   argv: Array<string>,
   waitForExit: Promise<RunCommandResult>,
   spawnedProcess: ChildProcess,
-};
+|};
 
 export function execCommand(
   execPath: string, argv: Array<string>, spawnOptions: child_process$spawnOpts,

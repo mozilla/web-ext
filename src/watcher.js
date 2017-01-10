@@ -15,12 +15,12 @@ export type ShouldWatchFn = (filePath: string) => boolean;
 
 export type OnChangeFn = () => any;
 
-export type OnSourceChangeParams = {
+export type OnSourceChangeParams = {|
   sourceDir: string,
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile?: ShouldWatchFn,
-};
+|};
 
 // NOTE: this fix an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declare the default export
@@ -54,12 +54,12 @@ export default function onSourceChange(
 
 // proxyFileChanges types and implementation.
 
-export type ProxyFileChangesParams = {
+export type ProxyFileChangesParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   filePath: string,
   shouldWatchFile?: ShouldWatchFn,
-};
+|};
 
 export function proxyFileChanges(
   {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams

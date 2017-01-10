@@ -27,31 +27,31 @@ export function safeFileName(name: string): string {
 
 // defaultPackageCreator types and implementation.
 
-export type ExtensionBuildResult = {
+export type ExtensionBuildResult = {|
   extensionPath: string,
-};
+|};
 
-export type PackageCreatorParams = {
+export type PackageCreatorParams = {|
   manifestData?: ExtensionManifest,
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
   showReadyMessage: boolean
-};
+|};
 
-export type LocalizedNameParams = {
+export type LocalizedNameParams = {|
   messageFile: string,
   manifestData: ExtensionManifest,
-}
+|}
 
 // This defines the _locales/messages.json type. See:
 // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Internationalization#Providing_localized_strings_in__locales
-type LocalizedMessageData = {
-  [messageName: string]: {
+type LocalizedMessageData = {|
+  [messageName: string]: {|
     description: string,
     message: string,
-  },
-}
+  |},
+|}
 
 export async function getDefaultLocalizedName(
   {messageFile, manifestData}: LocalizedNameParams
@@ -135,19 +135,19 @@ async function defaultPackageCreator({
 
 // Build command types and implementation.
 
-export type BuildCmdParams = {
+export type BuildCmdParams = {|
   sourceDir: string,
   artifactsDir: string,
   asNeeded?: boolean,
-};
+|};
 
-export type BuildCmdOptions = {
+export type BuildCmdOptions = {|
   manifestData?: ExtensionManifest,
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
   showReadyMessage?: boolean
-};
+|};
 
 export default async function build(
   {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
@@ -189,9 +189,9 @@ export default async function build(
 
 // FileFilter types and implementation.
 
-export type FileFilterOptions = {
+export type FileFilterOptions = {|
   filesToIgnore?: Array<string>,
-};
+|};
 
 /*
  * Allows or ignores files when creating a ZIP archive.
