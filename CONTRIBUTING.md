@@ -127,6 +127,39 @@ so as not to disturb any real `addons.mozilla.org` data.
   then you'd have to use our staging API server. File an issue for information
   on that.
 
+## Working on CLI
+
+WebExtensions rely on [Yargs](http://yargs.js.org) to parse its commands and
+their options. The commands are defined in `src/program.js`, `main` function
+describes them and `program.execute` function defines what happens with parsed
+commands. `cmd` directory is where all command actions are stored, options are
+passed to the corresponding functions as arguments.
+
+### Adding a command option
+
+To add a command option locate the relevant command description (i.e. `run`).
+Here is an example (note the trailing comma):
+
+````
+'file-path': {
+  describe: 'An absolute file path.',
+  alias: ['fp'],
+  demand: false,
+  requiresArg: true,
+  type: 'string',
+  coerce: nameOfCoerceFunction,
+},
+````
+This option can be used like `--file-path=./path/to/fil`. Since Yargs can be
+pretty powerful and not completely intuitive at times, for instance Yargs types
+are not the same as JavaScript types, so it is useful to take a look at [docs](http://yargs.js.org/docs/)
+when in doubt.
+Hyphenated options will be turned into [camelCase](https://en.wikipedia.org/wiki/Camel_case)
+when passed to function (so `file-path` will turn into `filePath`). Options
+can be transformed before they are passed to function using `coerce`.
+As a rule it is better to use a simple and descriptive name that user can easily
+associated with its functionality and avoid relying on aliases.
+
 ## Creating a pull request
 
 When you create a
