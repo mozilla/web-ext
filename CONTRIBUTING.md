@@ -100,6 +100,75 @@ You can also generate coverage reports continously as you edit files:
 
 Once a report has been generated, it can be found in the `./coverage` directory.
 
+## Working on the CLI
+
+This section will show you how to add a new commands and options.
+
+`web-ext` relies on [yargs](http://yargs.js.org) to parse its commands and
+their options. The commands are defined in `src/program.js` in the `main` function.
+For example, the `build` command is defined like this:
+
+````javascript
+program
+  .command(
+    'build',
+    'Create a web extension package from source',
+    commands.build, {
+      'as-needed': {
+        describe: 'Watch for file changes and re-build as needed',
+        type: 'boolean',
+      },
+    })
+````
+
+The first argument to `program.command()` is the command name, the second is the
+description (shown for `--help`), the third is a callback that executes the
+command, and the last is an object defining all available options.
+
+The `cmd` directory is where all command callbacks are stored. In this example,
+`commands.build` is defined in `src/cmd/build.js` but you can always trace the
+imports to find each one.
+
+When `web-ext` executes a command callback, it passes an object containing all option
+values, including global options (such as `--source-dir`). Each option key is
+converted from hyphenated words to [camelCase](https://en.wikipedia.org/wiki/Camel_case)
+words. So, the
+`--as-needed` and `--source-dir` options would be passed like:
+
+````javascript
+commands.build({asNeeded: true, sourceDir: './src/extension'})
+  .then((result) => {
+    // ...
+  });
+````
+
+### Adding a command option
+
+To add a command option, locate the relevant command definition (i.e. `run`)
+and specify a new option definition as an object.
+Here is an example of adding the `--file-path` option:
+
+````javascript
+program
+  // other commands...
+  .command('run', 'Run the web extension', commands.run, {
+    // other options...
+    'file-path': {
+      describe: 'An absolute file path.',
+      alias: ['fp'],
+      demand: false,
+      requiresArg: true,
+      type: 'string',
+    },
+  })
+````
+This option can be used like `web-ext run --file-path=./path/to/file` or
+`--fp=./path/to/file`. Since Yargs can be pretty powerful yet not completely
+intuitive at times, you may need to dig into the
+[docs](http://yargs.js.org/docs/). Any key that you can pass to
+[yargs.option](http://yargs.js.org/docs/#methods-optionkey-opt)
+is a key you can pass to each option object when calling `program.command()`.
+
 ## Working on `web-ext sign`
 
 When you are developing a fix or feature for the `web-ext sign` command it's wise
@@ -126,39 +195,6 @@ so as not to disturb any real `addons.mozilla.org` data.
   Firefox. If you need to test installation of add-ons (you probably don't)
   then you'd have to use our staging API server. File an issue for information
   on that.
-
-## Working on CLI
-
-WebExtensions rely on [Yargs](http://yargs.js.org) to parse its commands and
-their options. The commands are defined in `src/program.js`, `main` function
-describes them and `program.execute` function defines what happens with parsed
-commands. `cmd` directory is where all command actions are stored, options are
-passed to the corresponding functions as arguments.
-
-### Adding a command option
-
-To add a command option locate the relevant command description (i.e. `run`).
-Here is an example (note the trailing comma):
-
-````
-'file-path': {
-  describe: 'An absolute file path.',
-  alias: ['fp'],
-  demand: false,
-  requiresArg: true,
-  type: 'string',
-  coerce: nameOfCoerceFunction,
-},
-````
-This option can be used like `--file-path=./path/to/fil`. Since Yargs can be
-pretty powerful and not completely intuitive at times, for instance Yargs types
-are not the same as JavaScript types, so it is useful to take a look at [docs](http://yargs.js.org/docs/)
-when in doubt.
-Hyphenated options will be turned into [camelCase](https://en.wikipedia.org/wiki/Camel_case)
-when passed to function (so `file-path` will turn into `filePath`). Options
-can be transformed before they are passed to function using `coerce`.
-As a rule it is better to use a simple and descriptive name that user can easily
-associated with its functionality and avoid relying on aliases.
 
 ## Creating a pull request
 
