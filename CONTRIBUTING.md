@@ -141,20 +141,21 @@ To add a command option locate the relevant command description (i.e. `run`).
 Here is an example (note the trailing comma):
 
 ````
-'new-option': {
-  describe: 'A wonderful new option with useful functionality.',
-  alias: ['alias'],
+'file-path': {
+  describe: 'An absolute file path.',
+  alias: ['fp'],
   demand: false,
   requiresArg: true,
-  type: 'boolean',
+  type: 'string',
   coerce: nameOfCoerceFunction,
 },
 ````
-Since Yargs can be pretty powerful and not completely intuitive at times, for
-instance Yargs types are not the same as JavaScript types, so it is useful to
-take a look at [docs](http://yargs.js.org/docs/) when in doubt.
+This option can be used like `--file-path=./path/to/fil`. Since Yargs can be
+pretty powerful and not completely intuitive at times, for instance Yargs types
+are not the same as JavaScript types, so it is useful to take a look at [docs](http://yargs.js.org/docs/)
+when in doubt.
 Hyphenated options will be turned into [camelCase](https://en.wikipedia.org/wiki/Camel_case)
-when passed to function (so `new-option` will turn into `newOption`). Options
+when passed to function (so `file-path` will turn into `filePath`). Options
 can be transformed before they are passed to function using `coerce`.
 As a rule it is better to use a simple and descriptive name that user can easily
 associated with its functionality and avoid relying on aliases.
