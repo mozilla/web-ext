@@ -1,4 +1,6 @@
 /* @flow */
+import readline from 'readline';
+
 import type FirefoxProfile from 'firefox-profile';
 import type Watchpack from 'watchpack';
 
@@ -44,6 +46,7 @@ export type WatcherCreatorParams = {|
   desktopNotifications?: typeof defaultDesktopNotifications,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
+  reloader?: typeof reloadFn,
 |};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
@@ -54,6 +57,7 @@ export function defaultWatcherCreator(
     onSourceChange = defaultSourceWatcher,
     desktopNotifications = defaultDesktopNotifications,
     createFileFilter = defaultFileFilterCreator,
+    reloader = reloadFn,
   }: WatcherCreatorParams
  ): Watchpack {
   const fileFilter = createFileFilter(
@@ -63,21 +67,34 @@ export function defaultWatcherCreator(
     sourceDir,
     artifactsDir,
     onChange: () => {
-      log.debug(`Reloading add-on ID ${addonId}`);
-
-      return client.reloadAddon(addonId)
-        .catch((error) => {
-          log.error('\n');
-          log.error(error.stack);
-          desktopNotifications({
-            title: 'web-ext run: error occured',
-            message: error.message,
-          });
-          throw error;
-        });
+      return reloader({addonId, client});
     },
     shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
+}
+
+export type ReloadParams = {
+  addonId: string,
+  client: RemoteFirefox,
+  desktopNotifications?: typeof defaultDesktopNotifications,
+};
+
+export function reloadFn(
+  {
+  addonId, client, desktopNotifications = defaultDesktopNotifications,
+ }: ReloadParams
+): Promise<void> {
+  log.debug(`Reloading add-on ID ${addonId}`);
+  return client.reloadAddon(addonId)
+    .catch((error) => {
+      log.error('\n');
+      log.error(error.stack);
+      desktopNotifications({
+        title: 'web-ext run: error occured',
+        message: error.message,
+      });
+      throw error;
+    });
 }
 
 
@@ -186,6 +203,7 @@ export type CmdRunOptions = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
+  reloader: typeof reloadFn,
 |};
 
 export default async function run(
@@ -198,6 +216,7 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
+    reloader = reloadFn,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -271,6 +290,19 @@ export default async function run(
           'Unexpected missing addonId in the installAsTemporaryAddon result'
         );
       }
+
+      readline.emitKeypressEvents(process.stdin);
+      if (process.stdin.isTTY) {
+        log.info('Press R to reload');
+        (process.stdin: any).setRawMode(true);
+      }
+      process.stdin.on('keypress', (str, key) => {
+        if (key.ctrl && key.name === 'c') {
+          process.exit();
+        } else if (key.name === 'r' && addonId) {
+          reloader({addonId, client});
+        }
+      });
 
       log.info('The extension will reload if any source file changes');
       reloadStrategy({
