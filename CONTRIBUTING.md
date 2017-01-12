@@ -85,6 +85,89 @@ the test suite without lint checks:
 This project relies on [Flow] to ensure functions and
 classes are used correctly. Run all Flow checks with `npm run flow-check`.
 
+The first steps to learn how to fix flow errors are:
+
+- learn how to read the flow annotations
+- learn how to write new or change the existent type definitions
+- learn to read the flow errors and know some of the more common errors
+
+To learn more about the syntax used to add the flow annotations and how to
+write/change the type definitions, you should take a look at the official
+[Flow docs](https://flowtype.org/docs/getting-started.html)
+
+Follows some additional information related to common flow errors and how
+to read them.
+
+### Missing annotation
+
+This is a pretty common flow error and it is usually the simplest to fix.
+
+It means that the new code added in the sources doesn't define the types
+of the functions and methods parameters, e.g. on the following snippet:
+
+```js
+export default async function getValidatedManifest(sourceDir) {
+  ...
+}
+```
+
+flow is going to raise the error:
+
+```
+src/util/manifest.js:32
+ 32:   sourceDir
+       ^^^^^^^^^ parameter `sourceDir`. Missing annotation
+```
+
+which is fixed by annotate the function correctly, e.g.:
+
+```js
+export default async function getValidatedManifest(
+  sourceDir: string
+): Promise<ExtensionManifest> {
+  ...
+}
+```
+
+### How to read Flow errors related to type inconsistencies
+
+Some of the flow errors are going to contains references to the two sides
+of the flowtype errors:
+
+```
+tests/unit/test-cmd/test.build.js:193
+193:         manifestData: basicManifest,
+                           ^^^^^^^^^^^^^ property `applications`. Property not found in
+ 24: export type ExtensionManifest = {|
+                                     ^ object type. See: src/util/manifest.js:24
+
+```
+
+- The first part points to the offending code (where the type violation has been found)
+- The second part points to the offended type annotation (where the type has been defined)
+
+When flow raises this kind of errors (e.g. it is pretty common during a refactoring),
+we have to evaluate which one of the two sides is wrong.
+
+As an example, by reading the above error is not immediately clear which part should be fixed,
+To be sure about which is the proper fix, we have to look at the code near to both the lines
+and evaluate the actual reason (that can be different from time to time), e.g.:
+
+- it is possible that we wrote some of property names wrong (in the code or in the type definitions)
+- or the defined type is supposed to contains a new property and it is not yet in the related type definitions
+
+### Flow type definitions conventions
+
+In the `web-ext` sources we are currently using the following conventions, that should be preserved
+when we change or add flow types definitions:
+
+- the type names should be CamelCased (e.g. `ExtensionManifest`)
+- the types used to annotate functions or methods exported from the module should be exported
+  (`export type ExtensionManifest = ...`)
+- object types should be exact object types (e.g. `{| ... |}`), because flow will be able to raise
+  errors when we try to set or get a property not explicitly defined in the flow type (which is
+  particularly helpful during refactorings).
+
 ## Code Coverage
 
 You can generate code coverage reports every time you run the test suite
