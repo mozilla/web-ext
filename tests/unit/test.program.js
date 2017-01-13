@@ -10,7 +10,7 @@ import {assert} from 'chai';
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
-import {fake, makeSureItFails} from './helpers';
+import {fake, makeSureItFails, ErrorWithCode} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
 
 
@@ -84,14 +84,6 @@ describe('program.Program', () => {
   });
 
   it('handles errors that have codes', () => {
-
-    class ErrorWithCode extends Error {
-      code: string;
-      constructor() {
-        super('pretend this is a system error');
-        this.code = 'SOME_CODE';
-      }
-    }
 
     const program = new Program(['cmd'])
       .command('cmd', 'some command', () => {
