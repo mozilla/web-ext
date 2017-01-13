@@ -9,7 +9,7 @@ import {fs} from 'mz';
 import {onlyInstancesOf, UsageError} from '../../../src/errors';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {prepareArtifactsDir} from '../../../src/util/artifacts';
-import {makeSureItFails} from '../helpers';
+import {makeSureItFails, ErrorWithCode} from '../helpers';
 
 
 describe('prepareArtifactsDir', () => {
@@ -65,32 +65,41 @@ describe('prepareArtifactsDir', () => {
         return prepareArtifactsDir(artifactsDir)
           .then(makeSureItFails())
           .catch(onlyInstancesOf(UsageError, (error) => {
-            assert.match(error.message, /lack permissions/);
+            assert.match(error.message, /user lacks permissions/);
           }));
       });
+    }
+  ));
+
+  it('throws error when directory exists and user lacks writing permissions',
+    () => withTempDir(
+    (tmpDir) => {
+      const stats = {isDirectory: () => true};
+      const fakeFS = {
+        stat: sinon.spy(() => Promise.resolve(stats)),
+        access: sinon.spy(() => Promise.reject(new ErrorWithCode('EACCES'))),
+      };
+      return prepareArtifactsDir(tmpDir.path(), fakeFS)
+        .then(makeSureItFails())
+        .catch(onlyInstancesOf(UsageError, (error) => {
+          assert.match(error.message, /user lacks permissions/);
+        }));
     }
   ));
 
   it('throws error when creating a folder if lacks writing permissions',
     () => withTempDir(
     (tmpDir) => {
-      class ErrorWithCode extends Error {
-        code: string;
-        constructor(code) {
-          super('some error');
-          this.code = code;
-        }
-      }
-
       const tmpPath = path.join(tmpDir.path(), 'build');
       const fakeFS = {
-        mkdir: sinon.spy(() => Promise.reject(new ErrorWithCode('EACCES'))),
         stat: sinon.spy(() => Promise.reject(new ErrorWithCode('ENOENT'))),
       };
-      return prepareArtifactsDir(tmpPath, fakeFS)
+      const fakeMkdir = sinon.spy(
+        () => Promise.reject(new ErrorWithCode('EACCES')));
+      return prepareArtifactsDir(tmpPath, fakeFS, fakeMkdir)
         .then(makeSureItFails())
         .catch(onlyInstancesOf(UsageError, (error) => {
-          assert.match(error.message, /lack permissions/);
+          assert.match(error.message, /user lacks permissions/);
         }));
     }
  ));

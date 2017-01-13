@@ -232,3 +232,11 @@ export class TCPConnectError extends ExtendableError {
     this.code = 'ECONNREFUSED';
   }
 }
+
+export class ErrorWithCode extends Error {
+  code: string;
+  constructor(code: string) {
+    super('some error');
+    this.code = code;
+  }
+}
