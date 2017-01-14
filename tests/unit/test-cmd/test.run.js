@@ -223,6 +223,35 @@ describe('run', () => {
     });
   });
 
+  it('can reload when user presses R in shell console', () => {
+    const cmd = prepareRun();
+    const {reloader} = cmd.options;
+
+    return cmd.run({noReload: false})
+      .then(() => {
+        process.stdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+      })
+      .then(() => {
+        assert.ok(reloader.called);
+        assert.equal(reloader.firstCall.args[0].addonId,
+          tempInstallResult.addon.id);
+      });
+  });
+
+  it('exits when user presses CTRL+C in shell console', () => {
+    const cmd = prepareRun();
+    const exits = sinon.stub(process, 'exit', sinon.spy(() => {}));
+
+    return cmd.run({noReload: false})
+      .then(() => {
+        process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+      })
+      .then(() => {
+        assert.ok(exits.called);
+        process.exit.restore();
+      });
+  });
+
   it('raise an error on addonId missing from installTemporaryAddon result',
     () => {
       const cmd = prepareRun(tempInstallResultMissingAddonId);
