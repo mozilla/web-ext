@@ -1,5 +1,5 @@
 /* @flow */
-import {describe, it} from 'mocha';
+import {describe, it, before} from 'mocha';
 
 import {
   addonPath, fakeFirefoxPath,
@@ -9,6 +9,13 @@ import {
 const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 
 describe('web-ext run', () => {
+  before(function() {
+    // you can't spawn .js file as an executable on Windows
+    if (process.platform === 'win32') {
+      return this.skip();
+    }
+  });
+
   it('should accept: --no-reload --source-dir SRCDIR --firefox FXPATH',
      () => withTempAddonDir(
        {addonPath},
