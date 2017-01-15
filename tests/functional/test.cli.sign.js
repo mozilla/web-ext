@@ -12,7 +12,11 @@ describe('web-ext sign', () => {
   let fakeServerProcess;
 
   beforeEach(() => {
-    fakeServerProcess = spawn(fakeServerPath);
+    return new Promise((resolve, reject) => {
+      fakeServerProcess = spawn(fakeServerPath);
+      fakeServerProcess.stdout.on('data', resolve);
+      fakeServerProcess.stderr.on('data', reject);
+    });
   });
 
   afterEach(() => {
