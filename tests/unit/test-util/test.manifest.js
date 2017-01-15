@@ -5,7 +5,6 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import deepcopy from 'deepcopy';
 import {fs} from 'mz';
-import semver from 'semver';
 
 import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
 import getValidatedManifest, {getManifestId} from '../../../src/util/manifest';
@@ -61,30 +60,23 @@ describe('util/manifest', () => {
         }));
     });
 
-    // FIXME: Failed on Node 7.
-    // https://github.com/sindresorhus/parse-json/issues/6
-    it('reports an error for invalid manifest JSON', function() {
-      if (semver.gte(process.versions.node, '7.0.0')) {
-        return this.skip();
+    it('reports an error for invalid manifest JSON', () => withTempDir(
+      (tmpDir) => {
+        const badManifest = `{
+          "name": "I'm an invalid JSON Manifest
+          "version": "0.0.0"
+        }`;
+        const manifestFile = path.join(tmpDir.path(), 'manifest.json');
+        return fs.writeFile(manifestFile, badManifest)
+          .then(() => getValidatedManifest(tmpDir.path()))
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(InvalidManifest, (error) => {
+            assert.match(error.message, /Error parsing manifest\.json at /);
+            assert.include(error.message, 'Unexpected token \' \' at 2:49');
+            assert.include(error.message, manifestFile);
+          }));
       }
-      return withTempDir(
-        (tmpDir) => {
-          const badManifest = `{
-            "name": "I'm an invalid JSON Manifest
-            "version": "0.0.0"
-          }`;
-          const manifestFile = path.join(tmpDir.path(), 'manifest.json');
-          return fs.writeFile(manifestFile, badManifest)
-            .then(() => getValidatedManifest(tmpDir.path()))
-            .then(makeSureItFails())
-            .catch(onlyInstancesOf(InvalidManifest, (error) => {
-              assert.match(error.message, /Error parsing manifest\.json at /);
-              assert.include(error.message, 'Unexpected token \' \' at 2:49');
-              assert.include(error.message, manifestFile);
-            }));
-        }
-      );
-    });
+    ));
 
     it('reports an error when missing a name', () => withTempDir(
       (tmpDir) => {

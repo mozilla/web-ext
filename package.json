@@ -111,7 +111,6 @@
     "object.entries": "1.0.4",
     "object.values": "1.0.4",
     "prettyjson": "1.2.1",
-    "semver": "5.3.0",
     "sinon": "1.17.7",
     "webpack": "1.14.0",
     "webpack-dev-server": "1.16.2",
