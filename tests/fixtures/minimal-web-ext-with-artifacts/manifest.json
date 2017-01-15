@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "Minimal Extension",
+  "description": "This is an example of a minimal extension that does nothing",
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "minimal-example@web-ext-test-suite"
+    }
+  },
+  "browser_action": {},
+  "permissions": [
+    "tabs"
+  ],
+  "background": {
+    "scripts": ["background-script.js"]
+  }
+}

@@ -12,7 +12,12 @@ import build, {
   getDefaultLocalizedName,
 } from '../../../src/cmd/build';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
+import {
+  fixturePath,
+  makeSureItFails,
+  ZipFile,
+  copyDirAsPromised,
+} from '../helpers';
 import {
   basicManifest,
   manifestWithoutApps,
@@ -44,6 +49,50 @@ describe('build', () => {
             fileNames.sort();
             assert.deepEqual(fileNames,
                              ['background-script.js', 'manifest.json']);
+          })
+    );
+  });
+
+  it('ignore artifacts dir if included by source dir when zipping', () => {
+    const zipFile = new ZipFile();
+    return withTempDir(
+      (tmpDir) =>
+        copyDirAsPromised(
+          fixturePath('minimal-web-ext-with-artifacts'),
+          tmpDir.path()
+        )
+          .then(() =>
+            build({
+              sourceDir: tmpDir.path(),
+              artifactsDir: path.join(tmpDir.path(), 'web-ext-artifacts'),
+            })
+          )
+          .then((buildResult) => buildResult.extensionPath)
+          .then((extensionPath) => zipFile.open(extensionPath))
+          .then(() => zipFile.extractFilenames())
+          .then((fileNames) => {
+            fileNames.sort();
+            assert.deepEqual(fileNames,
+              ['background-script.js', 'manifest.json']);
+          })
+    );
+  });
+
+  it('ignore files', () => {
+    const zipFile = new ZipFile();
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+          ignoreFiles: ['background-script.js', '*.json'],
+        })
+          .then((buildResult) => buildResult.extensionPath)
+          .then((extensionPath) => zipFile.open(extensionPath))
+          .then(() => zipFile.extractFilenames())
+          .then((fileNames) => {
+            fileNames.sort();
+            assert.deepEqual(fileNames, []);
           })
     );
   });

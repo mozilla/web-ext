@@ -1,6 +1,7 @@
 /* @flow */
 import path from 'path';
 
+import copyDir from 'copy-dir';
 import sinon from 'sinon';
 import yauzl from 'yauzl';
 import ExtendableError from 'es6-error';
@@ -10,6 +11,7 @@ import {createLogger} from '../../src/util/logger';
 
 const log = createLogger(__filename);
 
+export const copyDirAsPromised = promisify(copyDir);
 
 /*
  * A way to read zip files using promises for all the things.
