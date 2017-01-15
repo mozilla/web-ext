@@ -13,7 +13,7 @@ describe('web-ext sign', () => {
 
   beforeEach(() => {
     return new Promise((resolve, reject) => {
-      fakeServerProcess = spawn(fakeServerPath);
+      fakeServerProcess = spawn(process.execPath, [fakeServerPath]);
       fakeServerProcess.stdout.on('data', resolve);
       fakeServerProcess.stderr.on('data', reject);
     });
