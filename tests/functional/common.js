@@ -90,6 +90,12 @@ export type RunningCommand = {|
 export function execCommand(
   execPath: string, argv: Array<string>, spawnOptions: child_process$spawnOpts,
 ): RunningCommand {
+  // bin/web-ext can't be directly spawned on Windows
+  if (execPath === webExt && process.platform === 'win32') {
+    argv.unshift(execPath);
+    execPath = process.execPath;
+  }
+
   const spawnedProcess = spawn(execPath, argv, spawnOptions);
   const waitForExit = new Promise((resolve) => {
     let errorData = '';
