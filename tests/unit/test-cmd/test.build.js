@@ -45,6 +45,7 @@ describe('build', () => {
             fileNames.sort();
             assert.deepEqual(fileNames,
                              ['background-script.js', 'manifest.json']);
+            return zipFile.close();
           })
     );
   });
@@ -221,6 +222,7 @@ describe('build', () => {
           .then(() => zipFile.extractFilenames())
           .then((fileNames) => {
             assert.notInclude(fileNames, 'background-script.js');
+            return zipFile.close();
           })
     );
   });
