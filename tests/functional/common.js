@@ -72,31 +72,27 @@ export function reportCommandErrors(obj: Object, msg: ?string) {
   throw error;
 }
 
-// execCommand helper
+// execWebExt helper
 
-export type RunCommandResult = {|
+export type RunWebExtResult = {|
   exitCode: number,
   stderr: string,
   stdout: string,
 |};
 
-export type RunningCommand = {|
-  execPath: string,
+export type RunningWebExt = {|
   argv: Array<string>,
-  waitForExit: Promise<RunCommandResult>,
+  waitForExit: Promise<RunWebExtResult>,
   spawnedProcess: ChildProcess,
 |};
 
-export function execCommand(
-  execPath: string, argv: Array<string>, spawnOptions: child_process$spawnOpts,
-): RunningCommand {
-  // bin/web-ext can't be directly spawned on Windows
-  if (execPath === webExt && process.platform === 'win32') {
-    argv.unshift(execPath);
-    execPath = process.execPath;
-  }
+export function execWebExt(
+  argv: Array<string>, spawnOptions: child_process$spawnOpts,
+): RunningWebExt {
 
-  const spawnedProcess = spawn(execPath, argv, spawnOptions);
+  const spawnedProcess = spawn(
+      process.execPath, [webExt, ...argv], spawnOptions);
+
   const waitForExit = new Promise((resolve) => {
     let errorData = '';
     let outputData = '';
@@ -113,5 +109,5 @@ export function execCommand(
     });
   });
 
-  return {execPath, argv, waitForExit, spawnedProcess};
+  return {argv, waitForExit, spawnedProcess};
 }
