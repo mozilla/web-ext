@@ -139,6 +139,7 @@ export type BuildCmdParams = {|
   sourceDir: string,
   artifactsDir: string,
   asNeeded?: boolean,
+  ignoreFiles?: Array<string>,
 |};
 
 export type BuildCmdOptions = {|
@@ -150,7 +151,7 @@ export type BuildCmdOptions = {|
 |};
 
 export default async function build(
-  {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
+  {sourceDir, artifactsDir, asNeeded = false, ignoreFiles = []}: BuildCmdParams,
   {
     manifestData, fileFilter = new FileFilter(),
     onSourceChange = defaultSourceWatcher,
@@ -158,7 +159,7 @@ export default async function build(
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
-  fileFilter.addToIgnoreList([artifactsDir]);
+  fileFilter.addToIgnoreList([...ignoreFiles, artifactsDir]);
 
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);

@@ -257,6 +257,11 @@ Example: $0 --help run.
           describe: 'Watch for file changes and re-build as needed',
           type: 'boolean',
         },
+        'ignore-files': {
+          describe: 'Files not to be packed',
+          type: 'array',
+          default: [],
+        },
       })
     .command(
       'sign',
