@@ -159,7 +159,11 @@ export default async function build(
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
-  fileFilter.addToIgnoreList([...ignoreFiles, artifactsDir]);
+
+  fileFilter.addToIgnoreList([
+    ...ignoreFiles,
+    artifactsDir,
+  ].map((file) => path.resolve(sourceDir, file)));
 
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
