@@ -4,9 +4,9 @@ import {createWriteStream} from 'fs';
 
 import minimatch from 'minimatch';
 import {fs} from 'mz';
-import streamToPromise from 'stream-to-promise';
 import parseJSON from 'parse-json';
 
+import {streamToPromise} from '../util/stream-to-promise';
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
@@ -121,10 +121,11 @@ async function defaultPackageCreator({
     `${extensionName}-${manifestData.version}.zip`);
   const extensionPath = path.join(artifactsDir, packageName);
   const stream = createWriteStream(extensionPath);
+  const pendingStream = streamToPromise(stream);
 
   stream.write(buffer, () => stream.end());
 
-  await streamToPromise(stream);
+  await pendingStream;
 
   if (showReadyMessage) {
     log.info(`Your web extension is ready: ${extensionPath}`);

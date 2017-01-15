@@ -5,10 +5,10 @@ import path from 'path';
 import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
-import streamToPromise from 'stream-to-promise';
 import {fs} from 'mz';
 import promisify from 'es6-promisify';
 
+import {streamToPromise} from '../util/stream-to-promise';
 import isDirectory from '../util/is-directory';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
@@ -377,9 +377,10 @@ export async function installExtension(
     // https://developer.mozilla.org/en-US/Add-ons/Setting_up_extension_development_environment#Firefox_extension_proxy_file
     const destPath = path.join(profile.extensionsDir, `${id}`);
     const writeStream = nodeFs.createWriteStream(destPath);
+    const pendingStream = streamToPromise(writeStream);
     writeStream.write(extensionPath);
     writeStream.end();
-    await streamToPromise(writeStream);
+    return await pendingStream;
   } else {
     // Write the XPI file to the profile.
     const readStream = nodeFs.createReadStream(extensionPath);
