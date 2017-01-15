@@ -158,6 +158,8 @@ export default async function build(
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
+  fileFilter.addToIgnoreList([artifactsDir]);
+
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
@@ -206,6 +208,13 @@ export class FileFilter {
       '**/.*', // any hidden file
       '**/node_modules',
     ];
+  }
+
+  /**
+   *  Insert more files into filesToIgnore array.
+   */
+  addToIgnoreList(filesToIgnore: Array<string>) {
+    this.filesToIgnore.push(...filesToIgnore);
   }
 
   /*
