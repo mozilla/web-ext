@@ -46,6 +46,8 @@ export type LintCmdParams = {|
   metadata?: boolean,
   pretty?: boolean,
   warningsAsErrors?: boolean,
+  ignoreFiles?: Array<string>,
+  artifactsDir?: string,
 |};
 
 export type LintCmdOptions = {|
@@ -56,11 +58,11 @@ export type LintCmdOptions = {|
 export default function lint(
   {
     verbose, sourceDir, selfHosted, boring, output,
-    metadata, pretty, warningsAsErrors,
+    metadata, pretty, warningsAsErrors, ignoreFiles, artifactsDir,
   }: LintCmdParams,
   {
     createLinter = defaultLinterCreator,
-    fileFilter = new FileFilter(),
+    fileFilter = new FileFilter({sourceDir, ignoreFiles, artifactsDir}),
   }: LintCmdOptions = {}
 ): Promise<void> {
   log.debug(`Running addons-linter on ${sourceDir}`);
