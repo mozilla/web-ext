@@ -19,7 +19,5 @@ Upload a .zip file of your web extension source if necessary.)
 * Paste the output of these commands:
 
 ````
-web-ext --version
-node --version
-npm --version
+node --version && npm --version && web-ext --version
 ````

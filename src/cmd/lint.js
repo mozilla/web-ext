@@ -12,8 +12,8 @@ const log = createLogger(__filename);
 
 export type LinterOutputType = 'text' | 'json';
 
-export type LinterCreatorParams = {
-  config: {
+export type LinterCreatorParams = {|
+  config: {|
     logLevel: 'debug' | 'fatal',
     stack: boolean,
     pretty?: boolean,
@@ -24,19 +24,20 @@ export type LinterCreatorParams = {
     selfHosted?: boolean,
     shouldScanFile: (fileName: string) => boolean,
     _: Array<string>,
-  },
-};
+  |},
+  runAsBinary: boolean,
+|};
 
-export type Linter = {
+export type Linter = {|
   run: () => Promise<void>,
-};
+|};
 
 export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
 
 
 // Lint command types and implementation.
 
-export type LintCmdParams = {
+export type LintCmdParams = {|
   sourceDir: string,
   verbose?: boolean,
   selfHosted?: boolean,
@@ -45,12 +46,12 @@ export type LintCmdParams = {
   metadata?: boolean,
   pretty?: boolean,
   warningsAsErrors?: boolean,
-};
+|};
 
-export type LintCmdOptions = {
+export type LintCmdOptions = {|
   createLinter?: LinterCreatorFn,
   fileFilter?: FileFilter,
-};
+|};
 
 export default function lint(
   {

@@ -182,10 +182,17 @@ export function fake<T>(original: Object, methods: Object = {}): T {
  * Returns a fake Firefox client as would be returned by
  * connect() of 'node-firefox-connect'
  */
+
+type FakeFirefoxClientParams = {|
+  requestResult?: Object,
+  requestError?: Object,
+  makeRequestResult?: Object,
+  makeRequestError?: Object,
+|}
 export function fakeFirefoxClient({
-  requestResult = {}, requestError = null,
-  makeRequestResult = {}, makeRequestError = null,
-}: Object = {}) {
+  requestResult = {}, requestError,
+  makeRequestResult = {}, makeRequestError,
+}: FakeFirefoxClientParams= {}) {
   return {
     disconnect: sinon.spy(() => {}),
     request: sinon.spy(

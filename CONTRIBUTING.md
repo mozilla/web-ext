@@ -100,6 +100,75 @@ You can also generate coverage reports continously as you edit files:
 
 Once a report has been generated, it can be found in the `./coverage` directory.
 
+## Working on the CLI
+
+This section will show you how to add a new commands and options.
+
+`web-ext` relies on [yargs](http://yargs.js.org) to parse its commands and
+their options. The commands are defined in `src/program.js` in the `main` function.
+For example, the `build` command is defined like this:
+
+````javascript
+program
+  .command(
+    'build',
+    'Create a web extension package from source',
+    commands.build, {
+      'as-needed': {
+        describe: 'Watch for file changes and re-build as needed',
+        type: 'boolean',
+      },
+    })
+````
+
+The first argument to `program.command()` is the command name, the second is the
+description (shown for `--help`), the third is a callback that executes the
+command, and the last is an object defining all available options.
+
+The `cmd` directory is where all command callbacks are stored. In this example,
+`commands.build` is defined in `src/cmd/build.js` but you can always trace the
+imports to find each one.
+
+When `web-ext` executes a command callback, it passes an object containing all option
+values, including global options (such as `--source-dir`). Each option key is
+converted from hyphenated words to [camelCase](https://en.wikipedia.org/wiki/Camel_case)
+words. So, the
+`--as-needed` and `--source-dir` options would be passed like:
+
+````javascript
+commands.build({asNeeded: true, sourceDir: './src/extension'})
+  .then((result) => {
+    // ...
+  });
+````
+
+### Adding a command option
+
+To add a command option, locate the relevant command definition (i.e. `run`)
+and specify a new option definition as an object.
+Here is an example of adding the `--file-path` option:
+
+````javascript
+program
+  // other commands...
+  .command('run', 'Run the web extension', commands.run, {
+    // other options...
+    'file-path': {
+      describe: 'An absolute file path.',
+      alias: ['fp'],
+      demand: false,
+      requiresArg: true,
+      type: 'string',
+    },
+  })
+````
+This option can be used like `web-ext run --file-path=./path/to/file` or
+`--fp=./path/to/file`. Since Yargs can be pretty powerful yet not completely
+intuitive at times, you may need to dig into the
+[docs](http://yargs.js.org/docs/). Any key that you can pass to
+[yargs.option](http://yargs.js.org/docs/#methods-optionkey-opt)
+is a key you can pass to each option object when calling `program.command()`.
+
 ## Working on `web-ext sign`
 
 When you are developing a fix or feature for the `web-ext sign` command it's wise

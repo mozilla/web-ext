@@ -7,9 +7,14 @@ import defaultLintCommand from '../../../src/cmd/lint';
 import {FileFilter} from '../../../src/cmd/build';
 import {fake, makeSureItFails} from '../helpers';
 
+type setUpParams = {|
+  createLinter?: Function,
+  fileFilter?: Function,
+|}
+
 describe('lint', () => {
 
-  function setUp({createLinter, fileFilter}: Object = {}) {
+  function setUp({createLinter, fileFilter}: setUpParams = {}) {
     const lintResult = '<lint.run() result placeholder>';
     const runLinter = sinon.spy(() => Promise.resolve(lintResult));
     if (!createLinter) {
