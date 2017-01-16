@@ -246,6 +246,12 @@ Example: $0 --help run.
       describe: 'Show verbose output',
       type: 'boolean',
     },
+    'ignore-files': {
+      alias: 'i',
+      describe: 'Files to ignore.',
+      default: [],
+      type: 'array',
+    },
   });
 
   program
@@ -256,11 +262,6 @@ Example: $0 --help run.
         'as-needed': {
           describe: 'Watch for file changes and re-build as needed',
           type: 'boolean',
-        },
-        'ignore-files': {
-          describe: 'Files not to be packed',
-          type: 'array',
-          default: [],
         },
       })
     .command(
