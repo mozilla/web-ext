@@ -122,11 +122,20 @@ export class Program {
 
     const runCommand = this.commands[cmd];
     const configFileName = argv.config;
+    let configObj;
     if (configFileName) {
-      const configObj = loadJSConfigFile(configFileName);
-      log.info(configObj);
+      if (!configFileName.startsWith('./')) {
+        configObj = loadJSConfigFile(`./${configFileName}`);
+        log.info(configObj.toString());
+      } else {
+        configObj = loadJSConfigFile(configFileName);
+      }
+      for (const option in configObj) {
+        if (!argv.hasOwnProperty(option)) {
+          argv[option] = configObj[option];
+        }
+      }
     }
-
     if (argv.verbose) {
       logStream.makeVerbose();
       log.info('Version:', getVersion(absolutePackageDir));
@@ -173,7 +182,7 @@ function loadJSConfigFile(filePath) {
   } catch (e) {
     log.debug(`Error reading JavaScript file: ${filePath}`);
     e.message = `Cannot read config file: ${filePath}\nError: ${e.message}`;
-    throw e;
+    throw new UsageError(e);
   }
 }
 
