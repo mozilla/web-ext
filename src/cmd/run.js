@@ -15,9 +15,10 @@ import {
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
+import {FileFilter} from '../util/file-filter';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
-import type {OnSourceChangeFn} from '../watcher';
+import type {OnSourceChangeFn, ShouldWatchFn} from '../watcher';
 import type {
   FirefoxProcess, // eslint-disable-line import/named
 } from '../firefox/index';
@@ -38,6 +39,7 @@ export type WatcherCreatorParams = {|
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   desktopNotifications?: typeof defaultDesktopNotifications,
+  shouldWatchFile?: ShouldWatchFn,
 |};
 
 
@@ -48,6 +50,7 @@ export function defaultWatcherCreator(
     addonId, client, sourceDir, artifactsDir,
     onSourceChange = defaultSourceWatcher,
     desktopNotifications = defaultDesktopNotifications,
+    shouldWatchFile,
   }: WatcherCreatorParams
  ): Watchpack {
   return onSourceChange({
@@ -67,6 +70,7 @@ export function defaultWatcherCreator(
           throw error;
         });
     },
+    shouldWatchFile,
   });
 }
 
@@ -165,6 +169,7 @@ export type CmdRunParams = {|
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
+  ignoreFiles?: Array<string>,
 |};
 
 export type CmdRunOptions = {|
@@ -177,7 +182,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
-    browserConsole = false, customPrefs, startUrl,
+    browserConsole = false, customPrefs, startUrl, ignoreFiles,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -257,6 +262,13 @@ export default async function run(
       }
 
       log.info('The extension will reload if any source file changes');
+      const createWatcher = (...args) => {
+        const fileFilter = new FileFilter({
+          sourceDir, artifactsDir, ignoreFiles,
+        });
+        args[0].shouldWatchFile = (file) => fileFilter.wantFile(file);
+        return defaultWatcherCreator(...args);
+      };
       reloadStrategy({
         firefoxProcess: runningFirefox,
         profile,
@@ -264,7 +276,7 @@ export default async function run(
         sourceDir,
         artifactsDir,
         addonId,
-      });
+      }, {createWatcher});
     }
   }
 
