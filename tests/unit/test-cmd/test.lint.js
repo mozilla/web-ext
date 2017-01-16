@@ -4,7 +4,7 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import defaultLintCommand from '../../../src/cmd/lint';
-import {FileFilter} from '../../../src/cmd/build';
+import {FileFilter} from '../../../src/util/file-filter';
 import {fake, makeSureItFails} from '../helpers';
 
 type setUpParams = {|

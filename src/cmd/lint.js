@@ -2,7 +2,7 @@
 import {createInstance as defaultLinterCreator} from 'addons-linter';
 
 import {createLogger} from '../util/logger';
-import {FileFilter} from './build';
+import {FileFilter} from '../util/file-filter';
 
 
 const log = createLogger(__filename);

@@ -2,7 +2,6 @@
 import path from 'path';
 import {createWriteStream} from 'fs';
 
-import minimatch from 'minimatch';
 import {fs} from 'mz';
 import streamToPromise from 'stream-to-promise';
 import parseJSON from 'parse-json';
@@ -13,6 +12,7 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 import {UsageError} from '../errors';
+import {FileFilter} from '../util/file-filter';
 // Import flow types.
 import type {OnSourceChangeFn} from '../watcher';
 import type {ExtensionManifest} from '../util/manifest';
@@ -191,50 +191,4 @@ export default async function build(
   }
 
   return result;
-}
-
-
-// FileFilter types and implementation.
-
-export type FileFilterOptions = {|
-  filesToIgnore?: Array<string>,
-|};
-
-/*
- * Allows or ignores files when creating a ZIP archive.
- */
-export class FileFilter {
-  filesToIgnore: Array<string>;
-
-  constructor({filesToIgnore}: FileFilterOptions = {}) {
-    this.filesToIgnore = filesToIgnore || [
-      '**/*.xpi',
-      '**/*.zip',
-      '**/.*', // any hidden file
-      '**/node_modules',
-    ];
-  }
-
-  /**
-   *  Insert more files into filesToIgnore array.
-   */
-  addToIgnoreList(filesToIgnore: Array<string>) {
-    this.filesToIgnore.push(...filesToIgnore);
-  }
-
-  /*
-   * Returns true if the file is wanted for the ZIP archive.
-   *
-   * This is called by zipdir as wantFile(path, stat) for each
-   * file in the folder that is being archived.
-   */
-  wantFile(path: string): boolean {
-    for (const test of this.filesToIgnore) {
-      if (minimatch(path, test)) {
-        log.debug(`FileFilter: ignoring file ${path}`);
-        return false;
-      }
-    }
-    return true;
-  }
 }
