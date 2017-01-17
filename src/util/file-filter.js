@@ -13,10 +13,7 @@ export const normalizeResolve = (file: string): string => {
   file = path.normalize(file);
 
   // trim trailing slash
-  if (!path.parse(file).base) {
-    return file;
-  }
-  if (file.endsWith(path.sep)) {
+  if (path.parse(file).base && file.endsWith(path.sep)) {
     return file.slice(0, -1);
   }
   return file;
