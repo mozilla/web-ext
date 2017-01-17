@@ -16,7 +16,6 @@ import {
   fixturePath,
   makeSureItFails,
   ZipFile,
-  copyDirAsPromised,
 } from '../helpers';
 import {
   basicManifest,
@@ -53,29 +52,21 @@ describe('build', () => {
     );
   });
 
-  it('ignore artifacts dir if included by source dir when zipping', () => {
-    const zipFile = new ZipFile();
-    return withTempDir(
-      (tmpDir) =>
-        copyDirAsPromised(
-          fixturePath('minimal-web-ext-with-artifacts'),
-          tmpDir.path()
-        )
-          .then(() =>
-            build({
-              sourceDir: tmpDir.path(),
-              artifactsDir: path.join(tmpDir.path(), 'web-ext-artifacts'),
-            })
-          )
-          .then((buildResult) => buildResult.extensionPath)
-          .then((extensionPath) => zipFile.open(extensionPath))
-          .then(() => zipFile.extractFilenames())
-          .then((fileNames) => {
-            fileNames.sort();
-            assert.deepEqual(fileNames,
-              ['background-script.js', 'manifest.json']);
-          })
+  it('ensure artifacts dir is excluded from zipping', () => {
+    const packageCreator = sinon.spy(
+      () => ({extensionPath: 'extension/path'})
     );
+    return build({
+      sourceDir: '/src',
+      artifactsDir: 'artifacts',
+    }, {packageCreator}).then(() => {
+      assert(packageCreator.calledOnce);
+      assert.isObject(packageCreator.firstCall.args[0]);
+      assert.property(packageCreator.firstCall.args[0], 'fileFilter');
+      const fileFilter = packageCreator.firstCall.args[0].fileFilter;
+      assert.isFalse(fileFilter.wantFile('/src/artifacts'));
+      assert.isFalse(fileFilter.wantFile('/src/artifacts/something'));
+    });
   });
 
   it('ignore files', () => {
