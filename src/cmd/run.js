@@ -84,6 +84,7 @@ export type ReloadStrategyParams = {|
   profile: FirefoxProfile,
   sourceDir: string,
   artifactsDir: string,
+  ignoreFiles?: Array<string>,
 |};
 
 export type ReloadStrategyOptions = {|
@@ -92,14 +93,17 @@ export type ReloadStrategyOptions = {|
 
 export function defaultReloadStrategy(
   {
-    addonId, firefoxProcess, client, profile, sourceDir, artifactsDir,
+    addonId, firefoxProcess, client, profile,
+    sourceDir, artifactsDir, ignoreFiles,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
+  const fileFilter = new FileFilter({sourceDir, artifactsDir, ignoreFiles});
+  const shouldWatchFile = (file) => fileFilter.wantFile(file);
   const watcher: Watchpack = (
-    createWatcher({addonId, client, sourceDir, artifactsDir})
+    createWatcher({addonId, client, sourceDir, artifactsDir, shouldWatchFile})
   );
 
   firefoxProcess.on('close', () => {
@@ -262,13 +266,6 @@ export default async function run(
       }
 
       log.info('The extension will reload if any source file changes');
-      const createWatcher = (...args) => {
-        const fileFilter = new FileFilter({
-          sourceDir, artifactsDir, ignoreFiles,
-        });
-        args[0].shouldWatchFile = (file) => fileFilter.wantFile(file);
-        return defaultWatcherCreator(...args);
-      };
       reloadStrategy({
         firefoxProcess: runningFirefox,
         profile,
@@ -276,7 +273,8 @@ export default async function run(
         sourceDir,
         artifactsDir,
         addonId,
-      }, {createWatcher});
+        ignoreFiles,
+      });
     }
   }
 
