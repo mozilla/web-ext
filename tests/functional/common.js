@@ -17,7 +17,9 @@ export const webExt = path.join(projectDir, 'bin', 'web-ext');
 export const fixturesDir = path.join(functionalTestsDir, '..', 'fixtures');
 export const addonPath = path.join(fixturesDir, 'minimal-web-ext');
 export const fakeFirefoxPath = path.join(
-  functionalTestsDir, 'fake-firefox-binary.js'
+  functionalTestsDir,
+  process.platform === 'win32' ?
+    'fake-firefox-binary.bat' : 'fake-firefox-binary.js'
 );
 export const fakeServerPath = path.join(
   functionalTestsDir, 'fake-amo-server.js'
