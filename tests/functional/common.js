@@ -91,7 +91,8 @@ export function execWebExt(
 ): RunningWebExt {
 
   const spawnedProcess = spawn(
-      process.execPath, [webExt, ...argv], spawnOptions);
+    process.execPath, [webExt, ...argv], spawnOptions
+  );
 
   const waitForExit = new Promise((resolve) => {
     let errorData = '';
