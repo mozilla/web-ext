@@ -88,4 +88,23 @@ describe('util/file-filter', () => {
 
   });
 
+  describe('normalizeResolve', () => {
+    const paths = [
+      'file', 'dir/',
+      'path/to/file', 'path/to/dir/', 'path/to/../file', 'path/to/../dir/',
+      'path/to/dir/.', 'path/to/dir/..',
+    ];
+
+    it('mimic path.resolve', () => {
+      const src = '/src/';
+
+      paths.forEach((file) => {
+        assert.equal(
+          path.resolve(src, file),
+          path.resolve(src) + path.sep + normalizeResolve(file)
+        );
+      });
+    });
+  });
+
 });

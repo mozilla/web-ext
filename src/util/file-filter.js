@@ -8,7 +8,7 @@ import {createLogger} from './logger';
 const log = createLogger(__filename);
 
 // Use this function to mimic path.resolve without resolving to absolute path.
-const normalizeResolve = (file: string): string => {
+export const normalizeResolve = (file: string): string => {
   // normalize
   file = path.normalize(file);
 
