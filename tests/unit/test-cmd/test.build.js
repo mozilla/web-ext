@@ -397,6 +397,37 @@ describe('build', () => {
       assert.equal(defaultFilter.wantFile('path/to/node_modules'), false);
     });
 
+    it('add more files to ignore with ignoreFiles', () => {
+      const filter = new FileFilter({
+        ignoreFiles: ['*.log'],
+      });
+      assert.equal(filter.wantFile('some.xpi'), false);
+      assert.equal(filter.wantFile('some.log'), false);
+    });
+
+    it('ignore artifactsDir and its content', () => {
+      const filter = new FileFilter({
+        artifactsDir: 'artifacts',
+      });
+      assert.equal(filter.wantFile('artifacts'), false);
+      assert.equal(filter.wantFile('artifacts/some.js'), false);
+    });
+
+    it('resolve relative path', () => {
+      const filter = new FileFilter({
+        sourceDir: '/src',
+        artifactsDir: 'artifacts',
+        ignoreFiles: ['ignore-dir/', 'some.js', '**/some.log'],
+      });
+      assert.equal(filter.wantFile('/src/artifacts'), false);
+      assert.equal(filter.wantFile('/src/ignore-dir'), false);
+      assert.equal(filter.wantFile('/src/ignore-dir/some.css'), false);
+      assert.equal(filter.wantFile('/src/some.js'), false);
+      assert.equal(filter.wantFile('/src/some.log'), false);
+      assert.equal(filter.wantFile('/src/other/some.js'), true);
+      assert.equal(filter.wantFile('/src/other/some.log'), false);
+    });
+
   });
 
 });
