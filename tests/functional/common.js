@@ -74,7 +74,7 @@ export function reportCommandErrors(obj: Object, msg: ?string) {
 
 // execWebExt helper
 
-export type RunWebExtResult = {|
+export type WebExtResult = {|
   exitCode: number,
   stderr: string,
   stdout: string,
@@ -82,7 +82,7 @@ export type RunWebExtResult = {|
 
 export type RunningWebExt = {|
   argv: Array<string>,
-  waitForExit: Promise<RunWebExtResult>,
+  waitForExit: Promise<WebExtResult>,
   spawnedProcess: ChildProcess,
 |};
 
