@@ -248,7 +248,8 @@ Example: $0 --help run.
     },
     'ignore-files': {
       alias: 'i',
-      describe: 'Files to ignore.',
+      describe: 'A list of file patterns to ignore. (example: ' +
+                '--ignore-files=path/to/first.js path/to/second.js **/*.log)',
       default: [],
       type: 'array',
     },
