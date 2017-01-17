@@ -7,6 +7,21 @@ import {createLogger} from './logger';
 
 const log = createLogger(__filename);
 
+// Use this function to mimic path.resolve without resolving to absolute path.
+const normalizeResolve = (file: string): string => {
+  // normalize
+  file = path.normalize(file);
+
+  // trim trailing slash
+  if (!path.parse(file).base) {
+    return file;
+  }
+  if (file.endsWith(path.sep)) {
+    return file.slice(0, -1);
+  }
+  return file;
+};
+
 // FileFilter types and implementation.
 
 export type FileFilterOptions = {|
@@ -27,27 +42,24 @@ export class FileFilter {
     filesToIgnore = [
       '**/*.xpi',
       '**/*.zip',
-      '**/.*', // any hidden file
-      '**/node_modules',
+      '**/.*/', // any hidden file and folder
+      '**/node_modules/',
     ],
     ignoreFiles = [],
     sourceDir = '',
     artifactsDir,
   }: FileFilterOptions = {}) {
 
-    this.filesToIgnore = filesToIgnore;
+    this.filesToIgnore = [];
     this.sourceDir = sourceDir;
 
+    this.addToIgnoreList(filesToIgnore);
     if (ignoreFiles) {
-      this.filesToIgnore.push(...ignoreFiles);
+      this.addToIgnoreList(ignoreFiles);
     }
     if (artifactsDir) {
-      this.filesToIgnore.push(artifactsDir);
+      this.addToIgnoreList([artifactsDir], true);
     }
-
-    this.filesToIgnore = this.filesToIgnore.map(
-      (file) => this.resolve(file)
-    );
   }
 
   /**
@@ -57,15 +69,20 @@ export class FileFilter {
     if (this.sourceDir) {
       return path.resolve(this.sourceDir, file);
     }
-    return file;
+    return normalizeResolve(file);
   }
 
   /**
    *  Insert more files into filesToIgnore array.
    */
-  addToIgnoreList(files: Array<string>) {
-    files = files.map((file) => this.resolve(file));
-    this.filesToIgnore.push(...files);
+  addToIgnoreList(files: Array<string>, isDir: boolean = false) {
+    for (const file of files) {
+      this.filesToIgnore.push(this.resolve(file));
+      // If file is a directory, ignore its content too.
+      if (/([/\\]\.{0,2})$/.test(file) || isDir) {
+        this.filesToIgnore.push(this.resolve(path.join(file, '**/*')));
+      }
+    }
   }
 
   /*
