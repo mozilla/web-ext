@@ -52,6 +52,7 @@
     "debounce": "1.0.0",
     "es6-error": "4.0.1",
     "es6-promisify": "5.0.0",
+    "event-to-promise": "0.7.0",
     "firefox-profile": "0.4.7",
     "fx-runner": "1.0.6",
     "git-rev-sync": "1.8.0",
