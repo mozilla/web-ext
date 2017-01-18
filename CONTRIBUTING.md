@@ -95,7 +95,7 @@ To learn more about the syntax used to add the flow annotations and how to
 write/change the type definitions, you should take a look at the official
 [Flow docs](https://flowtype.org/docs/getting-started.html)
 
-The following sections contain additional informations related to common
+The following sections contain additional information related to common
 flow errors and how to read and fix them.
 
 ### Missing annotation
@@ -160,7 +160,7 @@ and evaluate the actual reason, e.g.:
 ### Flow type conventions
 
 In the `web-ext` sources we are currently using the following conventions (and they should be preserved
-when we change or add flow types definitions):
+when we change or add flow type definitions):
 
 - the type names should be CamelCased (e.g. `ExtensionManifest`)
 - the types used to annotate functions or methods defined in a module should be exported only when
@@ -170,8 +170,8 @@ when we change or add flow types definitions):
   errors when we try to set or get a property not explicitly defined in the flow type (which is
   particularly helpful during refactorings)
 - all the flow type definitions should be as close as possible to the function they annotate
-- we prefer to do not use external files (e.g. .flow.js files or declaration files configured in the
-  .flowconfig file) for the web-ext flow types.
+- we prefer not to use external files (e.g. `.flow.js` files or declaration files configured in the
+  `.flowconfig` file) for the `web-ext` flow types.
 
 ## Code Coverage
 
