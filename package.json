@@ -64,7 +64,6 @@
     "regenerator-runtime": "0.10.1",
     "sign-addon": "0.2.0",
     "source-map-support": "0.4.8",
-    "stream-to-promise": "2.2.0",
     "tmp": "0.0.30",
     "update-notifier": "1.0.3",
     "watchpack": "1.2.0",
