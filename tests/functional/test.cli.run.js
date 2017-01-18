@@ -2,13 +2,14 @@
 import {describe, it} from 'mocha';
 
 import {
-  webExt, addonPath, fakeFirefoxPath,
-  withTempAddonDir, execCommand, reportCommandErrors,
+  addonPath, fakeFirefoxPath,
+  withTempAddonDir, execWebExt, reportCommandErrors,
 } from './common';
 
 const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 
 describe('web-ext run', () => {
+
   it('should accept: --no-reload --source-dir SRCDIR --firefox FXPATH',
      () => withTempAddonDir(
        {addonPath},
@@ -26,7 +27,7 @@ describe('web-ext run', () => {
            },
          };
 
-         const cmd = execCommand(webExt, argv, spawnOptions);
+         const cmd = execWebExt(argv, spawnOptions);
 
          return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
            if (stdout.indexOf(EXPECTED_MESSAGE) < 0) {

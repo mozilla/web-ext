@@ -2,14 +2,13 @@
 import {describe, it} from 'mocha';
 
 import {
-  webExt,
-  withTempDir, execCommand, reportCommandErrors,
+  withTempDir, execWebExt, reportCommandErrors,
 } from './common';
 
 describe('web-ext', () => {
   it('should accept: --help', () => withTempDir((tmpDir) => {
     const argv = ['--help'];
-    const cmd = execCommand(webExt, argv, {cwd: tmpDir});
+    const cmd = execWebExt(argv, {cwd: tmpDir});
 
     return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
       if (exitCode !== 0) {

@@ -4,8 +4,8 @@ import {createWriteStream} from 'fs';
 
 import minimatch from 'minimatch';
 import {fs} from 'mz';
-import streamToPromise from 'stream-to-promise';
 import parseJSON from 'parse-json';
+import eventToPromise from 'event-to-promise';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
@@ -124,7 +124,7 @@ async function defaultPackageCreator({
 
   stream.write(buffer, () => stream.end());
 
-  await streamToPromise(stream);
+  await eventToPromise(stream, 'close');
 
   if (showReadyMessage) {
     log.info(`Your web extension is ready: ${extensionPath}`);

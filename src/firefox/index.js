@@ -5,9 +5,9 @@ import path from 'path';
 import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
-import streamToPromise from 'stream-to-promise';
 import {fs} from 'mz';
 import promisify from 'es6-promisify';
+import eventToPromise from 'event-to-promise';
 
 import isDirectory from '../util/is-directory';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
@@ -379,7 +379,7 @@ export async function installExtension(
     const writeStream = nodeFs.createWriteStream(destPath);
     writeStream.write(extensionPath);
     writeStream.end();
-    await streamToPromise(writeStream);
+    return await eventToPromise(writeStream, 'close');
   } else {
     // Write the XPI file to the profile.
     const readStream = nodeFs.createReadStream(extensionPath);
@@ -390,8 +390,8 @@ export async function installExtension(
     readStream.pipe(writeStream);
 
     return await Promise.all([
-      streamToPromise(readStream),
-      streamToPromise(writeStream),
+      eventToPromise(readStream, 'close'),
+      eventToPromise(writeStream, 'close'),
     ]);
   }
 }
