@@ -4,6 +4,7 @@ import {readFileSync} from 'fs';
 
 import git from 'git-rev-sync';
 import yargs from 'yargs';
+import camelCase from 'camelcase';
 
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
@@ -36,6 +37,7 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
+  defaultValues: Object;
 
   constructor(
     argv: ?Array<string>,
@@ -90,7 +92,12 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
+    this.defaultValues = {};
     Object.keys(options).forEach((key) => {
+      if (options[key].default) {
+        const camelCasedKey = camelCase(key);
+        this.defaultValues[camelCasedKey] = options[key].default;
+      }
       options[key].global = true;
       if (options[key].demand === undefined) {
         // By default, all options should be "demanded" otherwise
@@ -126,12 +133,11 @@ export class Program {
     if (configFileName) {
       if (!configFileName.startsWith('./')) {
         configObj = loadJSConfigFile(`./${configFileName}`);
-        log.info(configObj.toString());
       } else {
         configObj = loadJSConfigFile(configFileName);
       }
       for (const option in configObj) {
-        if (!argv.hasOwnProperty(option)) {
+        if (!argv.hasOwnProperty(option) || this.defaultValues[option]) {
           argv[option] = configObj[option];
         }
       }
