@@ -45,7 +45,7 @@
     "opera"
   ],
   "dependencies": {
-    "addons-linter": "0.15.14",
+    "addons-linter": "0.15.15",
     "babel-polyfill": "6.16.0",
     "babel-runtime": "6.18.0",
     "bunyan": "1.8.5",
@@ -63,7 +63,7 @@
     "parse-json": "2.2.0",
     "regenerator-runtime": "0.10.1",
     "sign-addon": "0.2.0",
-    "source-map-support": "0.4.8",
+    "source-map-support": "0.4.10",
     "tmp": "0.0.30",
     "update-notifier": "1.0.3",
     "watchpack": "1.2.0",
@@ -89,7 +89,7 @@
     "coveralls": "2.11.15",
     "deepcopy": "0.6.3",
     "eslint-plugin-async-await": "0.0.0",
-    "eslint-plugin-flowtype": "2.29.2",
+    "eslint-plugin-flowtype": "2.30.0",
     "eslint-plugin-import": "2.2.0",
     "firefox-client": "0.3.0",
     "flow-bin": "0.37.4",
