@@ -1,5 +1,5 @@
 /* @flow */
-import {fs as defaultFS} from 'mz';
+import {fs} from 'mz';
 import mkdirp from 'mkdirp';
 import promisify from 'es6-promisify';
 
@@ -7,16 +7,13 @@ import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';
 
 const log = createLogger(__filename);
-const promisifiedMkdirp = promisify(mkdirp);
+const asyncMkdirp = promisify(mkdirp);
 
 export async function prepareArtifactsDir(
   artifactsDir: string,
-  fs?: typeof defaultFS = defaultFS,
-  mkdir?: typeof promisifiedMkdirp = promisifiedMkdirp,
 ): Promise<string> {
   try {
-    const stats = await defaultFS.stat(artifactsDir);
-    // Check that path is a directory.
+    const stats = await fs.stat(artifactsDir);
     if (!stats.isDirectory()) {
       throw new UsageError(
         `"${artifactsDir}" exists and it is not a directory.`);
@@ -31,18 +28,18 @@ export async function prepareArtifactsDir(
       }
     }
   } catch (error) {
-    // Handle errors when the artifactsDir cannot be accessed.
     if (isErrorWithCode('EACCES', error)) {
+      // Handle errors when the artifactsDir cannot be accessed.
       throw new UsageError(
         `Cannot access "${artifactsDir}", user lacks permissions.`);
-    // Handle errors when the artifactsDir doesn't exists yet.
     } else if (isErrorWithCode('ENOENT', error)) {
+      // Handle errors when the artifactsDir doesn't exists yet.
       try {
         log.debug(`Creating artifacts directory: ${artifactsDir}`);
-        await mkdir(artifactsDir);
+        await asyncMkdirp(artifactsDir);
       } catch (mkdirErr) {
-        // Handle errors when the artifactsDir cannot be created for lack of permissions.
         if (isErrorWithCode('EACCES', mkdirErr)) {
+          // Handle errors when the artifactsDir cannot be created for lack of permissions.
           throw new UsageError(
             `Cannot create "${artifactsDir}", user lacks permissions.`);
         } else {

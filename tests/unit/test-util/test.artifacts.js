@@ -3,13 +3,12 @@ import path from 'path';
 
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
-import sinon from 'sinon';
 import {fs} from 'mz';
 
 import {onlyInstancesOf, UsageError} from '../../../src/errors';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {prepareArtifactsDir} from '../../../src/util/artifacts';
-import {makeSureItFails, ErrorWithCode} from '../helpers';
+import {makeSureItFails} from '../helpers';
 
 
 describe('prepareArtifactsDir', () => {
@@ -65,43 +64,50 @@ describe('prepareArtifactsDir', () => {
         return prepareArtifactsDir(artifactsDir)
           .then(makeSureItFails())
           .catch(onlyInstancesOf(UsageError, (error) => {
-            assert.match(error.message, /user lacks permissions/);
+            assert.match(error.message, /Cannot access.*lacks permissions/);
           }));
       });
     }
   ));
 
-  it('throws error when directory exists and user lacks writing permissions',
+  it('throws error when directory exists but lacks writing permissions',
     () => withTempDir(
     (tmpDir) => {
-      const stats = {isDirectory: () => true};
-      const fakeFS = {
-        stat: sinon.spy(() => Promise.resolve(stats)),
-        access: sinon.spy(() => Promise.reject(new ErrorWithCode('EACCES'))),
-      };
-      return prepareArtifactsDir(tmpDir.path(), fakeFS)
-        .then(makeSureItFails())
-        .catch(onlyInstancesOf(UsageError, (error) => {
-          assert.match(error.message, /user lacks permissions/);
-        }));
+      const artifactsDir = path.join(tmpDir.path(), 'dir-nowrite');
+      return fs.mkdir(artifactsDir, '555').then(() => {
+        return prepareArtifactsDir(artifactsDir)
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(UsageError, (error) => {
+            assert.match(error.message, /exists.*lacks permissions/);
+          }));
+      });
     }
   ));
 
   it('throws error when creating a folder if lacks writing permissions',
     () => withTempDir(
     (tmpDir) => {
-      const tmpPath = path.join(tmpDir.path(), 'build');
-      const fakeFS = {
-        stat: sinon.spy(() => Promise.reject(new ErrorWithCode('ENOENT'))),
-      };
-      const fakeMkdir = sinon.spy(
-        () => Promise.reject(new ErrorWithCode('EACCES')));
-      return prepareArtifactsDir(tmpPath, fakeFS, fakeMkdir)
-        .then(makeSureItFails())
-        .catch(onlyInstancesOf(UsageError, (error) => {
-          assert.match(error.message, /user lacks permissions/);
-        }));
+      const parentDir = path.join(tmpDir.path(), 'dir-nowrite');
+      const artifactsDir = path.join(parentDir, 'artifacts');
+      return fs.mkdir(parentDir, '555').then(() => {
+        return prepareArtifactsDir(artifactsDir)
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(UsageError, (error) => {
+            assert.match(error.message, /Cannot create.*lacks permissions/);
+          }));
+      });
     }
  ));
+
+  it('creates the artifacts dir successfully if the parent dir does not exist',
+    () => withTempDir(
+    (tmpDir) => {
+      const tmpPath = path.join(tmpDir.path(), 'build', 'subdir');
+      return prepareArtifactsDir(tmpPath)
+        .then((resolvedDir) => {
+          assert.equal(resolvedDir, tmpPath);
+        });
+    }
+  ));
 
 });
