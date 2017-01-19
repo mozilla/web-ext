@@ -38,6 +38,12 @@ module.exports = function(grunt) {
     'mochaTest:functional',
   ]);
 
+  grunt.registerTask('test-appveyor', [
+    'build-tests',
+    'mochaTest:unit',
+    'mochaTest:functional',
+  ]);
+
   grunt.registerTask('develop', [
     'flowbin:start',
     'watch:develop',

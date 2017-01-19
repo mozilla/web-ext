@@ -17,6 +17,7 @@
     "flow-check": "grunt flowbin:check",
     "lint": "grunt lint",
     "test": "grunt test",
+    "test-appveyor": "grunt test-appveyor",
     "publish-coverage": "grunt coveralls",
     "nsp-check": "nsp check -o summary",
     "changelog": "conventional-changelog -p angular -u",
