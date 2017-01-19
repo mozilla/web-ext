@@ -62,6 +62,7 @@
     "node-notifier": "4.6.1",
     "parse-json": "2.2.0",
     "regenerator-runtime": "0.10.1",
+    "require-uncached": "1.0.3",
     "sign-addon": "0.2.0",
     "source-map-support": "0.4.9",
     "stream-to-promise": "2.2.0",

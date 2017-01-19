@@ -5,6 +5,7 @@ import {readFileSync} from 'fs';
 import git from 'git-rev-sync';
 import yargs from 'yargs';
 import camelCase from 'camelcase';
+import requireUncached from 'require-uncached';
 
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
@@ -131,8 +132,9 @@ export class Program {
     const configFileName = argv.config;
     let configObj;
     if (configFileName) {
-      if (!configFileName.startsWith('./')) {
-        configObj = loadJSConfigFile(`./${configFileName}`);
+      if (!configFileName.startsWith('/')) {
+        const configFilePath = path.join(`/${argv.sourceDir}`, configFileName);
+        configObj = loadJSConfigFile(configFilePath);
       } else {
         configObj = loadJSConfigFile(configFileName);
       }
@@ -183,8 +185,7 @@ export class Program {
 function loadJSConfigFile(filePath) {
   log.debug(`Loading JS config file: ${filePath}`);
   try {
-    /* $FLOW_IGNORE */
-    return require(filePath);
+    return requireUncached(filePath);
   } catch (e) {
     log.debug(`Error reading JavaScript file: ${filePath}`);
     e.message = `Cannot read config file: ${filePath}\nError: ${e.message}`;
