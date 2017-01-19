@@ -15,11 +15,11 @@ export type FATAL = 60;
 export type BunyanLogLevel =
   TRACE | DEBUG | INFO | WARN | ERROR | FATAL;
 
-export type BunyanLogEntry = {
+export type BunyanLogEntry = {|
   name: string,
   msg: string,
   level: BunyanLogLevel,
-};
+|};
 
 export type Logger = {
   debug: (msg: string) => void,
@@ -31,13 +31,13 @@ export type Logger = {
 
 // ConsoleStream types and implementation.
 
-export type ConsoleStreamParams = {
+export type ConsoleStreamParams = {|
   verbose?: boolean,
-};
+|};
 
-export type ConsoleOptions = {
+export type ConsoleOptions = {|
   localProcess?: typeof process,
-};
+|};
 
 export class ConsoleStream {
   verbose: boolean;
@@ -84,7 +84,7 @@ export class ConsoleStream {
   }
 
   flushCapturedLogs({localProcess = process}: ConsoleOptions = {}) {
-    for (let msg of this.capturedMessages) {
+    for (const msg of this.capturedMessages) {
       localProcess.stdout.write(msg);
     }
     this.capturedMessages = [];
@@ -96,22 +96,22 @@ export const consoleStream = new ConsoleStream();
 
 // createLogger types and implementation.
 
-export type BunyanStreamConfig = {
+export type BunyanStreamConfig = {|
   type: string,
   stream: ConsoleStream,
-};
+|};
 
-export type CreateBunyanLogParams = {
+export type CreateBunyanLogParams = {|
   name: string,
   level: BunyanLogLevel,
   streams: Array<BunyanStreamConfig>,
-};
+|};
 
 export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
 
-export type CreateLoggerOptions = {
+export type CreateLoggerOptions = {|
   createBunyanLog: CreateBunyanLogFn,
-};
+|};
 
 export function createLogger(
   filename: string,

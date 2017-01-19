@@ -8,10 +8,26 @@ import yargs from 'yargs';
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
+import {coerceCLICustomPreference} from './firefox/preferences';
+import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
 
+type ProgramOptions = {|
+  absolutePackageDir?: string,
+|}
+
+// TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
+
+type ExecuteOptions = {
+  checkForUpdates?: Function,
+  systemProcess?: typeof process,
+  logStream?: typeof defaultLogStream,
+  getVersion?: Function,
+  shouldExitProgram?: boolean,
+  globalEnv?: string,
+}
 
 /*
  * The command line program.
@@ -23,7 +39,9 @@ export class Program {
 
   constructor(
     argv: ?Array<string>,
-    {absolutePackageDir = process.cwd()}: {absolutePackageDir?: string} = {}
+    {
+      absolutePackageDir = process.cwd(),
+    }: ProgramOptions = {}
   ) {
     // This allows us to override the process argv which is useful for
     // testing.
@@ -52,7 +70,11 @@ export class Program {
         return;
       }
       return yargs
-        .demand(0, 0, 'This command does not take any arguments')
+        // Make sure the user does not add any extra commands. For example,
+        // this would be a mistake because lint does not accept arguments:
+        // web-ext lint ./src/path/to/file.js
+        .demandCommand(0, 0, undefined,
+                       'This command does not take any arguments')
         .strict()
         .exitProcess(this.shouldExitProgram)
         // Calling env() will be unnecessary after
@@ -83,9 +105,10 @@ export class Program {
   async execute(
     absolutePackageDir: string,
     {
-      systemProcess = process, logStream = defaultLogStream,
-      getVersion = defaultVersionGetter, shouldExitProgram = true,
-    }: Object = {}
+      checkForUpdates = defaultUpdateChecker, systemProcess = process,
+      logStream = defaultLogStream, getVersion = defaultVersionGetter,
+      shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
+    }: ExecuteOptions = {}
   ): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
@@ -94,7 +117,10 @@ export class Program {
     const argv = this.yargs.argv;
     const cmd = argv._[0];
 
-    let runCommand = this.commands[cmd];
+    // Command line option (pref) renamed for internal use (customPref).
+    argv.customPrefs = argv.pref;
+
+    const runCommand = this.commands[cmd];
 
     if (argv.verbose) {
       logStream.makeVerbose();
@@ -108,7 +134,14 @@ export class Program {
       if (!runCommand) {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
+      if (globalEnv === 'production') {
+        checkForUpdates ({
+          version: getVersion(absolutePackageDir),
+        });
+      }
+
       await runCommand(argv);
+
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -134,33 +167,43 @@ declare var WEBEXT_BUILD_ENV: string;
 
 //A defintion of type of argument for defaultVersionGetter
 type versionGetterOptions = {
-  localEnv?: string,
+  globalEnv?: string,
 };
 
 export function defaultVersionGetter(
   absolutePackageDir: string,
-  {localEnv = WEBEXT_BUILD_ENV}: versionGetterOptions = {}
+  {globalEnv = WEBEXT_BUILD_ENV}: versionGetterOptions = {}
 ): string {
-  if (localEnv === 'production') {
+  if (globalEnv === 'production') {
     log.debug('Getting the version from package.json');
-    let packageData: any = readFileSync(
+    const packageData: any = readFileSync(
       path.join(absolutePackageDir, 'package.json'));
     return JSON.parse(packageData).version;
   } else {
     log.debug('Getting version from the git revision');
-    return `${git.branch()}-${git.long()}`;
+    return `${git.branch(absolutePackageDir)}-${git.long(absolutePackageDir)}`;
   }
 }
 
+// TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
+
+type MainParams = {
+  getVersion?: Function,
+  commands?: Object,
+  argv: Array<any>,
+  runOptions?: Object,
+}
 
 export function main(
   absolutePackageDir: string,
   {
     getVersion = defaultVersionGetter, commands = defaultCommands, argv,
     runOptions = {},
-  }: Object = {}
+  }: MainParams = {}
 ): Promise<any> {
-  let program = new Program(argv, {absolutePackageDir});
+
+  const program = new Program(argv, {absolutePackageDir});
+
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.
@@ -178,7 +221,7 @@ Example: $0 --help run.
     .alias('h', 'help')
     .env(envPrefix)
     .version(() => getVersion(absolutePackageDir))
-    .demand(1)
+    .demandCommand(1, 'You must specify a command')
     .strict();
 
   program.setGlobalOptions({
@@ -283,6 +326,29 @@ Example: $0 --help run.
         describe: 'Pre-install the extension into the profile before ' +
                   'startup. This is only needed to support older versions ' +
                   'of Firefox.',
+        demand: false,
+        type: 'boolean',
+      },
+      'pref': {
+        describe: 'Launch firefox with a custom preference ' +
+                  '(example: --pref=general.useragent.locale=fr-FR). ' +
+                  'You can repeat this option to set more than one ' +
+                  'preference.',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+        coerce: coerceCLICustomPreference,
+      },
+      'start-url': {
+        alias: ['u', 'url'],
+        describe: 'Launch firefox at specified page',
+        demand: false,
+        requiresArg: true,
+        type: 'string',
+      },
+      'browser-console': {
+        alias: ['bc'],
+        describe: 'Open the DevTools Browser Console.',
         demand: false,
         type: 'boolean',
       },
