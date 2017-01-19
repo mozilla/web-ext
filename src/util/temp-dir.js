@@ -23,7 +23,7 @@ const log = createLogger(__filename);
  *
  */
 export function withTempDir(makePromise: Function): Promise<any> {
-  let tmpDir = new TempDir();
+  const tmpDir = new TempDir();
   return tmpDir.create()
     .then(() => {
       return makePromise(tmpDir);
@@ -62,7 +62,7 @@ export class TempDir {
    * been created.
    */
   create(): Promise<TempDir> {
-    let createTempDir = promisify(tmp.dir, {multiArgs: true});
+    const createTempDir = promisify(tmp.dir, {multiArgs: true});
     return createTempDir(
       {
         prefix: 'tmp-web-ext-',
@@ -70,7 +70,7 @@ export class TempDir {
         unsafeCleanup: true,
       })
       .then((args) => {
-        let [tmpPath, removeTempDir] = args;
+        const [tmpPath, removeTempDir] = args;
         this._path = tmpPath;
         this._removeTempDir = removeTempDir;
         log.debug(`Created temporary directory: ${this.path()}`);

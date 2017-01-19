@@ -1,11 +1,12 @@
 /* @flow */
-import {describe, it} from 'mocha';
 import path from 'path';
+
+import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import deepcopy from 'deepcopy';
+import {fs} from 'mz';
 
 import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
-import {fs} from 'mz';
 import getValidatedManifest, {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {makeSureItFails} from '../helpers';
@@ -48,7 +49,7 @@ describe('util/manifest', () => {
     ));
 
     it('reports an error for a missing manifest file', () => {
-      let nonExistentDir = '/dev/null/nowhere/';
+      const nonExistentDir = path.join('dev', 'null', 'nowhere');
       return getValidatedManifest(nonExistentDir)
         .then(makeSureItFails())
         .catch(onlyInstancesOf(InvalidManifest, (error) => {
@@ -61,11 +62,11 @@ describe('util/manifest', () => {
 
     it('reports an error for invalid manifest JSON', () => withTempDir(
       (tmpDir) => {
-        let badManifest = `{
+        const badManifest = `{
           "name": "I'm an invalid JSON Manifest
           "version": "0.0.0"
         }`;
-        let manifestFile = path.join(tmpDir.path(), 'manifest.json');
+        const manifestFile = path.join(tmpDir.path(), 'manifest.json');
         return fs.writeFile(manifestFile, badManifest)
           .then(() => getValidatedManifest(tmpDir.path()))
           .then(makeSureItFails())
@@ -79,7 +80,7 @@ describe('util/manifest', () => {
 
     it('reports an error when missing a name', () => withTempDir(
       (tmpDir) => {
-        let noNameManifest = deepcopy(basicManifest);
+        const noNameManifest = deepcopy(basicManifest);
         delete noNameManifest.name;
 
         return writeManifest(tmpDir.path(), noNameManifest)
@@ -98,7 +99,7 @@ describe('util/manifest', () => {
 
     it('reports an error when missing version', () => withTempDir(
       (tmpDir) => {
-        let noVersionManifest = deepcopy(basicManifest);
+        const noVersionManifest = deepcopy(basicManifest);
         delete noVersionManifest.version;
 
         return writeManifest(tmpDir.path(), noVersionManifest)
@@ -117,7 +118,7 @@ describe('util/manifest', () => {
 
     it('reports an error when missing applications.gecko', () => withTempDir(
       (tmpDir) => {
-        let incompleteManifest = deepcopy(basicManifest);
+        const incompleteManifest = deepcopy(basicManifest);
         delete incompleteManifest.applications.gecko;
 
         return writeManifest(tmpDir.path(), incompleteManifest)
@@ -149,7 +150,7 @@ describe('util/manifest', () => {
 
     it('concatenates errors in error message', () => withTempDir(
       (tmpDir) => {
-        let manifestWithErrors = deepcopy(basicManifest);
+        const manifestWithErrors = deepcopy(basicManifest);
         delete manifestWithErrors.name;
         delete manifestWithErrors.version;
 
@@ -185,7 +186,7 @@ describe('util/manifest', () => {
 
 
 function writeManifest(destDir, manifestData) {
-  let manifestFile = path.join(destDir, 'manifest.json');
+  const manifestFile = path.join(destDir, 'manifest.json');
   return fs.writeFile(manifestFile, JSON.stringify(manifestData))
     .then(() => manifestFile);
 }

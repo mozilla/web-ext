@@ -7,9 +7,14 @@ import defaultLintCommand from '../../../src/cmd/lint';
 import {FileFilter} from '../../../src/cmd/build';
 import {fake, makeSureItFails} from '../helpers';
 
+type setUpParams = {|
+  createLinter?: Function,
+  fileFilter?: Function,
+|}
+
 describe('lint', () => {
 
-  function setUp({createLinter, fileFilter}: Object = {}) {
+  function setUp({createLinter, fileFilter}: setUpParams = {}) {
     const lintResult = '<lint.run() result placeholder>';
     const runLinter = sinon.spy(() => Promise.resolve(lintResult));
     if (!createLinter) {
@@ -21,9 +26,14 @@ describe('lint', () => {
       lintResult,
       createLinter,
       runLinter,
-      lint: ({...args}) => {
-        // $FLOW_IGNORE: type checks skipped for testing purpose
-        return defaultLintCommand(args, {createLinter, fileFilter});
+      lint: (params = {}) => {
+        return defaultLintCommand({
+          sourceDir: '/fake/source/dir',
+          ...params,
+        }, {
+          createLinter,
+          fileFilter,
+        });
       },
     };
   }
@@ -75,7 +85,7 @@ describe('lint', () => {
 
   it('passes warningsAsErrors undefined to the linter', () => {
     const {lint, createLinter} = setUp();
-    return lint({}).then(() => {
+    return lint().then(() => {
       const config = createLinter.firstCall.args[0].config;
       assert.equal(config.warningsAsErrors, undefined);
     });
@@ -102,23 +112,18 @@ describe('lint', () => {
   it('passes through linter configuration', () => {
     const {lint, createLinter} = setUp();
     return lint({
-      // $FLOW_IGNORE: wrong type used for testing purpose
-      pretty: 'pretty flag',
-      // $FLOW_IGNORE: wrong type used for testing purpose
-      metadata: 'metadata flag',
-      // $FLOW_IGNORE: wrong type used for testing purpose
-      output: 'output value',
-      // $FLOW_IGNORE: wrong type used for testing purpose
-      boring: 'boring flag',
-      // $FLOW_IGNORE: wrong type used for testing purpose
-      selfHosted: 'self-hosted flag',
+      pretty: true,
+      metadata: true,
+      output: 'json',
+      boring: true,
+      selfHosted: true,
     }).then(() => {
       const config = createLinter.firstCall.args[0].config;
-      assert.equal(config.pretty, 'pretty flag');
-      assert.equal(config.metadata, 'metadata flag');
-      assert.equal(config.output, 'output value');
-      assert.equal(config.boring, 'boring flag');
-      assert.equal(config.selfHosted, 'self-hosted flag');
+      assert.strictEqual(config.pretty, true);
+      assert.strictEqual(config.metadata, true);
+      assert.strictEqual(config.output, 'json');
+      assert.strictEqual(config.boring, true);
+      assert.strictEqual(config.selfHosted, true);
     });
   });
 

@@ -1,9 +1,10 @@
 /* @flow */
-import {it, describe} from 'mocha';
-import {assert} from 'chai';
+import {WriteStream} from 'tty';
+
 import bunyan from 'bunyan';
 import sinon from 'sinon';
-import {WriteStream} from 'tty';
+import {it, describe} from 'mocha';
+import {assert} from 'chai';
 
 import {createLogger, ConsoleStream} from '../../../src/util/logger';
 
@@ -39,7 +40,7 @@ describe('logger', () => {
         }
       }
 
-      let fakeWritableStream = new FakeWritableStream();
+      const fakeWritableStream = new FakeWritableStream();
       sinon.spy(fakeWritableStream, 'write');
 
       return {

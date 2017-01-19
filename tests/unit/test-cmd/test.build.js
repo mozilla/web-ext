@@ -1,6 +1,7 @@
 /* @flow */
-import {fs} from 'mz';
 import path from 'path';
+
+import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -24,7 +25,7 @@ const log = createLogger(__filename);
 describe('build', () => {
 
   it('zips a package', () => {
-    let zipFile = new ZipFile();
+    const zipFile = new ZipFile();
 
     return withTempDir(
       (tmpDir) =>
@@ -43,6 +44,7 @@ describe('build', () => {
             fileNames.sort();
             assert.deepEqual(fileNames,
                              ['background-script.js', 'manifest.json']);
+            return zipFile.close();
           })
     );
   });
@@ -163,9 +165,8 @@ describe('build', () => {
         // Make sure a manifest without an ID doesn't throw an error.
         return build({
           sourceDir: fixturePath('minimal-web-ext'),
-          manifestData: manifestWithoutApps,
           artifactsDir: tmpDir.path(),
-        });
+        }, {manifestData: manifestWithoutApps});
       }
     );
   });
@@ -200,8 +201,8 @@ describe('build', () => {
   ));
 
   it('asks FileFilter what files to include in the ZIP', () => {
-    let zipFile = new ZipFile();
-    let fileFilter = new FileFilter({
+    const zipFile = new ZipFile();
+    const fileFilter = new FileFilter({
       filesToIgnore: ['**/background-script.js'],
     });
 
@@ -215,6 +216,7 @@ describe('build', () => {
           .then(() => zipFile.extractFilenames())
           .then((fileNames) => {
             assert.notInclude(fileNames, 'background-script.js');
+            return zipFile.close();
           })
     );
   });

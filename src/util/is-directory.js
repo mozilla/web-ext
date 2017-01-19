@@ -1,7 +1,7 @@
 /* @flow */
 import {fs} from 'mz';
-import {onlyErrorsWithCode} from '../errors';
 
+import {onlyErrorsWithCode} from '../errors';
 
 /*
  * Resolves true if the path is a readable directory.

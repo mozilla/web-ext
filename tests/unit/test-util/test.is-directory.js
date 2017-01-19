@@ -1,5 +1,6 @@
 /* @flow */
 import path from 'path';
+
 import {fs} from 'mz';
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
@@ -28,7 +29,7 @@ describe('util.isDirectory', () => {
 
   it('resolves false for non-directory paths', () => withTempDir(
     (tmpDir) => {
-      let filePath = path.join(tmpDir.path(), 'some.txt');
+      const filePath = path.join(tmpDir.path(), 'some.txt');
       return fs.writeFile(filePath, 'some text')
         .then(() => isDirectory(filePath))
         .then((dirExists) => {

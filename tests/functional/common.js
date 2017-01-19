@@ -1,12 +1,13 @@
 /* @flow */
-import {ChildProcess, spawn} from 'child_process';
-import copyDir from 'copy-dir';
 import path from 'path';
+import {ChildProcess, spawn} from 'child_process';
+
+import copyDir from 'copy-dir';
 import promisify from 'es6-promisify';
 import prettyjson from 'prettyjson';
 
-
 import * as tmpDirUtils from '../../src/util/temp-dir';
+
 export const withTempDir = tmpDirUtils.withTempDir;
 
 
@@ -16,7 +17,9 @@ export const webExt = path.join(projectDir, 'bin', 'web-ext');
 export const fixturesDir = path.join(functionalTestsDir, '..', 'fixtures');
 export const addonPath = path.join(fixturesDir, 'minimal-web-ext');
 export const fakeFirefoxPath = path.join(
-  functionalTestsDir, 'fake-firefox-binary.js'
+  functionalTestsDir,
+  process.platform === 'win32' ?
+    'fake-firefox-binary.bat' : 'fake-firefox-binary.js'
 );
 export const fakeServerPath = path.join(
   functionalTestsDir, 'fake-amo-server.js'
@@ -25,10 +28,10 @@ export const fakeServerPath = path.join(
 
 // withTempAddonDir helper
 
-export type TempAddonParams = {
+export type TempAddonParams = {|
   addonPath: string,
   runFromCwd?: boolean
-};
+|};
 
 export type TempAddonCallback =
   (tmpAddonDir: string, tmpDir: string) => Promise<any>
@@ -71,25 +74,28 @@ export function reportCommandErrors(obj: Object, msg: ?string) {
   throw error;
 }
 
-// execCommand helper
+// execWebExt helper
 
-export type RunCommandResult = {
+export type WebExtResult = {|
   exitCode: number,
   stderr: string,
   stdout: string,
-};
+|};
 
-export type RunningCommand = {
-  execPath: string,
+export type RunningWebExt = {|
   argv: Array<string>,
-  waitForExit: Promise<RunCommandResult>,
+  waitForExit: Promise<WebExtResult>,
   spawnedProcess: ChildProcess,
-};
+|};
 
-export function execCommand(
-  execPath: string, argv: Array<string>, spawnOptions: child_process$spawnOpts,
-): RunningCommand {
-  const spawnedProcess = spawn(execPath, argv, spawnOptions);
+export function execWebExt(
+  argv: Array<string>, spawnOptions: child_process$spawnOpts,
+): RunningWebExt {
+
+  const spawnedProcess = spawn(
+    process.execPath, [webExt, ...argv], spawnOptions
+  );
+
   const waitForExit = new Promise((resolve) => {
     let errorData = '';
     let outputData = '';
@@ -106,5 +112,5 @@ export function execCommand(
     });
   });
 
-  return {execPath, argv, waitForExit, spawnedProcess};
+  return {argv, waitForExit, spawnedProcess};
 }
