@@ -49,7 +49,7 @@ describe('util/manifest', () => {
     ));
 
     it('reports an error for a missing manifest file', () => {
-      const nonExistentDir = '/dev/null/nowhere/';
+      const nonExistentDir = path.join('dev', 'null', 'nowhere');
       return getValidatedManifest(nonExistentDir)
         .then(makeSureItFails())
         .catch(onlyInstancesOf(InvalidManifest, (error) => {

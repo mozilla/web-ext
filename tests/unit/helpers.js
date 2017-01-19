@@ -18,9 +18,11 @@ export const copyDirAsPromised = promisify(copyDir);
  */
 export class ZipFile {
   _zip: any;
+  _close: Promise<void> | null;
 
   constructor() {
     this._zip = null;
+    this._close = null;
   }
 
   /*
@@ -31,7 +33,18 @@ export class ZipFile {
     return promisify(yauzl.open)(...args)
       .then((zip) => {
         this._zip = zip;
+        this._close = new Promise((resolve) => {
+          zip.once('close', resolve);
+        });
       });
+  }
+
+  /**
+   * Close the zip file and wait fd to release.
+   */
+  close() {
+    this._zip.close();
+    return this._close;
   }
 
   /*
