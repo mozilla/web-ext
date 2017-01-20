@@ -15,7 +15,9 @@ import {
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
-import {FileFilter} from '../util/file-filter';
+import {
+  createFileFilter as defaultFileFilterCreator,
+} from '../util/file-filter';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn, ShouldWatchFn} from '../watcher';
@@ -27,6 +29,7 @@ import type {
   FirefoxRDPResponseAddon,
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
@@ -89,6 +92,7 @@ export type ReloadStrategyParams = {|
 
 export type ReloadStrategyOptions = {|
   createWatcher?: WatcherCreatorFn,
+  createFileFilter?: FileFilterCreatorFn,
 |};
 
 export function defaultReloadStrategy(
@@ -98,9 +102,10 @@ export function defaultReloadStrategy(
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
+    createFileFilter = defaultFileFilterCreator,
   }: ReloadStrategyOptions = {}
 ): void {
-  const fileFilter = new FileFilter({sourceDir, artifactsDir, ignoreFiles});
+  const fileFilter = createFileFilter({sourceDir, artifactsDir, ignoreFiles});
   const shouldWatchFile = (file) => fileFilter.wantFile(file);
   const watcher: Watchpack = (
     createWatcher({addonId, client, sourceDir, artifactsDir, shouldWatchFile})
