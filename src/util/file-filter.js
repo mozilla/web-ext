@@ -99,3 +99,11 @@ export class FileFilter {
     return true;
   }
 }
+
+// a helper function to make mocking easier
+
+export type FileFilterCreatorFn = (params: FileFilterOptions) => FileFilter;
+
+export const createFileFilter = (
+  (params: FileFilterOptions): FileFilter => new FileFilter(params)
+);
