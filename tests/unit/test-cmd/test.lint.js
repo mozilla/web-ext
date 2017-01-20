@@ -126,9 +126,10 @@ describe('lint', () => {
     });
   });
 
-  it('ensure linter build fileFilter correctly', () => {
-    const createFileFilter = sinon.spy();
-    const {lint} = setUp({createFileFilter});
+  it('ensure linter build fileFilter and shouldScanFile correctly', () => {
+    const fileFilter = {wantFile: sinon.spy(() => true)};
+    const createFileFilter = sinon.spy(() => fileFilter);
+    const {lint, createLinter} = setUp({createFileFilter});
     const params = {
       sourceDir: '.',
       artifactsDir: 'artifacts',
@@ -136,6 +137,10 @@ describe('lint', () => {
     };
     return lint(params).then(() => {
       assert(createFileFilter.calledWithMatch(params));
+      assert(createLinter.called);
+      const {shouldScanFile} = createLinter.firstCall.args[0].config;
+      shouldScanFile('path/to/file');
+      assert(fileFilter.wantFile.calledWith('path/to/file'));
     });
   });
 
