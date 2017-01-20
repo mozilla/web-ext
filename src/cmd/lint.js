@@ -2,8 +2,11 @@
 import {createInstance as defaultLinterCreator} from 'addons-linter';
 
 import {createLogger} from '../util/logger';
-import {FileFilter} from '../util/file-filter';
-
+import {
+  createFileFilter as defaultFileFilterCreator,
+} from '../util/file-filter';
+// import flow types
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
@@ -52,7 +55,7 @@ export type LintCmdParams = {|
 
 export type LintCmdOptions = {|
   createLinter?: LinterCreatorFn,
-  fileFilter?: FileFilter,
+  createFileFilter?: FileFilterCreatorFn,
 |};
 
 export default function lint(
@@ -62,9 +65,11 @@ export default function lint(
   }: LintCmdParams,
   {
     createLinter = defaultLinterCreator,
-    fileFilter = new FileFilter({sourceDir, ignoreFiles, artifactsDir}),
+    createFileFilter = defaultFileFilterCreator,
   }: LintCmdOptions = {}
 ): Promise<void> {
+  const fileFilter = createFileFilter({sourceDir, ignoreFiles, artifactsDir});
+
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({
     config: {
