@@ -49,40 +49,23 @@ describe('build', () => {
     );
   });
 
-  it('ensure artifacts dir is excluded from zipping', () => {
+  it('configure a build', () => {
     const packageCreator = sinon.spy(
       () => ({extensionPath: 'extension/path'})
     );
-    return build({
+    const fileFilter = {wantFile: () => true};
+    const createFileFilter = sinon.spy(() => fileFilter);
+    const params = {
       sourceDir: '/src',
       artifactsDir: 'artifacts',
-    }, {packageCreator}).then(() => {
-      assert(packageCreator.calledOnce);
-      assert.isObject(packageCreator.firstCall.args[0]);
-      assert.property(packageCreator.firstCall.args[0], 'fileFilter');
-      const fileFilter = packageCreator.firstCall.args[0].fileFilter;
-      assert.isFalse(fileFilter.wantFile('/src/artifacts'));
-      assert.isFalse(fileFilter.wantFile('/src/artifacts/something'));
+      ignoreFiles: ['**/*.log'],
+    };
+    return build(params, {packageCreator, createFileFilter}).then(() => {
+      // ensure sourceDir, artifactsDir, ignoreFiles is used
+      assert(createFileFilter.calledWithMatch(params));
+      // ensure packageCreator received correct fileFilter
+      assert(packageCreator.calledWithMatch({fileFilter}));
     });
-  });
-
-  it('ignore files', () => {
-    const zipFile = new ZipFile();
-    return withTempDir(
-      (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-          ignoreFiles: ['background-script.js', '*.json'],
-        })
-          .then((buildResult) => buildResult.extensionPath)
-          .then((extensionPath) => zipFile.open(extensionPath))
-          .then(() => zipFile.extractFilenames())
-          .then((fileNames) => {
-            fileNames.sort();
-            assert.deepEqual(fileNames, []);
-          })
-    );
   });
 
   it('gives the correct name to a localized extension', () => {
