@@ -12,10 +12,14 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 import {UsageError} from '../errors';
-import {FileFilter} from '../util/file-filter';
+import {
+  createFileFilter as defaultFileFilterCreator,
+  FileFilter,
+} from '../util/file-filter';
 // Import flow types.
 import type {OnSourceChangeFn} from '../watcher';
 import type {ExtensionManifest} from '../util/manifest';
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
@@ -147,14 +151,16 @@ export type BuildCmdOptions = {|
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
-  showReadyMessage?: boolean
+  showReadyMessage?: boolean,
+  createFileFilter?: FileFilterCreatorFn,
 |};
 
 export default async function build(
   {sourceDir, artifactsDir, asNeeded = false, ignoreFiles = []}: BuildCmdParams,
   {
     manifestData,
-    fileFilter = new FileFilter({
+    createFileFilter = defaultFileFilterCreator,
+    fileFilter = createFileFilter({
       sourceDir,
       artifactsDir,
       ignoreFiles,
