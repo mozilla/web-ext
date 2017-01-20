@@ -38,14 +38,11 @@ describe('firefox', () => {
     };
 
     function createFakeFxRunner(firefoxOverrides = {}) {
-      const firefox = {
+      const process = {
         ...deepcopy(fakeFirefoxProcess),
         ...firefoxOverrides,
       };
-      return sinon.spy(() => Promise.resolve({
-        args: [],
-        process: firefox,
-      }));
+      return sinon.spy(() => Promise.resolve({args: [], process}));
     }
 
     // TODO: This object should accept dynamic properties since those are passed to firefox.run()
@@ -315,8 +312,8 @@ describe('firefox', () => {
       (profile) => {
         const fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
-          .then((profile) => {
-            assert.instanceOf(profile, FirefoxProfile);
+          .then((configuredProfile) => {
+            assert.instanceOf(configuredProfile, FirefoxProfile);
           });
       }
     ));
@@ -350,7 +347,9 @@ describe('firefox', () => {
         // This is a quick sanity check that real preferences were
         // written to disk.
         return firefox.configureProfile(profile)
-          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((configuredProfile) => {
+            return fs.readFile(path.join(configuredProfile.path(), 'user.js'));
+          })
           .then((prefFile) => {
             // Check for some pref set by configureProfile().
             assert.include(prefFile.toString(),
@@ -363,7 +362,9 @@ describe('firefox', () => {
       (profile) => {
         const customPrefs = {'extensions.checkCompatibility.nightly': true};
         return firefox.configureProfile(profile, {customPrefs})
-          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((configuredProfile) => {
+            return fs.readFile(path.join(configuredProfile.path(), 'user.js'));
+          })
           .then((prefFile) => {
             // Check for custom pref set by configureProfile().
             assert.include(prefFile.toString(),

@@ -65,11 +65,11 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    this.yargs.command(name, description, (yargs) => {
+    this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {
         return;
       }
-      return yargs
+      return yargsForCmd
         // Make sure the user does not add any extra commands. For example,
         // this would be a mistake because lint does not accept arguments:
         // web-ext lint ./src/path/to/file.js

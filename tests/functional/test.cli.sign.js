@@ -4,7 +4,7 @@ import {spawn} from 'child_process';
 import {describe, it, beforeEach, afterEach} from 'mocha';
 
 import {
-  addonPath, fakeServerPath,
+  minimalAddonPath, fakeServerPath,
   withTempAddonDir, execWebExt, reportCommandErrors,
 } from './common';
 
@@ -27,7 +27,7 @@ describe('web-ext sign', () => {
   });
 
   it('should accept: --source-dir SRCDIR --api-url-prefix URL',
-     () => withTempAddonDir({addonPath}, (srcDir, tmpDir) => {
+     () => withTempAddonDir({addonPath: minimalAddonPath}, (srcDir, tmpDir) => {
        const argv = [
          'sign', '--verbose',
          '--api-url-prefix', 'http://localhost:8989/fake/api/v3',

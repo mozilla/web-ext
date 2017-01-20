@@ -211,13 +211,13 @@ export class FileFilter {
   /*
    * Returns true if the file is wanted for the ZIP archive.
    *
-   * This is called by zipdir as wantFile(path, stat) for each
+   * This is called by zipdir as wantFile(filePath, stat) for each
    * file in the folder that is being archived.
    */
-  wantFile(path: string): boolean {
+  wantFile(filePath: string): boolean {
     for (const test of this.filesToIgnore) {
-      if (minimatch(path, test)) {
-        log.debug(`FileFilter: ignoring file ${path}`);
+      if (minimatch(filePath, test)) {
+        log.debug(`FileFilter: ignoring file ${filePath}`);
         return false;
       }
     }
