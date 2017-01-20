@@ -154,7 +154,7 @@ module.exports = function(grunt) {
 
       Promise.all([
         getPreset('angular'),
-        getConfiguration('.conventional-changelog-lintrc'),
+        getConfiguration(),
       ]).then(function(results) {
         var preset = results[0];
         var configuration = results[1];
