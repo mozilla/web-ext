@@ -49,6 +49,12 @@ export type SignResult = {
   downloadedFiles: Array<string>,
 };
 
+export type UpdateManifest = {
+  addons: {[key: string]: {
+    updates: Array<Object>
+  }}
+};
+
 export default function sign(
   {
     verbose, sourceDir, artifactsDir, apiKey, apiSecret,
@@ -98,8 +104,9 @@ export default function sign(
         log.warn('No extension ID specified (it will be auto-generated)');
       }
 
-      let oldUpdateManifestData;
-
+      // note that we assign an empty object instead of leaving the variable
+      // undefined because of a problem with flow.
+      let oldUpdateManifestData = {};
       if (updateLink) {
         prevalidateUpdateManifestParams(manifestData, updateLink);
         oldUpdateManifestData = await fetchUpdateManifest(manifestData);
@@ -124,17 +131,15 @@ export default function sign(
         } else {
           extensionID = id;
         }
-        // flow thinks that oldUpdateManifestData can be potentially undefined
-        // this is wrong however, the if-case guarding both the `oldUpdateManifestData = `
-        // statement and this function call are both checking
-        // the exact same thing, which doesn't change
-        // anywhere in the code. Basically, `if (A) then define B` and later on `if (A) then use B`
-        // which flow doesn't seem to understand
-        let oldUpdateManifestDataMakeFlowHappy =
-          oldUpdateManifestData == null ? {} : oldUpdateManifestData;
+
+        if (signingResult.downloadedFiles.length > 1) {
+          throw new WebExtError(
+            'The downloaded files array should only be greater than 1' +
+            'in legacy cases, this is not supported.');
+        }
         await createNewUpdateManifest(
           extensionID, signingResult.downloadedFiles[0], artifactsDir,
-          manifestData, updateLink, oldUpdateManifestDataMakeFlowHappy,
+          manifestData, updateLink, oldUpdateManifestData,
         );
       }
 
@@ -159,41 +164,41 @@ export default function sign(
 /**
  * Fetches an updateManifest.json file from a remote web server
  */
-function fetchUpdateManifest(manifestData: Object): Object {
-  return new Promise(async function (resolve, /*reject*/) {
-    let oldUpdateManifest;
-    let statusCode;
+async function fetchUpdateManifest(manifestData: Object)
+: Promise<UpdateManifest> {
+  let oldUpdateManifest;
+  let statusCode;
 
-    let parsed = url.parse(manifestData.applications.gecko.update_url);
-    let updateManifestFileName = '';
-    // these will never be null, since parsed and parsed.pathname
-    // are already validated in an earlier function
-    // the `if` is only to please flow
-    if (parsed != null && parsed.pathname != null) {
-      updateManifestFileName = path.basename(parsed.pathname);
-    }
+  let parsed = url.parse(manifestData.applications.gecko.update_url);
+  let updateManifestFileName = '';
+  // these will never be null, since parsed and parsed.pathname
+  // are already validated in an earlier function
+  // the `if` is only to please flow
+  if (parsed != null && parsed.pathname != null) {
+    updateManifestFileName = path.basename(parsed.pathname);
+  }
 
-    try {
-      [oldUpdateManifest, statusCode] = await httpFetchFile(
-        manifestData.applications.gecko.update_url);
-      if (statusCode < 200 || statusCode > 290) {
-        throw new WebExtError(
-          `Failed to retrieve ${updateManifestFileName}\n` +
-          `http statusCode error, server responded with: ${statusCode}`);
-      }
-    } catch (e) {
+  try {
+    [oldUpdateManifest, statusCode] = await httpFetchFile(
+      manifestData.applications.gecko.update_url);
+    if (statusCode < 200 || statusCode > 290) {
       throw new WebExtError(
-        `Was unable to download ${updateManifestFileName}\nerror is: ${e}`);
+        `Failed to retrieve ${updateManifestFileName}\n
+http statusCode error, server responded with: ${statusCode}`);
     }
+  } catch (error) {
+    throw new WebExtError(
+      `Was unable to download ${updateManifestFileName}\nerror is: ${error}`);
+  }
 
-    try {
-      resolve(JSON.parse(oldUpdateManifest));
-    } catch (e) {
-      throw new WebExtError(
-        `Unable to parse ${updateManifestFileName} file located at ` +
-        `${manifestData.applications.gecko.update_url}`);
-    }
-  });
+  try {
+    return JSON.parse(oldUpdateManifest);
+  } catch (error) {
+    let originalError = error.toString();
+    throw new WebExtError(
+      `Unable to parse ${updateManifestFileName} file located at
+ ${manifestData.applications.gecko.update_url} because\n${originalError}`);
+  }
 }
 
 /**
@@ -225,13 +230,13 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
       let gecko =
         applications.gecko == null ?
         {gecko: applications.gecko} : manifestData.applications.gecko;
-      let update_url =
+      let updateUrl =
         gecko.update_url == null ?
         gecko.update_url : gecko.update_url; // flow please
       throw new WebExtError(
         'Was unable to parse manifest.applications.gecko.update_url ' +
         'please check this property in your manifest: ' +
-        `${update_url}`);
+        `${updateUrl}`);
     }
   }
 
@@ -249,15 +254,13 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
       'Unable to parse --update-link url, please use {xpiFileName} ' +
       'as a substitute for the XPI file');
   }
-
-  return true;
 }
 
 /**
  * Generates a new updateManifest.json file
  * It will add an entry to a previously fetched updateManifest.json file
  * for each generated XPI file.
- * The result will be stored in the artifacts directory
+ * The result will be stored in the --artifacts-dir folder
  */
 // jslint incorrectly reports that this return statement should be a yield.
 // eslint-disable-next-line
@@ -312,13 +315,13 @@ async function createNewUpdateManifest(
 
   return fs.writeFile(
     path.join(artifactsDir, updateManifestFileName),
-    newUpdateManifest,
-    function(error) {
-      if (error) {
-        throw new WebExtError(
-          `Was unable to write updated ${addonName}\n ${error}`);
-      }
-    });
+    newUpdateManifest
+  ).catch(function(error) {
+    if (error) {
+      throw new WebExtError(
+        `Was unable to write updated ${addonName}\n ${error}`);
+    }
+  });
 }
 
 export async function getIdFromSourceDir(
