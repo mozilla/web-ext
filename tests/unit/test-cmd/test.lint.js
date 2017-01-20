@@ -4,17 +4,16 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import defaultLintCommand from '../../../src/cmd/lint';
-import {FileFilter} from '../../../src/util/file-filter';
-import {fake, makeSureItFails} from '../helpers';
+import {makeSureItFails} from '../helpers';
 
 type setUpParams = {|
   createLinter?: Function,
-  fileFilter?: Function,
+  createFileFilter?: Function,
 |}
 
 describe('lint', () => {
 
-  function setUp({createLinter, fileFilter}: setUpParams = {}) {
+  function setUp({createLinter, createFileFilter}: setUpParams = {}) {
     const lintResult = '<lint.run() result placeholder>';
     const runLinter = sinon.spy(() => Promise.resolve(lintResult));
     if (!createLinter) {
@@ -28,7 +27,7 @@ describe('lint', () => {
       runLinter,
       lint: ({...args}) => {
         // $FLOW_IGNORE: type checks skipped for testing purpose
-        return defaultLintCommand(args, {createLinter, fileFilter});
+        return defaultLintCommand(args, {createLinter, createFileFilter});
       },
     };
   }
@@ -127,20 +126,17 @@ describe('lint', () => {
     });
   });
 
-  it('passes a file filter to the linter', () => {
-    const fileFilter = fake(new FileFilter());
-    const {lint, createLinter} = setUp({fileFilter});
-    return lint()
-      .then(() => {
-        assert.equal(createLinter.called, true);
-        const config = createLinter.firstCall.args[0].config;
-        assert.isFunction(config.shouldScanFile);
-
-        // Simulate how the linter will use this callback.
-        config.shouldScanFile('manifest.json');
-        assert.equal(fileFilter.wantFile.called, true);
-        assert.equal(fileFilter.wantFile.firstCall.args[0], 'manifest.json');
-      });
+  it('ensure linter build fileFilter correctly', () => {
+    const createFileFilter = sinon.spy();
+    const {lint} = setUp({createFileFilter});
+    const params = {
+      sourceDir: '.',
+      artifactsDir: 'artifacts',
+      ignoreFiles: ['file1', '**/file2'],
+    };
+    return lint(params).then(() => {
+      assert(createFileFilter.calledWithMatch(params));
+    });
   });
 
 });
