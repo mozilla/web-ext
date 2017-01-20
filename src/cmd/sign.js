@@ -55,6 +55,15 @@ export type UpdateManifest = {
   }}
 };
 
+export type NewUpdateManifestArgs = {
+  id: string,
+  XPIPath: string,
+  artifactsDir: string,
+  manifestData: Object,
+  updateLink: string,
+  oldUpdateManifestData: UpdateManifest
+};
+
 export default function sign(
   {
     verbose, sourceDir, artifactsDir, apiKey, apiSecret,
@@ -106,7 +115,9 @@ export default function sign(
 
       // note that we assign an empty object instead of leaving the variable
       // undefined because of a problem with flow.
-      let oldUpdateManifestData = {};
+      let oldUpdateManifestData = {
+        addons: {},
+      };
       if (updateLink) {
         prevalidateUpdateManifestParams(manifestData, updateLink);
         oldUpdateManifestData = await fetchUpdateManifest(manifestData);
@@ -125,22 +136,19 @@ export default function sign(
       });
 
       if (updateLink) {
-        let extensionID;
-        if (signingResult.id) {
-          extensionID = signingResult.id;
-        } else {
-          extensionID = id;
-        }
-
         if (signingResult.downloadedFiles.length > 1) {
           throw new WebExtError(
             'The downloaded files array should only be greater than 1' +
             'in legacy cases, this is not supported.');
         }
-        await createNewUpdateManifest(
-          extensionID, signingResult.downloadedFiles[0], artifactsDir,
-          manifestData, updateLink, oldUpdateManifestData,
-        );
+        await createNewUpdateManifest({
+          id: signingResult.id,
+          XPIPath: signingResult.downloadedFiles[0],
+          artifactsDir: artifactsDir,
+          manifestData: manifestData,
+          updateLink: updateLink,
+          oldUpdateManifestData: oldUpdateManifestData,
+        });
       }
 
       if (signingResult.id) {
@@ -264,10 +272,9 @@ function prevalidateUpdateManifestParams(manifestData, updateLink) {
  */
 // jslint incorrectly reports that this return statement should be a yield.
 // eslint-disable-next-line
-async function createNewUpdateManifest(
-  id: ?string, XPIPath: string, artifactsDir,
-  manifestData: Object, updateLink: string, oldUpdateManifestData: Object
-) {
+async function createNewUpdateManifest({
+  id, XPIPath, artifactsDir, manifestData, updateLink, oldUpdateManifestData,
+} : NewUpdateManifestArgs) {
   let updateManifestFileName = '';
   let newUpdateManifest;
 
@@ -305,8 +312,9 @@ async function createNewUpdateManifest(
     log.warn(`Creating first release of ${addonName}`);
     log.warn(
       'If this is not the actual first release, check your extension-id');
-    oldUpdateManifestData.addons[id] = {};
-    oldUpdateManifestData.addons[id].updates = [newVersion];
+    oldUpdateManifestData.addons[id] = {
+      updates: [newVersion],
+    };
   }
 
   // the oldUpdateManifest has been updated, it's ready to be saved
