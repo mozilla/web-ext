@@ -10,7 +10,7 @@ import {assert} from 'chai';
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
-import {fake, makeSureItFails} from './helpers';
+import {fake, makeSureItFails, it_skipOnWin32} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
 
 
@@ -434,11 +434,10 @@ describe('program.defaultVersionGetter', () => {
       });
   });
 
-  it('returns git commit information in development', () => {
+  it_skipOnWin32('returns git commit information in development', () => {
     const commit = `${git.branch()}-${git.long()}`;
     const testBuildEnv = {globalEnv: 'development'};
     assert.equal(defaultVersionGetter(root, testBuildEnv),
                  commit);
   });
-
 });
