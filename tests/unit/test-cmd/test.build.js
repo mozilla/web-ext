@@ -12,11 +12,7 @@ import build, {
 } from '../../../src/cmd/build';
 import {FileFilter} from '../../../src/util/file-filter';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {
-  fixturePath,
-  makeSureItFails,
-  ZipFile,
-} from '../helpers';
+import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {
   basicManifest,
   manifestWithoutApps,
