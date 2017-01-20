@@ -218,10 +218,10 @@ Example: $0 --help run.
         'update-link': {
           describe:
             'A URL to where your XPI files will be hosted. ' +
-            'ex: https://example.com/plugins/{xpiFileName} ' +
+            'Example: https://example.com/plugins/{xpiFileName} ' +
             'if you select this option, an updateManifest ' +
             'file will be generated ' +
-            'in the web-ext-artifacts folder',
+            'in the --artifacts-dir folder',
         },
       })
     .command('run', 'Run the web extension', commands.run, {
