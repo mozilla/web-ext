@@ -280,6 +280,7 @@ describe('run', () => {
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
         desktopNotifications: sinon.spy(() => Promise.resolve()),
+        shouldWatchFile: () => true,
       };
       return {
         config,
@@ -297,6 +298,7 @@ describe('run', () => {
       assert.equal(callArgs.sourceDir, config.sourceDir);
       assert.equal(callArgs.artifactsDir, config.artifactsDir);
       assert.typeOf(callArgs.onChange, 'function');
+      assert.equal(callArgs.shouldWatchFile, config.shouldWatchFile);
     });
 
     it('returns a watcher', () => {
