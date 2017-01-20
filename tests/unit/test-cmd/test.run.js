@@ -370,6 +370,9 @@ describe('run', () => {
       const watcher = {
         close: sinon.spy(() => {}),
       };
+      const fileFilter = {
+        wantFile: sinon.spy(() => true),
+      };
       const args = {
         addonId: 'some-addon@test-suite',
         client,
@@ -377,15 +380,18 @@ describe('run', () => {
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
+        ignoreFiles: ['first/file', 'second/file'],
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
+        createFileFilter: sinon.spy(() => fileFilter),
       };
       return {
         ...args,
         ...options,
         client,
         watcher,
+        fileFilter,
         reloadStrategy: (argOverride = {}, optOverride = {}) => {
           return defaultReloadStrategy(
             {...args, ...argOverride},
@@ -403,7 +409,11 @@ describe('run', () => {
     });
 
     it('configures a watcher', () => {
-      const {createWatcher, reloadStrategy, ...sentArgs} = prepare();
+      const {
+        createWatcher, createFileFilter, reloadStrategy, fileFilter,
+        ...sentArgs
+      } = prepare();
+
       reloadStrategy();
       assert.equal(createWatcher.called, true);
       const receivedArgs = createWatcher.firstCall.args[0];
@@ -411,6 +421,16 @@ describe('run', () => {
       assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
+
+      // ensure fileFilter is used
+      const params = {
+        sourceDir: sentArgs.sourceDir,
+        artifactsDir: sentArgs.artifactsDir,
+        ignoreFiles: sentArgs.ignoreFiles,
+      };
+      assert(createFileFilter.calledWithMatch(params));
+      receivedArgs.shouldWatchFile('path/to/file');
+      assert(fileFilter.wantFile.calledWith('path/to/file'));
     });
 
   });
