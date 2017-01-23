@@ -20,7 +20,7 @@ import {
 } from '../util/file-filter';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
-import type {OnSourceChangeFn, ShouldWatchFn} from '../watcher';
+import type {OnSourceChangeFn} from '../watcher';
 import type {
   FirefoxProcess, // eslint-disable-line import/named
 } from '../firefox/index';
@@ -42,20 +42,23 @@ export type WatcherCreatorParams = {|
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   desktopNotifications?: typeof defaultDesktopNotifications,
-  shouldWatchFile?: ShouldWatchFn,
+  ignoreFiles?: Array<string>,
+  createFileFilter?: FileFilterCreatorFn,
 |};
-
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    addonId, client, sourceDir, artifactsDir,
+    addonId, client, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     desktopNotifications = defaultDesktopNotifications,
-    shouldWatchFile,
+    createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
  ): Watchpack {
+  const fileFilter = createFileFilter(
+    {sourceDir, artifactsDir, ignoreFiles}
+  );
   return onSourceChange({
     sourceDir,
     artifactsDir,
@@ -73,7 +76,7 @@ export function defaultWatcherCreator(
           throw error;
         });
     },
-    shouldWatchFile,
+    shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
 }
 
@@ -102,13 +105,10 @@ export function defaultReloadStrategy(
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
-    createFileFilter = defaultFileFilterCreator,
   }: ReloadStrategyOptions = {}
 ): void {
-  const fileFilter = createFileFilter({sourceDir, artifactsDir, ignoreFiles});
-  const shouldWatchFile = (file) => fileFilter.wantFile(file);
   const watcher: Watchpack = (
-    createWatcher({addonId, client, sourceDir, artifactsDir, shouldWatchFile})
+    createWatcher({addonId, client, sourceDir, artifactsDir, ignoreFiles})
   );
 
   firefoxProcess.on('close', () => {

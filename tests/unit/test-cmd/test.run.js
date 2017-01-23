@@ -280,7 +280,7 @@ describe('run', () => {
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
         desktopNotifications: sinon.spy(() => Promise.resolve()),
-        shouldWatchFile: () => true,
+        ignoreFiles: ['path/to/file', 'path/to/file2'],
       };
       return {
         config,
@@ -298,7 +298,21 @@ describe('run', () => {
       assert.equal(callArgs.sourceDir, config.sourceDir);
       assert.equal(callArgs.artifactsDir, config.artifactsDir);
       assert.typeOf(callArgs.onChange, 'function');
-      assert.equal(callArgs.shouldWatchFile, config.shouldWatchFile);
+    });
+
+    it('configure fileFilter, shouldWatchFile', () => {
+      const fileFilter = {wantFile: sinon.spy()};
+      const createFileFilter = sinon.spy(() => fileFilter);
+      const {config, createWatcher} = prepare();
+      createWatcher({createFileFilter});
+      assert(createFileFilter.calledWithMatch({
+        sourceDir: config.sourceDir,
+        artifactsDir: config.artifactsDir,
+        ignoreFiles: config.ignoreFiles,
+      }));
+      const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
+      shouldWatchFile('path/to/file');
+      assert(fileFilter.wantFile.calledWith('path/to/file'));
     });
 
     it('returns a watcher', () => {
@@ -370,9 +384,6 @@ describe('run', () => {
       const watcher = {
         close: sinon.spy(() => {}),
       };
-      const fileFilter = {
-        wantFile: sinon.spy(() => true),
-      };
       const args = {
         addonId: 'some-addon@test-suite',
         client,
@@ -384,14 +395,12 @@ describe('run', () => {
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
-        createFileFilter: sinon.spy(() => fileFilter),
       };
       return {
         ...args,
         ...options,
         client,
         watcher,
-        fileFilter,
         reloadStrategy: (argOverride = {}, optOverride = {}) => {
           return defaultReloadStrategy(
             {...args, ...argOverride},
@@ -410,7 +419,7 @@ describe('run', () => {
 
     it('configures a watcher', () => {
       const {
-        createWatcher, createFileFilter, reloadStrategy, fileFilter,
+        createWatcher, reloadStrategy,
         ...sentArgs
       } = prepare();
 
@@ -421,16 +430,7 @@ describe('run', () => {
       assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
-
-      // ensure fileFilter is used
-      const params = {
-        sourceDir: sentArgs.sourceDir,
-        artifactsDir: sentArgs.artifactsDir,
-        ignoreFiles: sentArgs.ignoreFiles,
-      };
-      assert(createFileFilter.calledWithMatch(params));
-      receivedArgs.shouldWatchFile('path/to/file');
-      assert(fileFilter.wantFile.calledWith('path/to/file'));
+      assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
     });
 
   });
