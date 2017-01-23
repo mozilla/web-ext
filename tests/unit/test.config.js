@@ -50,7 +50,10 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject});
+      const defaultValues = {
+        sourceDir: 'default/source/dir',
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
     });
 
