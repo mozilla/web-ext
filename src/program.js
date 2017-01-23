@@ -11,7 +11,7 @@ import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
-import {applyConfigToArgv} from './config';
+import {applyConfigToArgv, parseConfig} from './config';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -130,7 +130,8 @@ export class Program {
 
     const runCommand = this.commands[cmd];
     const configFileName = argv.config;
-    const newArgv = applyConfigToArgv(argv, configFileName, this.defaultValues);
+    const configObject = parseConfig(argv, configFileName);
+    const newArgv = applyConfigToArgv(argv, configObject, this.defaultValues);
     if (argv.verbose) {
       logStream.makeVerbose();
       log.info('Version:', getVersion(absolutePackageDir));

@@ -88,7 +88,7 @@ describe('config', () => {
   });
 
   describe('parseConfig', () => {
-    it('passes the correct file name', () => {
+    it('parses the configuration file correctly', () => {
       const argv = makeArgv({
         globalOpt: {
           'source-dir': {

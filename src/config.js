@@ -10,8 +10,7 @@ const log = createLogger(__filename);
 
 type ApplyConfigToArgvParams = {
   argv: Object,
-  configObject?: Object,
-  configFileName?: string,
+  configObject: Object,
   defaultValues?: Object,
 };
 
@@ -23,14 +22,11 @@ type ParseConfigParams = {
 export function applyConfigToArgv({
   argv,
   configObject,
-  configFileName,
   defaultValues = {},
 }: ApplyConfigToArgvParams): Object {
-  if (configFileName) {
-    configObject = parseConfig(argv, configFileName);
-  }
   for (const option in configObject) {
     if (!argv.hasOwnProperty(option) || defaultValues[option]) {
+      log.info(defaultValues[option]);
       argv[option] = configObject[option];
     }
   }
