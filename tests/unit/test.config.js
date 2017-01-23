@@ -88,23 +88,28 @@ describe('config', () => {
   });
 
   describe('parseConfig', () => {
-    const argv = makeArgv({
-      globalOpt: {
-        'source-dir': {
-          requiresArg: true,
-          type: 'string',
-          demand: false,
+    it('passes the correct file name', () => {
+      const argv = makeArgv({
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+          },
         },
-      },
-    });
-    return withTempDir(
-      (tmpDir) => {
-        const configFilePath = path.join(tmpDir.path(), 'config.js');
-        argv.sourceDir = tmpDir.path();
-        fs.writeFileSync(configFilePath,
-          '{sourceDir: "path/to/fake/source/dir"');
-        const configObj = parseConfig(argv, 'config.js');
-        assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
       });
+      return withTempDir(
+        (tmpDir) => {
+          const configFilePath = path.join(tmpDir.path(), 'config.js');
+          const configFileName = 'config.js';
+          argv.sourceDir = tmpDir.path();
+          fs.writeFileSync(configFilePath,
+          `module.exports = {
+            sourceDir: 'path/to/fake/source/dir',
+          };`);
+          const configObj = parseConfig({argv, configFileName});
+          assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
+        });
+    });
   });
 });
