@@ -1,6 +1,9 @@
+import path from 'path';
+
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
 import sinon from 'sinon';
+import {fs} from 'mz';
 
 //import {fake} from './helpers';
 import {Program} from '../../src/program';
@@ -84,7 +87,24 @@ describe('config', () => {
     });
   });
 
-  describe('parseConfig' () => {
-
+  describe('parseConfig', () => {
+    const argv = makeArgv({
+      globalOpt: {
+        'source-dir': {
+          requiresArg: true,
+          type: 'string',
+          demand: false,
+        },
+      },
+    });
+    return withTempDir(
+      (tmpDir) => {
+        const configFilePath = path.join(tmpDir.path(), 'config.js');
+        argv.sourceDir = tmpDir.path();
+        fs.writeFileSync(configFilePath,
+          '{sourceDir: "path/to/fake/source/dir"');
+        const configObj = parseConfig(argv, 'config.js');
+        assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
+      });
   });
 });
