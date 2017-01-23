@@ -5,13 +5,13 @@ import {readFileSync} from 'fs';
 import git from 'git-rev-sync';
 import yargs from 'yargs';
 import camelCase from 'camelcase';
-import requireUncached from 'require-uncached';
 
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
+import {applyConfigToArgv} from './config';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -130,20 +130,7 @@ export class Program {
 
     const runCommand = this.commands[cmd];
     const configFileName = argv.config;
-    let configObj;
-    if (configFileName) {
-      if (!configFileName.startsWith('/')) {
-        const configFilePath = path.join(`/${argv.sourceDir}`, configFileName);
-        configObj = loadJSConfigFile(configFilePath);
-      } else {
-        configObj = loadJSConfigFile(configFileName);
-      }
-      for (const option in configObj) {
-        if (!argv.hasOwnProperty(option) || this.defaultValues[option]) {
-          argv[option] = configObj[option];
-        }
-      }
-    }
+    const newArgv = applyConfigToArgv(argv, configFileName, this.defaultValues);
     if (argv.verbose) {
       logStream.makeVerbose();
       log.info('Version:', getVersion(absolutePackageDir));
@@ -161,7 +148,7 @@ export class Program {
           version: getVersion(absolutePackageDir),
         });
       }
-      await runCommand(argv);
+      await runCommand({...newArgv, ...argv});
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -179,17 +166,6 @@ export class Program {
         throw error;
       }
     }
-  }
-}
-
-function loadJSConfigFile(filePath) {
-  log.debug(`Loading JS config file: ${filePath}`);
-  try {
-    return requireUncached(filePath);
-  } catch (e) {
-    log.debug(`Error reading JavaScript file: ${filePath}`);
-    e.message = `Cannot read config file: ${filePath}\nError: ${e.message}`;
-    throw new UsageError(e);
   }
 }
 
