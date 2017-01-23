@@ -4,7 +4,13 @@ import sinon from 'sinon';
 
 //import {fake} from './helpers';
 import {Program} from '../../src/program';
-import {applyConfigToArgv} from '../../src/config';
+import {
+  applyConfigToArgv,
+  parseConfig,
+  loadJSConfigFile,
+} from '../../src/config';
+import {withTempDir} from '../../src/util/temp-dir';
+import {UsageError} from '../../src/errors';
 
 function makeArgv({
   userCmd = [],
@@ -65,5 +71,20 @@ describe('config', () => {
       const newArgv = applyConfigToArgv({argv, configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
+  });
+
+  describe('loadJSConfigFile', () => {
+    it('throws an error if the config file does not exist', () => {
+      return withTempDir (
+        (tmpDir) => {
+          assert.throws(() => {
+            loadJSConfigFile(tmpDir.path());
+          }, UsageError);
+        });
+    });
+  });
+
+  describe('parseConfig' () => {
+
   });
 });

@@ -10,9 +10,9 @@ const log = createLogger(__filename);
 
 type ApplyConfigToArgvParams = {
   argv: Object,
-  configObject: Object,
-  configFileName: string,
-  defaultValues: Object,
+  configObject?: Object,
+  configFileName?: string,
+  defaultValues?: Object,
 };
 
 type ParseConfigParams = {
@@ -25,7 +25,7 @@ export function applyConfigToArgv({
   configObject,
   configFileName,
   defaultValues = {},
-}: ApplyConfigToArgvParams) {
+}: ApplyConfigToArgvParams): Object {
   if (configFileName) {
     configObject = parseConfig(argv, configFileName);
   }
@@ -41,12 +41,15 @@ export function parseConfig({
   argv,
   configFileName,
 }: ParseConfigParams) {
-  const configFilePath = path.join(`/${argv.sourceDir}`, configFileName);
-  const configObj = loadJSConfigFile(configFilePath);
-  return configObj;
+  let configObject;
+  if (configFileName) {
+    const configFilePath = path.join(`/${argv.sourceDir}`, configFileName);
+    configObject = loadJSConfigFile(configFilePath);
+  }
+  return configObject;
 }
 
-function loadJSConfigFile(filePath) {
+export function loadJSConfigFile(filePath: string) {
   log.debug(`Loading JS config file: ${filePath}`);
   try {
     return requireUncached(filePath);
