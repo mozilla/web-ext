@@ -370,7 +370,11 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
-    });
+    })
+    .command(
+      'new',
+      'Ease the creation of new extension', commands.newCommand
+    );
 
   return program.execute(absolutePackageDir, runOptions);
 }
