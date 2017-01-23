@@ -75,15 +75,19 @@ describe('util/file-filter', () => {
       const filter = new FileFilter({
         sourceDir: '/src',
         artifactsDir: 'artifacts',
-        ignoreFiles: ['ignore-dir/', 'some.js', '**/some.log'],
+        ignoreFiles: [
+          'ignore-dir/', 'some.js', '**/some.log', 'ignore/dir/content/**/*',
+        ],
       });
       assert.equal(filter.wantFile('/src/artifacts'), false);
       assert.equal(filter.wantFile('/src/ignore-dir'), false);
-      assert.equal(filter.wantFile('/src/ignore-dir/some.css'), false);
+      assert.equal(filter.wantFile('/src/ignore-dir/some.css'), true);
       assert.equal(filter.wantFile('/src/some.js'), false);
       assert.equal(filter.wantFile('/src/some.log'), false);
       assert.equal(filter.wantFile('/src/other/some.js'), true);
       assert.equal(filter.wantFile('/src/other/some.log'), false);
+      assert.equal(filter.wantFile('/src/ignore/dir/content'), true);
+      assert.equal(filter.wantFile('/src/ignore/dir/content/file.js'), false);
     });
 
   });

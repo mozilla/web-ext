@@ -39,8 +39,10 @@ export class FileFilter {
     filesToIgnore = [
       '**/*.xpi',
       '**/*.zip',
-      '**/.*/', // any hidden file and folder
-      '**/node_modules/',
+      '**/.*', // any hidden file and folder
+      '**/.*/**/*', // and the content inside hidden folder
+      '**/node_modules',
+      '**/node_modules/**/*',
     ],
     ignoreFiles = [],
     sourceDir = '',
@@ -55,7 +57,10 @@ export class FileFilter {
       this.addToIgnoreList(ignoreFiles);
     }
     if (artifactsDir) {
-      this.addToIgnoreList([artifactsDir], true);
+      this.addToIgnoreList([
+        artifactsDir,
+        path.join(artifactsDir, '**/*'),
+      ]);
     }
   }
 
@@ -72,13 +77,9 @@ export class FileFilter {
   /**
    *  Insert more files into filesToIgnore array.
    */
-  addToIgnoreList(files: Array<string>, isDir: boolean = false) {
+  addToIgnoreList(files: Array<string>) {
     for (const file of files) {
       this.filesToIgnore.push(this.resolve(file));
-      // If file is a directory, ignore its content too.
-      if (/([/\\]\.{0,2})$/.test(file) || isDir) {
-        this.filesToIgnore.push(this.resolve(path.join(file, '**/*')));
-      }
     }
   }
 
