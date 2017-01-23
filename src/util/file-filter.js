@@ -29,7 +29,7 @@ export type FileFilterOptions = {|
 |};
 
 /*
- * Allows or ignores files when creating a ZIP archive.
+ * Allows or ignores files.
  */
 export class FileFilter {
   filesToIgnore: Array<string>;
@@ -83,7 +83,7 @@ export class FileFilter {
   }
 
   /*
-   * Returns true if the file is wanted for the ZIP archive.
+   * Returns true if the file is wanted.
    *
    * This is called by zipdir as wantFile(path, stat) for each
    * file in the folder that is being archived.
@@ -102,7 +102,7 @@ export class FileFilter {
 
 // a helper function to make mocking easier
 
-export type FileFilterCreatorFn = (params: FileFilterOptions) => FileFilter;
+export type FileFilterCreatorFn = typeof createFileFilter;
 
 export const createFileFilter = (
   (params: FileFilterOptions): FileFilter => new FileFilter(params)
