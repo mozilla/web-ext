@@ -2,7 +2,7 @@
 import path from 'path';
 import EventEmitter from 'events';
 
-import {describe, it} from 'mocha';
+import {describe, it, after} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
@@ -238,6 +238,10 @@ describe('run', () => {
       });
   });
 
+  after(() => {
+    process.exit.restore();
+  });
+
   it('exits when user presses CTRL+C in shell console', () => {
     const cmd = prepareRun();
     const exits = sinon.stub(process, 'exit', sinon.spy(() => {}));
@@ -248,7 +252,6 @@ describe('run', () => {
       })
       .then(() => {
         assert.ok(exits.called);
-        process.exit.restore();
       });
   });
 
