@@ -1,6 +1,9 @@
 language: node_js
 sudo: false
 
+matrix:
+  fast_finish: true
+
 # Keep this in sync with appveyor.yml
 node_js:
 - '4'
@@ -12,6 +15,7 @@ env:
 - YARNPKG=false
 before_install:
 - if [[ $YARNPKG != "true" ]]; then rm yarn.lock; fi
+
 cache: yarn
 
 before_script:
