@@ -1,7 +1,6 @@
 /* @flow */
 import path from 'path';
 
-import {it} from 'mocha';
 import sinon from 'sinon';
 import yauzl from 'yauzl';
 import ExtendableError from 'es6-error';
@@ -251,13 +250,5 @@ export class TCPConnectError extends ExtendableError {
   constructor(msg: string = 'simulated connection error') {
     super(msg);
     this.code = 'ECONNREFUSED';
-  }
-}
-
-export function it_skipOnWin32(...args: Array<any>) {
-  if (process.platform === 'win32') {
-    it.skip(...args);
-  } else {
-    it(...args);
   }
 }

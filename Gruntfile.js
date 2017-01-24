@@ -30,19 +30,23 @@ module.exports = function(grunt) {
     'webpack:functional_tests',
   ]);
 
-  grunt.registerTask('test', [
-    'lint',
-    'flowbin:check',
-    'build-tests',
-    'mochaTest:unit',
-    'mochaTest:functional',
-  ]);
+  grunt.registerTask('test', 'run linting and test suites', function() {
+    var tasks = [
+      'lint',
+      'flowbin:check',
+      'build-tests',
+      'mochaTest:unit',
+      'mochaTest:functional',
+    ];
 
-  grunt.registerTask('test-appveyor', [
-    'build-tests',
-    'mochaTest:unit',
-    'mochaTest:functional',
-  ]);
+    // TODO: enable the flowbin:check task on AppVeyor (mozilla/web-ext#773)
+    if (process.env.APPVEYOR) {
+      tasks = tasks.filter((t) => t !== 'flowbin:check');
+      grunt.log.writeln('flowbin:check task skipped because of $APPVEYOR');
+    }
+
+    grunt.task.run(tasks);
+  });
 
   grunt.registerTask('develop', [
     'flowbin:start',
