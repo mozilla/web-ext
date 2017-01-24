@@ -24,21 +24,21 @@ function makeArgv({
   globalOpt,
 }) {
   const program = new Program(userCmd);
+
   if (globalOpt) {
     program.setGlobalOptions(globalOpt);
   }
   if (commandOpt) {
     program.command(command, commandDesc, commandExecutor, commandOpt);
   }
-
-  return program.yargs.exitProcess(false).argv;
+  return program;
 }
 
 describe('config', () => {
   describe('applyConfigToArgv', () => {
     it('overrides the default value with a configured value', () => {
 
-      const argv = makeArgv({
+      const program = makeArgv({
         globalOpt: {
           'source-dir': {
             requiresArg: true,
@@ -47,6 +47,7 @@ describe('config', () => {
           },
         },
       });
+      const argv = program.yargs.exitProcess(false).argv;
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
@@ -60,7 +61,7 @@ describe('config', () => {
     it('preserves a string option value on the command line', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
 
-      const argv = makeArgv({
+      const program = makeArgv({
         userCmd: ['fakecommand', '--source-dir', cmdLineSrcDir],
         globalOpt: {
           'source-dir': {
@@ -70,13 +71,35 @@ describe('config', () => {
           },
         },
       });
-
+      const argv = program.yargs.exitProcess(false).argv;
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
       const newArgv = applyConfigToArgv({argv, configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
+
+    it('overrides default value in option definition by configured value',
+      () => {
+        const program = makeArgv({
+          userCmd: ['fakecommand'],
+          globalOpt: {
+            'source-dir': {
+              requiresArg: true,
+              type: 'string',
+              demand: false,
+              default: 'default/value/option/definition',
+            },
+          },
+        });
+        const argv = program.yargs.exitProcess(false).argv;
+        const configObject = {
+          sourceDir: '/configured/source/dir',
+        };
+        const defaultValues = program.defaultValues;
+        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+        assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
+      });
   });
 
   describe('loadJSConfigFile', () => {
