@@ -2,7 +2,7 @@
 import path from 'path';
 import {fs} from 'mz';
 import defaultAddonSigner from 'sign-addon';
-import {httpFetchFile} from '../util/net';
+import rp from 'request-promise';
 import url from 'url';
 
 import defaultBuilder from './build';
@@ -114,7 +114,7 @@ export default function sign(
       }
 
       // note that we assign an empty object instead of leaving the variable
-      // undefined because of a problem with flow.
+      // undefined because of a problem with flow, see
       let oldUpdateManifestData = {
         addons: {},
       };
@@ -175,7 +175,6 @@ export default function sign(
 async function fetchUpdateManifest(manifestData: Object)
 : Promise<UpdateManifest> {
   let oldUpdateManifest;
-  let statusCode;
 
   let parsed = url.parse(manifestData.applications.gecko.update_url);
   let updateManifestFileName = '';
@@ -187,13 +186,16 @@ async function fetchUpdateManifest(manifestData: Object)
   }
 
   try {
-    [oldUpdateManifest, statusCode] = await httpFetchFile(
-      manifestData.applications.gecko.update_url);
-    if (statusCode < 200 || statusCode > 290) {
+    let response = await rp(manifestData.applications.gecko.update_url, {
+      resolveWithFullResponse: true,
+    });
+    if (response.statusCode < 200 || response.statusCode > 290) {
       throw new WebExtError(
         `Failed to retrieve ${updateManifestFileName}\n
-http statusCode error, server responded with: ${statusCode}`);
+http statusCode error, server responded with: ${response.statusCode}`);
     }
+
+    oldUpdateManifest = response.body;
   } catch (error) {
     throw new WebExtError(
       `Was unable to download ${updateManifestFileName}\nerror is: ${error}`);
