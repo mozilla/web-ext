@@ -39,6 +39,7 @@ module.exports = function(grunt) {
       'mochaTest:functional',
     ];
 
+    // TODO: enable the flowbin:check task on AppVeyor (mozilla/web-ext#773)
     if (process.env.APPVEYOR) {
       tasks = tasks.filter((t) => t !== 'flowbin:check');
       grunt.log.writeln('flowbin:check task skipped because of $APPVEYOR');
