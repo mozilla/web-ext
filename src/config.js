@@ -25,6 +25,12 @@ export function applyConfigToArgv({
   defaultValues = {},
 }: ApplyConfigToArgvParams): Object {
   for (const option in configObject) {
+    if (argv[option] && defaultValues[option]) {
+      const wasValueSetOnCLI = argv[option] !== defaultValues[option];
+      if (wasValueSetOnCLI) {
+        continue;
+      }
+    }
     if (!argv.hasOwnProperty(option) || defaultValues[option]) {
       argv[option] = configObject[option];
     }

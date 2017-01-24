@@ -58,7 +58,7 @@ describe('config', () => {
       assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
     });
 
-    it('preserves a string option value on the command line', () => {
+    it('preserves a string value on the command line over configured', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
 
       const program = makeArgv({
@@ -79,27 +79,48 @@ describe('config', () => {
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
-    it('overrides default value in option definition by configured value',
-      () => {
-        const program = makeArgv({
-          userCmd: ['fakecommand'],
-          globalOpt: {
-            'source-dir': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-              default: 'default/value/option/definition',
-            },
+    it('preserves configured value over default', () => {
+      const program = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'default/value/option/definition',
           },
-        });
-        const argv = program.yargs.exitProcess(false).argv;
-        const configObject = {
-          sourceDir: '/configured/source/dir',
-        };
-        const defaultValues = program.defaultValues;
-        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-        assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
+        },
       });
+      const argv = program.yargs.exitProcess(false).argv;
+      const configObject = {
+        sourceDir: '/configured/source/dir',
+      };
+      const defaultValues = program.defaultValues;
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
+    });
+
+    it('preserves a string value on the command line over all others', () => {
+      const cmdLineSrcDir = '/user/specified/source/dir/';
+      const program = makeArgv({
+        userCmd: ['fakecommand', '--sourceDir', cmdLineSrcDir],
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'default/value/option/definition',
+          },
+        },
+      });
+      const argv = program.yargs.exitProcess(false).argv;
+      const configObject = {
+        sourceDir: '/configured/source/dir',
+      };
+      const defaultValues = program.defaultValues;
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
+    });
   });
 
   describe('loadJSConfigFile', () => {
