@@ -11,11 +11,11 @@ const log = createLogger(__filename);
 type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
-  defaultValues?: Object,
+  defaultValues: Object,
 |};
 
 type ParseConfigParams = {|
-  argv: Object,
+  sourceDir: string,
   configFileName: string,
 |};
 
@@ -39,12 +39,12 @@ export function applyConfigToArgv({
 }
 
 export function parseConfig({
-  argv,
+  sourceDir,
   configFileName,
 }: ParseConfigParams) {
   let configObject;
   if (configFileName) {
-    const configFilePath = path.join(`/${argv.sourceDir}`, configFileName);
+    const configFilePath = path.join(`/${sourceDir}`, configFileName);
     configObject = loadJSConfigFile(configFilePath);
   }
   return configObject;
