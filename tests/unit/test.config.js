@@ -38,23 +38,6 @@ function makeArgv({
 
 describe('config', () => {
   describe('applyConfigToArgv', () => {
-    it('overrides the default value with a configured value', () => {
-
-      const {argv, defaultValues} = makeArgv({
-        globalOpt: {
-          'source-dir': {
-            requiresArg: true,
-            type: 'string',
-            demand: false,
-          },
-        },
-      });
-      const configObject = {
-        sourceDir: '/configured/source/dir',
-      };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-      assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
-    });
 
     it('preserves a string value on the command line over configured', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
@@ -131,7 +114,7 @@ describe('config', () => {
         foo: '/configured/foo',
       };
       const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-      assert.strictEqual(newArgv.sourceDir, argv.sourceDir);
+      assert.strictEqual(newArgv.sourceDir, 'default/value/option/definition');
     });
 
     it('preserves value on the command line if not in config', () => {

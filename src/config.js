@@ -24,18 +24,20 @@ export function applyConfigToArgv({
   configObject,
   defaultValues = {},
 }: ApplyConfigToArgvParams): Object {
+  const newArgv = {...argv};
   for (const option in configObject) {
-    if (argv[option] && defaultValues[option]) {
-      const wasValueSetOnCLI = argv[option] !== defaultValues[option];
-      if (wasValueSetOnCLI) {
-        continue;
-      }
+    const wasValueSetOnCLI = argv[option] && argv[option]
+                            !== defaultValues[option];
+    if (wasValueSetOnCLI) {
+      continue;
     }
     if (!argv.hasOwnProperty(option) || defaultValues[option]) {
-      argv[option] = configObject[option];
+      newArgv[option] = configObject[option];
+      log.debug(`Favoring configuration: ${option}=${configObject[option]}` +
+      `over CLI: ${option}=${argv[option]}`);
     }
   }
-  return argv;
+  return newArgv;
 }
 
 export function parseConfig({
@@ -56,7 +58,7 @@ export function loadJSConfigFile(filePath: string) {
     return requireUncached(filePath);
   } catch (error) {
     log.debug('Handling error:', error);
-    throw new UsageError
-        (`Cannot read config file: ${filePath}\nError: ${error.message}`);
+    throw new UsageError(
+        `Cannot read config file: ${filePath}\nError: ${error.message}`);
   }
 }
