@@ -43,8 +43,8 @@ export function applyConfigToArgv({
 export function parseConfig({
   sourceDir,
   configFileName,
-}: ParseConfigParams) {
-  let configObject;
+}: ParseConfigParams): Object {
+  let configObject = {};
   if (configFileName) {
     const configFilePath = path.join(`/${sourceDir}`, configFileName);
     configObject = loadJSConfigFile(configFilePath);

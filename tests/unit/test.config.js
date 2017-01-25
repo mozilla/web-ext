@@ -1,3 +1,4 @@
+/* @flow */
 import path from 'path';
 
 import {assert} from 'chai';
@@ -14,6 +15,15 @@ import {
 import {withTempDir} from '../../src/util/temp-dir';
 import {UsageError} from '../../src/errors';
 
+type MakeArgvParams = {
+  userCmd: Array<string>,
+  command?: string,
+  commandDesc?: string,
+  commandExecutor?: Function,
+  commandOpt?: Object,
+  globalOpt: Object,
+}
+
 function makeArgv({
   userCmd = [],
   command = 'fakecommand',
@@ -21,7 +31,7 @@ function makeArgv({
   commandExecutor = sinon.stub(),
   commandOpt,
   globalOpt,
-}) {
+}: MakeArgvParams) {
   const program = new Program(userCmd);
 
   if (globalOpt) {
