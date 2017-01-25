@@ -114,6 +114,45 @@ describe('config', () => {
       const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
+
+    it('preserves default value of option if not in config', () => {
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'default/value/option/definition',
+          },
+        },
+      });
+      const configObject = {
+        foo: '/configured/foo',
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, argv.sourceDir);
+    });
+
+    it('preserves value on the command line if not in config', () => {
+      const cmdLineSrcDir = '/user/specified/source/dir/';
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand', '--sourceDir', cmdLineSrcDir],
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'default/value/option/definition',
+          },
+        },
+      });
+      const configObject = {
+        foo: '/configured/foo',
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
+    });
   });
 
   describe('loadJSConfigFile', () => {
