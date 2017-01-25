@@ -18,13 +18,15 @@ export async function prepareArtifactsDir(
       throw new UsageError(
         `"${artifactsDir}" exists and it is not a directory.`);
     }
-    // Check that we can write in the artifacts dir.
+    // If the artifactsDir already exists, check that we have the write permissions on it.
     try {
       await fs.access(artifactsDir, fs.W_OK);
     } catch (accessErr) {
       if (isErrorWithCode('EACCES', accessErr)) {
         throw new UsageError(
           `"${artifactsDir}" exists but the user lacks permissions on it.`);
+      } else {
+        throw accessErr;
       }
     }
   } catch (error) {
@@ -33,7 +35,7 @@ export async function prepareArtifactsDir(
       throw new UsageError(
         `Cannot access "${artifactsDir}", user lacks permissions.`);
     } else if (isErrorWithCode('ENOENT', error)) {
-      // Handle errors when the artifactsDir doesn't exists yet.
+      // Create the artifact dir if it doesn't exist yet.
       try {
         log.debug(`Creating artifacts directory: ${artifactsDir}`);
         await asyncMkdirp(artifactsDir);
@@ -42,8 +44,6 @@ export async function prepareArtifactsDir(
           // Handle errors when the artifactsDir cannot be created for lack of permissions.
           throw new UsageError(
             `Cannot create "${artifactsDir}", user lacks permissions.`);
-        } else {
-          throw mkdirErr;
         }
       }
     } else {

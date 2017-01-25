@@ -55,9 +55,13 @@ describe('prepareArtifactsDir', () => {
     }
   ));
 
-  it('throws error when checking the directory if lacks writing permissions',
+  it('throws an UsageError when it lacks permissions to stat the directory',
     () => withTempDir(
-    (tmpDir) => {
+    function(tmpDir) {
+      if (process.platform === 'win32') {
+        this.skip();
+        return;
+      }
       const tmpPath = path.join(tmpDir.path(), 'build');
       return fs.mkdir(tmpPath, '0622').then(() => {
         const artifactsDir = path.join(tmpPath, 'artifacts');
@@ -72,9 +76,13 @@ describe('prepareArtifactsDir', () => {
 
   it('throws error when directory exists but lacks writing permissions',
     () => withTempDir(
-    (tmpDir) => {
+    function(tmpDir) {
+      if (process.platform === 'win32') {
+        this.skip();
+        return;
+      }
       const artifactsDir = path.join(tmpDir.path(), 'dir-nowrite');
-      return fs.mkdir(artifactsDir, '555').then(() => {
+      return fs.mkdir(artifactsDir, '0555').then(() => {
         return prepareArtifactsDir(artifactsDir)
           .then(makeSureItFails())
           .catch(onlyInstancesOf(UsageError, (error) => {
@@ -86,10 +94,14 @@ describe('prepareArtifactsDir', () => {
 
   it('throws error when creating a folder if lacks writing permissions',
     () => withTempDir(
-    (tmpDir) => {
+    function(tmpDir) {
+      if (process.platform === 'win32') {
+        this.skip();
+        return;
+      }
       const parentDir = path.join(tmpDir.path(), 'dir-nowrite');
       const artifactsDir = path.join(parentDir, 'artifacts');
-      return fs.mkdir(parentDir, '555').then(() => {
+      return fs.mkdir(parentDir, '0555').then(() => {
         return prepareArtifactsDir(artifactsDir)
           .then(makeSureItFails())
           .catch(onlyInstancesOf(UsageError, (error) => {
