@@ -11,7 +11,6 @@ import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
-import {applyConfigToArgv, parseConfig} from './config';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -129,9 +128,6 @@ export class Program {
     argv.customPrefs = argv.pref;
 
     const runCommand = this.commands[cmd];
-    const configFileName = argv.config;
-    const configObject = parseConfig(argv, configFileName);
-    const newArgv = applyConfigToArgv(argv, configObject, this.defaultValues);
     if (argv.verbose) {
       logStream.makeVerbose();
       log.info('Version:', getVersion(absolutePackageDir));
@@ -149,7 +145,7 @@ export class Program {
           version: getVersion(absolutePackageDir),
         });
       }
-      await runCommand({...newArgv, ...argv});
+      await runCommand(argv);
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -253,13 +249,6 @@ Example: $0 --help run.
       alias: 'v',
       describe: 'Show verbose output',
       type: 'boolean',
-    },
-    'config': {
-      alias: 'c',
-      describe: 'Supply a custom configuration file',
-      type: 'string',
-      requiresArg: true,
-      demand: false,
     },
   });
 
