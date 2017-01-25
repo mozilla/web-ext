@@ -9,20 +9,19 @@ import {fs} from 'mz';
 import {Program} from '../../src/program';
 import {
   applyConfigToArgv,
-  parseConfig,
   loadJSConfigFile,
 } from '../../src/config';
 import {withTempDir} from '../../src/util/temp-dir';
 import {UsageError} from '../../src/errors';
 
-type MakeArgvParams = {
+type MakeArgvParams = {|
   userCmd: Array<string>,
   command?: string,
   commandDesc?: string,
   commandExecutor?: Function,
   commandOpt?: Object,
-  globalOpt: Object,
-}
+  globalOpt?: Object,
+|}
 
 function makeArgv({
   userCmd = [],
@@ -157,20 +156,16 @@ describe('config', () => {
           }, UsageError, /Cannot read config file/);
         });
     });
-  });
 
-  describe('parseConfig', () => {
     it('parses the configuration file correctly', () => {
       return withTempDir(
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
-          const configFileName = 'config.js';
           fs.writeFileSync(configFilePath,
-          `module.exports = {
-            sourceDir: 'path/to/fake/source/dir',
-          };`);
-          const sourceDir = tmpDir.path();
-          const configObj = parseConfig({sourceDir, configFileName});
+            `module.exports = {
+              sourceDir: 'path/to/fake/source/dir',
+            };`);
+          const configObj = loadJSConfigFile(configFilePath);
           assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
         });
     });

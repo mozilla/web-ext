@@ -123,9 +123,12 @@ export class Program {
 
     const argv = this.yargs.argv;
     const cmd = argv._[0];
+
     // Command line option (pref) renamed for internal use (customPref).
     argv.customPrefs = argv.pref;
+
     const runCommand = this.commands[cmd];
+
     if (argv.verbose) {
       logStream.makeVerbose();
       log.info('Version:', getVersion(absolutePackageDir));
@@ -143,7 +146,9 @@ export class Program {
           version: getVersion(absolutePackageDir),
         });
       }
+
       await runCommand(argv);
+
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
