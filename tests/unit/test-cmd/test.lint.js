@@ -126,7 +126,7 @@ describe('lint', () => {
     });
   });
 
-  it('ensure linter build fileFilter and shouldScanFile correctly', () => {
+  it('configures and passes a fileFilter to the linter', () => {
     const fileFilter = {wantFile: sinon.spy(() => true)};
     const createFileFilter = sinon.spy(() => fileFilter);
     const {lint, createLinter} = setUp({createFileFilter});

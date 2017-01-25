@@ -86,6 +86,10 @@ export class FileFilter {
   /*
    * Returns true if the file is wanted.
    *
+   * If path does not start with a slash, it will be treated as a path
+   * relative to sourceDir when matching it against all configured
+   * ignore-patterns.
+   *
    * This is called by zipdir as wantFile(path, stat) for each
    * file in the folder that is being archived.
    */
@@ -93,7 +97,7 @@ export class FileFilter {
     path = this.resolve(path);
     for (const test of this.filesToIgnore) {
       if (minimatch(path, test)) {
-        log.debug(`FileFilter: ignoring file ${path}`);
+        log.debug(`FileFilter: ignoring file ${path} (it matched ${test})`);
         return false;
       }
     }

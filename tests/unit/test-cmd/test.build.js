@@ -49,7 +49,7 @@ describe('build', () => {
     );
   });
 
-  it('configure a build', () => {
+  it('configures a build', () => {
     const packageCreator = sinon.spy(
       () => ({extensionPath: 'extension/path'})
     );
