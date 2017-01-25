@@ -68,7 +68,7 @@ export class FileFilter {
    *  Resolve relative path to absolute path if sourceDir is setted.
    */
   resolve(file: string): string {
-    if (this.sourceDir) {
+    if (typeof this.sourceDir === 'string') {
       log.debug(
         `Adding sourceDir ${this.sourceDir} to the beginning of file ${file}`
       );
