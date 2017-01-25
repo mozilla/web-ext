@@ -35,13 +35,21 @@ export function applyConfigToArgv({
   return newArgv;
 }
 
-export function loadJSConfigFile(filePath: string) {
+export function loadJSConfigFile(filePath: string): Object {
   log.debug(`Loading JS config file: ${filePath}`);
+  let configObj;
   try {
-    return requireUncached(filePath);
+    configObj = requireUncached(filePath);
   } catch (error) {
     log.debug('Handling error:', error);
     throw new UsageError(
         `Cannot read config file: ${filePath}\nError: ${error.message}`);
   }
+  console.log(typeof(configObj));
+  console.log(configObj);
+  if (typeof(configObj) !== 'object') {
+    throw new UsageError(
+      `Config file does not export anything: ${filePath}`);
+  }
+  return configObj;
 }

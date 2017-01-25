@@ -157,6 +157,20 @@ describe('config', () => {
         });
     });
 
+    it('throws an error if the config file has syntax errors', () => {
+      return withTempDir (
+        (tmpDir) => {
+          const configFilePath = path.join(tmpDir.path(), 'config.js');
+          fs.writeFileSync(configFilePath,
+            `module.exports = {
+                sourceDir 'path/to/fake/source/dir',
+              };`);
+          assert.throws(() => {
+            loadJSConfigFile(configFilePath);
+          }, UsageError);
+        });
+    });
+
     it('parses the configuration file correctly', () => {
       return withTempDir(
         (tmpDir) => {
