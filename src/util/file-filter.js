@@ -33,7 +33,7 @@ export type FileFilterOptions = {|
  */
 export class FileFilter {
   filesToIgnore: Array<string>;
-  sourceDir: string | typeof undefined;
+  sourceDir: ?string;
 
   constructor({
     filesToIgnore = [
@@ -68,11 +68,13 @@ export class FileFilter {
    *  Resolve relative path to absolute path if sourceDir is setted.
    */
   resolve(file: string): string {
-    if (typeof this.sourceDir === 'string') {
+    if (this.sourceDir) {
+      const resolvedPath = path.resolve(this.sourceDir, file);
       log.debug(
-        `Adding sourceDir ${this.sourceDir} to the beginning of file ${file}`
+        `Resolved path ${file} with sourceDir ${this.sourceDir || ''} ` +
+        `to ${resolvedPath}`
       );
-      return path.resolve(this.sourceDir, file);
+      return resolvedPath;
     }
     return normalizeResolve(file);
   }
