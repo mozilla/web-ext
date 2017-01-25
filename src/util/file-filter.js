@@ -33,7 +33,7 @@ export type FileFilterOptions = {|
  */
 export class FileFilter {
   filesToIgnore: Array<string>;
-  sourceDir: string;
+  sourceDir: string | typeof undefined;
 
   constructor({
     filesToIgnore = [
@@ -45,7 +45,7 @@ export class FileFilter {
       '**/node_modules/**/*',
     ],
     ignoreFiles = [],
-    sourceDir = '',
+    sourceDir,
     artifactsDir,
   }: FileFilterOptions = {}) {
 
@@ -59,7 +59,7 @@ export class FileFilter {
     if (artifactsDir) {
       this.addToIgnoreList([
         artifactsDir,
-        path.join(artifactsDir, '**/*'),
+        path.join(artifactsDir, '**', '*'),
       ]);
     }
   }
@@ -69,6 +69,9 @@ export class FileFilter {
    */
   resolve(file: string): string {
     if (this.sourceDir) {
+      log.debug(
+        `Adding sourceDir ${this.sourceDir} to the beginning of file ${file}`
+      );
       return path.resolve(this.sourceDir, file);
     }
     return normalizeResolve(file);
@@ -107,8 +110,8 @@ export class FileFilter {
 
 // a helper function to make mocking easier
 
-export type FileFilterCreatorFn = typeof createFileFilter;
-
 export const createFileFilter = (
   (params: FileFilterOptions): FileFilter => new FileFilter(params)
 );
+
+export type FileFilterCreatorFn = typeof createFileFilter;

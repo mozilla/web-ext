@@ -31,6 +31,10 @@ describe('util/file-filter', () => {
       assert.equal(defaultFilter.wantFile('.whatever'), false);
     });
 
+    it('ignores subdirectories within hidden folders', () => {
+      assert.equal(defaultFilter.wantFile('.git/some/other/stuff'), false);
+    });
+
     it('ignores ZPI paths', () => {
       assert.equal(defaultFilter.wantFile('path/to/some.zip'), false);
     });
@@ -41,6 +45,11 @@ describe('util/file-filter', () => {
 
     it('ignores node_modules by default', () => {
       assert.equal(defaultFilter.wantFile('path/to/node_modules'), false);
+    });
+
+    it('ignores module content within node_modules by default', () => {
+      assert.equal(defaultFilter.wantFile('node_modules/something/file.js'),
+                   false);
     });
 
   });
@@ -88,6 +97,8 @@ describe('util/file-filter', () => {
       assert.equal(filter.wantFile('/src/other/some.log'), false);
       assert.equal(filter.wantFile('/src/ignore/dir/content'), true);
       assert.equal(filter.wantFile('/src/ignore/dir/content/file.js'), false);
+      // This file is not ignored because it's not relative to /src:
+      assert.equal(filter.wantFile('/some.js'), true);
     });
 
   });
