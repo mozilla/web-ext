@@ -305,14 +305,16 @@ describe('run', () => {
       const createFileFilter = sinon.spy(() => fileFilter);
       const {config, createWatcher} = prepare();
       createWatcher({createFileFilter});
-      assert(createFileFilter.calledWithMatch({
+      assert.ok(createFileFilter.called);
+      assert.deepEqual(createFileFilter.firstCall.args[0], {
         sourceDir: config.sourceDir,
         artifactsDir: config.artifactsDir,
         ignoreFiles: config.ignoreFiles,
-      }));
+      });
       const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
       shouldWatchFile('path/to/file');
-      assert(fileFilter.wantFile.calledWith('path/to/file'));
+      assert.ok(fileFilter.wantFile.called);
+      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
     });
 
     it('returns a watcher', () => {

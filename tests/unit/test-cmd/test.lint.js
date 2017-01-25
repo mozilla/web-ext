@@ -136,11 +136,14 @@ describe('lint', () => {
       ignoreFiles: ['file1', '**/file2'],
     };
     return lint(params).then(() => {
-      assert(createFileFilter.calledWithMatch(params));
-      assert(createLinter.called);
+      assert.ok(createFileFilter.called);
+      assert.deepEqual(createFileFilter.firstCall.args[0], params);
+
+      assert.ok(createLinter.called);
       const {shouldScanFile} = createLinter.firstCall.args[0].config;
       shouldScanFile('path/to/file');
-      assert(fileFilter.wantFile.calledWith('path/to/file'));
+      assert.ok(fileFilter.wantFile.called);
+      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
     });
   });
 
