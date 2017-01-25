@@ -37,19 +37,11 @@ export function applyConfigToArgv({
 
 export function loadJSConfigFile(filePath: string): Object {
   log.debug(`Loading JS config file: ${filePath}`);
-  let configObj;
   try {
-    configObj = requireUncached(filePath);
+    return requireUncached(filePath);
   } catch (error) {
     log.debug('Handling error:', error);
     throw new UsageError(
         `Cannot read config file: ${filePath}\nError: ${error.message}`);
   }
-  console.log(typeof(configObj));
-  console.log(configObj);
-  if (typeof(configObj) !== 'object') {
-    throw new UsageError(
-      `Config file does not export anything: ${filePath}`);
-  }
-  return configObj;
 }
