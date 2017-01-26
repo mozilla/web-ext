@@ -38,11 +38,11 @@ describe('firefox', () => {
     };
 
     function createFakeFxRunner(firefoxOverrides = {}) {
-      const process = {
+      const fxProcess = {
         ...deepcopy(fakeFirefoxProcess),
         ...firefoxOverrides,
       };
-      return sinon.spy(() => Promise.resolve({args: [], process}));
+      return sinon.spy(() => Promise.resolve({args: [], process: fxProcess}));
     }
 
     // TODO: This object should accept dynamic properties since those are passed to firefox.run()

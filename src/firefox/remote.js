@@ -192,6 +192,7 @@ export type ConnectOptions = {|
 // NOTE: this fixes an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declaring the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
+// eslint-disable-next-line no-shadow
 declare function exports(
   port: number, options?: ConnectOptions
 ): Promise<RemoteFirefox>;
