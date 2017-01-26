@@ -59,6 +59,7 @@ describe('prepareArtifactsDir', () => {
     () => withTempDir(
     function(tmpDir) {
       if (process.platform === 'win32') {
+        // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
         this.skip();
         return;
       }
@@ -78,6 +79,7 @@ describe('prepareArtifactsDir', () => {
     () => withTempDir(
     function(tmpDir) {
       if (process.platform === 'win32') {
+        // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
         this.skip();
         return;
       }
@@ -96,6 +98,7 @@ describe('prepareArtifactsDir', () => {
     () => withTempDir(
     function(tmpDir) {
       if (process.platform === 'win32') {
+        // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
         this.skip();
         return;
       }

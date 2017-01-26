@@ -10,7 +10,7 @@ const log = createLogger(__filename);
 const asyncMkdirp = promisify(mkdirp);
 
 export async function prepareArtifactsDir(
-  artifactsDir: string,
+  artifactsDir: string
 ): Promise<string> {
   try {
     const stats = await fs.stat(artifactsDir);
