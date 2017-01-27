@@ -18,8 +18,14 @@ export async function prepareArtifactsDir(
     }
   } catch (error) {
     if (isErrorWithCode('ENOENT', error)) {
-      log.debug(`Creating artifacts directory: ${artifactsDir}`);
-      await fs.mkdir(artifactsDir);
+      await fs.mkdir(artifactsDir, (error) => {
+        if (error) {
+          throw new UsageError(
+            `--artifacts-dir=${artifactsDir} (lack permissions)`);
+        } else {
+          log.debug(`Creating artifacts directory: ${artifactsDir}`);
+        }
+      });
     } else {
       throw error;
     }
