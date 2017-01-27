@@ -185,5 +185,14 @@ describe('config', () => {
           assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
         });
     });
+
+    it('does not throw an error for an empty config', () => {
+      return withTempDir(
+        (tmpDir) => {
+          const configFilePath = path.join(tmpDir.path(), 'config.js');
+          fs.writeFileSync(configFilePath, '{};');
+          loadJSConfigFile(configFilePath);
+        });
+    });
   });
 });
