@@ -145,6 +145,57 @@ describe('config', () => {
       const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
+
+    it('uses a configured boolean value over an implicit default', () => {
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'overwrite-files': {
+            type: 'boolean',
+            // No default is set here explicitly but yargs will set it to
+            // false implicitly.
+          },
+        },
+      });
+      const configObject = {
+        overwriteFiles: true,
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.overwriteFiles, true);
+    });
+
+    it('uses a configured boolean value over an explicit default', () => {
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'overwrite-files': {
+            type: 'boolean',
+            default: false,
+          },
+        },
+      });
+      const configObject = {
+        overwriteFiles: true,
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.overwriteFiles, true);
+    });
+
+    it('uses a CLI boolean value over a configured one', () => {
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand', '--overwrite-files'],
+        globalOpt: {
+          'overwrite-files': {
+            type: 'boolean',
+          },
+        },
+      });
+      const configObject = {
+        overwriteFiles: false,
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.overwriteFiles, true);
+    });
   });
 
   describe('loadJSConfigFile', () => {

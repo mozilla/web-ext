@@ -26,7 +26,7 @@ export function applyConfigToArgv({
         `configuration: ${option}=${configObject[option]}`);
       continue;
     }
-    if (!argv.hasOwnProperty(option) || defaultValues[option]) {
+    if (!newArgv.hasOwnProperty(option) || defaultValues[option]) {
       newArgv[option] = configObject[option];
       log.debug(`Favoring configuration: ${option}=${configObject[option]} ` +
         `over CLI: ${option}=${argv[option]}`);

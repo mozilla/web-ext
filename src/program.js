@@ -94,8 +94,11 @@ export class Program {
     // with the `global` flag so this makes sure every option has it.
     this.defaultValues = {};
     Object.keys(options).forEach((key) => {
+      const camelCasedKey = camelCase(key);
+      if (options[key].type === 'boolean') {
+        this.defaultValues[camelCasedKey] = 'defaultValueExists';
+      }
       if (options[key].default) {
-        const camelCasedKey = camelCase(key);
         this.defaultValues[camelCasedKey] = options[key].default;
       }
       options[key].global = true;
