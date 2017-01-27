@@ -26,7 +26,9 @@ export function applyConfigToArgv({
         `configuration: ${option}=${configObject[option]}`);
       continue;
     }
-    if (!newArgv.hasOwnProperty(option) || defaultValues[option]) {
+
+    if (!newArgv.hasOwnProperty(option) || defaultValues[option] ||
+      newArgv[option] === false) {
       newArgv[option] = configObject[option];
       log.debug(`Favoring configuration: ${option}=${configObject[option]} ` +
         `over CLI: ${option}=${argv[option]}`);
@@ -46,7 +48,7 @@ export function loadJSConfigFile(filePath: string): Object {
         `Cannot read config file: ${filePath}\nError: ${error.message}`);
   }
   if (Object.keys(configObject).length === 0) {
-    log.debug('Config file ${filePath} did not define any options. ' +
+    log.debug(`Config file ${filePath} did not define any options. ` +
       'Did you set module.exports = {...}?');
   }
   return configObject;

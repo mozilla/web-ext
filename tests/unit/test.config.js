@@ -24,7 +24,7 @@ type MakeArgvParams = {|
 |}
 
 function makeArgv({
-  userCmd = [],
+  userCmd = ['fakecommand'],
   command = 'fakecommand',
   commandDesc = 'this is a fake command',
   commandExecutor = sinon.stub(),
@@ -70,7 +70,6 @@ describe('config', () => {
 
     it('preserves configured value over default', () => {
       const {argv, defaultValues} = makeArgv({
-        userCmd: ['fakecommand'],
         globalOpt: {
           'source-dir': {
             requiresArg: true,
@@ -109,7 +108,6 @@ describe('config', () => {
 
     it('preserves default value of option if not in config', () => {
       const {argv, defaultValues} = makeArgv({
-        userCmd: ['fakecommand'],
         globalOpt: {
           'source-dir': {
             requiresArg: true,
@@ -148,7 +146,6 @@ describe('config', () => {
 
     it('uses a configured boolean value over an implicit default', () => {
       const {argv, defaultValues} = makeArgv({
-        userCmd: ['fakecommand'],
         globalOpt: {
           'overwrite-files': {
             type: 'boolean',
@@ -166,7 +163,6 @@ describe('config', () => {
 
     it('uses a configured boolean value over an explicit default', () => {
       const {argv, defaultValues} = makeArgv({
-        userCmd: ['fakecommand'],
         globalOpt: {
           'overwrite-files': {
             type: 'boolean',
