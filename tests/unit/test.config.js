@@ -15,7 +15,7 @@ import {withTempDir} from '../../src/util/temp-dir';
 import {UsageError} from '../../src/errors';
 
 type MakeArgvParams = {|
-  userCmd: Array<string>,
+  userCmd?: Array<string>,
   command?: string,
   commandDesc?: string,
   commandExecutor?: Function,
@@ -152,7 +152,8 @@ describe('config', () => {
       return withTempDir (
         (tmpDir) => {
           assert.throws(() => {
-            loadJSConfigFile(tmpDir.path());
+            loadJSConfigFile((path.join(tmpDir.path(),
+              'non-existant-config.js')));
           }, UsageError, /Cannot read config file/);
         });
     });
@@ -162,7 +163,8 @@ describe('config', () => {
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
           fs.writeFileSync(configFilePath,
-            `module.exports = {
+            // missing = in two places
+            `module.exports {
                 sourceDir 'path/to/fake/source/dir',
               };`);
           assert.throws(() => {
