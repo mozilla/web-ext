@@ -57,62 +57,62 @@ describe('prepareArtifactsDir', () => {
 
   it('throws an UsageError when it lacks permissions to stat the directory',
     () => withTempDir(
-    function(tmpDir) {
-      if (process.platform === 'win32') {
-        // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
-        this.skip();
-        return;
+      function(tmpDir) {
+        if (process.platform === 'win32') {
+          // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
+          this.skip();
+          return;
+        }
+        const tmpPath = path.join(tmpDir.path(), 'build');
+        return fs.mkdir(tmpPath, '0622').then(() => {
+          const artifactsDir = path.join(tmpPath, 'artifacts');
+          return prepareArtifactsDir(artifactsDir)
+            .then(makeSureItFails())
+            .catch(onlyInstancesOf(UsageError, (error) => {
+              assert.match(error.message, /Cannot access.*lacks permissions/);
+            }));
+        });
       }
-      const tmpPath = path.join(tmpDir.path(), 'build');
-      return fs.mkdir(tmpPath, '0622').then(() => {
-        const artifactsDir = path.join(tmpPath, 'artifacts');
-        return prepareArtifactsDir(artifactsDir)
-          .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
-            assert.match(error.message, /Cannot access.*lacks permissions/);
-          }));
-      });
-    }
   ));
 
   it('throws error when directory exists but lacks writing permissions',
     () => withTempDir(
-    function(tmpDir) {
-      if (process.platform === 'win32') {
-        // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
-        this.skip();
-        return;
+      function(tmpDir) {
+        if (process.platform === 'win32') {
+          // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
+          this.skip();
+          return;
+        }
+        const artifactsDir = path.join(tmpDir.path(), 'dir-nowrite');
+        return fs.mkdir(artifactsDir, '0555').then(() => {
+          return prepareArtifactsDir(artifactsDir)
+            .then(makeSureItFails())
+            .catch(onlyInstancesOf(UsageError, (error) => {
+              assert.match(error.message, /exists.*lacks permissions/);
+            }));
+        });
       }
-      const artifactsDir = path.join(tmpDir.path(), 'dir-nowrite');
-      return fs.mkdir(artifactsDir, '0555').then(() => {
-        return prepareArtifactsDir(artifactsDir)
-          .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
-            assert.match(error.message, /exists.*lacks permissions/);
-          }));
-      });
-    }
   ));
 
   it('throws error when creating a folder if lacks writing permissions',
     () => withTempDir(
-    function(tmpDir) {
-      if (process.platform === 'win32') {
-        // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
-        this.skip();
-        return;
+      function(tmpDir) {
+        if (process.platform === 'win32') {
+          // Skipped on windows because the mkdir permissions do not have any effect (web-ext#776)
+          this.skip();
+          return;
+        }
+        const parentDir = path.join(tmpDir.path(), 'dir-nowrite');
+        const artifactsDir = path.join(parentDir, 'artifacts');
+        return fs.mkdir(parentDir, '0555').then(() => {
+          return prepareArtifactsDir(artifactsDir)
+            .then(makeSureItFails())
+            .catch(onlyInstancesOf(UsageError, (error) => {
+              assert.match(error.message, /Cannot create.*lacks permissions/);
+            }));
+        });
       }
-      const parentDir = path.join(tmpDir.path(), 'dir-nowrite');
-      const artifactsDir = path.join(parentDir, 'artifacts');
-      return fs.mkdir(parentDir, '0555').then(() => {
-        return prepareArtifactsDir(artifactsDir)
-          .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
-            assert.match(error.message, /Cannot create.*lacks permissions/);
-          }));
-      });
-    }
- ));
+  ));
 
   it('creates the artifacts dir successfully if the parent dir does not exist',
     () => withTempDir(
