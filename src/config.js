@@ -30,7 +30,7 @@ export function applyConfigToArgv({
       continue;
     }
     // We want to include options of types string, boolean and number
-    if (argv[option] === 'undefined') {
+    if (argv[option] === undefined) {
       log.debug(`Favoring configuration: ${option}=${configObject[option]} ` +
         `over CLI: ${option}=${argv[option]}`);
       continue;

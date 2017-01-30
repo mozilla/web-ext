@@ -193,6 +193,23 @@ describe('config', () => {
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
+    it('uses CLI option over undefined configured option and default', () => {
+      const cmdLineSrcDir = '/user/specified/source/dir/';
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand', '--source-dir', cmdLineSrcDir],
+        globalOpt: {
+          'source-dir': {
+            type: 'string',
+          },
+        },
+      });
+      const configObject = {
+        foo: true,
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
+    });
+
     it('uses a configured number value over a falsey default', () => {
       const {argv, defaultValues} = makeArgv({
         userCmd: ['fakecommand'],
