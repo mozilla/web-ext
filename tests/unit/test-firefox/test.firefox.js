@@ -297,6 +297,46 @@ describe('firefox', () => {
 
   });
 
+  describe('useProfile', () => {
+
+    function withBaseProfile(callback) {
+      return withTempDir(
+        (tmpDir) => {
+          const baseProfile = new FirefoxProfile({
+            destinationDirectory: tmpDir.path(),
+          });
+          return callback(baseProfile);
+        }
+      );
+    }
+
+    it('resolves with a profile object', () => withBaseProfile(
+      (baseProfile) => {
+        return firefox.useProfile(baseProfile.path(),
+          {configureThisProfile: (profile) => Promise.resolve(profile)})
+          .then((profile) => {
+            assert.instanceOf(profile, FirefoxProfile);
+          });
+      }
+    ));
+
+    it('configures a profile', () => withBaseProfile(
+      (baseProfile) => {
+        const configureThisProfile =
+          sinon.spy((profile) => Promise.resolve(profile));
+        const app = 'fennec';
+        return firefox.useProfile(baseProfile.path(),
+          {app, configureThisProfile})
+          .then((profile) => {
+            assert.equal(configureThisProfile.called, true);
+            assert.equal(configureThisProfile.firstCall.args[0], profile);
+            assert.equal(configureThisProfile.firstCall.args[1].app, app);
+          });
+      }
+    ));
+
+  });
+
   describe('configureProfile', () => {
 
     function withTempProfile(callback) {

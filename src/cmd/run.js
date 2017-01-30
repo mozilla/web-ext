@@ -191,7 +191,7 @@ export type CmdRunOptions = {|
 export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
-    preInstall = false, noReload = false,
+    keepProfileChanges = false, preInstall = false, noReload = false,
     browserConsole = false, customPrefs, startUrl, ignoreFiles,
   }: CmdRunParams,
   {
@@ -336,11 +336,11 @@ export class ExtensionRunner {
     const {firefoxApp, profilePath, customPrefs, keepProfileChanges} = this;
     return new Promise((resolve) => {
       if (profilePath) {
-        log.debug(`Copying Firefox profile from ${profilePath}`);
         if (keepProfileChanges) {
-          log.info('YEAH');
-          resolve(firefoxApp.configureProfile(profilePath, {customPrefs}));
+          log.debug(`Using Firefox profile from ${profilePath}`);
+          resolve(firefoxApp.useProfile(profilePath, {customPrefs}));
         } else {
+          log.debug(`Copying Firefox profile from ${profilePath}`);
           resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
         }
       } else {

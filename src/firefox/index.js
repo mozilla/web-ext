@@ -227,6 +227,28 @@ export function configureProfile(
   return Promise.resolve(profile);
 }
 
+// UseProfile types and implementation.
+
+export type UseProfileParams = {
+  app?: PreferencesAppName,
+  configureThisProfile?: ConfigureProfileFn,
+  customPrefs?: FirefoxPreferences,
+};
+
+// Uses existing ptofile path to resolves with the profile object.
+
+export async function useProfile(
+  profilePath: string,
+  {
+    app,
+    configureThisProfile = configureProfile,
+    customPrefs = {},
+  }: UseProfileParams = {},
+): Promise<FirefoxProfile> {
+  const profile = new FirefoxProfile({destinationDirectory: profilePath});
+  return await configureThisProfile(profile, {app, customPrefs});
+}
+
 
 // createProfile types and implementation.
 
