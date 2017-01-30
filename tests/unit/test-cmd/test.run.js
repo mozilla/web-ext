@@ -36,6 +36,7 @@ describe('run', () => {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
+      keepProfileChanges: false,
     };
     const options = {
       firefoxApp: getFakeFirefox(),
