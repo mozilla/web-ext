@@ -24,7 +24,6 @@ export function applyConfigToArgv({
       typeof(newArgv[option]) === 'string') &&
       (argv[option] !== defaultValues[option]);
     if (wasValueSetOnCLI) {
-      console.log(typeof(argv[option]));
       log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
         `configuration: ${option}=${configObject[option]}`);
       continue;

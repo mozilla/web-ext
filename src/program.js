@@ -95,7 +95,11 @@ export class Program {
     this.defaultValues = {};
     Object.keys(options).forEach((key) => {
       const camelCasedKey = camelCase(key);
-      if (options[key].default) {
+      if (options[key].type === 'boolean') {
+        this.defaultValues[camelCasedKey] = false;
+      }
+      if (options[key].default || typeof(options[key].default) === 'number' ||
+        typeof(options[key].default) === 'boolean') {
         this.defaultValues[camelCasedKey] = options[key].default;
       }
       options[key].global = true;
