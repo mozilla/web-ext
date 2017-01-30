@@ -98,8 +98,7 @@ export class Program {
       if (options[key].type === 'boolean') {
         this.defaultValues[camelCasedKey] = false;
       }
-      if (options[key].default || typeof(options[key].default) === 'number' ||
-        typeof(options[key].default) === 'boolean') {
+      if (typeof(options[key].default) !== 'undefined') {
         this.defaultValues[camelCasedKey] = options[key].default;
       }
       options[key].global = true;
