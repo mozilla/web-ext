@@ -192,6 +192,40 @@ describe('config', () => {
       const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
+
+    it('uses a configured number value over a falsey default', () => {
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'number-of-retries': {
+            type: 'number',
+            default: 0,
+          },
+        },
+      });
+      const configObject = {
+        numberOfRetries: 1,
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.numberOfRetries, 1);
+    });
+
+    it('uses a falsey CLI number value over a configured one', () => {
+      const {argv, defaultValues} = makeArgv({
+        userCmd: ['fakecommand', '--number-of-retries=0'],
+        globalOpt: {
+          'number-of-retries': {
+            type: 'number',
+            default: 1,
+          },
+        },
+      });
+      const configObject = {
+        numberOfRetries: 1,
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.numberOfRetries, 0);
+    });
   });
 
   describe('loadJSConfigFile', () => {
