@@ -47,6 +47,8 @@ export async function prepareArtifactsDir(
           throw new UsageError(
             `Cannot create --artifacts-dir="${artifactsDir}" because the ` +
             'user lacks permissions.');
+        } else {
+          throw mkdirErr;
         }
       }
     } else {
