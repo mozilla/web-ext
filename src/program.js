@@ -99,7 +99,7 @@ export class Program {
         this.defaultValues[camelCasedKey] = false;
       }
       // We want to include options of types string, boolean and number
-      if (typeof(options[key].default) !== undefined) {
+      if (typeof(options[key].default) !== 'undefined') {
         this.defaultValues[camelCasedKey] = options[key].default;
       }
       options[key].global = true;
