@@ -19,21 +19,23 @@ export function applyConfigToArgv({
 }: ApplyConfigToArgvParams): Object {
   const newArgv = {...argv};
   for (const option in configObject) {
-    const wasValueSetOnCLI = typeof(newArgv[option]) !== 'undefined' &&
+    // we assume the value was set on the CLI if the default value is
+    // not the same as that on the argv object as there is a very rare chance
+    // this happening
+    const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
       (argv[option] !== defaultValues[option]);
     if (wasValueSetOnCLI) {
       log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
         `configuration: ${option}=${configObject[option]}`);
       continue;
     }
-    if (!newArgv.hasOwnProperty(option) || defaultValues[option] ||
-      typeof(newArgv[option]) === 'boolean' ||
-      typeof(newArgv[option]) === 'number') {
-
-      newArgv[option] = configObject[option];
+    // We want to include options of types string, boolean and number
+    if (argv[option] === 'undefined') {
       log.debug(`Favoring configuration: ${option}=${configObject[option]} ` +
         `over CLI: ${option}=${argv[option]}`);
+      continue;
     }
+    newArgv[option] = configObject[option];
   }
   return newArgv;
 }

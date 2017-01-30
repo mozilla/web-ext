@@ -98,6 +98,7 @@ export class Program {
       if (options[key].type === 'boolean') {
         this.defaultValues[camelCasedKey] = false;
       }
+      // We want to include options of types string, boolean and number
       if (typeof(options[key].default) !== 'undefined') {
         this.defaultValues[camelCasedKey] = options[key].default;
       }
