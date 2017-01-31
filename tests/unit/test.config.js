@@ -243,6 +243,22 @@ describe('config', () => {
       const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.numberOfRetries, 0);
     });
+
+    it('uses configured value even when option defaults to undefined', () => {
+      const {argv, defaultValues} = makeArgv({
+        globalOpt: {
+          'source-dir': {
+            type: 'string',
+            default: undefined,
+          },
+        },
+      });
+      const configObject = {
+        sourceDir: '/configured/directory',
+      };
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, '/configured/directory');
+    });
   });
 
   describe('loadJSConfigFile', () => {
