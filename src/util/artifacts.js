@@ -7,10 +7,11 @@ import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';
 
 const log = createLogger(__filename);
-const asyncMkdirp = promisify(mkdirp);
+const defaultAsyncMkdirp = promisify(mkdirp);
 
 export async function prepareArtifactsDir(
-  artifactsDir: string
+  artifactsDir: string,
+  asyncMkdirp?: typeof defaultAsyncMkdirp = defaultAsyncMkdirp,
 ): Promise<string> {
   try {
     const stats = await fs.stat(artifactsDir);

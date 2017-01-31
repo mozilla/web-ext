@@ -3,12 +3,14 @@ import path from 'path';
 
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
+import sinon from 'sinon';
 import {fs} from 'mz';
+
 
 import {onlyInstancesOf, UsageError} from '../../../src/errors';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {prepareArtifactsDir} from '../../../src/util/artifacts';
-import {makeSureItFails} from '../helpers';
+import {makeSureItFails, ErrorWithCode} from '../helpers';
 
 
 describe('prepareArtifactsDir', () => {
@@ -127,6 +129,21 @@ describe('prepareArtifactsDir', () => {
       return prepareArtifactsDir(tmpPath)
         .then((resolvedDir) => {
           assert.equal(resolvedDir, tmpPath);
+        });
+    }
+  ));
+
+  it('throws error when creating a folder if there is not enough space',
+    () => withTempDir(
+    (tmpDir) => {
+      const fakeAsyncMkdirp = sinon.spy(() =>
+        Promise.reject(new ErrorWithCode('ENOSPC', 'an error')));
+      const tmpPath = path.join(tmpDir.path(), 'build', 'subdir');
+      return prepareArtifactsDir(tmpPath, fakeAsyncMkdirp)
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.ok(fakeAsyncMkdirp.called);
+          assert.equal(error.message, 'an error');
         });
     }
   ));
