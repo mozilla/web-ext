@@ -165,7 +165,7 @@ export default async function build(
     manifestData, sourceDir, fileFilter, artifactsDir, showReadyMessage,
   });
 
-  await prepareArtifactsDir(artifactsDir);
+  await prepareArtifactsDir(artifactsDir, {});
   const result = await createPackage();
 
   if (rebuildAsNeeded) {

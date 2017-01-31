@@ -9,9 +9,13 @@ import {createLogger} from './logger';
 const log = createLogger(__filename);
 const defaultAsyncMkdirp = promisify(mkdirp);
 
+type PrepareArtifactsDirOptions = {
+  asyncMkdirp?: typeof defaultAsyncMkdirp,
+}
+
 export async function prepareArtifactsDir(
   artifactsDir: string,
-  asyncMkdirp?: typeof defaultAsyncMkdirp = defaultAsyncMkdirp,
+  {asyncMkdirp = defaultAsyncMkdirp}: PrepareArtifactsDirOptions,
 ): Promise<string> {
   try {
     const stats = await fs.stat(artifactsDir);
