@@ -483,7 +483,7 @@ describe('run', () => {
     const fakeKiller = sinon.spy(() => Promise.resolve());
 
     it('notifies user and exits when called', () => {
-      return defaultExitProgram(fakeLog, fakeKiller)
+      return defaultExitProgram({logger: fakeLog, killer: fakeKiller})
         .then(() => {
           assert.ok(fakeLog.info.called);
           assert.equal(fakeLog.info.firstCall.args[0],

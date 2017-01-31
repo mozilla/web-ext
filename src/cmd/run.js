@@ -99,8 +99,13 @@ export function defaultAddonReload(
     });
 }
 
+export type ExitParams = {
+  logger?: typeof log,
+  killer?: typeof process.kill,
+};
+
 export async function defaultExitProgram(
-  logger?: typeof log = log, killer?: typeof process.kill = process.kill,
+  {logger = log, killer = process.kill}: ExitParams = {},
 ): Promise<void> {
   logger.info('Exiting web-ext on user request');
   killer(process.pid, 'SIGINT');
