@@ -113,7 +113,7 @@
     "prettyjson": "1.2.1",
     "sinon": "1.17.7",
     "webpack": "1.14.0",
-    "webpack-dev-server": "1.16.2",
+    "webpack-dev-server": "2.2.1",
     "yauzl": "2.7.0"
   },
   "author": "Kumar McMillan",
