@@ -1,4 +1,6 @@
 /* @flow */
+import path from 'path';
+
 import requireUncached from 'require-uncached';
 
 import {createLogger} from './util/logger';
@@ -40,17 +42,21 @@ export function applyConfigToArgv({
 }
 
 export function loadJSConfigFile(filePath: string): Object {
-  log.debug(`Loading JS config file: ${filePath}`);
+  const resolvedFilePath = path.resolve(filePath);
+  log.debug(
+    `Loading JS config file: "${filePath}" ` +
+    `(resolved to "${resolvedFilePath}")`);
   let configObject;
   try {
-    configObject = requireUncached(filePath);
+    configObject = requireUncached(resolvedFilePath);
   } catch (error) {
     log.debug('Handling error:', error);
     throw new UsageError(
-        `Cannot read config file: ${filePath}\nError: ${error.message}`);
+      `Cannot read config file: ${resolvedFilePath}\n` +
+      `Error: ${error.message}`);
   }
   if (Object.keys(configObject).length === 0) {
-    log.debug(`Config file ${filePath} did not define any options. ` +
+    log.debug(`Config file ${resolvedFilePath} did not define any options. ` +
       'Did you set module.exports = {...}?');
   }
   return configObject;
