@@ -60,7 +60,6 @@ describe('prepareArtifactsDir', () => {
       return withTempDir(
         (tmpDir) => {
           if (process.platform === 'win32') {
-            // Now `this` will be bound to the mocha test case instance:
             this.skip();
             return;
           }
@@ -83,7 +82,6 @@ describe('prepareArtifactsDir', () => {
       return withTempDir(
         (tmpDir) => {
           if (process.platform === 'win32') {
-            // Now `this` will be bound to the mocha test case instance:
             this.skip();
             return;
           }
@@ -105,7 +103,6 @@ describe('prepareArtifactsDir', () => {
       return withTempDir(
         (tmpDir) => {
           if (process.platform === 'win32') {
-            // Now `this` will be bound to the mocha test case instance:
             this.skip();
             return;
           }

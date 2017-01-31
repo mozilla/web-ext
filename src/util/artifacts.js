@@ -35,7 +35,7 @@ export async function prepareArtifactsDir(
       // Handle errors when the artifactsDir cannot be accessed.
       throw new UsageError(
         `Cannot access --artifacts-dir="${artifactsDir}" because the user ` +
-        'lacks permissions.');
+        `lacks permissions: ${error}`);
     } else if (isErrorWithCode('ENOENT', error)) {
       // Create the artifact dir if it doesn't exist yet.
       try {
@@ -46,7 +46,7 @@ export async function prepareArtifactsDir(
           // Handle errors when the artifactsDir cannot be created for lack of permissions.
           throw new UsageError(
             `Cannot create --artifacts-dir="${artifactsDir}" because the ` +
-            'user lacks permissions.');
+            `user lacks permissions: ${mkdirErr}`);
         } else {
           throw mkdirErr;
         }
