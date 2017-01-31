@@ -434,11 +434,15 @@ describe('program.defaultVersionGetter', () => {
       });
   });
 
-  it('returns git commit information in development', () => {
+  it('returns git commit information in development', function() {
+    if (process.env.APPVEYOR) {
+      // Test skipped because of $APPVEYOR' issues with git-rev-sync (mozilla/web-ext#774)
+      this.skip();
+      return;
+    }
     const commit = `${git.branch()}-${git.long()}`;
     const testBuildEnv = {globalEnv: 'development'};
     assert.equal(defaultVersionGetter(root, testBuildEnv),
                  commit);
   });
-
 });
