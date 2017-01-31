@@ -35,4 +35,7 @@ http.createServer(function(req, res) {
   } else {
     process.exit(1);
   }
-}).listen(8989);
+}).listen(8989, () => {
+  process.stdout.write('listening');
+  process.stdout.uncork();
+});

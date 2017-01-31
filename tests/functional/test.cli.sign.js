@@ -4,15 +4,19 @@ import {spawn} from 'child_process';
 import {describe, it, beforeEach, afterEach} from 'mocha';
 
 import {
-  webExt, addonPath, fakeServerPath,
-  withTempAddonDir, execCommand, reportCommandErrors,
+  addonPath, fakeServerPath,
+  withTempAddonDir, execWebExt, reportCommandErrors,
 } from './common';
 
 describe('web-ext sign', () => {
   let fakeServerProcess;
 
   beforeEach(() => {
-    fakeServerProcess = spawn(fakeServerPath);
+    return new Promise((resolve, reject) => {
+      fakeServerProcess = spawn(process.execPath, [fakeServerPath]);
+      fakeServerProcess.stdout.on('data', resolve);
+      fakeServerProcess.stderr.on('data', reject);
+    });
   });
 
   afterEach(() => {
@@ -30,7 +34,7 @@ describe('web-ext sign', () => {
          '--api-key', 'FAKEAPIKEY', '--api-secret', 'FAKEAPISECRET',
          '--source-dir', srcDir,
        ];
-       const cmd = execCommand(webExt, argv, {cwd: tmpDir});
+       const cmd = execWebExt(argv, {cwd: tmpDir});
 
        return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
          if (exitCode !== 0) {
