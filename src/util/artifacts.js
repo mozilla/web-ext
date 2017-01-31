@@ -15,7 +15,7 @@ type PrepareArtifactsDirOptions = {
 
 export async function prepareArtifactsDir(
   artifactsDir: string,
-  {asyncMkdirp = defaultAsyncMkdirp}: PrepareArtifactsDirOptions,
+  {asyncMkdirp = defaultAsyncMkdirp}: PrepareArtifactsDirOptions = {},
 ): Promise<string> {
   try {
     const stats = await fs.stat(artifactsDir);

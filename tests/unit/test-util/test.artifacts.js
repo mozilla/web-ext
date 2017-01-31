@@ -18,7 +18,7 @@ describe('prepareArtifactsDir', () => {
   it('creates an artifacts dir if needed', () => withTempDir(
     (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'build');
-      return prepareArtifactsDir(artifactsDir, {})
+      return prepareArtifactsDir(artifactsDir)
         .then(() => {
           // This should not throw an error if created properly.
           return fs.stat(artifactsDir);
@@ -28,7 +28,7 @@ describe('prepareArtifactsDir', () => {
 
   it('ignores existing artifacts dir', () => withTempDir(
     (tmpDir) =>
-      prepareArtifactsDir(tmpDir.path(), {})
+      prepareArtifactsDir(tmpDir.path())
         .then(() => {
           // Make sure everything is still cool with this path.
           return fs.stat(tmpDir.path());
@@ -39,7 +39,7 @@ describe('prepareArtifactsDir', () => {
     (tmpDir) => {
       const someFile = path.join(tmpDir.path(), 'some-file.txt');
       return fs.writeFile(someFile, 'some content')
-        .then(() => prepareArtifactsDir(someFile, {}))
+        .then(() => prepareArtifactsDir(someFile))
         .then(makeSureItFails())
         .catch(onlyInstancesOf(UsageError, (error) => {
           assert.match(error.message, /not a directory/);
@@ -50,7 +50,7 @@ describe('prepareArtifactsDir', () => {
   it('resolves with the artifacts dir', () => withTempDir(
     (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'artifacts');
-      return prepareArtifactsDir(artifactsDir, {})
+      return prepareArtifactsDir(artifactsDir)
         .then((resolvedDir) => {
           assert.equal(resolvedDir, artifactsDir);
         });
@@ -68,7 +68,7 @@ describe('prepareArtifactsDir', () => {
           const tmpPath = path.join(tmpDir.path(), 'build');
           return fs.mkdir(tmpPath, '0622').then(() => {
             const artifactsDir = path.join(tmpPath, 'artifacts');
-            return prepareArtifactsDir(artifactsDir, {})
+            return prepareArtifactsDir(artifactsDir)
               .then(makeSureItFails())
               .catch(onlyInstancesOf(UsageError, (error) => {
                 assert.match(error.message, /Cannot access.*lacks permissions/);
@@ -89,7 +89,7 @@ describe('prepareArtifactsDir', () => {
           }
           const artifactsDir = path.join(tmpDir.path(), 'dir-nowrite');
           return fs.mkdir(artifactsDir, '0555').then(() => {
-            return prepareArtifactsDir(artifactsDir, {})
+            return prepareArtifactsDir(artifactsDir)
               .then(makeSureItFails())
               .catch(onlyInstancesOf(UsageError, (error) => {
                 assert.match(error.message, /exists.*lacks permissions/);
@@ -111,7 +111,7 @@ describe('prepareArtifactsDir', () => {
           const parentDir = path.join(tmpDir.path(), 'dir-nowrite');
           const artifactsDir = path.join(parentDir, 'artifacts');
           return fs.mkdir(parentDir, '0555').then(() => {
-            return prepareArtifactsDir(artifactsDir, {})
+            return prepareArtifactsDir(artifactsDir)
               .then(makeSureItFails())
               .catch(onlyInstancesOf(UsageError, (error) => {
                 assert.match(error.message, /Cannot create.*lacks permissions/);
@@ -126,7 +126,7 @@ describe('prepareArtifactsDir', () => {
     () => withTempDir(
     (tmpDir) => {
       const tmpPath = path.join(tmpDir.path(), 'build', 'subdir');
-      return prepareArtifactsDir(tmpPath, {})
+      return prepareArtifactsDir(tmpPath)
         .then((resolvedDir) => {
           assert.equal(resolvedDir, tmpPath);
         });
