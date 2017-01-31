@@ -1,5 +1,6 @@
 /* @flow */
 import readline from 'readline';
+import tty from 'tty';
 
 import type FirefoxProfile from 'firefox-profile';
 import type Watchpack from 'watchpack';
@@ -46,8 +47,9 @@ export type WatcherCreatorParams = {|
   desktopNotifications?: typeof defaultDesktopNotifications,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
-  reloader?: typeof reloadFn,
+  addonReload?: typeof defaultAddonReload,
 |};
+
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
@@ -57,7 +59,7 @@ export function defaultWatcherCreator(
     onSourceChange = defaultSourceWatcher,
     desktopNotifications = defaultDesktopNotifications,
     createFileFilter = defaultFileFilterCreator,
-    reloader = reloadFn,
+    addonReload = defaultAddonReload,
   }: WatcherCreatorParams
  ): Watchpack {
   const fileFilter = createFileFilter(
@@ -67,7 +69,7 @@ export function defaultWatcherCreator(
     sourceDir,
     artifactsDir,
     onChange: () => {
-      return reloader({addonId, client});
+      return addonReload({addonId, client});
     },
     shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
@@ -79,7 +81,7 @@ export type ReloadParams = {
   desktopNotifications?: typeof defaultDesktopNotifications,
 };
 
-export function reloadFn(
+export function defaultAddonReload(
   {
   addonId, client, desktopNotifications = defaultDesktopNotifications,
  }: ReloadParams
@@ -95,6 +97,13 @@ export function reloadFn(
       });
       throw error;
     });
+}
+
+export async function defaultExitProgram(
+  logger?: typeof log = log, killer?: typeof process.kill = process.kill,
+): Promise<void> {
+  logger.info('Exiting web-ext on user request');
+  killer(process.pid, 'SIGINT');
 }
 
 
@@ -203,7 +212,8 @@ export type CmdRunOptions = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
-  reloader: typeof reloadFn,
+  addonReload: typeof defaultAddonReload,
+  exitProgram: typeof defaultExitProgram,
 |};
 
 export default async function run(
@@ -216,7 +226,8 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
-    reloader = reloadFn,
+    addonReload = defaultAddonReload,
+    exitProgram = defaultExitProgram,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -291,18 +302,20 @@ export default async function run(
         );
       }
 
-      readline.emitKeypressEvents(process.stdin);
       if (process.stdin.isTTY) {
-        log.info('Press R to reload');
-        (process.stdin: any).setRawMode(true);
-      }
-      process.stdin.on('keypress', (str, key) => {
-        if (key.ctrl && key.name === 'c') {
-          process.exit();
-        } else if (key.name === 'r' && addonId) {
-          reloader({addonId, client});
+        readline.emitKeypressEvents(process.stdin);
+        log.info('Press R to reload (and Ctrl-C to quit)');
+        if (process.stdin instanceof tty.ReadStream) {
+          process.stdin.setRawMode(true);
         }
-      });
+        process.stdin.on('keypress', (str, key) => {
+          if (key.ctrl && key.name === 'c') {
+            exitProgram();
+          } else if (key.name === 'r' && addonId) {
+            addonReload({addonId, client});
+          }
+        });
+      }
 
       log.info('The extension will reload if any source file changes');
       reloadStrategy({

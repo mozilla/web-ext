@@ -2,14 +2,15 @@
 import path from 'path';
 import EventEmitter from 'events';
 
-import {describe, it, after} from 'mocha';
+import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
 import run, {
-  defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy, reloadFn,
+  defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
+  defaultAddonReload, defaultExitProgram,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
 import {RemoteFirefox} from '../../../src/firefox/remote';
@@ -51,7 +52,8 @@ describe('run', () => {
       reloadStrategy: sinon.spy(() => {
         log.debug('fake: reloadStrategy()');
       }),
-      reloader: sinon.spy(),
+      addonReload: sinon.spy(),
+      exitProgram: sinon.spy(),
     };
 
     return {
@@ -225,33 +227,30 @@ describe('run', () => {
 
   it('can reload when user presses R in shell console', () => {
     const cmd = prepareRun();
-    const {reloader} = cmd.options;
+    const {addonReload} = cmd.options;
 
     return cmd.run({noReload: false})
       .then(() => {
         process.stdin.emit('keypress', 'r', {name: 'r', ctrl: false});
       })
       .then(() => {
-        assert.ok(reloader.called);
-        assert.equal(reloader.firstCall.args[0].addonId,
+        assert.ok(addonReload.called);
+        assert.equal(addonReload.firstCall.args[0].addonId,
           tempInstallResult.addon.id);
       });
   });
 
-  after(() => {
-    process.exit.restore();
-  });
 
   it('exits when user presses CTRL+C in shell console', () => {
     const cmd = prepareRun();
-    const exits = sinon.stub(process, 'exit', sinon.spy(() => {}));
+    const {exitProgram} = cmd.options;
 
     return cmd.run({noReload: false})
       .then(() => {
         process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
       })
       .then(() => {
-        assert.ok(exits.called);
+        assert.ok(exitProgram.called);
       });
   });
 
@@ -315,7 +314,7 @@ describe('run', () => {
         onSourceChange: sinon.spy(() => {}),
         desktopNotifications: sinon.spy(() => Promise.resolve()),
         ignoreFiles: ['path/to/file', 'path/to/file2'],
-        reloader: sinon.spy(() => Promise.resolve()),
+        addonReload: sinon.spy(() => Promise.resolve()),
       };
       return {
         config,
@@ -368,8 +367,8 @@ describe('run', () => {
       // Simulate executing the handler when a source file changes.
       return callArgs.onChange()
         .then(() => {
-          assert.equal(config.reloader.called, true);
-          const reloadArgs = config.reloader.firstCall.args;
+          assert.equal(config.addonReload.called, true);
+          const reloadArgs = config.addonReload.firstCall.args;
           assert.ok(config.addonId);
           assert.equal(reloadArgs[0].addonId, config.addonId);
           assert.equal(reloadArgs[0].client, config.client);
@@ -441,7 +440,7 @@ describe('run', () => {
 
   });
 
-  describe('reloadFn', () => {
+  describe('defaultAddonReload', () => {
     const client = new RemoteFirefox(fakeFirefoxClient());
     sinon.stub(client, 'reloadAddon',
                sinon.spy(() => Promise.reject(new Error('an error')))
@@ -455,7 +454,7 @@ describe('run', () => {
     };
 
     it('notifies user on error from source change handler', () => {
-      return reloadFn(args)
+      return defaultAddonReload(args)
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(
@@ -469,11 +468,31 @@ describe('run', () => {
     });
 
     it('throws errors from source change handler', () => {
-      return reloadFn(args)
+      return defaultAddonReload(args)
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, 'an error');
         });
+    });
+
+  });
+
+  describe('defaultExitProgram', () => {
+    const fakeLog = createLogger(__filename);
+    sinon.spy(fakeLog, 'info');
+    const fakeKiller = sinon.spy(() => Promise.resolve());
+
+    it('notifies user and exits when called', () => {
+      return defaultExitProgram(fakeLog, fakeKiller)
+        .then(() => {
+          assert.ok(fakeLog.info.called);
+          assert.equal(fakeLog.info.firstCall.args[0],
+                      'Exiting web-ext on user request');
+          assert.ok(fakeKiller.called);
+          assert.equal(fakeKiller.firstCall.args[1],
+                                  'SIGINT');
+        });
+
     });
 
   });
