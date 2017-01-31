@@ -5,7 +5,7 @@ import {assert} from 'chai';
 import {
   onlyErrorsWithCode, isErrorWithCode, onlyInstancesOf,
 } from '../../src/errors';
-import {makeSureItFails} from './helpers';
+import {makeSureItFails, ErrorWithCode} from './helpers';
 
 
 describe('errors', () => {
@@ -33,14 +33,6 @@ describe('errors', () => {
   });
 
   describe('onlyErrorsWithCode', () => {
-
-    class ErrorWithCode extends Error {
-      code: string;
-      constructor() {
-        super('pretend this is a system error');
-        this.code = 'SOME_CODE';
-      }
-    }
 
     class ErrorWithErrno extends Error {
       errno: number;
@@ -103,13 +95,6 @@ describe('errors', () => {
   });
 
   describe('isErrorWithCode', () => {
-    class ErrorWithCode extends Error {
-      code: string;
-      constructor() {
-        super('pretend this is a system error');
-        this.code = 'SOME_CODE';
-      }
-    }
 
     it('returns true on errors that do match the code', () => {
       assert.equal(isErrorWithCode('SOME_CODE', new ErrorWithCode()), true);

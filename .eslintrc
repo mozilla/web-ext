@@ -94,6 +94,7 @@
     "no-shadow-restricted-names": 2,
     "no-script-url": 2,
     "no-sequences": 2,
+    "no-template-curly-in-string": 2,
     "no-trailing-spaces": [2, {"skipBlankLines": false}],
     "no-undef": 2,
     "no-underscore-dangle": 0,
