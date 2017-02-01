@@ -246,6 +246,15 @@ Example: $0 --help run.
       describe: 'Show verbose output',
       type: 'boolean',
     },
+    'ignore-files': {
+      alias: 'i',
+      describe: 'A list of glob patterns to define which files should be ' +
+                'ignored. (Example: --ignore-files=path/to/first.js ' +
+                'path/to/second.js "**/*.log")',
+      demand: false,
+      requiresArg: true,
+      type: 'array',
+    },
   });
 
   program

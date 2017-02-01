@@ -3,7 +3,7 @@ import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
 import {createLogger} from './util/logger';
-import {FileFilter} from './cmd/build';
+import {FileFilter} from './util/file-filter';
 
 
 const log = createLogger(__filename);

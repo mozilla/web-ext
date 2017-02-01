@@ -4,17 +4,16 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import defaultLintCommand from '../../../src/cmd/lint';
-import {FileFilter} from '../../../src/cmd/build';
-import {fake, makeSureItFails} from '../helpers';
+import {makeSureItFails} from '../helpers';
 
 type setUpParams = {|
   createLinter?: Function,
-  fileFilter?: Function,
+  createFileFilter?: Function,
 |}
 
 describe('lint', () => {
 
-  function setUp({createLinter, fileFilter}: setUpParams = {}) {
+  function setUp({createLinter, createFileFilter}: setUpParams = {}) {
     const lintResult = '<lint.run() result placeholder>';
     const runLinter = sinon.spy(() => Promise.resolve(lintResult));
     if (!createLinter) {
@@ -32,7 +31,7 @@ describe('lint', () => {
           ...params,
         }, {
           createLinter,
-          fileFilter,
+          createFileFilter,
         });
       },
     };
@@ -127,20 +126,25 @@ describe('lint', () => {
     });
   });
 
-  it('passes a file filter to the linter', () => {
-    const fileFilter = fake(new FileFilter());
-    const {lint, createLinter} = setUp({fileFilter});
-    return lint()
-      .then(() => {
-        assert.equal(createLinter.called, true);
-        const config = createLinter.firstCall.args[0].config;
-        assert.isFunction(config.shouldScanFile);
+  it('configures a lint command with the expected fileFilter', () => {
+    const fileFilter = {wantFile: sinon.spy(() => true)};
+    const createFileFilter = sinon.spy(() => fileFilter);
+    const {lint, createLinter} = setUp({createFileFilter});
+    const params = {
+      sourceDir: '.',
+      artifactsDir: 'artifacts',
+      ignoreFiles: ['file1', '**/file2'],
+    };
+    return lint(params).then(() => {
+      assert.ok(createFileFilter.called);
+      assert.deepEqual(createFileFilter.firstCall.args[0], params);
 
-        // Simulate how the linter will use this callback.
-        config.shouldScanFile('manifest.json');
-        assert.equal(fileFilter.wantFile.called, true);
-        assert.equal(fileFilter.wantFile.firstCall.args[0], 'manifest.json');
-      });
+      assert.ok(createLinter.called);
+      const {shouldScanFile} = createLinter.firstCall.args[0].config;
+      shouldScanFile('path/to/file');
+      assert.ok(fileFilter.wantFile.called);
+      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
+    });
   });
 
 });
