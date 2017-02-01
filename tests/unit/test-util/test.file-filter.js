@@ -116,7 +116,7 @@ describe('util/file-filter', () => {
       paths.forEach((file) => {
         assert.equal(
           path.resolve(src, file),
-          path.resolve(src) + path.sep + normalizeResolve(file)
+          path.join(path.resolve(src), normalizeResolve(file))
         );
       });
     });
