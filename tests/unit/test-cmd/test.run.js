@@ -280,6 +280,7 @@ describe('run', () => {
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
         desktopNotifications: sinon.spy(() => Promise.resolve()),
+        ignoreFiles: ['path/to/file', 'path/to/file2'],
       };
       return {
         config,
@@ -297,6 +298,23 @@ describe('run', () => {
       assert.equal(callArgs.sourceDir, config.sourceDir);
       assert.equal(callArgs.artifactsDir, config.artifactsDir);
       assert.typeOf(callArgs.onChange, 'function');
+    });
+
+    it('configures a run command with the expected fileFilter', () => {
+      const fileFilter = {wantFile: sinon.spy()};
+      const createFileFilter = sinon.spy(() => fileFilter);
+      const {config, createWatcher} = prepare();
+      createWatcher({createFileFilter});
+      assert.ok(createFileFilter.called);
+      assert.deepEqual(createFileFilter.firstCall.args[0], {
+        sourceDir: config.sourceDir,
+        artifactsDir: config.artifactsDir,
+        ignoreFiles: config.ignoreFiles,
+      });
+      const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
+      shouldWatchFile('path/to/file');
+      assert.ok(fileFilter.wantFile.called);
+      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
     });
 
     it('returns a watcher', () => {
@@ -375,6 +393,7 @@ describe('run', () => {
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
+        ignoreFiles: ['first/file', 'second/file'],
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
@@ -401,7 +420,11 @@ describe('run', () => {
     });
 
     it('configures a watcher', () => {
-      const {createWatcher, reloadStrategy, ...sentArgs} = prepare();
+      const {
+        createWatcher, reloadStrategy,
+        ...sentArgs
+      } = prepare();
+
       reloadStrategy();
       assert.equal(createWatcher.called, true);
       const receivedArgs = createWatcher.firstCall.args[0];
@@ -409,6 +432,7 @@ describe('run', () => {
       assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
+      assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
     });
 
   });

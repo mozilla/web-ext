@@ -15,6 +15,9 @@ import {
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
+import {
+  createFileFilter as defaultFileFilterCreator,
+} from '../util/file-filter';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
@@ -26,6 +29,7 @@ import type {
   FirefoxRDPResponseAddon,
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
@@ -38,18 +42,23 @@ export type WatcherCreatorParams = {|
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   desktopNotifications?: typeof defaultDesktopNotifications,
+  ignoreFiles?: Array<string>,
+  createFileFilter?: FileFilterCreatorFn,
 |};
-
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    addonId, client, sourceDir, artifactsDir,
+    addonId, client, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     desktopNotifications = defaultDesktopNotifications,
+    createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
  ): Watchpack {
+  const fileFilter = createFileFilter(
+    {sourceDir, artifactsDir, ignoreFiles}
+  );
   return onSourceChange({
     sourceDir,
     artifactsDir,
@@ -67,6 +76,7 @@ export function defaultWatcherCreator(
           throw error;
         });
     },
+    shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
 }
 
@@ -80,22 +90,25 @@ export type ReloadStrategyParams = {|
   profile: FirefoxProfile,
   sourceDir: string,
   artifactsDir: string,
+  ignoreFiles?: Array<string>,
 |};
 
 export type ReloadStrategyOptions = {|
   createWatcher?: WatcherCreatorFn,
+  createFileFilter?: FileFilterCreatorFn,
 |};
 
 export function defaultReloadStrategy(
   {
-    addonId, firefoxProcess, client, profile, sourceDir, artifactsDir,
+    addonId, firefoxProcess, client, profile,
+    sourceDir, artifactsDir, ignoreFiles,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
   const watcher: Watchpack = (
-    createWatcher({addonId, client, sourceDir, artifactsDir})
+    createWatcher({addonId, client, sourceDir, artifactsDir, ignoreFiles})
   );
 
   firefoxProcess.on('close', () => {
@@ -165,6 +178,7 @@ export type CmdRunParams = {|
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
+  ignoreFiles?: Array<string>,
 |};
 
 export type CmdRunOptions = {|
@@ -177,7 +191,7 @@ export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
     preInstall = false, noReload = false,
-    browserConsole = false, customPrefs, startUrl,
+    browserConsole = false, customPrefs, startUrl, ignoreFiles,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -264,6 +278,7 @@ export default async function run(
         sourceDir,
         artifactsDir,
         addonId,
+        ignoreFiles,
       });
     }
   }
