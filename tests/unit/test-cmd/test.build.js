@@ -224,7 +224,7 @@ describe('build', () => {
   it('asks FileFilter what files to include in the ZIP', () => {
     const zipFile = new ZipFile();
     const fileFilter = new FileFilter({
-      filesToIgnore: ['**/background-script.js'],
+      baseIgnoredPatterns: ['**/background-script.js'],
     });
 
     return withTempDir(

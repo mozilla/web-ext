@@ -22,7 +22,7 @@ export const normalizeResolve = (file: string): string => {
 // FileFilter types and implementation.
 
 export type FileFilterOptions = {|
-  filesToIgnore?: Array<string>,
+  baseIgnoredPatterns?: Array<string>,
   ignoreFiles?: Array<string>,
   sourceDir?: string,
   artifactsDir?: string,
@@ -36,7 +36,7 @@ export class FileFilter {
   sourceDir: ?string;
 
   constructor({
-    filesToIgnore = [
+    baseIgnoredPatterns = [
       '**/*.xpi',
       '**/*.zip',
       '**/.*', // any hidden file and folder
@@ -52,7 +52,7 @@ export class FileFilter {
     this.filesToIgnore = [];
     this.sourceDir = sourceDir;
 
-    this.addToIgnoreList(filesToIgnore);
+    this.addToIgnoreList(baseIgnoredPatterns);
     if (ignoreFiles) {
       this.addToIgnoreList(ignoreFiles);
     }

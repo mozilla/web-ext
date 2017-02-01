@@ -56,9 +56,9 @@ describe('util/file-filter', () => {
 
   describe('options', () => {
 
-    it('override the defaults with filesToIgnore', () => {
+    it('override the defaults with baseIgnoredPatterns', () => {
       const filter = new FileFilter({
-        filesToIgnore: ['manifest.json'],
+        baseIgnoredPatterns: ['manifest.json'],
       });
       assert.equal(filter.wantFile('some.xpi'), true);
       assert.equal(filter.wantFile('manifest.json'), false);
