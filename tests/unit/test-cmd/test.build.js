@@ -49,7 +49,7 @@ describe('build', () => {
     );
   });
 
-  it('configures a build', () => {
+  it('configures a build command with the expected fileFilter', () => {
     const packageCreator = sinon.spy(
       () => ({extensionPath: 'extension/path'})
     );

@@ -250,7 +250,7 @@ Example: $0 --help run.
       alias: 'i',
       describe: 'A list of glob patterns to define which files should be ' +
                 'ignored. (Example: --ignore-files=path/to/first.js ' +
-                'path/to/second.js **/*.log)',
+                'path/to/second.js "**/*.log")',
       default: [],
       type: 'array',
     },

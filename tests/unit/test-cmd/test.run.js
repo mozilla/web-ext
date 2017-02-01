@@ -300,7 +300,7 @@ describe('run', () => {
       assert.typeOf(callArgs.onChange, 'function');
     });
 
-    it('configure fileFilter, shouldWatchFile', () => {
+    it('configures a run command with the expected fileFilter', () => {
       const fileFilter = {wantFile: sinon.spy()};
       const createFileFilter = sinon.spy(() => fileFilter);
       const {config, createWatcher} = prepare();
