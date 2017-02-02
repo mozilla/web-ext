@@ -2,13 +2,12 @@
 import {describe, it} from 'mocha';
 
 import {
-  addonPath,
-  withTempAddonDir, execWebExt, reportCommandErrors,
+  minimalAddonPath, withTempAddonDir, execWebExt, reportCommandErrors,
 } from './common';
 
 describe('web-ext lint', () => {
   it('should accept: --source-dir SRCDIR',
-     () => withTempAddonDir({addonPath}, (srcDir, tmpDir) => {
+     () => withTempAddonDir({addonPath: minimalAddonPath}, (srcDir, tmpDir) => {
        const argv = ['lint', '--source-dir', srcDir, '--verbose'];
        const cmd = execWebExt(argv, {cwd: tmpDir});
 

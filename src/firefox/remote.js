@@ -90,31 +90,36 @@ export class RemoteFirefox {
     addonPath: string
   ): Promise<FirefoxRDPResponseAddon> {
     return new Promise((resolve, reject) => {
-      this.client.request('listTabs', (error, response) => {
+      this.client.request('listTabs', (error, tabsResponse) => {
         if (error) {
           return reject(new WebExtError(
             `Remote Firefox: listTabs() error: ${error}`));
         }
-        if (!response.addonsActor) {
+        if (!tabsResponse.addonsActor) {
           log.debug(
-            `listTabs returned a falsey addonsActor: ${response.addonsActor}`);
+            'listTabs returned a falsey addonsActor: ' +
+            `${tabsResponse.addonsActor}`);
           return reject(new RemoteTempInstallNotSupported(
             'This is an older version of Firefox that does not provide an ' +
             'add-ons actor for remote installation. Try Firefox 49 or ' +
             'higher.'));
         }
-        this.client.client.makeRequest(
-          {to: response.addonsActor, type: 'installTemporaryAddon', addonPath},
-          (response) => {
-            if (response.error) {
-              return reject(new WebExtError(
-                'installTemporaryAddon: Error: ' +
-                `${response.error}: ${response.message}`));
-            }
-            log.debug(`installTemporaryAddon: ${JSON.stringify(response)}`);
-            log.info(`Installed ${addonPath} as a temporary add-on`);
-            resolve(response);
-          });
+
+        this.client.client.makeRequest({
+          to: tabsResponse.addonsActor,
+          type: 'installTemporaryAddon',
+          addonPath,
+        }, (installResponse) => {
+          if (installResponse.error) {
+            return reject(new WebExtError(
+              'installTemporaryAddon: Error: ' +
+              `${installResponse.error}: ${installResponse.message}`));
+          }
+          log.debug(
+            `installTemporaryAddon: ${JSON.stringify(installResponse)}`);
+          log.info(`Installed ${addonPath} as a temporary add-on`);
+          resolve(installResponse);
+        });
       });
     });
   }
@@ -187,6 +192,7 @@ export type ConnectOptions = {|
 // NOTE: this fixes an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declaring the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
+// eslint-disable-next-line no-shadow
 declare function exports(
   port: number, options?: ConnectOptions
 ): Promise<RemoteFirefox>;

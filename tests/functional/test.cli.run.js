@@ -2,7 +2,7 @@
 import {describe, it} from 'mocha';
 
 import {
-  addonPath, fakeFirefoxPath,
+  minimalAddonPath, fakeFirefoxPath,
   withTempAddonDir, execWebExt, reportCommandErrors,
 } from './common';
 
@@ -12,7 +12,7 @@ describe('web-ext run', () => {
 
   it('should accept: --no-reload --source-dir SRCDIR --firefox FXPATH',
      () => withTempAddonDir(
-       {addonPath},
+       {addonPath: minimalAddonPath},
        (srcDir) => {
          const argv = [
            'run', '--verbose', '--no-reload',

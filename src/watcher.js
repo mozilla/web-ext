@@ -25,6 +25,7 @@ export type OnSourceChangeParams = {|
 // NOTE: this fix an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declare the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
+// eslint-disable-next-line no-shadow
 declare function exports(params: OnSourceChangeParams): Watchpack;
 
 export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;

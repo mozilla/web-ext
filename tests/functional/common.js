@@ -15,7 +15,7 @@ export const functionalTestsDir = path.resolve(__dirname);
 export const projectDir = path.join(functionalTestsDir, '..', '..');
 export const webExt = path.join(projectDir, 'bin', 'web-ext');
 export const fixturesDir = path.join(functionalTestsDir, '..', 'fixtures');
-export const addonPath = path.join(fixturesDir, 'minimal-web-ext');
+export const minimalAddonPath = path.join(fixturesDir, 'minimal-web-ext');
 export const fakeFirefoxPath = path.join(
   functionalTestsDir,
   process.platform === 'win32' ?

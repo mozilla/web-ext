@@ -90,6 +90,8 @@
     "no-plusplus": 0,
     "no-proto": 2,
     "no-redeclare": 0,
+    "no-shadow": [2, {"builtinGlobals": true}],
+    "no-shadow-restricted-names": 2,
     "no-script-url": 2,
     "no-sequences": 2,
     "no-template-curly-in-string": 2,
