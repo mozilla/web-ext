@@ -2,7 +2,7 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {FileFilter} from '../../../src/util/file-filter';
+import {FileFilter, isSubDir} from '../../../src/util/file-filter';
 
 describe('util/file-filter', () => {
 
@@ -108,6 +108,17 @@ describe('util/file-filter', () => {
       assert.equal(filter.wantFile('/some.js'), true);
     });
 
+  });
+
+  describe('isSubDir', () => {
+    it('test if target is a sub directory of src', () => {
+      assert.equal(isSubDir('dist', '.'), false);
+      assert.equal(isSubDir('.', 'artifacts'), true);
+      assert.equal(isSubDir('.', '.'), false);
+      assert.equal(isSubDir('/src/dist', '/src'), false);
+      assert.equal(isSubDir('/src', '/src/artifacts'), true);
+      assert.equal(isSubDir('/src', '/src'), false);
+    });
   });
 
 });
