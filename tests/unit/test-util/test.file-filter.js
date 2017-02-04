@@ -1,10 +1,8 @@
 /* @flow */
-import path from 'path';
-
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {FileFilter, normalizeResolve} from '../../../src/util/file-filter';
+import {FileFilter} from '../../../src/util/file-filter';
 
 describe('util/file-filter', () => {
 
@@ -80,6 +78,15 @@ describe('util/file-filter', () => {
       assert.equal(filter.wantFile('artifacts/some.js'), false);
     });
 
+    it('no ignore if artifactsDir is outside the sourceDir', () => {
+      const filter = new FileFilter({
+        artifactsDir: '.',
+        sourceDir: 'dist',
+      });
+      assert.equal(filter.wantFile('file'), true);
+      assert.equal(filter.wantFile('dist/file'), true);
+    });
+
     it('resolve relative path', () => {
       const filter = new FileFilter({
         sourceDir: '/src',
@@ -88,7 +95,7 @@ describe('util/file-filter', () => {
           'ignore-dir/', 'some.js', '**/some.log', 'ignore/dir/content/**/*',
         ],
       });
-      assert.equal(filter.wantFile('/src/artifacts'), false);
+      assert.equal(filter.wantFile('/src/artifacts'), true);
       assert.equal(filter.wantFile('/src/ignore-dir'), false);
       assert.equal(filter.wantFile('/src/ignore-dir/some.css'), true);
       assert.equal(filter.wantFile('/src/some.js'), false);
@@ -101,25 +108,6 @@ describe('util/file-filter', () => {
       assert.equal(filter.wantFile('/some.js'), true);
     });
 
-  });
-
-  describe('normalizeResolve', () => {
-    const paths = [
-      'file', 'dir/',
-      'path/to/file', 'path/to/dir/', 'path/to/../file', 'path/to/../dir/',
-      'path/to/dir/.', 'path/to/dir/..',
-    ];
-
-    it('mimic path.resolve', () => {
-      const src = '/src/';
-
-      paths.forEach((file) => {
-        assert.equal(
-          path.resolve(src, file),
-          path.join(path.resolve(src), normalizeResolve(file))
-        );
-      });
-    });
   });
 
 });
