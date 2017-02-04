@@ -103,16 +103,6 @@ describe('watcher', () => {
 
     });
 
-    it('filters out commonly unwanted files by default', () => {
-      const conf = {
-        ...defaults,
-        shouldWatchFile: undefined,
-        onChange: sinon.spy(() => {}),
-      };
-      proxyFileChanges({...conf, filePath: '/somewhere/.git'});
-      assert.equal(conf.onChange.called, false);
-    });
-
   });
 
 });

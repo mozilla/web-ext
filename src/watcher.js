@@ -3,7 +3,6 @@ import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
 import {createLogger} from './util/logger';
-import {FileFilter} from './util/file-filter';
 
 
 const log = createLogger(__filename);
@@ -66,8 +65,7 @@ export function proxyFileChanges(
   {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams
 ): void {
   if (!shouldWatchFile) {
-    const fileFilter = new FileFilter();
-    shouldWatchFile = (...args) => fileFilter.wantFile(...args);
+    shouldWatchFile = () => true;
   }
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
     log.debug(`Ignoring change to: ${filePath}`);
