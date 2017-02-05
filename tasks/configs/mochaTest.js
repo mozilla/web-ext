@@ -15,7 +15,7 @@ if (process.env.COVERAGE === 'y') {
   var path = require('path');
 
   var coverageReporterModulePath = path.resolve(
-    path.join(__dirname, '..', 'tests', 'coverage-reporter.js')
+    path.join(__dirname, '..', '..', 'tests', 'coverage-reporter.js')
   );
 
   module.exports.options.reporterOptions[coverageReporterModulePath] = '-';

@@ -4,9 +4,14 @@ Hi! Thanks for your interest in helping make
 [WebExtension](https://developer.mozilla.org/en-US/Add-ons/WebExtensions)
 development more awesome by contributing to the `web-ext` tool.
 
+#Picking an issue
+
 If you're looking for a small task to work on so you can get familiar with the
 process of contributing patches, have a read through these
 [good first bugs](https://github.com/mozilla/web-ext/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+bug%22).
+
+If you'd like to work on a bug, please comment on it to let the maintainers know. If someone else has already commented and taken up that bug, please refrain from working on it and submitting a PR without asking the maintainers as it leads to unnecessary duplication of effort.
+
 
 # Installation
 
@@ -80,6 +85,94 @@ the test suite without lint checks:
 This project relies on [Flow] to ensure functions and
 classes are used correctly. Run all Flow checks with `npm run flow-check`.
 
+The first steps to learn how to fix flow errors are:
+
+- learn how to read the flow annotations
+- learn how to write new type definitions or change the existing definitions
+- learn to read the flow errors and know some of the more common errors
+
+To learn more about the syntax used to add the flow annotations and how to
+write/change the type definitions, you should take a look at the official
+[Flow docs](https://flowtype.org/docs/getting-started.html)
+
+The following sections contain additional information related to common
+flow errors and how to read and fix them.
+
+### Missing annotation
+
+This is a pretty common flow error and it is usually the simplest to fix.
+
+It means that the new code added in the sources doesn't define the types
+of the functions and methods parameters, e.g. on the following snippet:
+
+```js
+export default async function getValidatedManifest(sourceDir) {
+  ...
+}
+```
+
+flow is going to raise the error:
+
+```
+src/util/manifest.js:32
+ 32:   sourceDir
+       ^^^^^^^^^ parameter `sourceDir`. Missing annotation
+```
+
+which is fixed by annotating the function correctly, e.g.:
+
+```js
+export default async function getValidatedManifest(
+  sourceDir: string
+): Promise<ExtensionManifest> {
+  ...
+}
+```
+
+### How to read Flow errors related to type inconsistencies
+
+Some of the flow errors are going to contain references to the two sides
+of the flowtype errors:
+
+```
+tests/unit/test-cmd/test.build.js:193
+193:         manifestData: basicManifest,
+                           ^^^^^^^^^^^^^ property `applications`. Property not found in
+ 24: export type ExtensionManifest = {|
+                                     ^ object type. See: src/util/manifest.js:24
+
+```
+
+- The first part points to the offending code (where the type violation has been found)
+- The second part points to the violated type annotation (where the type has been defined)
+
+When flow raises this kind of error (e.g. it is pretty common during a refactoring),
+we have to evaluate which one of the two sides is wrong.
+
+As an example, by reading the above error it is not immediately clear which part should be fixed.
+
+To be sure about which is the proper fix, we have to look at the code near to both the lines
+and evaluate the actual reason, e.g.:
+
+- it is possible that we wrote some of the property names wrong (in the code or in the type definitions)
+- or the defined type is supposed to contain a new property and it is not yet in the related type definitions
+
+### Flow type conventions
+
+In the `web-ext` sources we are currently using the following conventions (and they should be preserved
+when we change or add flow type definitions):
+
+- the type names should be CamelCased (e.g. `ExtensionManifest`)
+- the types used to annotate functions or methods defined in a module should be exported only when
+  they are supposed to be used by other modules (`export type ExtensionManifest = ...`)
+- any type imported from the other modules should be in the module preamble (near to the regular ES6 imports)
+- object types should be exact object types (e.g. `{| ... |}`), because flow will be able to raise
+  errors when we try to set or get a property not explicitly defined in the flow type (which is
+  particularly helpful during refactorings)
+- all the flow type definitions should be as close as possible to the function they annotate
+- we prefer not to use external files (e.g. `.flow.js` files or declaration files configured in the
+  `.flowconfig` file) for the `web-ext` flow types.
+
 ## Code Coverage
 
 You can generate code coverage reports every time you run the test suite
@@ -94,6 +187,75 @@ You can also generate coverage reports continously as you edit files:
     COVERAGE=y npm start
 
 Once a report has been generated, it can be found in the `./coverage` directory.
+
+## Working on the CLI
+
+This section will show you how to add a new commands and options.
+
+`web-ext` relies on [yargs](http://yargs.js.org) to parse its commands and
+their options. The commands are defined in `src/program.js` in the `main` function.
+For example, the `build` command is defined like this:
+
+````javascript
+program
+  .command(
+    'build',
+    'Create a web extension package from source',
+    commands.build, {
+      'as-needed': {
+        describe: 'Watch for file changes and re-build as needed',
+        type: 'boolean',
+      },
+    })
+````
+
+The first argument to `program.command()` is the command name, the second is the
+description (shown for `--help`), the third is a callback that executes the
+command, and the last is an object defining all available options.
+
+The `cmd` directory is where all command callbacks are stored. In this example,
+`commands.build` is defined in `src/cmd/build.js` but you can always trace the
+imports to find each one.
+
+When `web-ext` executes a command callback, it passes an object containing all option
+values, including global options (such as `--source-dir`). Each option key is
+converted from hyphenated words to [camelCase](https://en.wikipedia.org/wiki/Camel_case)
+words. So, the
+`--as-needed` and `--source-dir` options would be passed like:
+
+````javascript
+commands.build({asNeeded: true, sourceDir: './src/extension'})
+  .then((result) => {
+    // ...
+  });
+````
+
+### Adding a command option
+
+To add a command option, locate the relevant command definition (i.e. `run`)
+and specify a new option definition as an object.
+Here is an example of adding the `--file-path` option:
+
+````javascript
+program
+  // other commands...
+  .command('run', 'Run the web extension', commands.run, {
+    // other options...
+    'file-path': {
+      describe: 'An absolute file path.',
+      alias: ['fp'],
+      demand: false,
+      requiresArg: true,
+      type: 'string',
+    },
+  })
+````
+This option can be used like `web-ext run --file-path=./path/to/file` or
+`--fp=./path/to/file`. Since Yargs can be pretty powerful yet not completely
+intuitive at times, you may need to dig into the
+[docs](http://yargs.js.org/docs/). Any key that you can pass to
+[yargs.option](http://yargs.js.org/docs/#methods-optionkey-opt)
+is a key you can pass to each option object when calling `program.command()`.
 
 ## Working on `web-ext sign`
 
@@ -139,7 +301,7 @@ pull request is merged.
 
 ## Writing commit messages
 
-Commit messages must adhere to the Angular style of
+The subject of the pull requests and commit messages must adhere to the Angular style of
 [semantic messages](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#commit).
 This allows us to auto-generate a changelog without too much noise in it.
 Additionally, write the commit message in past tense so it will read

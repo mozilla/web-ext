@@ -1,21 +1,19 @@
 language: node_js
 sudo: false
+
+# Keep this in sync with appveyor.yml
 node_js:
 - '4'
 - '6'
-before_install:
-# Create a master branch for conventional-changelog-lint
-- git remote set-branches origin master && git fetch
-- git checkout master
-- git checkout -
 
 before_script:
 # If this command fails and you can't fix it, file an issue and add an exception to .nsprc
 - npm run nsp-check
 
+# Keep this in sync with appveyor.yml
 script:
 - COVERAGE=y NODE_ENV=production npm test
-- npm run changelog-lint
+- npm run travis-pr-title-lint
 
 after_script: npm run publish-coverage
 

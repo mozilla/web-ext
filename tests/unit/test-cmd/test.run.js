@@ -1,6 +1,7 @@
 /* @flow */
 import path from 'path';
 import EventEmitter from 'events';
+
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -31,12 +32,12 @@ describe('run', () => {
 
   function prepareRun(fakeInstallResult) {
     const sourceDir = fixturePath('minimal-web-ext');
-    let argv = {
+    const argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
     };
-    let options = {
+    const options = {
       firefoxApp: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(fake(RemoteFirefox.prototype, {
@@ -62,8 +63,8 @@ describe('run', () => {
   }
 
   function getFakeFirefox(implementations = {}) {
-    let profile = {}; // empty object just to avoid errors.
-    let allImplementations = {
+    const profile = {}; // empty object just to avoid errors.
+    const allImplementations = {
       createProfile: () => Promise.resolve(profile),
       copyProfile: () => Promise.resolve(profile),
       installExtension: () => Promise.resolve(),
@@ -75,7 +76,7 @@ describe('run', () => {
 
   it('installs and runs the extension', () => {
 
-    let profile = {};
+    const profile = {};
 
     const cmd = prepareRun();
     const {firefoxApp} = cmd.options;
@@ -123,6 +124,45 @@ describe('run', () => {
       assert.equal(firefoxApp.run.called, true);
       assert.equal(firefoxApp.run.firstCall.args[1].firefoxBinary,
                    firefox);
+    });
+  });
+
+  it('passes single url parameter to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+    const expectedBinaryArgs = ['--url', 'www.example.com'];
+
+    return cmd.run({startUrl: 'www.example.com'}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                       expectedBinaryArgs);
+    });
+  });
+
+  it('passes multiple url parameters to Firefox when specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+    const expectedBinaryArgs = [
+      '--url', 'www.one.com', '--url', 'www.two.com', '--url', 'www.three.com',
+    ];
+
+    return cmd.run({startUrl: [
+      'www.one.com', 'www.two.com', 'www.three.com',
+    ]}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.deepEqual(firefoxApp.run.firstCall.args[1].binaryArgs,
+                       expectedBinaryArgs);
+    });
+  });
+
+  it('passes -jsconsole when --browser-console is specified', () => {
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({browserConsole: true}).then(() => {
+      assert.ok(firefoxApp.run.called);
+      assert.equal(firefoxApp.run.firstCall.args[1].binaryArgs,
+                   '-jsconsole');
     });
   });
 
@@ -233,13 +273,14 @@ describe('run', () => {
     function prepare() {
       const config = {
         addonId: 'some-addon@test-suite',
-        profile: {},
         client: fake(RemoteFirefox.prototype, {
           reloadAddon: () => Promise.resolve(),
         }),
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
+        desktopNotifications: sinon.spy(() => Promise.resolve()),
+        ignoreFiles: ['path/to/file', 'path/to/file2'],
       };
       return {
         config,
@@ -257,6 +298,23 @@ describe('run', () => {
       assert.equal(callArgs.sourceDir, config.sourceDir);
       assert.equal(callArgs.artifactsDir, config.artifactsDir);
       assert.typeOf(callArgs.onChange, 'function');
+    });
+
+    it('configures a run command with the expected fileFilter', () => {
+      const fileFilter = {wantFile: sinon.spy()};
+      const createFileFilter = sinon.spy(() => fileFilter);
+      const {config, createWatcher} = prepare();
+      createWatcher({createFileFilter});
+      assert.ok(createFileFilter.called);
+      assert.deepEqual(createFileFilter.firstCall.args[0], {
+        sourceDir: config.sourceDir,
+        artifactsDir: config.artifactsDir,
+        ignoreFiles: config.ignoreFiles,
+      });
+      const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
+      shouldWatchFile('path/to/file');
+      assert.ok(fileFilter.wantFile.called);
+      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
     });
 
     it('returns a watcher', () => {
@@ -279,6 +337,24 @@ describe('run', () => {
           const reloadArgs = config.client.reloadAddon.firstCall.args;
           assert.ok(config.addonId);
           assert.equal(reloadArgs[0], config.addonId);
+        });
+    });
+
+    it('notifies user on error from source change handler', () => {
+      const {config, createWatcher} = prepare();
+      config.client.reloadAddon = () => Promise.reject(new Error('an error'));
+      createWatcher();
+
+      assert.equal(config.onSourceChange.called, true);
+      // Simulate executing the handler when a source file changes.
+      return config.onSourceChange.firstCall.args[0].onChange()
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(config.desktopNotifications.called, true);
+          assert.equal(
+            config.desktopNotifications.lastCall.args[0].message,
+            error.message
+          );
         });
     });
 
@@ -317,6 +393,7 @@ describe('run', () => {
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
+        ignoreFiles: ['first/file', 'second/file'],
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
@@ -343,7 +420,11 @@ describe('run', () => {
     });
 
     it('configures a watcher', () => {
-      const {createWatcher, reloadStrategy, ...sentArgs} = prepare();
+      const {
+        createWatcher, reloadStrategy,
+        ...sentArgs
+      } = prepare();
+
       reloadStrategy();
       assert.equal(createWatcher.called, true);
       const receivedArgs = createWatcher.firstCall.args[0];
@@ -351,6 +432,7 @@ describe('run', () => {
       assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
+      assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
     });
 
   });

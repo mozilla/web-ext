@@ -61,11 +61,17 @@
     "mkdirp": "0.5.1",
     "mz": "2.6.0",
     "node-firefox-connect": "1.2.0",
+<<<<<<< HEAD
     "open": "0.0.5",
+    "regenerator-runtime": "0.10.0",
+    "sign-addon": "0.2.0",
+    "source-map-support": "0.4.6",
+=======
     "node-notifier": "5.0.2",
     "parse-json": "2.2.0",
     "regenerator-runtime": "0.10.1",
     "require-uncached": "1.0.3",
+>>>>>>> ec8d3ef7dcbf2c1d5459e5fc58a07f6cd1d33770
     "stream-to-promise": "2.2.0",
     "sign-addon": "0.2.1",
     "source-map-support": "0.4.11",

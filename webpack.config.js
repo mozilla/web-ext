@@ -1,7 +1,8 @@
 /*eslint prefer-template: 0*/
-var webpack = require('webpack');
 var path = require('path');
 var fs = require('fs');
+
+var webpack = require('webpack');
 
 var nodeModules = {};
 
@@ -40,7 +41,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   module: {
-    preLoaders: preLoaders,
+    preLoaders,
     loaders: [
       {
         exclude: /(node_modules|bower_components)/,

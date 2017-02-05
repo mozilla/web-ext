@@ -1,5 +1,6 @@
 /* @flow */
 import path from 'path';
+
 import {it, describe} from 'mocha';
 import {fs} from 'mz';
 import sinon from 'sinon';
@@ -33,7 +34,7 @@ describe('watcher', () => {
           });
         })
         .then((watcher) => {
-          return fs.utimes(someFile, Date.now(), Date.now())
+          return fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000)
             .then(() => watcher);
         })
         .then((watcher) => {
