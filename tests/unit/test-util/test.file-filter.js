@@ -81,7 +81,7 @@ describe('util/file-filter', () => {
       assert.equal(filter.wantFile('artifacts/some.js'), false);
     });
 
-    it('no ignore if artifactsDir is outside the sourceDir', () => {
+    it('does not ignore an artifactsDir outside of sourceDir', () => {
       const filter = new FileFilter({
         artifactsDir: '.',
         sourceDir: 'dist',

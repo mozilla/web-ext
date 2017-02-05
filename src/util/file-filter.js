@@ -57,6 +57,10 @@ export class FileFilter {
     }
     if (artifactsDir && isSubDir(sourceDir, artifactsDir)) {
       artifactsDir = path.resolve(artifactsDir);
+      log.debug(
+        `Ignoring artifacts directory "${artifactsDir}" ` +
+        'and all its subdirectories'
+      );
       this.addToIgnoreList([
         artifactsDir,
         path.join(artifactsDir, '**', '*'),
