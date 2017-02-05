@@ -2,6 +2,7 @@
 import {it, describe} from 'mocha';
 import sinon from 'sinon';
 import {assert} from 'chai';
+
 import docs, {openDocs} from '../../../src/cmd/docs';
 
 
