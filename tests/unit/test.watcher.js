@@ -31,6 +31,7 @@ describe('watcher', () => {
             sourceDir: tmpDir.path(),
             artifactsDir,
             onChange,
+            shouldWatchFile: () => true,
           });
         })
         .then((watcher) => {
@@ -56,6 +57,7 @@ describe('watcher', () => {
     const defaults = {
       artifactsDir: '/some/artifacts/dir/',
       onChange: () => {},
+      shouldWatchFile: () => true,
     };
 
     it('proxies file changes', () => {

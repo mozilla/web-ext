@@ -18,7 +18,7 @@ export type OnSourceChangeParams = {|
   sourceDir: string,
   artifactsDir: string,
   onChange: OnChangeFn,
-  shouldWatchFile?: ShouldWatchFn,
+  shouldWatchFile: ShouldWatchFn,
 |};
 
 // NOTE: this fix an issue with flow and default exports (which currently
@@ -58,15 +58,12 @@ export type ProxyFileChangesParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   filePath: string,
-  shouldWatchFile?: ShouldWatchFn,
+  shouldWatchFile: ShouldWatchFn,
 |};
 
 export function proxyFileChanges(
   {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams
 ): void {
-  if (!shouldWatchFile) {
-    shouldWatchFile = () => true;
-  }
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
     log.debug(`Ignoring change to: ${filePath}`);
   } else {
