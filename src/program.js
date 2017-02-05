@@ -8,7 +8,6 @@ import yargs from 'yargs';
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
-import open from 'open';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -324,10 +323,7 @@ Example: $0 --help run.
         default: false,
       },
     })
-    .command('docs', 'Open the web-ext documentation', function() {
-      open('https://developer.mozilla.org/en-US/Add-ons' +
-        '/WebExtensions/Getting_started_with_web-ext');
-    });
+    .command('docs', 'Open the web-ext documentation', commands.docs, {});
 
   return program.execute(absolutePackageDir, runOptions);
 }
