@@ -7,7 +7,7 @@ import {FileFilter, isSubDir} from '../../../src/util/file-filter';
 describe('util/file-filter', () => {
 
   describe('default', () => {
-    const defaultFilter = new FileFilter();
+    const defaultFilter = new FileFilter({sourceDir: '.'});
 
     it('ignores long XPI paths', () => {
       assert.equal(defaultFilter.wantFile('path/to/some.xpi'), false);
@@ -56,6 +56,7 @@ describe('util/file-filter', () => {
 
     it('override the defaults with baseIgnoredPatterns', () => {
       const filter = new FileFilter({
+        sourceDir: '.',
         baseIgnoredPatterns: ['manifest.json'],
       });
       assert.equal(filter.wantFile('some.xpi'), true);
@@ -64,6 +65,7 @@ describe('util/file-filter', () => {
 
     it('add more files to ignore with ignoreFiles', () => {
       const filter = new FileFilter({
+        sourceDir: '.',
         ignoreFiles: ['*.log'],
       });
       assert.equal(filter.wantFile('some.xpi'), false);
@@ -72,6 +74,7 @@ describe('util/file-filter', () => {
 
     it('ignore artifactsDir and its content', () => {
       const filter = new FileFilter({
+        sourceDir: '.',
         artifactsDir: 'artifacts',
       });
       assert.equal(filter.wantFile('artifacts'), false);

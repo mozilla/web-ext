@@ -22,7 +22,7 @@ export const isSubDir = (src: string, target: string): boolean => {
 export type FileFilterOptions = {|
   baseIgnoredPatterns?: Array<string>,
   ignoreFiles?: Array<string>,
-  sourceDir?: string,
+  sourceDir: string,
   artifactsDir?: string,
 |};
 
@@ -43,7 +43,7 @@ export class FileFilter {
       '**/node_modules/**/*',
     ],
     ignoreFiles = [],
-    sourceDir = '.',
+    sourceDir,
     artifactsDir,
   }: FileFilterOptions = {}) {
     sourceDir = path.resolve(sourceDir);
