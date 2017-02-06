@@ -287,6 +287,23 @@ describe('config', () => {
         applyConfigToArgv({argv, configObject, defaultValues});
       }, UsageError, /Please use camel case to specify source-dir/);
     });
+
+    it('throws an error when an option is invalid', () => {
+      const {argv, defaultValues} = makeArgv({
+        globalOpt: {
+          'source-dir': {
+            type: 'string',
+            demand: false,
+          },
+        },
+      });
+      const configObject = {
+        artifacts: 'fake/value/',
+      };
+      assert.throws(() => {
+        applyConfigToArgv({argv, configObject, defaultValues});
+      }, UsageError, /The option artifacts is invalid. Please fix your config/);
+    });
   });
 
   describe('loadJSConfigFile', () => {
