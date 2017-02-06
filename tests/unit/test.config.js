@@ -120,8 +120,11 @@ describe('config', () => {
       const configObject = {
         foo: '/configured/foo',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-      assert.strictEqual(newArgv.sourceDir, 'default/value/option/definition');
+      assert.throws(() => {
+        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+        assert.strictEqual(newArgv.sourceDir,
+          'default/value/option/definition');
+      }, UsageError, /Please fix your config and try again/);
     });
 
     it('preserves value on the command line if not in config', () => {
@@ -140,8 +143,10 @@ describe('config', () => {
       const configObject = {
         foo: '/configured/foo',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-      assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
+      assert.throws(() => {
+        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+        assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
+      }, UsageError, /Please fix your config and try again/);
     });
 
     it('uses a configured boolean value over an implicit default', () => {
@@ -206,8 +211,10 @@ describe('config', () => {
       const configObject = {
         foo: true,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-      assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
+      assert.throws(() => {
+        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+        assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
+      }, UsageError, /Please fix your config and try again/);
     });
 
     it('uses a configured number value over a falsey default', () => {
@@ -258,6 +265,23 @@ describe('config', () => {
       };
       const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, '/configured/directory');
+    });
+
+    it('throws an error when an option is invalid', () => {
+      const {argv, defaultValues} = makeArgv({
+        globalOpt: {
+          'source-dir': {
+            type: 'string',
+            demand: false,
+          },
+        },
+      });
+      const configObject = {
+        foo: 'fake/value/',
+      };
+      assert.throws(() => {
+        applyConfigToArgv({argv, configObject, defaultValues});
+      }, UsageError, /Please fix your config and try again/);
     });
   });
 

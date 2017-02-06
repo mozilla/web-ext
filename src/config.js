@@ -10,7 +10,7 @@ const log = createLogger(__filename);
 
 type ApplyConfigToArgvParams = {|
   argv: Object,
-  configObject: Object,
+  configObject?: Object,
   defaultValues: Object,
 |};
 
@@ -34,7 +34,8 @@ export function applyConfigToArgv({
     if (!argv.hasOwnProperty(option)) {
       log.debug(`Ignoring configuration: ${option}=${configObject[option]} ` +
         'because this is an unknown option');
-      continue;
+      throw new UsageError(`The option ${option} is invalid.` +
+        ' Please fix your config and try again.');
     }
     newArgv[option] = configObject[option];
   }
