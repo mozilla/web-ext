@@ -267,7 +267,7 @@ describe('config', () => {
       assert.strictEqual(newArgv.sourceDir, '/configured/directory');
     });
 
-    it('throws an error when an option is invalid', () => {
+    it('throws an error when an option is not camel cased', () => {
       const {argv, defaultValues} = makeArgv({
         globalOpt: {
           'source-dir': {
@@ -277,11 +277,11 @@ describe('config', () => {
         },
       });
       const configObject = {
-        foo: 'fake/value/',
+        'source-dir': 'fake/value/',
       };
       assert.throws(() => {
         applyConfigToArgv({argv, configObject, defaultValues});
-      }, UsageError, /Please fix your config and try again/);
+      }, UsageError, /Please use camel case to specify source-dir/);
     });
   });
 

@@ -2,6 +2,7 @@
 import path from 'path';
 
 import requireUncached from 'require-uncached';
+import camelCase from 'camelcase';
 
 import {createLogger} from './util/logger';
 import {UsageError} from './errors';
@@ -10,7 +11,7 @@ const log = createLogger(__filename);
 
 type ApplyConfigToArgvParams = {|
   argv: Object,
-  configObject?: Object,
+  configObject: Object,
   defaultValues: Object,
 |};
 
@@ -23,7 +24,11 @@ export function applyConfigToArgv({
   for (const option in configObject) {
     // we assume the value was set on the CLI if the default value is
     // not the same as that on the argv object as there is a very rare chance
-    // this happening
+    // of this happening
+    if (camelCase(option) !== option) {
+      throw new UsageError(`Please use camel case to specify ${option} ` +
+        'in the config');
+    }
     const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
       (argv[option] !== defaultValues[option]);
     if (wasValueSetOnCLI) {
