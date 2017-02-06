@@ -14,12 +14,14 @@ type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
   defaultValues: Object,
+  configFileName?: string,
 |};
 
 export function applyConfigToArgv({
   argv,
   configObject,
   defaultValues = {},
+  configFileName = '',
 }: ApplyConfigToArgvParams): Object {
   const newArgv = {...argv};
   for (const option in configObject) {
@@ -27,8 +29,8 @@ export function applyConfigToArgv({
     // not the same as that on the argv object as there is a very rare chance
     // of this happening
     if (camelCase(option) !== option) {
-      throw new UsageError(`Please use camel case to specify ${option} ` +
-        'in the config');
+      throw new UsageError(`The config option "${option}" must be ` +
+        `specified in camel case: "${camelCase(option)}"`);
     }
     const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
       (argv[option] !== defaultValues[option]);
@@ -37,12 +39,9 @@ export function applyConfigToArgv({
         `configuration: ${option}=${configObject[option]}`);
       continue;
     }
-    if (!argv.hasOwnProperty(option) &&
-      !argv.hasOwnProperty(decamelize(option, '-'))) {
-      log.debug(`Ignoring configuration: ${option}=${configObject[option]} ` +
-        'because this is an unknown option');
-      throw new UsageError(`The option ${option} is invalid.` +
-        ' Please fix your config and try again.');
+    if (!argv.hasOwnProperty(decamelize(option, '-'))) {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `an unknown option: "${option}"`);
     }
     newArgv[option] = configObject[option];
   }

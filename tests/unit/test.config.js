@@ -285,7 +285,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConfigToArgv({argv, configObject, defaultValues});
-      }, UsageError, /Please use camel case to specify source-dir/);
+      }, UsageError, 'UsageError: The config option "source-dir" must be ' +
+        'specified in camel case: "sourceDir"');
     });
 
     it('throws an error when an option is invalid', () => {
@@ -297,12 +298,14 @@ describe('config', () => {
           },
         },
       });
+      const configFileName = 'fake/path/to/config';
       const configObject = {
         artifacts: 'fake/value/',
       };
       assert.throws(() => {
-        applyConfigToArgv({argv, configObject, defaultValues});
-      }, UsageError, /The option artifacts is invalid. Please fix your config/);
+        applyConfigToArgv({argv, configObject, defaultValues, configFileName});
+      }, UsageError, 'UsageError: The config file at fake/path/to/config ' +
+        'specified an unknown option: "artifacts"');
     });
   });
 
