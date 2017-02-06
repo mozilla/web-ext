@@ -115,16 +115,17 @@ describe('config', () => {
             demand: false,
             default: 'default/value/option/definition',
           },
+          'artifacts-dir': {
+            type: 'string',
+            demand: false,
+          },
         },
       });
       const configObject = {
-        foo: '/configured/foo',
+        artifactsDir: '/configured/artifacts/dir',
       };
-      assert.throws(() => {
-        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-        assert.strictEqual(newArgv.sourceDir,
-          'default/value/option/definition');
-      }, UsageError, /Please fix your config and try again/);
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, 'default/value/option/definition');
     });
 
     it('preserves value on the command line if not in config', () => {
@@ -138,15 +139,17 @@ describe('config', () => {
             demand: false,
             default: 'default/value/option/definition',
           },
+          'artifacts-dir': {
+            type: 'string',
+            demand: false,
+          },
         },
       });
       const configObject = {
-        foo: '/configured/foo',
+        artifactsDir: '/configured/artifacts/dir',
       };
-      assert.throws(() => {
-        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-        assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
-      }, UsageError, /Please fix your config and try again/);
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
     it('uses a configured boolean value over an implicit default', () => {
@@ -206,15 +209,16 @@ describe('config', () => {
           'source-dir': {
             type: 'string',
           },
+          'verbose': {
+            type: 'boolean',
+          },
         },
       });
       const configObject = {
-        foo: true,
+        verbose: true,
       };
-      assert.throws(() => {
-        const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
-        assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
-      }, UsageError, /Please fix your config and try again/);
+      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
     it('uses a configured number value over a falsey default', () => {

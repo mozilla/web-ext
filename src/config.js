@@ -3,6 +3,7 @@ import path from 'path';
 
 import requireUncached from 'require-uncached';
 import camelCase from 'camelcase';
+import decamelize from 'decamelize';
 
 import {createLogger} from './util/logger';
 import {UsageError} from './errors';
@@ -36,7 +37,8 @@ export function applyConfigToArgv({
         `configuration: ${option}=${configObject[option]}`);
       continue;
     }
-    if (!argv.hasOwnProperty(option)) {
+    if (!argv.hasOwnProperty(option) &&
+      !argv.hasOwnProperty(decamelize(option, '-'))) {
       log.debug(`Ignoring configuration: ${option}=${configObject[option]} ` +
         'because this is an unknown option');
       throw new UsageError(`The option ${option} is invalid.` +
