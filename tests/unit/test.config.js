@@ -45,6 +45,11 @@ function makeArgv({
   };
 }
 
+const applyConf = (params) => applyConfigToArgv({
+  configFileName: 'some/path/to/config.js',
+  ...params,
+});
+
 describe('config', () => {
   describe('applyConfigToArgv', () => {
 
@@ -64,7 +69,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -82,7 +87,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
     });
 
@@ -102,7 +107,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -124,7 +129,7 @@ describe('config', () => {
       const configObject = {
         artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, 'default/value/option/definition');
     });
 
@@ -148,7 +153,7 @@ describe('config', () => {
       const configObject = {
         artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -165,7 +170,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -181,7 +186,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -197,7 +202,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: false,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -217,7 +222,7 @@ describe('config', () => {
       const configObject = {
         verbose: true,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -234,7 +239,7 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.numberOfRetries, 1);
     });
 
@@ -251,7 +256,7 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.numberOfRetries, 0);
     });
 
@@ -267,7 +272,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/directory',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, '/configured/directory');
     });
 
@@ -284,7 +289,7 @@ describe('config', () => {
         'source-dir': 'fake/value/',
       };
       assert.throws(() => {
-        applyConfigToArgv({argv, configObject, defaultValues});
+        applyConf({argv, configObject, defaultValues});
       }, UsageError, 'UsageError: The config option "source-dir" must be ' +
         'specified in camel case: "sourceDir"');
     });
@@ -300,12 +305,12 @@ describe('config', () => {
       });
       const configFileName = 'fake/path/to/config';
       const configObject = {
-        artifacts: 'fake/value/',
+        artifactsDir: 'fake/artifacts/dir',
       };
       assert.throws(() => {
-        applyConfigToArgv({argv, configObject, defaultValues, configFileName});
+        applyConf({argv, configObject, defaultValues, configFileName});
       }, UsageError, 'UsageError: The config file at fake/path/to/config ' +
-        'specified an unknown option: "artifacts"');
+        'specified an unknown option: "artifactsDir"');
     });
   });
 

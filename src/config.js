@@ -14,14 +14,14 @@ type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
   defaultValues: Object,
-  configFileName?: string,
+  configFileName: string,
 |};
 
 export function applyConfigToArgv({
   argv,
   configObject,
   defaultValues = {},
-  configFileName = '',
+  configFileName,
 }: ApplyConfigToArgvParams): Object {
   const newArgv = {...argv};
   for (const option in configObject) {
