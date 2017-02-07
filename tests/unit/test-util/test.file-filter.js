@@ -6,8 +6,15 @@ import {FileFilter, isSubDir} from '../../../src/util/file-filter';
 
 describe('util/file-filter', () => {
 
+  const newFileFilter = (params = {}) => {
+    return new FileFilter({
+      sourceDir: '.',
+      ...params,
+    });
+  };
+
   describe('default', () => {
-    const defaultFilter = new FileFilter({sourceDir: '.'});
+    const defaultFilter = newFileFilter();
 
     it('ignores long XPI paths', () => {
       assert.equal(defaultFilter.wantFile('path/to/some.xpi'), false);
@@ -55,8 +62,7 @@ describe('util/file-filter', () => {
   describe('options', () => {
 
     it('override the defaults with baseIgnoredPatterns', () => {
-      const filter = new FileFilter({
-        sourceDir: '.',
+      const filter = newFileFilter({
         baseIgnoredPatterns: ['manifest.json'],
       });
       assert.equal(filter.wantFile('some.xpi'), true);
@@ -64,8 +70,7 @@ describe('util/file-filter', () => {
     });
 
     it('add more files to ignore with ignoreFiles', () => {
-      const filter = new FileFilter({
-        sourceDir: '.',
+      const filter = newFileFilter({
         ignoreFiles: ['*.log'],
       });
       assert.equal(filter.wantFile('some.xpi'), false);
@@ -73,8 +78,7 @@ describe('util/file-filter', () => {
     });
 
     it('ignore artifactsDir and its content', () => {
-      const filter = new FileFilter({
-        sourceDir: '.',
+      const filter = newFileFilter({
         artifactsDir: 'artifacts',
       });
       assert.equal(filter.wantFile('artifacts'), false);
@@ -82,7 +86,7 @@ describe('util/file-filter', () => {
     });
 
     it('does not ignore an artifactsDir outside of sourceDir', () => {
-      const filter = new FileFilter({
+      const filter = newFileFilter({
         artifactsDir: '.',
         sourceDir: 'dist',
       });
@@ -91,7 +95,7 @@ describe('util/file-filter', () => {
     });
 
     it('resolve relative path', () => {
-      const filter = new FileFilter({
+      const filter = newFileFilter({
         sourceDir: '/src',
         artifactsDir: 'artifacts',
         ignoreFiles: [
