@@ -227,7 +227,7 @@ export function configureProfile(
   return Promise.resolve(profile);
 }
 
-// UseProfile types and implementation.
+// useProfile types and implementation.
 
 export type UseProfileParams = {
   app?: PreferencesAppName,
@@ -235,7 +235,7 @@ export type UseProfileParams = {
   customPrefs?: FirefoxPreferences,
 };
 
-// Uses existing ptofile path to resolves with the profile object.
+// Use the target path as a Firefox profile without cloning it
 
 export async function useProfile(
   profilePath: string,

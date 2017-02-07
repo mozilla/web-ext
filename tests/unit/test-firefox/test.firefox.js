@@ -310,10 +310,10 @@ describe('firefox', () => {
       );
     }
 
-    it('resolves with a profile object', () => withBaseProfile(
+    it('resolves to a FirefoxProfile instance', () => withBaseProfile(
       (baseProfile) => {
-        return firefox.useProfile(baseProfile.path(),
-          {configureThisProfile: (profile) => Promise.resolve(profile)})
+        const configureThisProfile = (profile) => Promise.resolve(profile);
+        return firefox.useProfile(baseProfile.path(), {configureThisProfile})
           .then((profile) => {
             assert.instanceOf(profile, FirefoxProfile);
           });
@@ -325,8 +325,8 @@ describe('firefox', () => {
         const configureThisProfile =
           sinon.spy((profile) => Promise.resolve(profile));
         const app = 'fennec';
-        return firefox.useProfile(baseProfile.path(),
-          {app, configureThisProfile})
+        const profilePath = baseProfile.path();
+        return firefox.useProfile(profilePath, {app, configureThisProfile})
           .then((profile) => {
             assert.equal(configureThisProfile.called, true);
             assert.equal(configureThisProfile.firstCall.args[0], profile);

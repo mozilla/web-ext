@@ -185,9 +185,8 @@ describe('run', () => {
     const firefoxProfile = '/pretend/path/to/firefox/profile';
     const cmd = prepareRun();
     const {firefoxApp} = cmd.options;
-    const keepProfileChanges = true;
 
-    return cmd.run({firefoxProfile, keepProfileChanges}).then(() => {
+    return cmd.run({firefoxProfile, keepProfileChanges: true}).then(() => {
       assert.equal(firefoxApp.useProfile.called, true);
       assert.equal(firefoxApp.useProfile.firstCall.args[0],
                    firefoxProfile);
