@@ -69,19 +69,16 @@ export class FileFilter {
   }
 
   /**
-   *  Resolve relative path to absolute path if sourceDir is setted.
-   */
-  resolve(file: string): string {
-    log.debug(`Resolved path ${file} with sourceDir ${this.sourceDir}`);
-    return path.resolve(this.sourceDir, file);
-  }
-
-  /**
    *  Insert more files into filesToIgnore array.
    */
   addToIgnoreList(files: Array<string>) {
     for (const file of files) {
-      this.filesToIgnore.push(this.resolve(file));
+      const resolvedFile = path.resolve(this.sourceDir, file);
+      log.debug(
+        `Resolved path ${file} with sourceDir ${this.sourceDir} ` +
+        `to ${resolvedFile}`
+      );
+      this.filesToIgnore.push(resolvedFile);
     }
   }
 
