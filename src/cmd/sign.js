@@ -19,7 +19,7 @@ export const extensionIdFile = '.web-extension-id';
 
 // Sign command types and implementation.
 
-export type SignParams = {
+export type SignParams = {|
   id?: string,
   verbose?: boolean,
   sourceDir: string,
@@ -29,7 +29,7 @@ export type SignParams = {
   apiUrlPrefix: string,
   apiProxy: string,
   timeout: number,
-};
+|};
 
 export type SignOptions = {
   build?: typeof defaultBuilder,
@@ -37,11 +37,11 @@ export type SignOptions = {
   preValidatedManifest?: ExtensionManifest,
 };
 
-export type SignResult = {
+export type SignResult = {|
   success: boolean,
   id: string,
   downloadedFiles: Array<string>,
-};
+|};
 
 export default function sign(
   {
@@ -77,6 +77,9 @@ export default function sign(
         throw new UsageError(
           `Cannot set custom ID ${id} because manifest.json ` +
           `declares ID ${manifestId}`);
+      }
+      if (id) {
+        log.debug(`Using custom ID declared as --id=${id}`);
       }
 
       if (manifestId) {

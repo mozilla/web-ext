@@ -4,6 +4,7 @@ import {readFileSync} from 'fs';
 
 import git from 'git-rev-sync';
 import yargs from 'yargs';
+import camelCase from 'camelcase';
 
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
@@ -18,6 +19,17 @@ type ProgramOptions = {|
   absolutePackageDir?: string,
 |}
 
+// TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
+
+type ExecuteOptions = {
+  checkForUpdates?: Function,
+  systemProcess?: typeof process,
+  logStream?: typeof defaultLogStream,
+  getVersion?: Function,
+  shouldExitProgram?: boolean,
+  globalEnv?: string,
+}
+
 /*
  * The command line program.
  */
@@ -25,6 +37,7 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
+  defaultValues: Object;
 
   constructor(
     argv: ?Array<string>,
@@ -54,11 +67,11 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    this.yargs.command(name, description, (yargs) => {
+    this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {
         return;
       }
-      return yargs
+      return yargsForCmd
         // Make sure the user does not add any extra commands. For example,
         // this would be a mistake because lint does not accept arguments:
         // web-ext lint ./src/path/to/file.js
@@ -79,7 +92,15 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
+    this.defaultValues = {};
     Object.keys(options).forEach((key) => {
+      const camelCasedKey = camelCase(key);
+      if (options[key].type === 'boolean') {
+        this.defaultValues[camelCasedKey] = false;
+      }
+      if (typeof(options[key].default) !== 'undefined') {
+        this.defaultValues[camelCasedKey] = options[key].default;
+      }
       options[key].global = true;
       if (options[key].demand === undefined) {
         // By default, all options should be "demanded" otherwise
@@ -97,7 +118,7 @@ export class Program {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
       logStream = defaultLogStream, getVersion = defaultVersionGetter,
       shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
-    }: Object = {}
+    }: ExecuteOptions = {}
   ): Promise<void> {
 
     this.shouldExitProgram = shouldExitProgram;
@@ -174,13 +195,21 @@ export function defaultVersionGetter(
   }
 }
 
+// TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
+
+type MainParams = {
+  getVersion?: Function,
+  commands?: Object,
+  argv: Array<any>,
+  runOptions?: Object,
+}
 
 export function main(
   absolutePackageDir: string,
   {
     getVersion = defaultVersionGetter, commands = defaultCommands, argv,
     runOptions = {},
-  }: Object = {}
+  }: MainParams = {}
 ): Promise<any> {
 
   const program = new Program(argv, {absolutePackageDir});
@@ -226,6 +255,15 @@ Example: $0 --help run.
       alias: 'v',
       describe: 'Show verbose output',
       type: 'boolean',
+    },
+    'ignore-files': {
+      alias: 'i',
+      describe: 'A list of glob patterns to define which files should be ' +
+                'ignored. (Example: --ignore-files=path/to/first.js ' +
+                'path/to/second.js "**/*.log")',
+      demand: false,
+      requiresArg: true,
+      type: 'array',
     },
   });
 

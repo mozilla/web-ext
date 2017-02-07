@@ -2,10 +2,9 @@
 import path from 'path';
 import {createWriteStream} from 'fs';
 
-import minimatch from 'minimatch';
 import {fs} from 'mz';
-import streamToPromise from 'stream-to-promise';
 import parseJSON from 'parse-json';
+import eventToPromise from 'event-to-promise';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
@@ -13,9 +12,14 @@ import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
 import {UsageError} from '../errors';
+import {
+  createFileFilter as defaultFileFilterCreator,
+  FileFilter,
+} from '../util/file-filter';
 // Import flow types.
 import type {OnSourceChangeFn} from '../watcher';
 import type {ExtensionManifest} from '../util/manifest';
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
@@ -27,31 +31,31 @@ export function safeFileName(name: string): string {
 
 // defaultPackageCreator types and implementation.
 
-export type ExtensionBuildResult = {
+export type ExtensionBuildResult = {|
   extensionPath: string,
-};
+|};
 
-export type PackageCreatorParams = {
+export type PackageCreatorParams = {|
   manifestData?: ExtensionManifest,
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
   showReadyMessage: boolean
-};
+|};
 
-export type LocalizedNameParams = {
+export type LocalizedNameParams = {|
   messageFile: string,
   manifestData: ExtensionManifest,
-}
+|}
 
 // This defines the _locales/messages.json type. See:
 // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Internationalization#Providing_localized_strings_in__locales
-type LocalizedMessageData = {
-  [messageName: string]: {
+type LocalizedMessageData = {|
+  [messageName: string]: {|
     description: string,
     message: string,
-  },
-}
+  |},
+|}
 
 export async function getDefaultLocalizedName(
   {messageFile, manifestData}: LocalizedNameParams
@@ -124,7 +128,7 @@ async function defaultPackageCreator({
 
   stream.write(buffer, () => stream.end());
 
-  await streamToPromise(stream);
+  await eventToPromise(stream, 'close');
 
   if (showReadyMessage) {
     log.info(`Your web extension is ready: ${extensionPath}`);
@@ -135,29 +139,38 @@ async function defaultPackageCreator({
 
 // Build command types and implementation.
 
-export type BuildCmdParams = {
+export type BuildCmdParams = {|
   sourceDir: string,
   artifactsDir: string,
   asNeeded?: boolean,
-};
+  ignoreFiles?: Array<string>,
+|};
 
-export type BuildCmdOptions = {
+export type BuildCmdOptions = {|
   manifestData?: ExtensionManifest,
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
-  showReadyMessage?: boolean
-};
+  showReadyMessage?: boolean,
+  createFileFilter?: FileFilterCreatorFn,
+|};
 
 export default async function build(
-  {sourceDir, artifactsDir, asNeeded = false}: BuildCmdParams,
+  {sourceDir, artifactsDir, asNeeded = false, ignoreFiles = []}: BuildCmdParams,
   {
-    manifestData, fileFilter = new FileFilter(),
+    manifestData,
+    createFileFilter = defaultFileFilterCreator,
+    fileFilter = createFileFilter({
+      sourceDir,
+      artifactsDir,
+      ignoreFiles,
+    }),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
+
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
@@ -184,43 +197,4 @@ export default async function build(
   }
 
   return result;
-}
-
-
-// FileFilter types and implementation.
-
-export type FileFilterOptions = {
-  filesToIgnore?: Array<string>,
-};
-
-/*
- * Allows or ignores files when creating a ZIP archive.
- */
-export class FileFilter {
-  filesToIgnore: Array<string>;
-
-  constructor({filesToIgnore}: FileFilterOptions = {}) {
-    this.filesToIgnore = filesToIgnore || [
-      '**/*.xpi',
-      '**/*.zip',
-      '**/.*', // any hidden file
-      '**/node_modules',
-    ];
-  }
-
-  /*
-   * Returns true if the file is wanted for the ZIP archive.
-   *
-   * This is called by zipdir as wantFile(path, stat) for each
-   * file in the folder that is being archived.
-   */
-  wantFile(path: string): boolean {
-    for (const test of this.filesToIgnore) {
-      if (minimatch(path, test)) {
-        log.debug(`FileFilter: ignoring file ${path}`);
-        return false;
-      }
-    }
-    return true;
-  }
 }

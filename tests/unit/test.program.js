@@ -414,23 +414,27 @@ describe('program.main', () => {
 });
 
 describe('program.defaultVersionGetter', () => {
-  const root = path.join(__dirname, '..', '..');
+  const projectRoot = path.join(__dirname, '..', '..');
 
   it('returns the package version in production', () => {
-    const pkgFile = path.join(root, 'package.json');
+    const pkgFile = path.join(projectRoot, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
         const testBuildEnv = {globalEnv: 'production'};
-        assert.equal(defaultVersionGetter(root, testBuildEnv),
+        assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
                    JSON.parse(pkgData).version);
       });
   });
 
-  it('returns git commit information in development', () => {
+  it('returns git commit information in development', function() {
+    if (process.env.APPVEYOR) {
+      // Test skipped because of $APPVEYOR' issues with git-rev-sync (mozilla/web-ext#774)
+      this.skip();
+      return;
+    }
     const commit = `${git.branch()}-${git.long()}`;
     const testBuildEnv = {globalEnv: 'development'};
-    assert.equal(defaultVersionGetter(root, testBuildEnv),
+    assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
                  commit);
   });
-
 });

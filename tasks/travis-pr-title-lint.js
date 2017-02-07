@@ -1,9 +1,11 @@
 /* eslint prefer-template: 0, no-console: 0 */
 
 var exec = require('child_process').exec;
+var path = require('path');
 var https = require('https');
 
 var changelogLintPkg = require('conventional-changelog-lint');
+var fs = require('mz').fs;
 var objectValues = require('object.values');
 var objectEntries = require('object.entries');
 
@@ -152,12 +154,30 @@ module.exports = function(grunt) {
         return;
       }
 
+      var config = path.join(__dirname, '..', '.conventional-changelog-lintrc');
+      var checkLintConfig = Promise.all([
+        fs.stat(config), fs.access(config, fs.R_OK),
+      ])
+        .then(function(results) {
+          const configStat = results[0];
+
+          if (!configStat.isFile()) {
+            throw new Error(
+              `Config file "${config}" found, but it should be a regular file`
+            );
+          }
+        })
+        .catch(function(err) {
+          throw new Error(`Unable to load changelog lint config: ${err.stack}`);
+        });
+
       Promise.all([
+        checkLintConfig,
         getPreset('angular'),
-        getConfiguration('.conventional-changelog-lintrc'),
+        getConfiguration(),
       ]).then(function(results) {
-        var preset = results[0];
-        var configuration = results[1];
+        var preset = results[1];
+        var configuration = results[2];
 
         grunt.log.writeln('\nChangelog lint input: "' + message + '"');
 

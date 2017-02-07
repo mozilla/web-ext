@@ -1,0 +1,24 @@
+install:
+  - ps: Install-Product node $env:nodejs_version
+  - set CI=true
+  - set PATH=%APPDATA%\npm;%PATH%
+  - npm install
+
+matrix:
+  fast_finish: true
+
+build: off
+shallow_clone: true
+
+# Keep the following configs in sync with .travis.yml
+environment:
+  matrix:
+    - nodejs_version: '6'
+    - nodejs_version: '4'
+
+test_script:
+  - node --version
+  - npm --version
+  - set COVERAGE=y
+  - set NODE_ENV=production
+  - npm run test

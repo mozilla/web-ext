@@ -7,16 +7,21 @@ import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';
 
 const log = createLogger(__filename);
-const asyncMkdirp = promisify(mkdirp);
+const defaultAsyncMkdirp = promisify(mkdirp);
+
+type PrepareArtifactsDirOptions = {
+  asyncMkdirp?: typeof defaultAsyncMkdirp,
+}
 
 export async function prepareArtifactsDir(
   artifactsDir: string,
+  {asyncMkdirp = defaultAsyncMkdirp}: PrepareArtifactsDirOptions = {},
 ): Promise<string> {
   try {
     const stats = await fs.stat(artifactsDir);
     if (!stats.isDirectory()) {
       throw new UsageError(
-        `"${artifactsDir}" exists and it is not a directory.`);
+        `--artifacts-dir="${artifactsDir}" exists but it is not a directory.`);
     }
     // If the artifactsDir already exists, check that we have the write permissions on it.
     try {
@@ -24,7 +29,8 @@ export async function prepareArtifactsDir(
     } catch (accessErr) {
       if (isErrorWithCode('EACCES', accessErr)) {
         throw new UsageError(
-          `"${artifactsDir}" exists but the user lacks permissions on it.`);
+          `--artifacts-dir="${artifactsDir}" exists but the user lacks ` +
+          'permissions on it.');
       } else {
         throw accessErr;
       }
@@ -33,7 +39,8 @@ export async function prepareArtifactsDir(
     if (isErrorWithCode('EACCES', error)) {
       // Handle errors when the artifactsDir cannot be accessed.
       throw new UsageError(
-        `Cannot access "${artifactsDir}", user lacks permissions.`);
+        `Cannot access --artifacts-dir="${artifactsDir}" because the user ` +
+        `lacks permissions: ${error}`);
     } else if (isErrorWithCode('ENOENT', error)) {
       // Create the artifact dir if it doesn't exist yet.
       try {
@@ -43,7 +50,10 @@ export async function prepareArtifactsDir(
         if (isErrorWithCode('EACCES', mkdirErr)) {
           // Handle errors when the artifactsDir cannot be created for lack of permissions.
           throw new UsageError(
-            `Cannot create "${artifactsDir}", user lacks permissions.`);
+            `Cannot create --artifacts-dir="${artifactsDir}" because the ` +
+            `user lacks permissions: ${mkdirErr}`);
+        } else {
+          throw mkdirErr;
         }
       }
     } else {
