@@ -336,12 +336,6 @@ Example: $0 --help run.
         demand: false,
         type: 'string',
       },
-      'keep-profile-changes': {
-        describe: 'Run Firefox directly in custom profile. Any changes to ' +
-                  'the profile will be saved.',
-        demand: false,
-        type: 'boolean',
-      },
       'no-reload': {
         describe: 'Do not reload the extension when source files change',
         demand: false,
