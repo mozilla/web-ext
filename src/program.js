@@ -38,6 +38,7 @@ export class Program {
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
   defaultValues: Object;
+  subCommandDefaultValues: Object;
 
   constructor(
     argv: ?Array<string>,
@@ -67,6 +68,20 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
+    const mapCommandToSubOpts = {};
+    mapCommandToSubOpts [name] = commandOptions;
+    this.subCommandDefaultValues = {};
+    Object.keys(commandOptions).forEach((key) => {
+      const camelCasedKey = camelCase(key);
+      if (commandOptions[key].type === 'boolean') {
+        this.subCommandDefaultValues[camelCasedKey] = false;
+      }
+      if (typeof(commandOptions[key].default) !== 'undefined') {
+        this.subCommandDefaultValues[camelCasedKey] =
+          commandOptions[key].default;
+      }
+    });
+
     this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {
         return;
