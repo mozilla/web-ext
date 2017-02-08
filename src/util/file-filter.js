@@ -96,7 +96,7 @@ export class FileFilter {
    * file in the folder that is being archived.
    */
   wantFile(filePath: string): boolean {
-    const resolvedPath = path.resolve(filePath);
+    const resolvedPath = this.resolve(filePath);
     for (const test of this.filesToIgnore) {
       if (minimatch(resolvedPath, test)) {
         log.debug(
