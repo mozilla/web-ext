@@ -69,11 +69,15 @@ export class FileFilter {
   }
 
   /**
-   *  Resolve relative path to absolute path if sourceDir is setted.
+   *  Resolve relative path to absolute path with sourceDir.
    */
   resolve(file: string): string {
-    log.debug(`Resolved path ${file} with sourceDir ${this.sourceDir}`);
-    return path.resolve(this.sourceDir, file);
+    const resolvedPath = path.resolve(this.sourceDir, file);
+    log.debug(
+      `Resolved path ${file} with sourceDir ${this.sourceDir} ` +
+      `to ${resolvedPath}`
+    );
+    return resolvedPath;
   }
 
   /**
