@@ -45,6 +45,11 @@ function makeArgv({
   };
 }
 
+const applyConf = (params) => applyConfigToArgv({
+  configFileName: 'some/path/to/config.js',
+  ...params,
+});
+
 describe('config', () => {
   describe('applyConfigToArgv', () => {
 
@@ -64,7 +69,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -82,7 +87,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
     });
 
@@ -102,7 +107,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -115,12 +120,16 @@ describe('config', () => {
             demand: false,
             default: 'default/value/option/definition',
           },
+          'artifacts-dir': {
+            type: 'string',
+            demand: false,
+          },
         },
       });
       const configObject = {
-        foo: '/configured/foo',
+        artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, 'default/value/option/definition');
     });
 
@@ -135,12 +144,16 @@ describe('config', () => {
             demand: false,
             default: 'default/value/option/definition',
           },
+          'artifacts-dir': {
+            type: 'string',
+            demand: false,
+          },
         },
       });
       const configObject = {
-        foo: '/configured/foo',
+        artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -157,7 +170,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -173,7 +186,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -189,7 +202,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: false,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -201,12 +214,15 @@ describe('config', () => {
           'source-dir': {
             type: 'string',
           },
+          'verbose': {
+            type: 'boolean',
+          },
         },
       });
       const configObject = {
-        foo: true,
+        verbose: true,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -223,7 +239,7 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.numberOfRetries, 1);
     });
 
@@ -240,7 +256,7 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.numberOfRetries, 0);
     });
 
@@ -256,8 +272,45 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/directory',
       };
-      const newArgv = applyConfigToArgv({argv, configObject, defaultValues});
+      const newArgv = applyConf({argv, configObject, defaultValues});
       assert.strictEqual(newArgv.sourceDir, '/configured/directory');
+    });
+
+    it('throws an error when an option is not camel cased', () => {
+      const {argv, defaultValues} = makeArgv({
+        globalOpt: {
+          'source-dir': {
+            type: 'string',
+            demand: false,
+          },
+        },
+      });
+      const configObject = {
+        'source-dir': 'fake/value/',
+      };
+      assert.throws(() => {
+        applyConf({argv, configObject, defaultValues});
+      }, UsageError, 'UsageError: The config option "source-dir" must be ' +
+        'specified in camel case: "sourceDir"');
+    });
+
+    it('throws an error when an option is invalid', () => {
+      const {argv, defaultValues} = makeArgv({
+        globalOpt: {
+          'source-dir': {
+            type: 'string',
+            demand: false,
+          },
+        },
+      });
+      const configFileName = 'fake/path/to/config';
+      const configObject = {
+        artifactsDir: 'fake/artifacts/dir',
+      };
+      assert.throws(() => {
+        applyConf({argv, configObject, defaultValues, configFileName});
+      }, UsageError, 'UsageError: The config file at fake/path/to/config ' +
+        'specified an unknown option: "artifactsDir"');
     });
   });
 
