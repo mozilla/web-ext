@@ -51,7 +51,7 @@
     "bunyan": "1.8.5",
     "camelcase": "4.0.0",
     "debounce": "1.0.0",
-    "es6-error": "4.0.1",
+    "es6-error": "4.0.2",
     "es6-promisify": "5.0.0",
     "event-to-promise": "0.7.0",
     "firefox-profile": "0.4.8",
