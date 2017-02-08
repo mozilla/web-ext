@@ -71,7 +71,7 @@ export class FileFilter {
   /**
    *  Resolve relative path to absolute path with sourceDir.
    */
-  resolve(file: string): string {
+  resolveWithSourceDir(file: string): string {
     const resolvedPath = path.resolve(this.sourceDir, file);
     log.debug(
       `Resolved path ${file} with sourceDir ${this.sourceDir} ` +
@@ -85,7 +85,7 @@ export class FileFilter {
    */
   addToIgnoreList(files: Array<string>) {
     for (const file of files) {
-      this.filesToIgnore.push(this.resolve(file));
+      this.filesToIgnore.push(this.resolveWithSourceDir(file));
     }
   }
 
@@ -100,7 +100,7 @@ export class FileFilter {
    * file in the folder that is being archived.
    */
   wantFile(filePath: string): boolean {
-    const resolvedPath = this.resolve(filePath);
+    const resolvedPath = this.resolveWithSourceDir(filePath);
     for (const test of this.filesToIgnore) {
       if (minimatch(resolvedPath, test)) {
         log.debug(
