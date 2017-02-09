@@ -2,7 +2,7 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {FileFilter, isSubDir} from '../../../src/util/file-filter';
+import {FileFilter, isSubPath} from '../../../src/util/file-filter';
 
 describe('util/file-filter', () => {
 
@@ -117,17 +117,17 @@ describe('util/file-filter', () => {
 
   });
 
-  describe('isSubDir', () => {
+  describe('isSubPath', () => {
     it('test if target is a sub directory of src', () => {
-      assert.equal(isSubDir('dist', '.'), false);
-      assert.equal(isSubDir('.', 'artifacts'), true);
-      assert.equal(isSubDir('.', '.'), false);
-      assert.equal(isSubDir('/src/dist', '/src'), false);
-      assert.equal(isSubDir('/src', '/src/artifacts'), true);
-      assert.equal(isSubDir('/src', '/src'), false);
-      assert.equal(isSubDir('/firstroot', '/secondroot'), false);
-      assert.equal(isSubDir('/src', '/src/.dir'), true);
-      assert.equal(isSubDir('/src', '/src/..dir'), true);
+      assert.equal(isSubPath('dist', '.'), false);
+      assert.equal(isSubPath('.', 'artifacts'), true);
+      assert.equal(isSubPath('.', '.'), false);
+      assert.equal(isSubPath('/src/dist', '/src'), false);
+      assert.equal(isSubPath('/src', '/src/artifacts'), true);
+      assert.equal(isSubPath('/src', '/src'), false);
+      assert.equal(isSubPath('/firstroot', '/secondroot'), false);
+      assert.equal(isSubPath('/src', '/src/.dir'), true);
+      assert.equal(isSubPath('/src', '/src/..dir'), true);
     });
   });
 

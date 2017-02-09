@@ -8,7 +8,7 @@ import {createLogger} from './logger';
 const log = createLogger(__filename);
 
 // check if target is a sub directory of src
-export const isSubDir = (src: string, target: string): boolean => {
+export const isSubPath = (src: string, target: string): boolean => {
   const relate = path.relative(src, target);
   // same dir
   if (!relate) {
@@ -58,7 +58,7 @@ export class FileFilter {
     if (ignoreFiles) {
       this.addToIgnoreList(ignoreFiles);
     }
-    if (artifactsDir && isSubDir(sourceDir, artifactsDir)) {
+    if (artifactsDir && isSubPath(sourceDir, artifactsDir)) {
       artifactsDir = path.resolve(artifactsDir);
       log.debug(
         `Ignoring artifacts directory "${artifactsDir}" ` +
