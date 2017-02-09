@@ -1,6 +1,6 @@
 {
   "name": "web-ext",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
   "engines": {
