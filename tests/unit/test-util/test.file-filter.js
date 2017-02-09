@@ -126,6 +126,8 @@ describe('util/file-filter', () => {
       assert.equal(isSubDir('/src', '/src/artifacts'), true);
       assert.equal(isSubDir('/src', '/src'), false);
       assert.equal(isSubDir('/firstroot', '/secondroot'), false);
+      assert.equal(isSubDir('/src', '/src/.dir'), true);
+      assert.equal(isSubDir('/src', '/src/..dir'), true);
     });
   });
 
