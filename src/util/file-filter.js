@@ -14,7 +14,10 @@ export const isSubDir = (src: string, target: string): boolean => {
   if (!relate) {
     return false;
   }
-  return relate[0] !== '.';
+  if (relate === '..') {
+    return false;
+  }
+  return !relate.startsWith(`..${path.sep}`);
 };
 
 // FileFilter types and implementation.
