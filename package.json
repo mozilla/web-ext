@@ -70,8 +70,8 @@
     "source-map-support": "0.4.11",
     "stream-to-promise": "2.2.0",
     "tmp": "0.0.30",
-    "update-notifier": "1.0.3",
     "watchpack": "1.2.1",
+    "update-notifier": "2.0.0",
     "yargs": "6.6.0",
     "zip-dir": "1.0.2"
   },
