@@ -3,6 +3,6 @@ import build from './build';
 import lint from './lint';
 import run from './run';
 import sign from './sign';
-import newCommand from './new';
+import create from './create';
 
-export default {build, lint, run, sign, newCommand};
+export default {build, lint, run, sign, create};

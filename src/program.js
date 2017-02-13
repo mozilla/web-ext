@@ -372,9 +372,20 @@ Example: $0 --help run.
       },
     })
     .command(
-      'new',
-      'Ease the creation of new extension', commands.newCommand
-    );
+      'create',
+      'Create basic structure of a new addon', commands.create, {
+        'name': {
+          desc: 'Name of the project and its directory',
+          type: 'string',
+          demand: true,
+          requiresArg: true,
+        },
+        'path': {
+          desc: 'Optional path to a directory',
+          type: 'string',
+          requiresArg: true,
+        },
+      });
 
   return program.execute(absolutePackageDir, runOptions);
 }
