@@ -47,7 +47,7 @@
   "dependencies": {
     "addons-linter": "0.15.15",
     "babel-polyfill": "6.20.0",
-    "babel-runtime": "6.20.0",
+    "babel-runtime": "6.23.0",
     "bunyan": "1.8.5",
     "camelcase": "4.0.0",
     "debounce": "1.0.0",
