@@ -224,6 +224,7 @@ describe('build', () => {
   it('asks FileFilter what files to include in the ZIP', () => {
     const zipFile = new ZipFile();
     const fileFilter = new FileFilter({
+      sourceDir: '.',
       baseIgnoredPatterns: ['**/background-script.js'],
     });
 
@@ -244,11 +245,11 @@ describe('build', () => {
 
   it('lets you rebuild when files change', () => withTempDir(
     (tmpDir) => {
-      const fileFilter = new FileFilter();
-      sinon.spy(fileFilter, 'wantFile');
-      const onSourceChange = sinon.spy(() => {});
       const sourceDir = fixturePath('minimal-web-ext');
       const artifactsDir = tmpDir.path();
+      const fileFilter = new FileFilter({sourceDir, artifactsDir});
+      sinon.spy(fileFilter, 'wantFile');
+      const onSourceChange = sinon.spy(() => {});
       return build({
         sourceDir, artifactsDir, asNeeded: true,
       }, {

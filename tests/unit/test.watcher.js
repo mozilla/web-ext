@@ -31,6 +31,7 @@ describe('watcher', () => {
             sourceDir: tmpDir.path(),
             artifactsDir,
             onChange,
+            shouldWatchFile: () => true,
           });
         })
         .then((watcher) => {
@@ -56,6 +57,7 @@ describe('watcher', () => {
     const defaults = {
       artifactsDir: '/some/artifacts/dir/',
       onChange: () => {},
+      shouldWatchFile: () => true,
     };
 
     it('proxies file changes', () => {
@@ -101,16 +103,6 @@ describe('watcher', () => {
       proxyFileChanges({...conf, filePath: '/any/file/'});
       assert.equal(conf.onChange.called, true);
 
-    });
-
-    it('filters out commonly unwanted files by default', () => {
-      const conf = {
-        ...defaults,
-        shouldWatchFile: undefined,
-        onChange: sinon.spy(() => {}),
-      };
-      proxyFileChanges({...conf, filePath: '/somewhere/.git'});
-      assert.equal(conf.onChange.called, false);
     });
 
   });

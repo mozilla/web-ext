@@ -7,16 +7,17 @@ import {createLogger} from './logger';
 
 const log = createLogger(__filename);
 
-// Use this function to mimic path.resolve without resolving to absolute path.
-export const normalizeResolve = (file: string): string => {
-  // normalize
-  file = path.normalize(file);
-
-  // trim trailing slash
-  if (path.parse(file).base && file.endsWith(path.sep)) {
-    return file.slice(0, -1);
+// check if target is a sub directory of src
+export const isSubPath = (src: string, target: string): boolean => {
+  const relate = path.relative(src, target);
+  // same dir
+  if (!relate) {
+    return false;
   }
-  return file;
+  if (relate === '..') {
+    return false;
+  }
+  return !relate.startsWith(`..${path.sep}`);
 };
 
 // FileFilter types and implementation.
@@ -24,7 +25,7 @@ export const normalizeResolve = (file: string): string => {
 export type FileFilterOptions = {|
   baseIgnoredPatterns?: Array<string>,
   ignoreFiles?: Array<string>,
-  sourceDir?: string,
+  sourceDir: string,
   artifactsDir?: string,
 |};
 
@@ -33,7 +34,7 @@ export type FileFilterOptions = {|
  */
 export class FileFilter {
   filesToIgnore: Array<string>;
-  sourceDir: ?string;
+  sourceDir: string;
 
   constructor({
     baseIgnoredPatterns = [
@@ -48,6 +49,7 @@ export class FileFilter {
     sourceDir,
     artifactsDir,
   }: FileFilterOptions = {}) {
+    sourceDir = path.resolve(sourceDir);
 
     this.filesToIgnore = [];
     this.sourceDir = sourceDir;
@@ -56,7 +58,12 @@ export class FileFilter {
     if (ignoreFiles) {
       this.addToIgnoreList(ignoreFiles);
     }
-    if (artifactsDir) {
+    if (artifactsDir && isSubPath(sourceDir, artifactsDir)) {
+      artifactsDir = path.resolve(artifactsDir);
+      log.debug(
+        `Ignoring artifacts directory "${artifactsDir}" ` +
+        'and all its subdirectories'
+      );
       this.addToIgnoreList([
         artifactsDir,
         path.join(artifactsDir, '**', '*'),
@@ -65,18 +72,15 @@ export class FileFilter {
   }
 
   /**
-   *  Resolve relative path to absolute path if sourceDir is setted.
+   *  Resolve relative path to absolute path with sourceDir.
    */
-  resolve(file: string): string {
-    if (this.sourceDir) {
-      const resolvedPath = path.resolve(this.sourceDir, file);
-      log.debug(
-        `Resolved path ${file} with sourceDir ${this.sourceDir || ''} ` +
-        `to ${resolvedPath}`
-      );
-      return resolvedPath;
-    }
-    return normalizeResolve(file);
+  resolveWithSourceDir(file: string): string {
+    const resolvedPath = path.resolve(this.sourceDir, file);
+    log.debug(
+      `Resolved path ${file} with sourceDir ${this.sourceDir} ` +
+      `to ${resolvedPath}`
+    );
+    return resolvedPath;
   }
 
   /**
@@ -84,7 +88,7 @@ export class FileFilter {
    */
   addToIgnoreList(files: Array<string>) {
     for (const file of files) {
-      this.filesToIgnore.push(this.resolve(file));
+      this.filesToIgnore.push(this.resolveWithSourceDir(file));
     }
   }
 
@@ -99,7 +103,7 @@ export class FileFilter {
    * file in the folder that is being archived.
    */
   wantFile(filePath: string): boolean {
-    const resolvedPath = this.resolve(filePath);
+    const resolvedPath = this.resolveWithSourceDir(filePath);
     for (const test of this.filesToIgnore) {
       if (minimatch(resolvedPath, test)) {
         log.debug(
