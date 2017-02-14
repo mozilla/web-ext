@@ -36,6 +36,8 @@ import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
+let userExitRequest = false;
+
 // defaultWatcherCreator types and implementation.
 
 export type WatcherCreatorParams = {|
@@ -44,12 +46,10 @@ export type WatcherCreatorParams = {|
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
-  desktopNotifications?: typeof defaultDesktopNotifications,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
   addonReload?: typeof defaultAddonReload,
 |};
-
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
@@ -67,23 +67,22 @@ export function defaultWatcherCreator(
   return onSourceChange({
     sourceDir,
     artifactsDir,
-    onChange: () => {
-      return addonReload({addonId, client});
-    },
+    onChange: () => addonReload({addonId, client}),
     shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
 }
 
-export type ReloadParams = {
+export type ReloadParams = {|
   addonId: string,
   client: RemoteFirefox,
   desktopNotifications?: typeof defaultDesktopNotifications,
-};
+|};
 
 export function defaultAddonReload(
   {
-  addonId, client, desktopNotifications = defaultDesktopNotifications,
- }: ReloadParams
+    addonId, client,
+    desktopNotifications = defaultDesktopNotifications,
+  }: ReloadParams
 ): Promise<void> {
   log.debug(`Reloading add-on ID ${addonId}`);
   return client.reloadAddon(addonId)
@@ -96,18 +95,6 @@ export function defaultAddonReload(
       });
       throw error;
     });
-}
-
-export type ExitParams = {
-  logger?: typeof log,
-  killer?: typeof process.kill,
-};
-
-export async function defaultExitProgram(
-  {logger = log, killer = process.kill}: ExitParams = {},
-): Promise<void> {
-  logger.info('Exiting web-ext on user request');
-  killer(process.pid, 'SIGINT');
 }
 
 
@@ -144,6 +131,11 @@ export function defaultReloadStrategy(
   firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
+    if (userExitRequest) {
+      process.exit(0);
+    } else {
+      process.exit(1);
+    }
   });
 
 }
@@ -216,7 +208,6 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   addonReload: typeof defaultAddonReload,
-  exitProgram: typeof defaultExitProgram,
 |};
 
 export default async function run(
@@ -230,7 +221,6 @@ export default async function run(
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
     addonReload = defaultAddonReload,
-    exitProgram = defaultExitProgram,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -312,7 +302,9 @@ export default async function run(
         }
         process.stdin.on('keypress', (str, key) => {
           if (key.ctrl && key.name === 'c') {
-            exitProgram();
+            log.info('Exiting web-ext on user request');
+            userExitRequest = true;
+            runningFirefox.kill();
           } else if (key.name === 'r' && addonId) {
             addonReload({addonId, client});
           }

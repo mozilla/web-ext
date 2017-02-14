@@ -10,7 +10,7 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
-  defaultAddonReload, defaultExitProgram,
+  defaultAddonReload,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
 import {RemoteFirefox} from '../../../src/firefox/remote';
@@ -52,7 +52,6 @@ describe('run', () => {
         log.debug('fake: reloadStrategy()');
       }),
       addonReload: sinon.spy(),
-      exitProgram: sinon.spy(),
     };
 
     return {
@@ -240,18 +239,16 @@ describe('run', () => {
   });
 
 
-  it('exits when user presses CTRL+C in shell console', () => {
-    const cmd = prepareRun();
-    const {exitProgram} = cmd.options;
-
-    return cmd.run({noReload: false})
-      .then(() => {
-        process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
-      })
-      .then(() => {
-        assert.ok(exitProgram.called);
-      });
-  });
+  // it('exits when user presses CTRL+C in shell console', () => {
+  //   const cmd = prepareRun();
+  //
+  //   return cmd.run({noReload: false})
+  //     .then(() => {
+  //       process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+  //     })
+  //     .then(() => {
+  //     });
+  // });
 
   it('raise an error on addonId missing from installTemporaryAddon result',
     () => {
@@ -311,7 +308,6 @@ describe('run', () => {
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
-        desktopNotifications: sinon.spy(() => Promise.resolve()),
         ignoreFiles: ['path/to/file', 'path/to/file2'],
         addonReload: sinon.spy(() => Promise.resolve()),
       };
@@ -475,27 +471,6 @@ describe('run', () => {
     });
 
   });
-
-  describe('defaultExitProgram', () => {
-    const fakeLog = createLogger(__filename);
-    sinon.spy(fakeLog, 'info');
-    const fakeKiller = sinon.spy(() => Promise.resolve());
-
-    it('notifies user and exits when called', () => {
-      return defaultExitProgram({logger: fakeLog, killer: fakeKiller})
-        .then(() => {
-          assert.ok(fakeLog.info.called);
-          assert.equal(fakeLog.info.firstCall.args[0],
-                      'Exiting web-ext on user request');
-          assert.ok(fakeKiller.called);
-          assert.equal(fakeKiller.firstCall.args[1],
-                                  'SIGINT');
-        });
-
-    });
-
-  });
-
 
   describe('firefoxClient', () => {
 
