@@ -90,7 +90,7 @@ export function defaultAddonReload(
       log.error('\n');
       log.error(error.stack);
       desktopNotifications({
-        title: 'web-ext run: error occured',
+        title: 'web-ext run: error occurred',
         message: error.message,
       });
       throw error;
