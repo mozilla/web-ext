@@ -39,6 +39,8 @@ export class Program {
   shouldExitProgram: boolean;
   defaultValues: Object;
   subCommandDefaultValues: Object;
+  commandExecuted: string;
+  mapCommandToSubOpts: Object;
 
   constructor(
     argv: ?Array<string>,
@@ -68,8 +70,9 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    const mapCommandToSubOpts = {};
-    mapCommandToSubOpts [name] = commandOptions;
+    this.mapCommandToSubOpts = {};
+    this.mapCommandToSubOpts[name] = commandOptions;
+    this.commandExecuted = name;
     this.subCommandDefaultValues = setDefaultValues(commandOptions);
 
     this.yargs.command(name, description, (yargsForCmd) => {

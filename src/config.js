@@ -17,6 +17,35 @@ type ApplyConfigToArgvParams = {|
   configFileName: string,
 |};
 
+type ApplySubOptionsToArgvParams = {|
+  commandExecuted: string,
+  argv: Object,
+  mapCommandToSubOpts: Object,
+  configObject: Object,
+  defaultValues: Object,
+  configFileName: string,
+|};
+
+export function applySubOptionsToArgv({
+  commandExecuted,
+  argv,
+  mapCommandToSubOpts,
+  configObject,
+  defaultValues,
+  configFileName,
+}: ApplySubOptionsToArgvParams): Object {
+  // cannot use spread operator because Flow complains. See: https://github.com/facebook/flow/pull/3381/
+  const newArgv = JSON.parse(JSON.stringify(argv));
+  if (mapCommandToSubOpts[commandExecuted]) {
+    for (const opt in mapCommandToSubOpts) {
+      newArgv[opt] = mapCommandToSubOpts[opt];
+    }
+  }
+  const adjustedArgv = applyConfigToArgv(newArgv, configObject,
+    defaultValues, configFileName);
+  return adjustedArgv;
+}
+
 export function applyConfigToArgv({
   argv,
   configObject,
