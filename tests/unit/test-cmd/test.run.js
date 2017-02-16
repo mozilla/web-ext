@@ -10,7 +10,7 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
-  defaultAddonReload,
+  defaultAddonReload, defaultExitProgram,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
 import {RemoteFirefox} from '../../../src/firefox/remote';
@@ -242,12 +242,14 @@ describe('run', () => {
 
   it('exits when user presses CTRL+C in shell console', () => {
     const cmd = prepareRun();
+    const {exitProgram} = cmd.options;
 
     return cmd.run({noReload: false})
       .then(() => {
         process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
       })
       .then(() => {
+        assert.ok(exitProgram.called);
       });
   });
 
@@ -469,6 +471,32 @@ describe('run', () => {
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, 'an error');
+        });
+    });
+
+  });
+
+  describe('defaultExitProgram', () => {
+
+    class StubChildProcess extends EventEmitter {
+      stderr = new EventEmitter();
+      stdout = new EventEmitter();
+      kill = sinon.spy(() => Promise.resolve());
+    }
+
+    it('logs and exits on user request', () => {
+      const fakeLog = createLogger(__filename);
+      sinon.spy(fakeLog, 'info');
+      const fakeRunningFirefox = new StubChildProcess;
+
+      return defaultExitProgram({
+        runningFirefox: fakeRunningFirefox, logger: fakeLog,
+      })
+        .then(() => {
+          assert.ok(fakeLog.info.called);
+          assert.equal(fakeLog.info.firstCall.args[0],
+            'Exiting web-ext on user request');
+          assert.ok(fakeRunningFirefox.kill.called);
         });
     });
 

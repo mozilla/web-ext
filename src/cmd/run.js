@@ -104,7 +104,7 @@ export type ExitParams = {
  };
 
 export async function defaultExitProgram(
-  {logger = log, runningFirefox}: ExitParams = {},
+  {runningFirefox, logger = log}: ExitParams = {},
 ): Promise<void> {
   logger.info('Exiting web-ext on user request');
   userExitRequest = true;
