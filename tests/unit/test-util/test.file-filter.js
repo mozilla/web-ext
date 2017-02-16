@@ -1,15 +1,20 @@
 /* @flow */
-import path from 'path';
-
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {FileFilter, normalizeResolve} from '../../../src/util/file-filter';
+import {FileFilter, isSubPath} from '../../../src/util/file-filter';
 
 describe('util/file-filter', () => {
 
+  const newFileFilter = (params = {}) => {
+    return new FileFilter({
+      sourceDir: '.',
+      ...params,
+    });
+  };
+
   describe('default', () => {
-    const defaultFilter = new FileFilter();
+    const defaultFilter = newFileFilter();
 
     it('ignores long XPI paths', () => {
       assert.equal(defaultFilter.wantFile('path/to/some.xpi'), false);
@@ -57,7 +62,7 @@ describe('util/file-filter', () => {
   describe('options', () => {
 
     it('override the defaults with baseIgnoredPatterns', () => {
-      const filter = new FileFilter({
+      const filter = newFileFilter({
         baseIgnoredPatterns: ['manifest.json'],
       });
       assert.equal(filter.wantFile('some.xpi'), true);
@@ -65,7 +70,7 @@ describe('util/file-filter', () => {
     });
 
     it('add more files to ignore with ignoreFiles', () => {
-      const filter = new FileFilter({
+      const filter = newFileFilter({
         ignoreFiles: ['*.log'],
       });
       assert.equal(filter.wantFile('some.xpi'), false);
@@ -73,22 +78,31 @@ describe('util/file-filter', () => {
     });
 
     it('ignore artifactsDir and its content', () => {
-      const filter = new FileFilter({
+      const filter = newFileFilter({
         artifactsDir: 'artifacts',
       });
       assert.equal(filter.wantFile('artifacts'), false);
       assert.equal(filter.wantFile('artifacts/some.js'), false);
     });
 
+    it('does not ignore an artifactsDir outside of sourceDir', () => {
+      const filter = newFileFilter({
+        artifactsDir: '.',
+        sourceDir: 'dist',
+      });
+      assert.equal(filter.wantFile('file'), true);
+      assert.equal(filter.wantFile('dist/file'), true);
+    });
+
     it('resolve relative path', () => {
-      const filter = new FileFilter({
+      const filter = newFileFilter({
         sourceDir: '/src',
         artifactsDir: 'artifacts',
         ignoreFiles: [
           'ignore-dir/', 'some.js', '**/some.log', 'ignore/dir/content/**/*',
         ],
       });
-      assert.equal(filter.wantFile('/src/artifacts'), false);
+      assert.equal(filter.wantFile('/src/artifacts'), true);
       assert.equal(filter.wantFile('/src/ignore-dir'), false);
       assert.equal(filter.wantFile('/src/ignore-dir/some.css'), true);
       assert.equal(filter.wantFile('/src/some.js'), false);
@@ -103,22 +117,17 @@ describe('util/file-filter', () => {
 
   });
 
-  describe('normalizeResolve', () => {
-    const paths = [
-      'file', 'dir/',
-      'path/to/file', 'path/to/dir/', 'path/to/../file', 'path/to/../dir/',
-      'path/to/dir/.', 'path/to/dir/..',
-    ];
-
-    it('mimic path.resolve', () => {
-      const src = '/src/';
-
-      paths.forEach((file) => {
-        assert.equal(
-          path.resolve(src, file),
-          path.join(path.resolve(src), normalizeResolve(file))
-        );
-      });
+  describe('isSubPath', () => {
+    it('test if target is a sub directory of src', () => {
+      assert.equal(isSubPath('dist', '.'), false);
+      assert.equal(isSubPath('.', 'artifacts'), true);
+      assert.equal(isSubPath('.', '.'), false);
+      assert.equal(isSubPath('/src/dist', '/src'), false);
+      assert.equal(isSubPath('/src', '/src/artifacts'), true);
+      assert.equal(isSubPath('/src', '/src'), false);
+      assert.equal(isSubPath('/firstroot', '/secondroot'), false);
+      assert.equal(isSubPath('/src', '/src/.dir'), true);
+      assert.equal(isSubPath('/src', '/src/..dir'), true);
     });
   });
 
