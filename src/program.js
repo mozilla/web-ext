@@ -411,7 +411,8 @@ Example: $0 --help run.
         default: false,
       },
     })
-    .command('docs', 'Open the web-ext documentation', commands.docs, {});
+    .command('docs', 'Open the web-ext documentation in a browser',
+      commands.docs, {});
 
   return program.execute(absolutePackageDir, runOptions);
 }

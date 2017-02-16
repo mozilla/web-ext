@@ -1,12 +1,27 @@
 /* @flow */
-import open from 'open';
+import defaultUrlOpener from 'open';
 
-export const openDocs = {
-  openURL: open,
-};
+import {createLogger} from '../util/logger';
 
-export default function docs() {
-  return openDocs.openURL('https://developer.mozilla.org/en-US/Add-ons' +
-       '/WebExtensions/Getting_started_with_web-ext');
+const log = createLogger(__filename);
+
+type DocsOptions = {
+	openUrl?: typeof defaultUrlOpener,
 }
 
+export default function docs(
+  params: Object, {openUrl = defaultUrlOpener}: DocsOptions = {}
+	) {
+  const url = 'https://developer.mozilla.org/en-US/Add-ons' +
+       '/WebExtensions/Getting_started_with_web-ext';
+  return new Promise((resolve, reject) => {
+    openUrl(url, (error) => {
+      if (error) {
+        log.debug(`Encountered an error while opening URL ${url}`, error);
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
