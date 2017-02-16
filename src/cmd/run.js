@@ -146,8 +146,6 @@ export function defaultReloadStrategy(
     watcher.close();
     if (userExitRequest) {
       process.exit(0);
-    } else {
-      process.exit(1);
     }
   });
 
