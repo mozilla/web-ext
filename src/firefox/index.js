@@ -96,6 +96,7 @@ export type FirefoxRunnerParams = {|
 export interface FirefoxProcess extends events$EventEmitter {
   stderr: events$EventEmitter;
   stdout: events$EventEmitter;
+  kill(): Function;
 }
 
 export type FirefoxRunnerResults = {|

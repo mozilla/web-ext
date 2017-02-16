@@ -98,6 +98,19 @@ export function defaultAddonReload(
 }
 
 
+export type ExitParams = {
+   logger?: typeof log,
+   runningFirefox: FirefoxProcess,
+ };
+
+export async function defaultExitProgram(
+  {logger = log, runningFirefox}: ExitParams = {},
+): Promise<void> {
+  logger.info('Exiting web-ext on user request');
+  userExitRequest = true;
+  runningFirefox.kill();
+}
+
 // defaultReloadStrategy types and implementation.
 
 export type ReloadStrategyParams = {|
@@ -208,6 +221,7 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   addonReload: typeof defaultAddonReload,
+  exitProgram: typeof defaultExitProgram,
 |};
 
 export default async function run(
@@ -221,6 +235,7 @@ export default async function run(
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
     addonReload = defaultAddonReload,
+    exitProgram = defaultExitProgram,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -302,9 +317,7 @@ export default async function run(
         }
         process.stdin.on('keypress', (str, key) => {
           if (key.ctrl && key.name === 'c') {
-            log.info('Exiting web-ext on user request');
-            userExitRequest = true;
-            runningFirefox.kill();
+            exitProgram({runningFirefox});
           } else if (key.name === 'r' && addonId) {
             addonReload({addonId, client});
           }

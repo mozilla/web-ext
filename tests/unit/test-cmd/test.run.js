@@ -52,6 +52,7 @@ describe('run', () => {
         log.debug('fake: reloadStrategy()');
       }),
       addonReload: sinon.spy(),
+      exitProgram: sinon.spy(),
     };
 
     return {
@@ -239,16 +240,16 @@ describe('run', () => {
   });
 
 
-  // it('exits when user presses CTRL+C in shell console', () => {
-  //   const cmd = prepareRun();
-  //
-  //   return cmd.run({noReload: false})
-  //     .then(() => {
-  //       process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
-  //     })
-  //     .then(() => {
-  //     });
-  // });
+  it('exits when user presses CTRL+C in shell console', () => {
+    const cmd = prepareRun();
+
+    return cmd.run({noReload: false})
+      .then(() => {
+        process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+      })
+      .then(() => {
+      });
+  });
 
   it('raise an error on addonId missing from installTemporaryAddon result',
     () => {
@@ -387,6 +388,7 @@ describe('run', () => {
       const args = {
         addonId: 'some-addon@test-suite',
         client,
+        // $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
         firefoxProcess: new StubChildProcess(),
         profile: {},
         sourceDir: '/path/to/extension/source',
