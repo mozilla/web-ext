@@ -345,6 +345,65 @@ describe('config', () => {
       });
       assert.strictEqual(newArgv.apiKey, configObject.sign.apiKey);
     });
+
+    it('preserves CLI value over default and configured', () => {
+      const cmdApiKey = 'api-key-cmd';
+      const {argv, defaultValues, commandExecuted,
+        subCommandDefaultValues} = makeArgv({
+          userCmd: ['sign', '--api-key', cmdApiKey],
+          command: 'sign',
+          commandOpt: {
+            'api-key': {
+              requiresArg: true,
+              type: 'string',
+              demand: false,
+              default: 'pretend-default-value',
+            },
+          },
+        });
+      const configObject = {
+        sign: {
+          apiKey: 'custom-configured-key',
+        },
+      };
+      const newArgv = applyConf({
+        argv,
+        configObject,
+        defaultValues,
+        subCommandDefaultValues,
+        commandExecuted,
+      });
+      assert.strictEqual(newArgv.apiKey, cmdApiKey);
+    });
+
+    it('preserves CLI value over configured', () => {
+      const cmdApiKey = 'api-key-cmd';
+      const {argv, defaultValues, commandExecuted,
+        subCommandDefaultValues} = makeArgv({
+          userCmd: ['sign', '--api-key', cmdApiKey],
+          command: 'sign',
+          commandOpt: {
+            'api-key': {
+              requiresArg: true,
+              type: 'string',
+              demand: false,
+            },
+          },
+        });
+      const configObject = {
+        sign: {
+          apiKey: 'custom-configured-key',
+        },
+      };
+      const newArgv = applyConf({
+        argv,
+        configObject,
+        defaultValues,
+        subCommandDefaultValues,
+        commandExecuted,
+      });
+      assert.strictEqual(newArgv.apiKey, cmdApiKey);
+    });
   });
 
   describe('loadJSConfigFile', () => {
