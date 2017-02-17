@@ -439,6 +439,42 @@ describe('config', () => {
       });
       assert.strictEqual(newArgv.apiUrl, 'pretend-default-value-of-apiUrl');
     });
+
+    it('preserves CLI value if not in config', () => {
+      const cmdApiKey = 'api-key-cmd';
+      const {argv, defaultValues, commandExecuted,
+        subCommandDefaultValues} = makeArgv({
+          userCmd: ['sign', '--api-key', cmdApiKey],
+          command: 'sign',
+          commandOpt: {
+            'api-key': {
+              requiresArg: true,
+              type: 'string',
+              demand: false,
+              default: 'pretend-default-value-of-apiKey',
+            },
+            'api-url': {
+              requiresArg: true,
+              type: 'string',
+              demand: false,
+              default: 'pretend-default-value-of-apiUrl',
+            },
+          },
+        });
+      const configObject = {
+        sign: {
+          apiUrl: 'custom-configured-url',
+        },
+      };
+      const newArgv = applyConf({
+        argv,
+        configObject,
+        defaultValues,
+        subCommandDefaultValues,
+        commandExecuted,
+      });
+      assert.strictEqual(newArgv.apiKey, cmdApiKey);
+    });
   });
 
   describe('loadJSConfigFile', () => {
