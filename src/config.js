@@ -14,48 +14,26 @@ type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
   defaultValues: Object,
+  subCommandDefaultValues: Object,
   configFileName: string,
   commandExecuted: string,
 |};
 
 type ApplySubOptionsToArgvParams = {|
-  commandExecuted: string,
   argv: Object,
-  mapCommandToSubOpts: Object,
-  configObject: Object,
-  defaultValues: Object,
+  newConfigObj: Object,
+  subCommandDefaultValues: Object,
   configFileName: string,
 |};
 
 export function applySubOptionsToArgv({
-  commandExecuted,
   argv,
-  mapCommandToSubOpts,
-  configObject,
-  defaultValues,
+  newConfigObj,
+  subCommandDefaultValues,
   configFileName,
 }: ApplySubOptionsToArgvParams): Object {
-  // cannot use spread operator because Flow complains. See: https://github.com/facebook/flow/pull/3381/
-  const newArgv = JSON.parse(JSON.stringify(argv));
-  if (mapCommandToSubOpts[commandExecuted]) {
-    for (const opt in mapCommandToSubOpts) {
-      newArgv[opt] = mapCommandToSubOpts[opt];
-    }
-  }
-  const adjustedArgv = applyConfigToArgv(newArgv, configObject,
-    defaultValues, configFileName);
-  return adjustedArgv;
-}
-
-export function applyConfigToArgv({
-  argv,
-  configObject,
-  defaultValues = {},
-  configFileName,
-  commandExecuted,
-}: ApplyConfigToArgvParams): Object {
   const newArgv = {...argv};
-  for (const option in configObject) {
+  for (const option in newConfigObj) {
     // we assume the value was set on the CLI if the default value is
     // not the same as that on the argv object as there is a very rare chance
     // of this happening
@@ -64,7 +42,50 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
+    const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
+      (argv[option] !== subCommandDefaultValues[option]);
+    if (wasValueSetOnCLI) {
+      log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
+        `configuration: ${option}=${newConfigObj[option]}`);
+      continue;
+    }
+
+    if (!argv.hasOwnProperty(decamelize(option, '-'))) {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `an unknown option: "${option}"`);
+    }
+
+    newArgv[option] = newConfigObj[option];
+  }
+  return newArgv;
+
+}
+
+export function applyConfigToArgv({
+  argv,
+  configObject,
+  defaultValues = {},
+  subCommandDefaultValues,
+  configFileName,
+  commandExecuted,
+}: ApplyConfigToArgvParams): Object {
+  const newArgv = {...argv};
+  let adjustedArgv;
+  for (const option in configObject) {
+    // we assume the value was set on the CLI if the default value is
+    // not the same as that on the argv object as there is a very rare chance
+    // of this happening
+    if (camelCase(option) !== option) {
+      throw new UsageError(`The config option "${option}" must be ` +
+        `specified in camel case: "${camelCase(option)}"`);
+    }
     if (option === commandExecuted) {
+      const newConfigObj = configObject[option];
+      adjustedArgv = applySubOptionsToArgv({
+        argv,
+        newConfigObj,
+        subCommandDefaultValues,
+        configFileName});
       continue;
     }
 
@@ -83,7 +104,7 @@ export function applyConfigToArgv({
 
     newArgv[option] = configObject[option];
   }
-  return newArgv;
+  return {...newArgv, ...adjustedArgv};
 }
 
 export function loadJSConfigFile(filePath: string): Object {
