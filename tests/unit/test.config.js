@@ -404,6 +404,41 @@ describe('config', () => {
       });
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
+
+    it('preserves default value if not in config', () => {
+      const {argv, defaultValues, commandExecuted,
+        subCommandDefaultValues} = makeArgv({
+          userCmd: ['sign'],
+          command: 'sign',
+          commandOpt: {
+            'api-key': {
+              requiresArg: true,
+              type: 'string',
+              demand: false,
+              default: 'pretend-default-value-of-apiKey',
+            },
+            'api-url': {
+              requiresArg: true,
+              type: 'string',
+              demand: false,
+              default: 'pretend-default-value-of-apiUrl',
+            },
+          },
+        });
+      const configObject = {
+        sign: {
+          apiKey: 'custom-configured-key',
+        },
+      };
+      const newArgv = applyConf({
+        argv,
+        configObject,
+        defaultValues,
+        subCommandDefaultValues,
+        commandExecuted,
+      });
+      assert.strictEqual(newArgv.apiUrl, 'pretend-default-value-of-apiUrl');
+    });
   });
 
   describe('loadJSConfigFile', () => {
