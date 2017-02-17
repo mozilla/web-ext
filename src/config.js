@@ -15,6 +15,7 @@ type ApplyConfigToArgvParams = {|
   configObject: Object,
   defaultValues: Object,
   configFileName: string,
+  commandExecuted: string,
 |};
 
 type ApplySubOptionsToArgvParams = {|
@@ -51,6 +52,7 @@ export function applyConfigToArgv({
   configObject,
   defaultValues = {},
   configFileName,
+  commandExecuted,
 }: ApplyConfigToArgvParams): Object {
   const newArgv = {...argv};
   for (const option in configObject) {
@@ -61,6 +63,11 @@ export function applyConfigToArgv({
       throw new UsageError(`The config option "${option}" must be ` +
         `specified in camel case: "${camelCase(option)}"`);
     }
+
+    if (option === commandExecuted) {
+      continue;
+    }
+
     const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
       (argv[option] !== defaultValues[option]);
     if (wasValueSetOnCLI) {
@@ -68,10 +75,12 @@ export function applyConfigToArgv({
         `configuration: ${option}=${configObject[option]}`);
       continue;
     }
+
     if (!argv.hasOwnProperty(decamelize(option, '-'))) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `an unknown option: "${option}"`);
     }
+
     newArgv[option] = configObject[option];
   }
   return newArgv;
