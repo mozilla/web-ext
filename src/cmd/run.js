@@ -36,8 +36,6 @@ import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
-let userExitRequest = false;
-
 // defaultWatcherCreator types and implementation.
 
 export type WatcherCreatorParams = {|
@@ -99,16 +97,19 @@ export function defaultAddonReload(
 
 
 export type ExitParams = {
+   firefox: FirefoxProcess,
+   stdin: tty$ReadStream,
    logger?: typeof log,
-   runningFirefox: FirefoxProcess,
  };
 
 export async function defaultExitProgram(
-  {runningFirefox, logger = log}: ExitParams = {},
+  {
+    firefox, stdin, logger = log,
+  }: ExitParams = {},
 ): Promise<void> {
-  logger.info('Exiting web-ext on user request');
-  userExitRequest = true;
-  runningFirefox.kill();
+  log.info('\nExiting web-ext on user request');
+  firefox.kill();
+  stdin.pause();
 }
 
 // defaultReloadStrategy types and implementation.
@@ -144,9 +145,6 @@ export function defaultReloadStrategy(
   firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
-    if (userExitRequest) {
-      process.exit(0);
-    }
   });
 
 }
@@ -312,14 +310,18 @@ export default async function run(
         log.info('Press R to reload (and Ctrl-C to quit)');
         if (process.stdin instanceof tty.ReadStream) {
           process.stdin.setRawMode(true);
+          process.stdin.on('keypress', (str, key) => {
+            if (key.ctrl && key.name === 'c') {
+              if (process.stdin instanceof tty.ReadStream) {
+                exitProgram({
+                  firefox: runningFirefox, stdin: process.stdin,
+                });
+              }
+            } else if (key.name === 'r' && addonId) {
+              addonReload({addonId, client});
+            }
+          });
         }
-        process.stdin.on('keypress', (str, key) => {
-          if (key.ctrl && key.name === 'c') {
-            exitProgram({runningFirefox});
-          } else if (key.name === 'r' && addonId) {
-            addonReload({addonId, client});
-          }
-        });
       }
 
       log.info('The extension will reload if any source file changes');
