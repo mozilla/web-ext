@@ -107,7 +107,7 @@ export async function defaultExitProgram(
     firefox, stdin, logger = log,
   }: ExitParams = {},
 ): Promise<void> {
-  log.info('\nExiting web-ext on user request');
+  logger.info('\nExiting web-ext on user request');
   firefox.kill();
   stdin.pause();
 }

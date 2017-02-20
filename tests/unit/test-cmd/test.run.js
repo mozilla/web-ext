@@ -5,6 +5,7 @@ import EventEmitter from 'events';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+import mockStdin from 'mock-stdin';
 
 import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
@@ -487,16 +488,18 @@ describe('run', () => {
     it('logs and exits on user request', () => {
       const fakeLog = createLogger(__filename);
       sinon.spy(fakeLog, 'info');
-      const fakeRunningFirefox = new StubChildProcess;
+      const fakeFirefox = new StubChildProcess;
+      mockStdin.pause = sinon.spy(() => Promise.resolve());
 
       return defaultExitProgram({
-        runningFirefox: fakeRunningFirefox, logger: fakeLog,
+        firefox: fakeFirefox, stdin: mockStdin, logger: fakeLog,
       })
         .then(() => {
           assert.ok(fakeLog.info.called);
-          assert.equal(fakeLog.info.firstCall.args[0],
-            'Exiting web-ext on user request');
-          assert.ok(fakeRunningFirefox.kill.called);
+          assert.match(fakeLog.info.firstCall.args[0],
+            /Exiting web-ext on user request/);
+          assert.ok(fakeFirefox.kill.called);
+          assert.ok(mockStdin.pause.called);
         });
     });
 
