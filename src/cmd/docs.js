@@ -9,11 +9,12 @@ type DocsOptions = {
 	openUrl?: typeof defaultUrlOpener,
 }
 
+export const url = 'https://developer.mozilla.org/en-US/Add-ons' +
+       '/WebExtensions/Getting_started_with_web-ext';
+
 export default function docs(
   params: Object, {openUrl = defaultUrlOpener}: DocsOptions = {}
 	) {
-  const url = 'https://developer.mozilla.org/en-US/Add-ons' +
-       '/WebExtensions/Getting_started_with_web-ext';
   return new Promise((resolve, reject) => {
     openUrl(url, (error) => {
       if (error) {
