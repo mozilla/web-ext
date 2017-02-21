@@ -34,28 +34,18 @@ export function applySubOptionsToArgv({
 }: ApplySubOptionsToArgvParams): Object {
   const newArgv = {...argv};
   for (const option in newConfigObj) {
-    // we assume the value was set on the CLI if the default value is
-    // not the same as that on the argv object as there is a very rare chance
-    // of this happening
-    if (camelCase(option) !== option) {
-      throw new UsageError(`The config option "${option}" must be ` +
-        `specified in camel case: "${camelCase(option)}"`);
-    }
 
+    validateOption(option);
     if (wasValueSetOnCLI(option, newArgv[option],
     subCommandDefaultValues[option], newConfigObj[option])) {
       continue;
     }
 
-    if (!argv.hasOwnProperty(decamelize(option, '-'))) {
-      throw new UsageError(`The config file at ${configFileName} specified ` +
-        `an unknown option: "${option}"`);
-    }
+    checkOptionPresence(newArgv, option, configFileName);
 
     newArgv[option] = newConfigObj[option];
   }
   return newArgv;
-
 }
 
 export function applyConfigToArgv({
@@ -69,13 +59,8 @@ export function applyConfigToArgv({
   const newArgv = {...argv};
   let adjustedArgv;
   for (const option in configObject) {
-    // we assume the value was set on the CLI if the default value is
-    // not the same as that on the argv object as there is a very rare chance
-    // of this happening
-    if (camelCase(option) !== option) {
-      throw new UsageError(`The config option "${option}" must be ` +
-        `specified in camel case: "${camelCase(option)}"`);
-    }
+
+    validateOption(option);
     if (option === commandExecuted) {
       const newConfigObj = configObject[option];
       adjustedArgv = applySubOptionsToArgv({
@@ -91,18 +76,34 @@ export function applyConfigToArgv({
       continue;
     }
 
-    if (!argv.hasOwnProperty(decamelize(option, '-'))) {
-      throw new UsageError(`The config file at ${configFileName} specified ` +
-        `an unknown option: "${option}"`);
-    }
+    checkOptionPresence(argv, option, configFileName);
 
     newArgv[option] = configObject[option];
   }
   return {...newArgv, ...adjustedArgv};
 }
 
+function checkOptionPresence(argv: Object, option: string,
+  configFileName: string) {
+  if (!argv.hasOwnProperty(decamelize(option, '-'))) {
+    throw new UsageError(`The config file at ${configFileName} specified ` +
+      `an unknown option: "${option}"`);
+  }
+
+}
+
+function validateOption(option: string) {
+  if (camelCase(option) !== option) {
+    throw new UsageError(`The config option "${option}" must be ` +
+      `specified in camel case: "${camelCase(option)}"`);
+  }
+}
+
 function wasValueSetOnCLI(optionName: string, optionValue: string,
   defaultValue: string, configOption: string) {
+  // we assume the value was set on the CLI if the default value is
+  // not the same as that on the argv object as there is a very rare chance
+  // of this happening
   const setOnCLI = typeof(optionValue) !== 'undefined' &&
   (optionValue !== defaultValue);
 
