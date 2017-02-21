@@ -42,11 +42,8 @@ export function applySubOptionsToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
-      (argv[option] !== subCommandDefaultValues[option]);
-    if (wasValueSetOnCLI) {
-      log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
-        `configuration: ${option}=${newConfigObj[option]}`);
+    if (wasValueSetOnCLI(option, newArgv[option],
+    subCommandDefaultValues[option], newConfigObj[option])) {
       continue;
     }
 
@@ -89,11 +86,8 @@ export function applyConfigToArgv({
       continue;
     }
 
-    const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
-      (argv[option] !== defaultValues[option]);
-    if (wasValueSetOnCLI) {
-      log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
-        `configuration: ${option}=${configObject[option]}`);
+    if (wasValueSetOnCLI(option, argv[option], defaultValues[option],
+      configObject[option])) {
       continue;
     }
 
@@ -105,6 +99,19 @@ export function applyConfigToArgv({
     newArgv[option] = configObject[option];
   }
   return {...newArgv, ...adjustedArgv};
+}
+
+function wasValueSetOnCLI(optionName: string, optionValue: string,
+  defaultValue: string, configOption: string) {
+  const setOnCLI = typeof(optionValue) !== 'undefined' &&
+  (optionValue !== defaultValue);
+
+  if (setOnCLI) {
+    log.debug(`Favoring CLI: ${optionName}=${optionValue} over ` +
+      `configuration: ${optionName}=${configOption}`);
+  }
+  return setOnCLI;
+
 }
 
 export function loadJSConfigFile(filePath: string): Object {
