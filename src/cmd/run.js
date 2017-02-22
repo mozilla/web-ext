@@ -71,7 +71,8 @@ export function defaultWatcherCreator(
           log.error(error.stack);
           desktopNotifications({
             title: 'web-ext run: error occurred',
-            message: error.message,
+            message: error.message.replace(
+              'reload response error: unknownError: ', ''),
           });
           throw error;
         });
