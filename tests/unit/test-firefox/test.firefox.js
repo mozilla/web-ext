@@ -18,6 +18,17 @@ import type {RemotePortFinderParams} from '../../../src/firefox/index';
 
 const {defaultFirefoxEnv} = firefox;
 
+function withBaseProfile(callback) {
+  return withTempDir(
+    (tmpDir) => {
+      const baseProfile = new FirefoxProfile({
+        destinationDirectory: tmpDir.path(),
+      });
+      return callback(baseProfile);
+    }
+  );
+}
+
 describe('firefox', () => {
 
   describe('run', () => {
@@ -169,17 +180,6 @@ describe('firefox', () => {
 
   describe('copyProfile', () => {
 
-    function withBaseProfile(callback) {
-      return withTempDir(
-        (tmpDir) => {
-          const baseProfile = new FirefoxProfile({
-            destinationDirectory: tmpDir.path(),
-          });
-          return callback(baseProfile);
-        }
-      );
-    }
-
     it('copies a profile', () => withBaseProfile(
       (baseProfile) => {
         baseProfile.setPreference('webext.customSetting', true);
@@ -298,17 +298,6 @@ describe('firefox', () => {
   });
 
   describe('useProfile', () => {
-
-    function withBaseProfile(callback) {
-      return withTempDir(
-        (tmpDir) => {
-          const baseProfile = new FirefoxProfile({
-            destinationDirectory: tmpDir.path(),
-          });
-          return callback(baseProfile);
-        }
-      );
-    }
 
     it('resolves to a FirefoxProfile instance', () => withBaseProfile(
       (baseProfile) => {
