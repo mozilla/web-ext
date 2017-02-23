@@ -65,7 +65,6 @@ export type CmdRunOptions = {|
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
   getValidatedManifest?: typeof defaultGetValidatedManifest,
   linter: typeof defaultLinter,
-  createFileFilter?: FileFilterCreatorFn,
 |};
 
 export default async function run(

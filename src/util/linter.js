@@ -10,20 +10,22 @@ import {
 export type linterParams = {|
   sourceDir: string,
   artifactsDir: string,
-  ignoreFiles?: Array<string> | [],
+  createLinter?: typeof defaultLinterCreator,
+  fileFilterCreator?: typeof defaultFileFilterCreator,
   filePath?: string | null,
-  createLinter: typeof defaultLinterCreator,
+  ignoreFiles?: Array<string>,
 |};
 
 export async function linter(
   {
-    sourceDir, artifactsDir, ignoreFiles = [],
-    filePath = null, createLinter = defaultLinterCreator,
+    sourceDir, artifactsDir, ignoreFiles = [], filePath = null,
+    createLinter = defaultLinterCreator,
+    fileFilterCreator = defaultFileFilterCreator,
   }: linterParams
 ): Promise<void> {
   const relativePath = filePath ? [path.relative(sourceDir, filePath)]
     : filePath;
-  const fileFilter = defaultFileFilterCreator({
+  const fileFilter = fileFilterCreator({
     sourceDir, artifactsDir, ignoreFiles,
   });
   const linterInstance = createLinter({
