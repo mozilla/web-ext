@@ -5,22 +5,19 @@ import {createInstance as defaultLinterCreator} from 'addons-linter';
 import {
   createFileFilter as defaultFileFilterCreator,
 } from './file-filter';
-import {createLogger} from './logger';
 
-
-const log = createLogger(__filename);
 
 export type linterParams = {|
   sourceDir: string,
   artifactsDir: string,
-  ignoreFiles?: Array<string>,
+  ignoreFiles?: Array<string> | [],
   filePath?: string | null,
   createLinter: typeof defaultLinterCreator,
 |};
 
 export async function linter(
   {
-    sourceDir, artifactsDir, ignoreFiles,
+    sourceDir, artifactsDir, ignoreFiles = [],
     filePath = null, createLinter = defaultLinterCreator,
   }: linterParams
 ): Promise<void> {

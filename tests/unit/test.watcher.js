@@ -51,6 +51,57 @@ describe('watcher', () => {
     }
   ));
 
+  it('passes changed file to linter when specified', () => withTempDir(
+    (tmpDir) => {
+      const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
+      const someFile = path.join(tmpDir.path(), 'foo.txt');
+      const sourceDir = tmpDir.path();
+
+      var resolveChange;
+      const whenFilesChanged = new Promise((resolve) => {
+        resolveChange = resolve;
+      });
+      const onChange = sinon.spy(() => {
+        resolveChange();
+      });
+
+      const fakeLinter = sinon.spy(() => Promise.resolve());
+      const expectedParams = {
+        artifactsDir,
+        sourceDir,
+        filePath: someFile,
+      };
+
+      return fs.writeFile(someFile, '<contents>')
+        .then(() => {
+          return onSourceChange({
+            sourceDir,
+            artifactsDir,
+            onChange,
+            shouldWatchFile: () => true,
+            lint: true,
+            linter: fakeLinter,
+          });
+        })
+        .then((watcher) => {
+          return fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000)
+            .then(() => watcher);
+        })
+        .then((watcher) => {
+          return whenFilesChanged
+            .then(() => {
+              watcher.close();
+              assert.equal(fakeLinter.called, true);
+              assert.deepEqual(fakeLinter.firstCall.args[0], expectedParams);
+              // This delay seems to avoid stat errors from the watcher
+              // which can happen when the temp dir is deleted (presumably
+              // before watcher.close() has removed all listeners).
+              return new Promise((resolve) => setTimeout(resolve, 2));
+            });
+        });
+    }
+  ));
+
   describe('proxyFileChanges', () => {
 
     const defaults = {
