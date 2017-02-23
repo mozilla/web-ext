@@ -14,6 +14,8 @@ import {
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
 } from '../extension-runners';
+import {linter as defaultLinter} from '../util/linter';
+import defaultSourceWatcher from '../watcher';
 import {
   FirefoxDesktopExtensionRunner as DefaultFirefoxDesktopExtensionRunner,
 } from '../extension-runners/firefox-desktop';
@@ -24,7 +26,6 @@ import {
 import type {FirefoxPreferences} from '../firefox/preferences';
 
 const log = createLogger(__filename);
-
 
 // Run command types and implementation.
 
@@ -42,6 +43,7 @@ export type CmdRunParams = {|
   sourceDir: string,
   startUrl?: Array<string>,
   target?: Array<string>,
+  lint: boolean,
 
   // Android CLI options.
   adbBin?: string,
@@ -62,6 +64,8 @@ export type CmdRunOptions = {|
   FirefoxDesktopExtensionRunner?: typeof DefaultFirefoxDesktopExtensionRunner,
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
   getValidatedManifest?: typeof defaultGetValidatedManifest,
+  linter: typeof defaultLinter,
+  createFileFilter?: FileFilterCreatorFn,
 |};
 
 export default async function run(
@@ -79,6 +83,7 @@ export default async function run(
     sourceDir,
     startUrl,
     target,
+    lint = false,
     // Android CLI options.
     adbBin,
     adbHost,
@@ -96,6 +101,7 @@ export default async function run(
     FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
+    linter = defaultLinter, createFileFilter = defaultFileFilterCreator,
   }: CmdRunOptions = {}): Promise<DefaultMultiExtensionRunner> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -111,6 +117,10 @@ export default async function run(
   const manifestData = await getValidatedManifest(sourceDir);
 
   const runners = [];
+
+  if (lint) {
+    await linter({sourceDir, artifactsDir, ignoreFiles});
+  }
 
   const commonRunnerParams = {
     // Common options.

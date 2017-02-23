@@ -518,6 +518,11 @@ Example: $0 --help run.
         type: 'string',
         requiresArg: true,
       },
+      'lint': {
+        describe: 'Lint before running, then lint changed files when saved.',
+        demand: false,
+        type: 'boolean',
+      },
     })
     .command('lint', 'Validate the extension source', commands.lint, {
       'output': {
