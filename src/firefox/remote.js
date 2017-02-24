@@ -76,9 +76,10 @@ export class RemoteFirefox {
       this.client.client.makeRequest(
         {to: addon.actor, type: request}, (response) => {
           if (response.error) {
-            reject(
-              new WebExtError(`${request} response error: ` +
-                              `${response.error}: ${response.message}`));
+            const error = `${response.error}: ${response.message}`;
+            log.debug(
+              `Client responded to '${request}' request with error:`, error);
+            reject(new WebExtError(error));
           } else {
             resolve(response);
           }
