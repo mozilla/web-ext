@@ -14,7 +14,7 @@ describe('util.linter', () => {
   const fakeFileFilter = {wantFile: sinon.spy(() => Promise.resolve())};
   const fakeFilterCreator = sinon.spy(() => Promise.resolve(fakeFileFilter));
 
-  it('is calls addon-linter when linting directory', () => withTempDir(
+  it('calls addon-linter when linting directory', () => withTempDir(
       (tmpDir) => {
         const sourceDir = tmpDir.path();
         const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
@@ -56,7 +56,7 @@ describe('util.linter', () => {
       }
     ));
 
-  it('is calls addon-linter when specified files', () => withTempDir(
+  it('calls addon-linter when specified files', () => withTempDir(
       (tmpDir) => {
         const sourceDir = tmpDir.path();
         const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
@@ -78,16 +78,14 @@ describe('util.linter', () => {
           run: sinon.spy(() => Promise.resolve()),
         };
 
-        return fs.open(file, 'w')
-          .then(() => {
-            return linter({
-              sourceDir,
-              artifactsDir,
-              createLinter: fakeCreateLinter,
-              fileFilterCreator: fakeFilterCreator,
-              filePath: file,
-            });
-          })
+
+        return linter({
+          sourceDir,
+          artifactsDir,
+          createLinter: fakeCreateLinter,
+          fileFilterCreator: fakeFilterCreator,
+          filePath: file,
+        })
           .then(() => {
             const config = fakeCreateLinter.firstCall.args[0].config;
             config.shouldScanFile = null;
