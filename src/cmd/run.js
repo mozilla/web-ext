@@ -305,23 +305,18 @@ export default async function run(
         );
       }
 
-      if (process.stdin.isTTY) {
+      const {stdin} = process;
+      if (stdin.isTTY && stdin instanceof tty.ReadStream) {
         readline.emitKeypressEvents(process.stdin);
         log.info('Press R to reload (and Ctrl-C to quit)');
-        if (process.stdin instanceof tty.ReadStream) {
-          process.stdin.setRawMode(true);
-          process.stdin.on('keypress', (str, key) => {
-            if (key.ctrl && key.name === 'c') {
-              if (process.stdin instanceof tty.ReadStream) {
-                exitProgram({
-                  firefox: runningFirefox, stdin: process.stdin,
-                });
-              }
-            } else if (key.name === 'r' && addonId) {
-              addonReload({addonId, client});
-            }
-          });
-        }
+        stdin.setRawMode(true);
+        stdin.on('keypress', (str, key) => {
+          if (key.ctrl && key.name === 'c') {
+            exitProgram({firefox: runningFirefox, stdin});
+          } else if (key.name === 'r' && addonId) {
+            addonReload({addonId, client});
+          }
+        });
       }
 
       log.info('The extension will reload if any source file changes');
