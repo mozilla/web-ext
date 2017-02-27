@@ -13,40 +13,11 @@ const log = createLogger(__filename);
 type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
-  defaultValues: Object,
+  defaultValues?: Object,
   subCommandDefaultValues: Object,
   configFileName: string,
-  commandExecuted: string,
+  commandExecuted?: string,
 |};
-
-type ApplySubOptionsToArgvParams = {|
-  argv: Object,
-  newConfigObj: Object,
-  subCommandDefaultValues: Object,
-  configFileName: string,
-|};
-
-export function applySubOptionsToArgv({
-  argv,
-  newConfigObj,
-  subCommandDefaultValues,
-  configFileName,
-}: ApplySubOptionsToArgvParams): Object {
-  const newArgv = {...argv};
-  for (const option in newConfigObj) {
-
-    validateOption(option);
-    if (wasValueSetOnCLI(option, newArgv[option],
-    subCommandDefaultValues[option], newConfigObj[option])) {
-      continue;
-    }
-
-    checkOptionPresence(newArgv, option, configFileName);
-
-    newArgv[option] = newConfigObj[option];
-  }
-  return newArgv;
-}
 
 export function applyConfigToArgv({
   argv,
@@ -56,19 +27,22 @@ export function applyConfigToArgv({
   configFileName,
   commandExecuted,
 }: ApplyConfigToArgvParams): Object {
-  const newArgv = {...argv};
-  let adjustedArgv;
+  let newArgv = {...argv};
   for (const option in configObject) {
 
     validateOption(option);
     if (option === commandExecuted) {
-      const newConfigObj = configObject[option];
-      adjustedArgv = applySubOptionsToArgv({
+      configObject = configObject[option];
+      newArgv = applyConfigToArgv({
         argv,
-        newConfigObj,
+        configObject,
         subCommandDefaultValues,
         configFileName});
       continue;
+    }
+
+    if (defaultValues[option] === undefined && subCommandDefaultValues) {
+      defaultValues = subCommandDefaultValues;
     }
 
     if (wasValueSetOnCLI(option, argv[option], defaultValues[option],
@@ -80,7 +54,7 @@ export function applyConfigToArgv({
 
     newArgv[option] = configObject[option];
   }
-  return {...newArgv, ...adjustedArgv};
+  return newArgv;
 }
 
 function checkOptionPresence(argv: Object, option: string,
