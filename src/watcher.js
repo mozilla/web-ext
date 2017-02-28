@@ -3,7 +3,6 @@ import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
 import {createLogger} from './util/logger';
-import {linter as defaultLinter} from './util/linter';
 
 
 const log = createLogger(__filename);
@@ -20,8 +19,6 @@ export type OnSourceChangeParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile: ShouldWatchFn,
-  lint?: boolean,
-  linter?: typeof defaultLinter,
 |};
 
 // NOTE: this fix an issue with flow and default exports (which currently
@@ -35,7 +32,6 @@ export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
 export default function onSourceChange(
   {
     sourceDir, artifactsDir, onChange, shouldWatchFile,
-    lint = false, linter = defaultLinter,
   }: OnSourceChangeParams
 ): Watchpack {
   // TODO: For network disks, we would need to add {poll: true}.
@@ -46,9 +42,6 @@ export default function onSourceChange(
 
   watcher.on('change', async (filePath) => {
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
-    if (lint) {
-      await linter({artifactsDir, sourceDir, filePath});
-    }
   });
 
   log.debug(`Watching for file changes in ${sourceDir}`);
@@ -78,6 +71,6 @@ export function proxyFileChanges(
   } else {
     log.debug(`Changed: ${filePath}`);
     log.debug(`Last change detection: ${(new Date()).toTimeString()}`);
-    onChange();
+    onChange(filePath);
   }
 }
