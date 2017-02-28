@@ -98,7 +98,9 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
-    this.defaultValues = setDefaultValues(options);
+    this.defaultValues = {};
+    const defaultValuesSet = setDefaultValues(options);
+    this.defaultValues = {...this.defaultValues, ...defaultValuesSet};
     Object.keys(options).forEach((key) => {
       options[key].global = true;
       if (options[key].demand === undefined) {
@@ -176,17 +178,15 @@ declare var WEBEXT_BUILD_ENV: string;
 
 function setDefaultValues(options: Object): Object {
   const defaultValues = {};
-  if (options !== undefined && options !== null) {
-    Object.keys(options).forEach((key) => {
-      const camelCasedKey = camelCase(key);
-      if (options[key].type === 'boolean') {
-        defaultValues[camelCasedKey] = false;
-      }
-      if (typeof(options[key].default) !== 'undefined') {
-        defaultValues[camelCasedKey] = options[key].default;
-      }
-    });
-  }
+  Object.keys(options).forEach((key) => {
+    const camelCasedKey = camelCase(key);
+    if (options[key].type === 'boolean') {
+      defaultValues[camelCasedKey] = false;
+    }
+    if (typeof(options[key].default) !== 'undefined') {
+      defaultValues[camelCasedKey] = options[key].default;
+    }
+  });
   return defaultValues;
 }
 
