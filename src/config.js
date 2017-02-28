@@ -37,7 +37,7 @@ export function applyConfigToArgv({
       newArgv = applyConfigToArgv({
         argv,
         configObject: configObject[option],
-        defaultValues,
+        defaultValues: defaultValues[commandExecuted],
         configFileName});
       continue;
     }

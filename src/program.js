@@ -68,11 +68,11 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
+    if (!this.defaultValues) {
+      this.defaultValues = {};
+    }
+    this.defaultValues[name] = setDefaultValues(commandOptions);
     this.commandExecuted = name;
-    const subCommandDefaultValues = setDefaultValues(commandOptions);
-    this.defaultValues = {...this.defaultValues,
-      ...subCommandDefaultValues};
-
     this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {
         return;
@@ -98,8 +98,10 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
-    this.defaultValues = {};
     const defaultValuesSet = setDefaultValues(options);
+    if (!this.defaultValues) {
+      this.defaultValues = {};
+    }
     this.defaultValues = {...this.defaultValues, ...defaultValuesSet};
     Object.keys(options).forEach((key) => {
       options[key].global = true;
