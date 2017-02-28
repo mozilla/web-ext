@@ -39,7 +39,6 @@ export class Program {
   shouldExitProgram: boolean;
   defaultValues: Object;
   commandExecuted: string;
-  mapCommandToSubOpts: Object;
 
   constructor(
     argv: ?Array<string>,
@@ -69,8 +68,6 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    this.mapCommandToSubOpts = {};
-    this.mapCommandToSubOpts[name] = commandOptions;
     this.commandExecuted = name;
     const subCommandDefaultValues = setDefaultValues(commandOptions);
     this.defaultValues = {...this.defaultValues,
