@@ -14,7 +14,6 @@ type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
   defaultValues: Object,
-  subCommandDefaultValues: Object,
   configFileName: string,
   commandExecuted?: string,
 |};
@@ -22,25 +21,26 @@ type ApplyConfigToArgvParams = {|
 export function applyConfigToArgv({
   argv,
   configObject,
-  defaultValues = {},
-  subCommandDefaultValues,
+  defaultValues,
   configFileName,
   commandExecuted,
 }: ApplyConfigToArgvParams): Object {
   let newArgv = {...argv};
   for (const option in configObject) {
 
-    validateOption(option);
+    if (camelCase(option) !== option) {
+      throw new UsageError(`The config option "${option}" must be ` +
+        `specified in camel case: "${camelCase(option)}"`);
+    }
+
     if (option === commandExecuted) {
       newArgv = applyConfigToArgv({
         argv,
         configObject: configObject[option],
-        defaultValues: subCommandDefaultValues,
-        subCommandDefaultValues,
+        defaultValues,
         configFileName});
       continue;
     }
-
 
     // we assume the value was set on the CLI if the default value is
     // not the same as that on the argv object as there is a very rare chance
@@ -61,13 +61,6 @@ export function applyConfigToArgv({
     newArgv[option] = configObject[option];
   }
   return newArgv;
-}
-
-function validateOption(option: string) {
-  if (camelCase(option) !== option) {
-    throw new UsageError(`The config option "${option}" must be ` +
-      `specified in camel case: "${camelCase(option)}"`);
-  }
 }
 
 export function loadJSConfigFile(filePath: string): Object {

@@ -42,7 +42,6 @@ function makeArgv({
   return {
     argv: program.yargs.exitProcess(false).argv,
     defaultValues: program.defaultValues,
-    subCommandDefaultValues: program.subCommandDefaultValues,
     commandExecuted: program.commandExecuted,
   };
 }
@@ -318,19 +317,18 @@ describe('config', () => {
 
   describe('sub commands', () => {
     it('preserves configured value over default', () => {
-      const {argv, defaultValues, commandExecuted,
-        subCommandDefaultValues} = makeArgv({
-          userCmd: ['sign'],
-          command: 'sign',
-          commandOpt: {
-            'api-key': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-              default: 'pretend-default-value',
-            },
+      const {argv, defaultValues, commandExecuted} = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value',
           },
-        });
+        },
+      });
       const configObject = {
         sign: {
           apiKey: 'custom-configured-key',
@@ -340,7 +338,6 @@ describe('config', () => {
         argv,
         configObject,
         defaultValues,
-        subCommandDefaultValues,
         commandExecuted,
       });
       assert.strictEqual(newArgv.apiKey, configObject.sign.apiKey);
@@ -348,19 +345,18 @@ describe('config', () => {
 
     it('preserves CLI value over default and configured', () => {
       const cmdApiKey = 'api-key-cmd';
-      const {argv, defaultValues, commandExecuted,
-        subCommandDefaultValues} = makeArgv({
-          userCmd: ['sign', '--api-key', cmdApiKey],
-          command: 'sign',
-          commandOpt: {
-            'api-key': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-              default: 'pretend-default-value',
-            },
+      const {argv, defaultValues, commandExecuted} = makeArgv({
+        userCmd: ['sign', '--api-key', cmdApiKey],
+        command: 'sign',
+        commandOpt: {
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value',
           },
-        });
+        },
+      });
       const configObject = {
         sign: {
           apiKey: 'custom-configured-key',
@@ -370,7 +366,6 @@ describe('config', () => {
         argv,
         configObject,
         defaultValues,
-        subCommandDefaultValues,
         commandExecuted,
       });
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
@@ -378,18 +373,17 @@ describe('config', () => {
 
     it('preserves CLI value over configured', () => {
       const cmdApiKey = 'api-key-cmd';
-      const {argv, defaultValues, commandExecuted,
-        subCommandDefaultValues} = makeArgv({
-          userCmd: ['sign', '--api-key', cmdApiKey],
-          command: 'sign',
-          commandOpt: {
-            'api-key': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-            },
+      const {argv, defaultValues, commandExecuted} = makeArgv({
+        userCmd: ['sign', '--api-key', cmdApiKey],
+        command: 'sign',
+        commandOpt: {
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
           },
-        });
+        },
+      });
       const configObject = {
         sign: {
           apiKey: 'custom-configured-key',
@@ -399,32 +393,30 @@ describe('config', () => {
         argv,
         configObject,
         defaultValues,
-        subCommandDefaultValues,
         commandExecuted,
       });
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
     it('preserves default value if not in config', () => {
-      const {argv, defaultValues, commandExecuted,
-        subCommandDefaultValues} = makeArgv({
-          userCmd: ['sign'],
-          command: 'sign',
-          commandOpt: {
-            'api-key': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-              default: 'pretend-default-value-of-apiKey',
-            },
-            'api-url': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-              default: 'pretend-default-value-of-apiUrl',
-            },
+      const {argv, defaultValues, commandExecuted} = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
           },
-        });
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiUrl',
+          },
+        },
+      });
       const configObject = {
         sign: {
           apiKey: 'custom-configured-key',
@@ -434,7 +426,6 @@ describe('config', () => {
         argv,
         configObject,
         defaultValues,
-        subCommandDefaultValues,
         commandExecuted,
       });
       assert.strictEqual(newArgv.apiUrl, 'pretend-default-value-of-apiUrl');
@@ -442,25 +433,24 @@ describe('config', () => {
 
     it('preserves CLI value if not in config', () => {
       const cmdApiKey = 'api-key-cmd';
-      const {argv, defaultValues, commandExecuted,
-        subCommandDefaultValues} = makeArgv({
-          userCmd: ['sign', '--api-key', cmdApiKey],
-          command: 'sign',
-          commandOpt: {
-            'api-key': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-              default: 'pretend-default-value-of-apiKey',
-            },
-            'api-url': {
-              requiresArg: true,
-              type: 'string',
-              demand: false,
-              default: 'pretend-default-value-of-apiUrl',
-            },
+      const {argv, defaultValues, commandExecuted} = makeArgv({
+        userCmd: ['sign', '--api-key', cmdApiKey],
+        command: 'sign',
+        commandOpt: {
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
           },
-        });
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiUrl',
+          },
+        },
+      });
       const configObject = {
         sign: {
           apiUrl: 'custom-configured-url',
@@ -470,7 +460,6 @@ describe('config', () => {
         argv,
         configObject,
         defaultValues,
-        subCommandDefaultValues,
         commandExecuted,
       });
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
