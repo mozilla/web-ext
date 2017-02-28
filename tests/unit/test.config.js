@@ -42,7 +42,7 @@ function makeArgv({
   return {
     argv: program.yargs.exitProcess(false).argv,
     defaultValues: program.defaultValues,
-    commandExecuted: program.commandExecuted,
+    commandExecuted: command,
   };
 }
 
