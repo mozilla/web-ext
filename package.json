@@ -54,7 +54,7 @@
     "decamelize": "1.2.0",
     "es6-error": "4.0.2",
     "es6-promisify": "5.0.0",
-    "event-to-promise": "0.7.0",
+    "event-to-promise": "0.8.0",
     "firefox-profile": "0.4.8",
     "fx-runner": "1.0.6",
     "git-rev-sync": "1.8.0",
