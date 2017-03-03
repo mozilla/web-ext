@@ -90,7 +90,7 @@
     "babel-preset-stage-2": "6.18.0",
     "chai": "3.5.0",
     "conventional-changelog-cli": "1.2.0",
-    "conventional-changelog-lint": "1.1.0",
+    "conventional-changelog-lint": "1.1.1",
     "copy-dir": "0.3.0",
     "coveralls": "2.11.16",
     "deepcopy": "0.6.3",
