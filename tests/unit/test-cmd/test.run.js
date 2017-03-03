@@ -3,19 +3,26 @@ import path from 'path';
 import EventEmitter from 'events';
 
 import {describe, it} from 'mocha';
-import {assert} from 'chai';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 
-import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
-  from '../../../src/errors';
+import {
+  onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported, UsageError,
+} from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
 import {RemoteFirefox} from '../../../src/firefox/remote';
-import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
-  from '../helpers';
+import {
+  TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath,
+} from '../helpers';
 import {createLogger} from '../../../src/util/logger';
+
+chai.use(chaiAsPromised);
+
+const {assert} = chai;
 
 const log = createLogger(__filename);
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
@@ -30,11 +37,12 @@ const tempInstallResultMissingAddonId = {
 
 describe('run', () => {
 
-  function prepareRun(fakeInstallResult) {
+  function prepareRun(fakeInstallResult, fakeExperiments) {
     const sourceDir = fixturePath('minimal-web-ext');
     const argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
+      experiments: fakeExperiments,
       noReload: true,
       keepProfileChanges: false,
     };
@@ -42,10 +50,11 @@ describe('run', () => {
       firefoxApp: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(fake(RemoteFirefox.prototype, {
-          installTemporaryAddon: () =>
-            Promise.resolve(
+          installTemporaryAddon: () => {
+            return Promise.resolve(
               fakeInstallResult || tempInstallResult
-            ),
+            );
+          },
         }));
       }),
       reloadStrategy: sinon.spy(() => {
@@ -77,7 +86,6 @@ describe('run', () => {
   }
 
   it('installs and runs the extension', () => {
-
     const profile = {};
 
     const cmd = prepareRun();
@@ -282,6 +290,82 @@ describe('run', () => {
     });
   });
 
+  it('installs additional experiments addons', async () => {
+    const experiments = [
+      fixturePath('fake-experiment'),
+      fixturePath('fake-experiment2'),
+    ];
+    const experimentsResults = [
+      {addon: {id: 'expnamespace@experiments.addons.mozilla.org'}},
+      {addon: {id: 'expnamespace2@experiments.addons.mozilla.org'}},
+    ];
+
+    const cmd = prepareRun(null, experiments);
+
+    let installCallIndex = 0;
+    const firefoxClient = fake(RemoteFirefox.prototype, {
+      installTemporaryAddon: () => {
+        if (installCallIndex < experimentsResults.length) {
+          return Promise.resolve(experimentsResults[installCallIndex++]);
+        }
+
+        return Promise.resolve(tempInstallResult);
+      },
+    });
+
+    await cmd.run({}, {
+      firefoxClient: sinon.spy(() => Promise.resolve(firefoxClient)),
+    });
+
+    assert.equal(firefoxClient.installTemporaryAddon.callCount, 3);
+    assert.equal(firefoxClient.installTemporaryAddon.firstCall.args[0],
+                 path.resolve(experiments[0]));
+    assert.equal(firefoxClient.installTemporaryAddon.secondCall.args[0],
+                 path.resolve(experiments[1]));
+    assert.equal(firefoxClient.installTemporaryAddon.lastCall.args[0],
+                 cmd.argv.sourceDir);
+  });
+
+  it('raise an error on missing experiment addonId', async () => {
+    const experiments = [
+      fixturePath('fake-experiment'),
+      fixturePath('fake-experiment2'),
+    ];
+    const experimentsResults = [
+      {addon: {}},
+      {addon: {id: 'expnamespace2@experiments.addons.mozilla.org'}},
+    ];
+
+    const cmd = prepareRun(null, experiments);
+
+    let installCallIndex = 0;
+    const firefoxClient = fake(RemoteFirefox.prototype, {
+      installTemporaryAddon: () => {
+        if (installCallIndex < experimentsResults.length) {
+          return Promise.resolve(experimentsResults[installCallIndex++]);
+        }
+
+        return Promise.resolve(tempInstallResult);
+      },
+    });
+
+    assert.isRejected(cmd.run({}, {
+      firefoxClient: sinon.spy(() => Promise.resolve(firefoxClient)),
+    }), `Missing ${experiments[0]} addonId on installExperiments`);
+  });
+
+  it('raises an error message on --experiments and --pre-install', () => {
+    const experiments = [
+      fixturePath('fake-experiment'),
+      fixturePath('fake-experiment2'),
+    ];
+
+    const cmd = prepareRun(null, experiments);
+
+    assert.isRejected(cmd.run({preInstall: true}), UsageError);
+  });
+
+
   describe('defaultWatcherCreator', () => {
 
     function prepare() {
@@ -395,7 +479,7 @@ describe('run', () => {
       stdout = new EventEmitter();
     }
 
-    function prepare() {
+    function prepare(installedExperiments = {}) {
       const client = new RemoteFirefox(fakeFirefoxClient());
       const watcher = {
         close: sinon.spy(() => {}),
@@ -406,6 +490,7 @@ describe('run', () => {
         firefoxProcess: new StubChildProcess(),
         profile: {},
         sourceDir: '/path/to/extension/source',
+        installedExperiments,
         artifactsDir: '/path/to/web-ext-artifacts/',
         ignoreFiles: ['first/file', 'second/file'],
       };
@@ -447,6 +532,43 @@ describe('run', () => {
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
       assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
+    });
+
+    it('configures and cleanup experiments watchers', () => {
+      const experiment = path.resolve('fake-experiment');
+      const experiment2 = path.resolve('fake-experiment2');
+      const installedExperiments = {
+        [experiment]: {
+          addonId: 'expnamespace@experiments.addons.mozilla.org',
+        },
+        [experiment2]: {
+          addonId: 'expnamespace2@experiments.addons.mozilla.org',
+        },
+      };
+
+      const {
+        createWatcher, reloadStrategy,
+        firefoxProcess, watcher,
+        ...sentArgs
+      } = prepare(installedExperiments);
+
+      reloadStrategy();
+
+      assert.equal(createWatcher.callCount, 3);
+      const firstCallArg = createWatcher.firstCall.args[0];
+      assert.equal(firstCallArg.sourceDir, experiment);
+      assert.equal(firstCallArg.addonId,
+                   installedExperiments[experiment].addonId);
+      const secondCallArg = createWatcher.secondCall.args[0];
+      assert.equal(secondCallArg.sourceDir, experiment2);
+      assert.equal(secondCallArg.addonId,
+                   installedExperiments[experiment2].addonId);
+      const lastCallArg = createWatcher.lastCall.args[0];
+      assert.equal(lastCallArg.sourceDir, sentArgs.sourceDir);
+      assert.equal(lastCallArg.addonId, sentArgs.addonId);
+
+      firefoxProcess.emit('close');
+      assert.equal(watcher.close.callCount, 3);
     });
 
   });

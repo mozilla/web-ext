@@ -1,4 +1,7 @@
 /* @flow */
+
+import path from 'path';
+
 import type FirefoxProfile from 'firefox-profile';
 import type Watchpack from 'watchpack';
 
@@ -11,6 +14,7 @@ import {
   isErrorWithCode,
   RemoteTempInstallNotSupported,
   WebExtError,
+  UsageError,
 } from '../errors';
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
@@ -83,8 +87,17 @@ export function defaultWatcherCreator(
 
 // defaultReloadStrategy types and implementation.
 
+export type InstalledExperiment = {|
+  addonId: string,
+|};
+
+export type InstalledExperiments = {
+  [experimentPath: string]: InstalledExperiment,
+};
+
 export type ReloadStrategyParams = {|
   addonId: string,
+  installedExperiments: InstalledExperiments,
   firefoxProcess: FirefoxProcess,
   client: RemoteFirefox,
   profile: FirefoxProfile,
@@ -100,13 +113,28 @@ export type ReloadStrategyOptions = {|
 
 export function defaultReloadStrategy(
   {
-    addonId, firefoxProcess, client, profile,
+    addonId, installedExperiments = {}, firefoxProcess, client, profile,
     sourceDir, artifactsDir, ignoreFiles,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
+  const experimentWatchers: Array<Watchpack> = [];
+
+  for (const experimentDir of Object.keys(installedExperiments)) {
+    const installedExperiment = installedExperiments[experimentDir];
+
+    const experimentWatcher: Watchpack = createWatcher({
+      addonId: installedExperiment.addonId,
+      artifactsDir,
+      client,
+      ignoreFiles,
+      sourceDir: experimentDir,
+    });
+    experimentWatchers.push(experimentWatcher);
+  }
+
   const watcher: Watchpack = (
     createWatcher({addonId, client, sourceDir, artifactsDir, ignoreFiles})
   );
@@ -114,8 +142,11 @@ export function defaultReloadStrategy(
   firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
-  });
 
+    for (const experimentWatcher of experimentWatchers) {
+      experimentWatcher.close();
+    }
+  });
 }
 
 
@@ -171,6 +202,7 @@ export function defaultFirefoxClient(
 export type CmdRunParams = {|
   sourceDir: string,
   artifactsDir: string,
+  experiments: Array<string>,
   firefox: string,
   firefoxProfile: string,
   keepProfileChanges: boolean,
@@ -190,7 +222,7 @@ export type CmdRunOptions = {|
 
 export default async function run(
   {
-    sourceDir, artifactsDir, firefox, firefoxProfile,
+    sourceDir, artifactsDir, experiments = [], firefox, firefoxProfile,
     keepProfileChanges = false, preInstall = false, noReload = false,
     browserConsole = false, customPrefs, startUrl, ignoreFiles,
   }: CmdRunParams,
@@ -202,6 +234,12 @@ export default async function run(
 
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
+    if (experiments.length > 0) {
+      throw new UsageError(
+        "Experiments not supported in 'web-ext run --pre-install' mode"
+      );
+    }
+
     log.info('Disabled auto-reloading because it\'s not possible with ' +
              '--pre-install');
     noReload = true;
@@ -213,11 +251,17 @@ export default async function run(
 
   let client;
   let addonId;
+  let installedExperiments;
 
   const manifestData = await getValidatedManifest(sourceDir);
 
+  experiments = experiments.map((experimentRelativePath) => {
+    return path.resolve(experimentRelativePath);
+  });
+
   const runner = new ExtensionRunner({
     sourceDir,
+    experiments,
     firefoxApp,
     firefox,
     keepProfileChanges,
@@ -248,6 +292,10 @@ export default async function run(
     client = await firefoxClient();
 
     try {
+      log.debug('Installing Experiments...');
+      installedExperiments = await runner.installExperiments(client);
+
+      log.debug('Installing WebExtension...');
       addonId = await runner.installAsTemporaryAddon(client).then(
         (installResult: FirefoxRDPResponseAddon) => installResult.addon.id
       );
@@ -280,6 +328,7 @@ export default async function run(
         sourceDir,
         artifactsDir,
         addonId,
+        installedExperiments,
         ignoreFiles,
       });
     }
@@ -293,6 +342,7 @@ export default async function run(
 
 export type ExtensionRunnerParams = {|
   sourceDir: string,
+  experiments: Array<string>,
   manifestData: ExtensionManifest,
   profilePath: string,
   keepProfileChanges: boolean,
@@ -305,6 +355,7 @@ export type ExtensionRunnerParams = {|
 
 export class ExtensionRunner {
   sourceDir: string;
+  experiments: Array<string>;
   manifestData: ExtensionManifest;
   profilePath: string;
   keepProfileChanges: boolean;
@@ -316,12 +367,13 @@ export class ExtensionRunner {
 
   constructor(
     {
-      firefoxApp, sourceDir, manifestData,
+      firefoxApp, sourceDir, experiments = [], manifestData,
       profilePath, keepProfileChanges, firefox, browserConsole, startUrl,
       customPrefs = {},
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
+    this.experiments = experiments;
     this.manifestData = manifestData;
     this.profilePath = profilePath;
     this.keepProfileChanges = keepProfileChanges;
@@ -348,6 +400,22 @@ export class ExtensionRunner {
         resolve(firefoxApp.createProfile({customPrefs}));
       }
     });
+  }
+
+  async installExperiments(
+    client: RemoteFirefox
+  ): Promise<InstalledExperiments> {
+    const results = {};
+    for (const experimentDir of this.experiments) {
+      const {addon} = await client.installTemporaryAddon(experimentDir);
+      if (!addon.id) {
+        throw new WebExtError(
+          `Missing ${experimentDir} addonId on installExperiments`
+        );
+      }
+      results[experimentDir] = {addonId: addon.id};
+    }
+    return results;
   }
 
   installAsTemporaryAddon(
