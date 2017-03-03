@@ -36,6 +36,7 @@ describe('run', () => {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
+      keepProfileChanges: false,
     };
     const options = {
       firefoxApp: getFakeFirefox(),
@@ -67,6 +68,7 @@ describe('run', () => {
     const allImplementations = {
       createProfile: () => Promise.resolve(profile),
       copyProfile: () => Promise.resolve(profile),
+      useProfile: () => Promise.resolve(profile),
       installExtension: () => Promise.resolve(),
       run: () => Promise.resolve(),
       ...implementations,
@@ -175,6 +177,18 @@ describe('run', () => {
       assert.equal(firefoxApp.createProfile.called, false);
       assert.equal(firefoxApp.copyProfile.called, true);
       assert.equal(firefoxApp.copyProfile.firstCall.args[0],
+                   firefoxProfile);
+    });
+  });
+
+  it('keeps changes in custom profile when specified', () => {
+    const firefoxProfile = '/pretend/path/to/firefox/profile';
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({firefoxProfile, keepProfileChanges: true}).then(() => {
+      assert.equal(firefoxApp.useProfile.called, true);
+      assert.equal(firefoxApp.useProfile.firstCall.args[0],
                    firefoxProfile);
     });
   });

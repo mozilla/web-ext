@@ -173,6 +173,7 @@ export type CmdRunParams = {|
   artifactsDir: string,
   firefox: string,
   firefoxProfile: string,
+  keepProfileChanges: boolean,
   preInstall: boolean,
   noReload: boolean,
   browserConsole: boolean,
@@ -190,7 +191,7 @@ export type CmdRunOptions = {|
 export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
-    preInstall = false, noReload = false,
+    keepProfileChanges = false, preInstall = false, noReload = false,
     browserConsole = false, customPrefs, startUrl, ignoreFiles,
   }: CmdRunParams,
   {
@@ -219,6 +220,7 @@ export default async function run(
     sourceDir,
     firefoxApp,
     firefox,
+    keepProfileChanges,
     browserConsole,
     manifestData,
     profilePath: firefoxProfile,
@@ -293,6 +295,7 @@ export type ExtensionRunnerParams = {|
   sourceDir: string,
   manifestData: ExtensionManifest,
   profilePath: string,
+  keepProfileChanges: boolean,
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
   browserConsole: boolean,
@@ -304,6 +307,7 @@ export class ExtensionRunner {
   sourceDir: string;
   manifestData: ExtensionManifest;
   profilePath: string;
+  keepProfileChanges: boolean;
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
   browserConsole: boolean;
@@ -313,13 +317,14 @@ export class ExtensionRunner {
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, browserConsole, startUrl,
+      profilePath, keepProfileChanges, firefox, browserConsole, startUrl,
       customPrefs = {},
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
     this.manifestData = manifestData;
     this.profilePath = profilePath;
+    this.keepProfileChanges = keepProfileChanges;
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
     this.browserConsole = browserConsole;
@@ -328,11 +333,16 @@ export class ExtensionRunner {
   }
 
   getProfile(): Promise<FirefoxProfile> {
-    const {firefoxApp, profilePath, customPrefs} = this;
+    const {firefoxApp, profilePath, customPrefs, keepProfileChanges} = this;
     return new Promise((resolve) => {
       if (profilePath) {
-        log.debug(`Copying Firefox profile from ${profilePath}`);
-        resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
+        if (keepProfileChanges) {
+          log.debug(`Using Firefox profile from ${profilePath}`);
+          resolve(firefoxApp.useProfile(profilePath, {customPrefs}));
+        } else {
+          log.debug(`Copying Firefox profile from ${profilePath}`);
+          resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
+        }
       } else {
         log.debug('Creating new Firefox profile');
         resolve(firefoxApp.createProfile({customPrefs}));
