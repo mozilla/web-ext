@@ -15,6 +15,7 @@ import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
 
+
 type ProgramOptions = {|
   absolutePackageDir?: string,
 |}
@@ -29,6 +30,7 @@ type ExecuteOptions = {
   shouldExitProgram?: boolean,
   globalEnv?: string,
 }
+
 
 /*
  * The command line program.
@@ -417,7 +419,9 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
-    });
+    })
+    .command('docs', 'Open the web-ext documentation in a browser',
+      commands.docs, {});
 
   return program.execute(absolutePackageDir, runOptions);
 }
