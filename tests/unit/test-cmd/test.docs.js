@@ -7,7 +7,6 @@ import {makeSureItFails} from '../helpers';
 import defaultDocsCommand, {url} from '../../../src/cmd/docs';
 
 describe('docs', () => {
-
   it('passes the correct url to docs', () => {
     const openUrl = sinon.spy((urlToOpen, callback) => callback(null));
     return defaultDocsCommand({}, {openUrl}).then(() => {
@@ -17,10 +16,9 @@ describe('docs', () => {
   });
 
   it('throws an error when open fails', () => {
-    const openUrl = sinon.spy(
-      (urlToOpen, callback) => callback(
-        new Error('pretends this is an error from open()')
-        ));
+    const openUrl = sinon.spy((urlToOpen, callback) => callback(
+      new Error('pretends this is an error from open()')
+    ));
     return defaultDocsCommand({}, {openUrl})
       .then(makeSureItFails()).catch((error) => {
         assert.match(error.message, /error from open()/);
