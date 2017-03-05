@@ -365,10 +365,16 @@ export class ExtensionRunner {
       binaryArgs.push('-jsconsole');
     }
     if (startUrl) {
-      const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
+      let urls;
+      if (typeof startUrl === 'string' && startUrl.indexOf(' ') !== -1) {
+        urls = startUrl.split(' ');
+      } else {
+        urls = Array.isArray(startUrl) ? startUrl : [startUrl];
+      }
       for (const url of urls) {
         binaryArgs.push('--url', url);
       }
+      log.debug('binaryArgs is: ', binaryArgs);
     }
     return firefoxApp.run(profile, {
       firefoxBinary: firefox, binaryArgs,
