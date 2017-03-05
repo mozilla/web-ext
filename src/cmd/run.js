@@ -374,7 +374,6 @@ export class ExtensionRunner {
       for (const url of urls) {
         binaryArgs.push('--url', url);
       }
-      log.debug('binaryArgs is: ', binaryArgs);
     }
     return firefoxApp.run(profile, {
       firefoxBinary: firefox, binaryArgs,
