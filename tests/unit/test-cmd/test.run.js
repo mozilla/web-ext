@@ -1,19 +1,22 @@
 /* @flow */
 import path from 'path';
 import EventEmitter from 'events';
+import tty from 'tty';
 
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
-import mockStdin from 'mock-stdin';
 
 import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
-  defaultAddonReload, defaultExitProgram,
+  defaultAddonReload, DefaultExtensionRunner,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
+import type {
+  FirefoxProcess, // eslint-disable-line import/named
+} from '../../../src/firefox/index';
 import {RemoteFirefox} from '../../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
@@ -34,10 +37,15 @@ describe('run', () => {
 
   function prepareRun(fakeInstallResult) {
     const sourceDir = fixturePath('minimal-web-ext');
+    const fakeStdin = new tty.ReadStream();
+    sinon.spy(fakeStdin, 'pause');
+    sinon.spy(fakeStdin, 'setRawMode');
+
     const argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
+      stdin: fakeStdin,
     };
     const options = {
       firefoxApp: getFakeFirefox(),
@@ -53,7 +61,7 @@ describe('run', () => {
         log.debug('fake: reloadStrategy()');
       }),
       addonReload: sinon.spy(),
-      exitProgram: sinon.spy(),
+      ExtensionRunner: DefaultExtensionRunner,
     };
 
     return {
@@ -228,12 +236,14 @@ describe('run', () => {
   it('can reload when user presses R in shell console', () => {
     const cmd = prepareRun();
     const {addonReload} = cmd.options;
+    const fakeStdin = cmd.argv.stdin;
 
     return cmd.run({noReload: false})
       .then(() => {
-        process.stdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
       })
       .then(() => {
+        assert.ok(fakeStdin.setRawMode.called);
         assert.ok(addonReload.called);
         assert.equal(addonReload.firstCall.args[0].addonId,
           tempInstallResult.addon.id);
@@ -241,16 +251,35 @@ describe('run', () => {
   });
 
 
-  it('exits when user presses CTRL+C in shell console', () => {
+  it('logs and exits on user request (CTRL+C in shell console)', () => {
     const cmd = prepareRun();
-    const {exitProgram} = cmd.options;
+    const fakeStdin = cmd.argv.stdin;
+    const {reloadStrategy} = cmd.options;
+
+    class StubChildProcess extends EventEmitter {
+      stderr = new EventEmitter();
+      stdout = new EventEmitter();
+      kill = sinon.spy(() => Promise.resolve());
+    }
+    const fakeFirefox = new StubChildProcess();
+
+    class FakeExtensionRunner extends DefaultExtensionRunner {
+      run(): Promise<FirefoxProcess> {
+        return Promise.resolve(fakeFirefox);
+      }
+    }
+    cmd.options.ExtensionRunner = FakeExtensionRunner;
 
     return cmd.run({noReload: false})
       .then(() => {
-        process.stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
       })
       .then(() => {
-        assert.ok(exitProgram.called);
+        assert.ok(fakeStdin.pause.called);
+        assert.ok(reloadStrategy.called);
+        assert.equal(reloadStrategy.firstCall.args[0].firefoxProcess,
+          fakeFirefox);
+        assert.ok(fakeFirefox.kill.called);
       });
   });
 
@@ -472,34 +501,6 @@ describe('run', () => {
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, 'an error');
-        });
-    });
-
-  });
-
-  describe('defaultExitProgram', () => {
-
-    class StubChildProcess extends EventEmitter {
-      stderr = new EventEmitter();
-      stdout = new EventEmitter();
-      kill = sinon.spy(() => Promise.resolve());
-    }
-
-    it('logs and exits on user request', () => {
-      const fakeLog = createLogger(__filename);
-      sinon.spy(fakeLog, 'info');
-      const fakeFirefox = new StubChildProcess;
-      mockStdin.pause = sinon.spy(() => Promise.resolve());
-
-      return defaultExitProgram({
-        firefox: fakeFirefox, stdin: mockStdin, logger: fakeLog,
-      })
-        .then(() => {
-          assert.ok(fakeLog.info.called);
-          assert.match(fakeLog.info.firstCall.args[0],
-            /Exiting web-ext on user request/);
-          assert.ok(fakeFirefox.kill.called);
-          assert.ok(mockStdin.pause.called);
         });
     });
 
