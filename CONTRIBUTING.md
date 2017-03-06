@@ -346,7 +346,7 @@ To release a new version of `web-ext`, follow these steps:
   it will automatically publish the package to
   [npm](https://www.npmjs.com/package/web-ext).
 * After the package has been published, check the
-  [needs user docs](https://github.com/mozilla/web-ext/issues?utf8=%E2%9C%93&q=is%3Aclosed%20label%3A%22needs%20user%20docs%22%20)
+  [needs: docs](https://github.com/mozilla/web-ext/issues?utf8=%E2%9C%93&q=is%3Aclosed%20label%3A%22needs%3A%20docs%22%20)
   label to see if
   [the user docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
   need updating.

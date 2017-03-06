@@ -18,6 +18,17 @@ import type {RemotePortFinderParams} from '../../../src/firefox/index';
 
 const {defaultFirefoxEnv} = firefox;
 
+function withBaseProfile(callback) {
+  return withTempDir(
+    (tmpDir) => {
+      const baseProfile = new FirefoxProfile({
+        destinationDirectory: tmpDir.path(),
+      });
+      return callback(baseProfile);
+    }
+  );
+}
+
 describe('firefox', () => {
 
   describe('run', () => {
@@ -169,17 +180,6 @@ describe('firefox', () => {
 
   describe('copyProfile', () => {
 
-    function withBaseProfile(callback) {
-      return withTempDir(
-        (tmpDir) => {
-          const baseProfile = new FirefoxProfile({
-            destinationDirectory: tmpDir.path(),
-          });
-          return callback(baseProfile);
-        }
-      );
-    }
-
     it('copies a profile', () => withBaseProfile(
       (baseProfile) => {
         baseProfile.setPreference('webext.customSetting', true);
@@ -294,6 +294,35 @@ describe('firefox', () => {
           assert.equal(configureThisProfile.firstCall.args[1].app, app);
         });
     });
+
+  });
+
+  describe('useProfile', () => {
+
+    it('resolves to a FirefoxProfile instance', () => withBaseProfile(
+      (baseProfile) => {
+        const configureThisProfile = (profile) => Promise.resolve(profile);
+        return firefox.useProfile(baseProfile.path(), {configureThisProfile})
+          .then((profile) => {
+            assert.instanceOf(profile, FirefoxProfile);
+          });
+      }
+    ));
+
+    it('configures a profile', () => withBaseProfile(
+      (baseProfile) => {
+        const configureThisProfile =
+          sinon.spy((profile) => Promise.resolve(profile));
+        const app = 'fennec';
+        const profilePath = baseProfile.path();
+        return firefox.useProfile(profilePath, {app, configureThisProfile})
+          .then((profile) => {
+            assert.equal(configureThisProfile.called, true);
+            assert.equal(configureThisProfile.firstCall.args[0], profile);
+            assert.equal(configureThisProfile.firstCall.args[1].app, app);
+          });
+      }
+    ));
 
   });
 
