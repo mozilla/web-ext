@@ -44,9 +44,10 @@ export function applyConfigToArgv({
         configFileName});
       continue;
     }
-
-    if (typeof(configObject[option]) !== optionTypes[option] &&
-      optionTypes[option] !== undefined) {
+    const optionType = typeof(configObject[option]);
+    if (optionType !== optionTypes[option] &&
+      optionTypes[option] !== undefined &&
+      !(optionTypes[option] === 'count' && optionType === 'number')) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `the type of "${option}" incorrectly`);
     }

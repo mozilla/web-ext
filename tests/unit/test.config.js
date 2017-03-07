@@ -376,6 +376,24 @@ describe('config', () => {
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "sourceDir" incorrectly');
     });
+
+    it('does not throw an error when the type of option value is count', () => {
+      const {argv, defaultValues, optionTypes} = makeArgv({
+        globalOpt: {
+          verbose: {
+            type: 'count',
+          },
+        },
+      });
+      const configObject = {
+        verbose: 2,
+      };
+      const newArgv = applyConf({argv,
+        configObject,
+        defaultValues,
+        optionTypes});
+      assert.strictEqual(newArgv.verbose, 0);
+    });
   });
 
   describe('sub commands', () => {
