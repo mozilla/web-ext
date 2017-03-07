@@ -33,6 +33,14 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
+    const optionType = typeof(configObject[option]);
+
+    if (optionType !== 'number' && optionType !== 'string' &&
+      optionType !== 'boolean' && Array.isArray(configObject[option])) {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `an option of incorrect type: "${option}"`);
+    }
+
     if (option === commandExecuted) {
       newArgv = applyConfigToArgv({
         argv,
