@@ -355,6 +355,27 @@ describe('config', () => {
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified an unknown option: "randomDir"');
     });
+
+    it('throws an error when the type of option value is invalid', () => {
+      const {argv, defaultValues, optionTypes} = makeArgv({
+        globalOpt: {
+          'source-dir': {
+            type: 'string',
+            demand: false,
+          },
+        },
+      });
+      const configObject = {
+        sourceDir: {randomKey: 'randomValue'},
+      };
+      assert.throws(() => {
+        applyConf({argv,
+          configObject,
+          defaultValues,
+          optionTypes});
+      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+        'specified the type of "sourceDir" incorrectly');
+    });
   });
 
   describe('sub commands', () => {
@@ -510,6 +531,34 @@ describe('config', () => {
         commandExecuted,
       });
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
+    });
+
+    it('throws an error when the type of sub option is invalid', () => {
+      const {argv, defaultValues, optionTypes, commandExecuted} = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
+          },
+        },
+      });
+      const configObject = {
+        sign: {
+          apiUrl: 2,
+        },
+      };
+      assert.throws(() => {
+        applyConf({argv,
+          configObject,
+          defaultValues,
+          optionTypes,
+          commandExecuted});
+      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+        'specified the type of "apiUrl" incorrectly');
     });
   });
 

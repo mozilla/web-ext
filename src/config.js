@@ -35,8 +35,6 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    const optionType = typeof(configObject[option]);
-
     if (option === commandExecuted) {
       newArgv = applyConfigToArgv({
         argv,
@@ -47,10 +45,10 @@ export function applyConfigToArgv({
       continue;
     }
 
-    if (optionType !== optionTypes[option] &&
+    if (typeof(configObject[option]) !== optionTypes[option] &&
       optionTypes[option] !== undefined) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
-        `an option of incorrect type: "${option}"`);
+        `the type of "${option}" incorrectly`);
     }
 
     // we assume the value was set on the CLI if the default value is
