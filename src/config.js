@@ -14,6 +14,7 @@ type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
   defaultValues: Object,
+  optionTypes: Object,
   configFileName: string,
   commandExecuted?: string,
 |};
@@ -22,6 +23,7 @@ export function applyConfigToArgv({
   argv,
   configObject,
   defaultValues,
+  optionTypes,
   configFileName,
   commandExecuted,
 }: ApplyConfigToArgvParams): Object {
@@ -35,19 +37,20 @@ export function applyConfigToArgv({
 
     const optionType = typeof(configObject[option]);
 
-    if (optionType !== 'number' && optionType !== 'string' &&
-      optionType !== 'boolean' && Array.isArray(configObject[option])) {
-      throw new UsageError(`The config file at ${configFileName} specified ` +
-        `an option of incorrect type: "${option}"`);
-    }
-
     if (option === commandExecuted) {
       newArgv = applyConfigToArgv({
         argv,
         configObject: configObject[commandExecuted],
         defaultValues: defaultValues[commandExecuted],
+        optionTypes,
         configFileName});
       continue;
+    }
+
+    if (optionType !== optionTypes[option] &&
+      optionTypes[option] !== undefined) {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `an option of incorrect type: "${option}"`);
     }
 
     // we assume the value was set on the CLI if the default value is
