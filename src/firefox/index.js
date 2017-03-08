@@ -130,7 +130,7 @@ export async function run(
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxProcess> {
 
-  log.info(`Running Firefox with profile at ${profile.path()}`);
+  log.debug(`Running Firefox with profile at ${profile.path()}`);
 
   const remotePort = await findRemotePort();
 
