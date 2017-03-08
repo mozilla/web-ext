@@ -131,7 +131,8 @@ async function defaultPackageCreator({
   await eventToPromise(stream, 'close');
 
   if (showReadyMessage) {
-    log.info(`Your web extension is ready: ${extensionPath}`);
+    log.info('Your web extension is ready for being submitted on ' +
+             `addons.mozilla.org: ${extensionPath}`);
   }
   return {extensionPath};
 }
