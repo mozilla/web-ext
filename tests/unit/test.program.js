@@ -10,14 +10,19 @@ import {assert} from 'chai';
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
-import {fake, makeSureItFails, ErrorWithCode} from './helpers';
+import {
+  createFakeProcess,
+  fake,
+  makeSureItFails,
+  ErrorWithCode,
+} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
 
 
 describe('program.Program', () => {
 
   function execProgram(program, options = {}) {
-    const fakeProcess = fake(process);
+    const fakeProcess = createFakeProcess();
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
@@ -58,7 +63,7 @@ describe('program.Program', () => {
   });
 
   it('exits 1 on a thrown error', () => {
-    const fakeProcess = fake(process);
+    const fakeProcess = createFakeProcess();
     const program = new Program(['cmd'])
       .command('cmd', 'some command', () => {
         throw new Error('this is an error from a command handler');
@@ -280,7 +285,7 @@ describe('program.main', () => {
       getVersion: () => 'not-a-real-version',
       checkForUpdates: spy(),
       shouldExitProgram: false,
-      systemProcess: fake(process),
+      systemProcess: createFakeProcess,
     };
     return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
