@@ -24,6 +24,7 @@ export type SignParams = {|
   verbose?: boolean,
   sourceDir: string,
   artifactsDir: string,
+  ignoreFiles?: Array<string>,
   apiKey: string,
   apiSecret: string,
   apiUrlPrefix: string,
@@ -45,8 +46,8 @@ export type SignResult = {|
 
 export default function sign(
   {
-    verbose, sourceDir, artifactsDir, apiKey, apiSecret,
-    apiUrlPrefix, apiProxy, id, timeout,
+    verbose, sourceDir, artifactsDir, ignoreFiles = [],
+    apiKey, apiSecret, apiUrlPrefix, apiProxy, id, timeout,
   }: SignParams,
   {
     build = defaultBuilder, signAddon = defaultAddonSigner,
@@ -66,7 +67,7 @@ export default function sign(
       }
 
       const [buildResult, idFromSourceDir] = await Promise.all([
-        build({sourceDir, artifactsDir: tmpDir.path()},
+        build({sourceDir, ignoreFiles, artifactsDir: tmpDir.path()},
               {manifestData, showReadyMessage: false}),
         getIdFromSourceDir(sourceDir),
       ]);
