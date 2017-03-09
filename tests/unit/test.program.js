@@ -221,9 +221,9 @@ describe('program.Program', () => {
     return execProgram(new Program(['--nope']))
       .then(makeSureItFails())
       .catch((error) => {
-        // It's a bit weird that yargs calls this an argument rather
-        // than an option but, hey, it's an error.
-        assert.match(error.message, /Unknown argument: nope/);
+        // Make sure that the option name is in the error message.
+        // Be careful not to rely on any text from yargs since it's localized.
+        assert.match(error.message, /nope/);
       });
   });
 
@@ -233,8 +233,9 @@ describe('program.Program', () => {
     return execProgram(program)
       .then(makeSureItFails())
       .catch((error) => {
-        // Again, yargs calls this an argument not an option for some reason.
-        assert.match(error.message, /Unknown argument: nope/);
+        // Make sure that the option name is in the error message.
+        // Be careful not to rely on any text from yargs since it's localized.
+        assert.match(error.message, /nope/);
       });
   });
 
