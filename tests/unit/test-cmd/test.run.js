@@ -11,7 +11,7 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
-  defaultAddonReload, DefaultExtensionRunner,
+  defaultAddonReload, ExtensionRunner,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
 import type {
@@ -62,7 +62,6 @@ describe('run', () => {
         log.debug('fake: reloadStrategy()');
       }),
       addonReload: sinon.spy(),
-      ExtensionRunner: DefaultExtensionRunner,
     };
 
     return {
@@ -277,14 +276,13 @@ describe('run', () => {
     }
     const fakeFirefox = new StubChildProcess();
 
-    class FakeExtensionRunner extends DefaultExtensionRunner {
+    class FakeExtensionRunner extends ExtensionRunner {
       run(): Promise<FirefoxProcess> {
         return Promise.resolve(fakeFirefox);
       }
     }
-    cmd.options.ExtensionRunner = FakeExtensionRunner;
 
-    return cmd.run({noReload: false})
+    return cmd.run({noReload: false}, {AddonRunner: FakeExtensionRunner})
       .then(() => {
         fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
       })
@@ -424,6 +422,7 @@ describe('run', () => {
     class StubChildProcess extends EventEmitter {
       stderr = new EventEmitter();
       stdout = new EventEmitter();
+      kill = sinon.spy(() => {});
     }
 
     function prepare() {
@@ -434,7 +433,6 @@ describe('run', () => {
       const args = {
         addonId: 'some-addon@test-suite',
         client,
-        // $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
         firefoxProcess: new StubChildProcess(),
         profile: {},
         sourceDir: '/path/to/extension/source',

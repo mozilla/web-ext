@@ -203,7 +203,7 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   addonReload: typeof defaultAddonReload,
-  ExtensionRunner: typeof DefaultExtensionRunner
+  AddonRunner: typeof ExtensionRunner
 |};
 
 export default async function run(
@@ -218,7 +218,7 @@ export default async function run(
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
     addonReload = defaultAddonReload,
-    ExtensionRunner = DefaultExtensionRunner,
+    AddonRunner = ExtensionRunner,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -237,7 +237,7 @@ export default async function run(
 
   const manifestData = await getValidatedManifest(sourceDir);
 
-  const runner = new ExtensionRunner({
+  const runner = new AddonRunner({
     sourceDir,
     firefoxApp,
     firefox,
@@ -295,16 +295,31 @@ export default async function run(
 
       if (stdin.isTTY && stdin instanceof tty.ReadStream) {
         readline.emitKeypressEvents(stdin);
-        log.info('Press R to reload (and Ctrl-C to quit)');
         stdin.setRawMode(true);
-        stdin.on('keypress', (str, key) => {
-          if (key.ctrl && key.name === 'c') {
-            log.info('\nExiting web-ext on user request');
-            runningFirefox.kill();
-            stdin.pause();
-          } else if (key.name === 'r' && addonId) {
-            addonReload({addonId, client});
+
+        // NOTE: this `Promise.resolve().then(...)` is basically used to spawn a "co-routine" that is executed
+        // before the callback attached to the Promise returned by this function (and it allows the `run` function
+        // to not be stuck in the while loop).
+        Promise.resolve().then(async function() {
+          log.info('Press R to reload (and Ctrl-C to quit)');
+
+          let userExit = false;
+
+          while (!userExit) {
+            const keyPressed = await new Promise((resolve) => {
+              stdin.once('keypress', (str, key) => resolve(key));
+            });
+
+            if (keyPressed.ctrl && keyPressed.name === 'c') {
+              userExit = true;
+            } else if (keyPressed.name === 'r' && addonId) {
+              await addonReload({addonId, client});
+            }
           }
+
+          log.info('\nExiting web-ext on user request');
+          runningFirefox.kill();
+          stdin.pause();
         });
       }
 
@@ -339,7 +354,7 @@ export type ExtensionRunnerParams = {|
   startUrl?: string | Array<string>,
 |};
 
-export class DefaultExtensionRunner {
+export class ExtensionRunner {
   sourceDir: string;
   manifestData: ExtensionManifest;
   profilePath: string;
