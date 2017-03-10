@@ -8,6 +8,7 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [Picking an issue](#picking-an-issue)
 - [Installation](#installation)
   - [Develop all the things](#develop-all-the-things)
   - [Run all application tests](#run-all-application-tests)
