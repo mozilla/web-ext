@@ -482,6 +482,14 @@ describe('run', () => {
   });
 
   describe('defaultAddonReload', () => {
+    function createFakeRemoteFirefox(firefoxClient, {reloadAddon}) {
+      class FakeRemoteFirefox extends RemoteFirefox {
+        reloadAddon = sinon.spy(reloadAddon)
+      }
+      const client = new FakeRemoteFirefox(firefoxClient);
+      return client;
+    }
+
     const desktopNotifications = sinon.spy(() => Promise.resolve());
     const args = {
       addonId: 'some-addon@test-suite',
@@ -489,10 +497,8 @@ describe('run', () => {
     };
 
     it('reloads addon', () => {
-      class FakeRemoteFirefox extends RemoteFirefox {
-        reloadAddon = sinon.spy(() => Promise.resolve())
-      }
-      const client = new FakeRemoteFirefox(fakeFirefoxClient());
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(),
+        {reloadAddon: () => Promise.resolve()});
       return defaultAddonReload({client, ...args})
         .then(() => {
           assert.ok(client.reloadAddon.called, true);
@@ -502,10 +508,8 @@ describe('run', () => {
     });
 
     it('notifies user on error from source change handler', () => {
-      class FakeRemoteFirefox extends RemoteFirefox {
-        reloadAddon = sinon.spy(() => Promise.reject(new Error('an error')))
-      }
-      const client = new FakeRemoteFirefox(fakeFirefoxClient());
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(),
+        {reloadAddon: () => Promise.reject(new Error('an error'))});
       return defaultAddonReload({client, ...args})
         .then(makeSureItFails())
         .catch((error) => {
@@ -520,10 +524,8 @@ describe('run', () => {
     });
 
     it('throws errors from source change handler', () => {
-      class FakeRemoteFirefox extends RemoteFirefox {
-        reloadAddon = sinon.spy(() => Promise.reject(new Error('an error')))
-      }
-      const client = new FakeRemoteFirefox(fakeFirefoxClient());
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(),
+        {reloadAddon: () => Promise.reject(new Error('an error'))});
       return defaultAddonReload({client, ...args})
         .then(makeSureItFails())
         .catch((error) => {
