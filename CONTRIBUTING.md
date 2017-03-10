@@ -4,26 +4,31 @@ Hi! Thanks for your interest in helping make
 [WebExtension](https://developer.mozilla.org/en-US/Add-ons/WebExtensions)
 development more awesome by contributing to the `web-ext` tool. Here are links to all the sections in this document:
 
-- [Picking an issue](#picking-an-issue)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
 - [Installation](#installation)
-    - [Develop all the things](#develop-all-the-things)
-    - [Run all application tests](#run-all-application-tests)
-        - [Run a single test](#run-a-single-test)
-        - [Debug a test](#debug-a-test)
-    - [Build web-ext](#build-web-ext)
-    - [Check for lint](#check-for-lint)
-    - [Check for Flow errors](#check-for-flow-errors)
-        - [Missing annotation](#missing-annotation)
-        - [How to read Flow errors related to type inconsistencies](#how-to-read-flow-errors-related-to-type-inconsistencies)
-        - [Flow type conventions](#flow-type-conventions)
-    - [Code Coverage](#code-coverage)
-    - [Working on the CLI](#working-on-the-cli)
-        - [Adding a command option](#adding-a-command-option)
-    - [Working on `web-ext sign`](#working-on-web-ext-sign)
-    - [Creating a pull request](#creating-a-pull-request)
-    - [Writing commit messages](#writing-commit-messages)
-        - [Checking commit message formatting](#checking-commit-message-formatting)
-    - [Creating a release](#creating-a-release)
+  - [Develop all the things](#develop-all-the-things)
+  - [Run all application tests](#run-all-application-tests)
+    - [Run a single test](#run-a-single-test)
+    - [Debug a test](#debug-a-test)
+  - [Build web-ext](#build-web-ext)
+  - [Check for lint](#check-for-lint)
+  - [Check for Flow errors](#check-for-flow-errors)
+    - [Missing annotation](#missing-annotation)
+    - [How to read Flow errors related to type inconsistencies](#how-to-read-flow-errors-related-to-type-inconsistencies)
+    - [Flow type conventions](#flow-type-conventions)
+  - [Code Coverage](#code-coverage)
+  - [Working on the CLI](#working-on-the-cli)
+    - [Adding a command option](#adding-a-command-option)
+  - [Working on `web-ext sign`](#working-on-web-ext-sign)
+  - [Creating a pull request](#creating-a-pull-request)
+  - [Writing commit messages](#writing-commit-messages)
+    - [Checking commit message formatting](#checking-commit-message-formatting)
+  - [Creating a release](#creating-a-release)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 #Picking an issue
 
