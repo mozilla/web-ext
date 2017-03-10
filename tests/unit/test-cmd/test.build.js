@@ -8,9 +8,9 @@ import sinon from 'sinon';
 
 import build, {
   safeFileName,
-  FileFilter,
   getDefaultLocalizedName,
 } from '../../../src/cmd/build';
+import {FileFilter} from '../../../src/util/file-filter';
 import {withTempDir} from '../../../src/util/temp-dir';
 import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {
@@ -44,8 +44,30 @@ describe('build', () => {
             fileNames.sort();
             assert.deepEqual(fileNames,
                              ['background-script.js', 'manifest.json']);
+            return zipFile.close();
           })
     );
+  });
+
+  it('configures a build command with the expected fileFilter', () => {
+    const packageCreator = sinon.spy(
+      () => ({extensionPath: 'extension/path'})
+    );
+    const fileFilter = {wantFile: () => true};
+    const createFileFilter = sinon.spy(() => fileFilter);
+    const params = {
+      sourceDir: '/src',
+      artifactsDir: 'artifacts',
+      ignoreFiles: ['**/*.log'],
+    };
+    return build(params, {packageCreator, createFileFilter}).then(() => {
+      // ensure sourceDir, artifactsDir, ignoreFiles is used
+      assert.ok(createFileFilter.called);
+      assert.deepEqual(createFileFilter.firstCall.args[0], params);
+      // ensure packageCreator received correct fileFilter
+      assert.ok(packageCreator.called);
+      assert.equal(packageCreator.firstCall.args[0].fileFilter, fileFilter);
+    });
   });
 
   it('gives the correct name to a localized extension', () => {
@@ -164,9 +186,8 @@ describe('build', () => {
         // Make sure a manifest without an ID doesn't throw an error.
         return build({
           sourceDir: fixturePath('minimal-web-ext'),
-          manifestData: manifestWithoutApps,
           artifactsDir: tmpDir.path(),
-        });
+        }, {manifestData: manifestWithoutApps});
       }
     );
   });
@@ -203,7 +224,8 @@ describe('build', () => {
   it('asks FileFilter what files to include in the ZIP', () => {
     const zipFile = new ZipFile();
     const fileFilter = new FileFilter({
-      filesToIgnore: ['**/background-script.js'],
+      sourceDir: '.',
+      baseIgnoredPatterns: ['**/background-script.js'],
     });
 
     return withTempDir(
@@ -216,17 +238,18 @@ describe('build', () => {
           .then(() => zipFile.extractFilenames())
           .then((fileNames) => {
             assert.notInclude(fileNames, 'background-script.js');
+            return zipFile.close();
           })
     );
   });
 
   it('lets you rebuild when files change', () => withTempDir(
     (tmpDir) => {
-      const fileFilter = new FileFilter();
-      sinon.spy(fileFilter, 'wantFile');
-      const onSourceChange = sinon.spy(() => {});
       const sourceDir = fixturePath('minimal-web-ext');
       const artifactsDir = tmpDir.path();
+      const fileFilter = new FileFilter({sourceDir, artifactsDir});
+      sinon.spy(fileFilter, 'wantFile');
+      const onSourceChange = sinon.spy(() => {});
       return build({
         sourceDir, artifactsDir, asNeeded: true,
       }, {
@@ -302,51 +325,6 @@ describe('build', () => {
     it('makes names safe for writing to a file system', () => {
       assert.equal(safeFileName('Bob Loblaw\'s 2005 law-blog.net'),
                    'bob_loblaw_s_2005_law-blog.net');
-    });
-
-  });
-
-  describe('FileFilter', () => {
-    const defaultFilter = new FileFilter();
-
-    it('ignores long XPI paths by default', () => {
-      assert.equal(defaultFilter.wantFile('path/to/some.xpi'), false);
-    });
-
-    it('ignores short XPI paths by default', () => {
-      assert.equal(defaultFilter.wantFile('some.xpi'), false);
-    });
-
-    it('ignores .git directories by default', () => {
-      assert.equal(defaultFilter.wantFile('.git'), false);
-    });
-
-    it('ignores nested .git directories by default', () => {
-      assert.equal(defaultFilter.wantFile('path/to/.git'), false);
-    });
-
-    it('ignores any hidden file by default', () => {
-      assert.equal(defaultFilter.wantFile('.whatever'), false);
-    });
-
-    it('ignores ZPI paths by default', () => {
-      assert.equal(defaultFilter.wantFile('path/to/some.zip'), false);
-    });
-
-    it('allows other files', () => {
-      assert.equal(defaultFilter.wantFile('manifest.json'), true);
-    });
-
-    it('allows you to override the defaults', () => {
-      const filter = new FileFilter({
-        filesToIgnore: ['manifest.json'],
-      });
-      assert.equal(filter.wantFile('some.xpi'), true);
-      assert.equal(filter.wantFile('manifest.json'), false);
-    });
-
-    it('ignores node_modules by default', () => {
-      assert.equal(defaultFilter.wantFile('path/to/node_modules'), false);
     });
 
   });

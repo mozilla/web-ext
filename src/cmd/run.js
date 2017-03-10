@@ -15,6 +15,9 @@ import {
 import {createLogger} from '../util/logger';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import defaultSourceWatcher from '../watcher';
+import {
+  createFileFilter as defaultFileFilterCreator,
+} from '../util/file-filter';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
@@ -26,29 +29,36 @@ import type {
   FirefoxRDPResponseAddon,
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
 // defaultWatcherCreator types and implementation.
 
-export type WatcherCreatorParams = {
+export type WatcherCreatorParams = {|
   addonId: string,
   client: RemoteFirefox,
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   desktopNotifications?: typeof defaultDesktopNotifications,
-};
+  ignoreFiles?: Array<string>,
+  createFileFilter?: FileFilterCreatorFn,
+|};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    addonId, client, sourceDir, artifactsDir,
+    addonId, client, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     desktopNotifications = defaultDesktopNotifications,
+    createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
  ): Watchpack {
+  const fileFilter = createFileFilter(
+    {sourceDir, artifactsDir, ignoreFiles}
+  );
   return onSourceChange({
     sourceDir,
     artifactsDir,
@@ -60,41 +70,45 @@ export function defaultWatcherCreator(
           log.error('\n');
           log.error(error.stack);
           desktopNotifications({
-            title: 'web-ext run: error occured',
+            title: 'web-ext run: error occurred',
             message: error.message,
           });
           throw error;
         });
     },
+    shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
 }
 
 
 // defaultReloadStrategy types and implementation.
 
-export type ReloadStrategyParams = {
+export type ReloadStrategyParams = {|
   addonId: string,
   firefoxProcess: FirefoxProcess,
   client: RemoteFirefox,
   profile: FirefoxProfile,
   sourceDir: string,
   artifactsDir: string,
-};
+  ignoreFiles?: Array<string>,
+|};
 
-export type ReloadStrategyOptions = {
+export type ReloadStrategyOptions = {|
   createWatcher?: WatcherCreatorFn,
-};
+  createFileFilter?: FileFilterCreatorFn,
+|};
 
 export function defaultReloadStrategy(
   {
-    addonId, firefoxProcess, client, profile, sourceDir, artifactsDir,
+    addonId, firefoxProcess, client, profile,
+    sourceDir, artifactsDir, ignoreFiles,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
   }: ReloadStrategyOptions = {}
 ): void {
   const watcher: Watchpack = (
-    createWatcher({addonId, client, sourceDir, artifactsDir})
+    createWatcher({addonId, client, sourceDir, artifactsDir, ignoreFiles})
   );
 
   firefoxProcess.on('close', () => {
@@ -107,11 +121,11 @@ export function defaultReloadStrategy(
 
 // defaultFirefoxClient types and implementation.
 
-export type CreateFirefoxClientParams = {
+export type CreateFirefoxClientParams = {|
   connectToFirefox?: FirefoxConnectorFn,
   maxRetries: number,
   retryInterval: number,
-};
+|};
 
 export function defaultFirefoxClient(
   {
@@ -154,29 +168,31 @@ export function defaultFirefoxClient(
 
 // Run command types and implementation.
 
-export type CmdRunParams = {
+export type CmdRunParams = {|
   sourceDir: string,
   artifactsDir: string,
   firefox: string,
   firefoxProfile: string,
+  keepProfileChanges: boolean,
   preInstall: boolean,
   noReload: boolean,
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
-};
+  ignoreFiles?: Array<string>,
+|};
 
-export type CmdRunOptions = {
+export type CmdRunOptions = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
-};
+|};
 
 export default async function run(
   {
     sourceDir, artifactsDir, firefox, firefoxProfile,
-    preInstall = false, noReload = false,
-    browserConsole = false, customPrefs, startUrl,
+    keepProfileChanges = false, preInstall = false, noReload = false,
+    browserConsole = false, customPrefs, startUrl, ignoreFiles,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
@@ -204,6 +220,7 @@ export default async function run(
     sourceDir,
     firefoxApp,
     firefox,
+    keepProfileChanges,
     browserConsole,
     manifestData,
     profilePath: firefoxProfile,
@@ -263,6 +280,7 @@ export default async function run(
         sourceDir,
         artifactsDir,
         addonId,
+        ignoreFiles,
       });
     }
   }
@@ -273,21 +291,23 @@ export default async function run(
 
 // ExtensionRunner types and implementation.
 
-export type ExtensionRunnerParams = {
+export type ExtensionRunnerParams = {|
   sourceDir: string,
   manifestData: ExtensionManifest,
   profilePath: string,
+  keepProfileChanges: boolean,
   firefoxApp: typeof defaultFirefoxApp,
   firefox: string,
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
-};
+|};
 
 export class ExtensionRunner {
   sourceDir: string;
   manifestData: ExtensionManifest;
   profilePath: string;
+  keepProfileChanges: boolean;
   firefoxApp: typeof defaultFirefoxApp;
   firefox: string;
   browserConsole: boolean;
@@ -297,13 +317,14 @@ export class ExtensionRunner {
   constructor(
     {
       firefoxApp, sourceDir, manifestData,
-      profilePath, firefox, browserConsole, startUrl,
+      profilePath, keepProfileChanges, firefox, browserConsole, startUrl,
       customPrefs = {},
     }: ExtensionRunnerParams
   ) {
     this.sourceDir = sourceDir;
     this.manifestData = manifestData;
     this.profilePath = profilePath;
+    this.keepProfileChanges = keepProfileChanges;
     this.firefoxApp = firefoxApp;
     this.firefox = firefox;
     this.browserConsole = browserConsole;
@@ -312,11 +333,16 @@ export class ExtensionRunner {
   }
 
   getProfile(): Promise<FirefoxProfile> {
-    const {firefoxApp, profilePath, customPrefs} = this;
+    const {firefoxApp, profilePath, customPrefs, keepProfileChanges} = this;
     return new Promise((resolve) => {
       if (profilePath) {
-        log.debug(`Copying Firefox profile from ${profilePath}`);
-        resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
+        if (keepProfileChanges) {
+          log.debug(`Using Firefox profile from ${profilePath}`);
+          resolve(firefoxApp.useProfile(profilePath, {customPrefs}));
+        } else {
+          log.debug(`Copying Firefox profile from ${profilePath}`);
+          resolve(firefoxApp.copyProfile(profilePath, {customPrefs}));
+        }
       } else {
         log.debug('Creating new Firefox profile');
         resolve(firefoxApp.createProfile({customPrefs}));

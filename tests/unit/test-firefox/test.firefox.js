@@ -14,8 +14,20 @@ import {withTempDir} from '../../../src/util/temp-dir';
 import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
 import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
 import {RemoteFirefox} from '../../../src/firefox/remote';
+import type {RemotePortFinderParams} from '../../../src/firefox/index';
 
 const {defaultFirefoxEnv} = firefox;
+
+function withBaseProfile(callback) {
+  return withTempDir(
+    (tmpDir) => {
+      const baseProfile = new FirefoxProfile({
+        destinationDirectory: tmpDir.path(),
+      });
+      return callback(baseProfile);
+    }
+  );
+}
 
 describe('firefox', () => {
 
@@ -37,17 +49,25 @@ describe('firefox', () => {
     };
 
     function createFakeFxRunner(firefoxOverrides = {}) {
-      const firefox = {
+      const fxProcess = {
         ...deepcopy(fakeFirefoxProcess),
         ...firefoxOverrides,
       };
-      return sinon.spy(() => Promise.resolve({
-        args: [],
-        process: firefox,
-      }));
+      return sinon.spy(() => Promise.resolve({args: [], process: fxProcess}));
     }
 
-    function runFirefox({profile = fakeProfile, ...args}: Object = {}) {
+    // TODO: This object should accept dynamic properties since those are passed to firefox.run()
+
+    type RunFirefoxOptions = {
+      profile?: typeof FirefoxProfile,
+    }
+
+    function runFirefox(
+      {
+        profile = fakeProfile,
+        ...args
+      }: RunFirefoxOptions = {},
+    ) {
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),
@@ -159,17 +179,6 @@ describe('firefox', () => {
   });
 
   describe('copyProfile', () => {
-
-    function withBaseProfile(callback) {
-      return withTempDir(
-        (tmpDir) => {
-          const baseProfile = new FirefoxProfile({
-            destinationDirectory: tmpDir.path(),
-          });
-          return callback(baseProfile);
-        }
-      );
-    }
 
     it('copies a profile', () => withBaseProfile(
       (baseProfile) => {
@@ -288,6 +297,35 @@ describe('firefox', () => {
 
   });
 
+  describe('useProfile', () => {
+
+    it('resolves to a FirefoxProfile instance', () => withBaseProfile(
+      (baseProfile) => {
+        const configureThisProfile = (profile) => Promise.resolve(profile);
+        return firefox.useProfile(baseProfile.path(), {configureThisProfile})
+          .then((profile) => {
+            assert.instanceOf(profile, FirefoxProfile);
+          });
+      }
+    ));
+
+    it('configures a profile', () => withBaseProfile(
+      (baseProfile) => {
+        const configureThisProfile =
+          sinon.spy((profile) => Promise.resolve(profile));
+        const app = 'fennec';
+        const profilePath = baseProfile.path();
+        return firefox.useProfile(profilePath, {app, configureThisProfile})
+          .then((profile) => {
+            assert.equal(configureThisProfile.called, true);
+            assert.equal(configureThisProfile.firstCall.args[0], profile);
+            assert.equal(configureThisProfile.firstCall.args[1].app, app);
+          });
+      }
+    ));
+
+  });
+
   describe('configureProfile', () => {
 
     function withTempProfile(callback) {
@@ -303,8 +341,8 @@ describe('firefox', () => {
       (profile) => {
         const fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
-          .then((profile) => {
-            assert.instanceOf(profile, FirefoxProfile);
+          .then((configuredProfile) => {
+            assert.instanceOf(configuredProfile, FirefoxProfile);
           });
       }
     ));
@@ -338,7 +376,9 @@ describe('firefox', () => {
         // This is a quick sanity check that real preferences were
         // written to disk.
         return firefox.configureProfile(profile)
-          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((configuredProfile) => {
+            return fs.readFile(path.join(configuredProfile.path(), 'user.js'));
+          })
           .then((prefFile) => {
             // Check for some pref set by configureProfile().
             assert.include(prefFile.toString(),
@@ -351,7 +391,9 @@ describe('firefox', () => {
       (profile) => {
         const customPrefs = {'extensions.checkCompatibility.nightly': true};
         return firefox.configureProfile(profile, {customPrefs})
-          .then((profile) => fs.readFile(path.join(profile.path(), 'user.js')))
+          .then((configuredProfile) => {
+            return fs.readFile(path.join(configuredProfile.path(), 'user.js'));
+          })
           .then((prefFile) => {
             // Check for custom pref set by configureProfile().
             assert.include(prefFile.toString(),
@@ -484,7 +526,7 @@ describe('firefox', () => {
 
   describe('defaultRemotePortFinder', () => {
 
-    function findRemotePort({...args}: Object = {}) {
+    function findRemotePort({...args}: RemotePortFinderParams = {}) {
       return firefox.defaultRemotePortFinder({...args});
     }
 

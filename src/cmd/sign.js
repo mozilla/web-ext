@@ -19,17 +19,18 @@ export const extensionIdFile = '.web-extension-id';
 
 // Sign command types and implementation.
 
-export type SignParams = {
+export type SignParams = {|
   id?: string,
   verbose?: boolean,
   sourceDir: string,
   artifactsDir: string,
+  ignoreFiles?: Array<string>,
   apiKey: string,
   apiSecret: string,
   apiUrlPrefix: string,
   apiProxy: string,
   timeout: number,
-};
+|};
 
 export type SignOptions = {
   build?: typeof defaultBuilder,
@@ -37,16 +38,16 @@ export type SignOptions = {
   preValidatedManifest?: ExtensionManifest,
 };
 
-export type SignResult = {
+export type SignResult = {|
   success: boolean,
   id: string,
   downloadedFiles: Array<string>,
-};
+|};
 
 export default function sign(
   {
-    verbose, sourceDir, artifactsDir, apiKey, apiSecret,
-    apiUrlPrefix, apiProxy, id, timeout,
+    verbose, sourceDir, artifactsDir, ignoreFiles = [],
+    apiKey, apiSecret, apiUrlPrefix, apiProxy, id, timeout,
   }: SignParams,
   {
     build = defaultBuilder, signAddon = defaultAddonSigner,
@@ -66,7 +67,7 @@ export default function sign(
       }
 
       const [buildResult, idFromSourceDir] = await Promise.all([
-        build({sourceDir, artifactsDir: tmpDir.path()},
+        build({sourceDir, ignoreFiles, artifactsDir: tmpDir.path()},
               {manifestData, showReadyMessage: false}),
         getIdFromSourceDir(sourceDir),
       ]);
@@ -77,6 +78,9 @@ export default function sign(
         throw new UsageError(
           `Cannot set custom ID ${id} because manifest.json ` +
           `declares ID ${manifestId}`);
+      }
+      if (id) {
+        log.debug(`Using custom ID declared as --id=${id}`);
       }
 
       if (manifestId) {

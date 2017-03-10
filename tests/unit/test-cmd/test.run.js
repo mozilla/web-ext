@@ -36,6 +36,7 @@ describe('run', () => {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
+      keepProfileChanges: false,
     };
     const options = {
       firefoxApp: getFakeFirefox(),
@@ -67,6 +68,7 @@ describe('run', () => {
     const allImplementations = {
       createProfile: () => Promise.resolve(profile),
       copyProfile: () => Promise.resolve(profile),
+      useProfile: () => Promise.resolve(profile),
       installExtension: () => Promise.resolve(),
       run: () => Promise.resolve(),
       ...implementations,
@@ -179,6 +181,18 @@ describe('run', () => {
     });
   });
 
+  it('keeps changes in custom profile when specified', () => {
+    const firefoxProfile = '/pretend/path/to/firefox/profile';
+    const cmd = prepareRun();
+    const {firefoxApp} = cmd.options;
+
+    return cmd.run({firefoxProfile, keepProfileChanges: true}).then(() => {
+      assert.equal(firefoxApp.useProfile.called, true);
+      assert.equal(firefoxApp.useProfile.firstCall.args[0],
+                   firefoxProfile);
+    });
+  });
+
   it('can pre-install into the profile before startup', () => {
     const cmd = prepareRun();
     const firefoxClient = fake(RemoteFirefox.prototype, {
@@ -273,7 +287,6 @@ describe('run', () => {
     function prepare() {
       const config = {
         addonId: 'some-addon@test-suite',
-        profile: {},
         client: fake(RemoteFirefox.prototype, {
           reloadAddon: () => Promise.resolve(),
         }),
@@ -281,6 +294,7 @@ describe('run', () => {
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
         desktopNotifications: sinon.spy(() => Promise.resolve()),
+        ignoreFiles: ['path/to/file', 'path/to/file2'],
       };
       return {
         config,
@@ -298,6 +312,23 @@ describe('run', () => {
       assert.equal(callArgs.sourceDir, config.sourceDir);
       assert.equal(callArgs.artifactsDir, config.artifactsDir);
       assert.typeOf(callArgs.onChange, 'function');
+    });
+
+    it('configures a run command with the expected fileFilter', () => {
+      const fileFilter = {wantFile: sinon.spy()};
+      const createFileFilter = sinon.spy(() => fileFilter);
+      const {config, createWatcher} = prepare();
+      createWatcher({createFileFilter});
+      assert.ok(createFileFilter.called);
+      assert.deepEqual(createFileFilter.firstCall.args[0], {
+        sourceDir: config.sourceDir,
+        artifactsDir: config.artifactsDir,
+        ignoreFiles: config.ignoreFiles,
+      });
+      const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
+      shouldWatchFile('path/to/file');
+      assert.ok(fileFilter.wantFile.called);
+      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
     });
 
     it('returns a watcher', () => {
@@ -376,6 +407,7 @@ describe('run', () => {
         profile: {},
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
+        ignoreFiles: ['first/file', 'second/file'],
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
@@ -402,7 +434,11 @@ describe('run', () => {
     });
 
     it('configures a watcher', () => {
-      const {createWatcher, reloadStrategy, ...sentArgs} = prepare();
+      const {
+        createWatcher, reloadStrategy,
+        ...sentArgs
+      } = prepare();
+
       reloadStrategy();
       assert.equal(createWatcher.called, true);
       const receivedArgs = createWatcher.firstCall.args[0];
@@ -410,6 +446,7 @@ describe('run', () => {
       assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
+      assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
     });
 
   });

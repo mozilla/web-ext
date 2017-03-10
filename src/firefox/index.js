@@ -5,9 +5,9 @@ import path from 'path';
 import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
-import streamToPromise from 'stream-to-promise';
 import {fs} from 'mz';
 import promisify from 'es6-promisify';
+import eventToPromise from 'event-to-promise';
 
 import isDirectory from '../util/is-directory';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
@@ -34,11 +34,11 @@ export const defaultFirefoxEnv = {
 
 // defaultRemotePortFinder types and implementation.
 
-export type RemotePortFinderParams = {
+export type RemotePortFinderParams = {|
   portToTry?: number,
   retriesLeft?: number,
   connectToFirefox?: FirefoxConnectorFn,
-};
+|};
 
 export type RemotePortFinderFn =
   (params?: RemotePortFinderParams) => Promise<number>;
@@ -79,7 +79,7 @@ export async function defaultRemotePortFinder(
 
 // Declare the needed 'fx-runner' module flow types.
 
-export type FirefoxRunnerParams = {
+export type FirefoxRunnerParams = {|
   binary: ?string,
   profile?: string,
   'new-instance'?: boolean,
@@ -91,18 +91,18 @@ export type FirefoxRunnerParams = {
     [key: string]: string
   },
   'verbose'?: boolean,
-};
+|};
 
 export interface FirefoxProcess extends events$EventEmitter {
   stderr: events$EventEmitter;
   stdout: events$EventEmitter;
 }
 
-export type FirefoxRunnerResults = {
+export type FirefoxRunnerResults = {|
   process: FirefoxProcess,
   binary: string,
   args: Array<string>,
-}
+|}
 
 export type FirefoxRunnerFn =
   (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
@@ -110,12 +110,13 @@ export type FirefoxRunnerFn =
 
 // Run command types and implementaion.
 
-export type FirefoxRunOptions = {
+export type FirefoxRunOptions = {|
   fxRunner?: FirefoxRunnerFn,
   findRemotePort?: RemotePortFinderFn,
-  firefoxBinary: ?string,
+  firefoxBinary?: string,
   binaryArgs?: Array<string>,
-};
+  args?: Array<any>,
+|};
 
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
@@ -129,7 +130,7 @@ export async function run(
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxProcess> {
 
-  log.info(`Running Firefox with profile at ${profile.path()}`);
+  log.debug(`Running Firefox with profile at ${profile.path()}`);
 
   const remotePort = await findRemotePort();
 
@@ -184,11 +185,11 @@ export async function run(
 
 // configureProfile types and implementation.
 
-export type ConfigureProfileOptions = {
+export type ConfigureProfileOptions = {|
   app?: PreferencesAppName,
   getPrefs?: PreferencesGetterFn,
   customPrefs?: FirefoxPreferences,
-};
+|};
 
 export type ConfigureProfileFn = (
   profile: FirefoxProfile,
@@ -226,6 +227,28 @@ export function configureProfile(
   return Promise.resolve(profile);
 }
 
+// useProfile types and implementation.
+
+export type UseProfileParams = {
+  app?: PreferencesAppName,
+  configureThisProfile?: ConfigureProfileFn,
+  customPrefs?: FirefoxPreferences,
+};
+
+// Use the target path as a Firefox profile without cloning it
+
+export async function useProfile(
+  profilePath: string,
+  {
+    app,
+    configureThisProfile = configureProfile,
+    customPrefs = {},
+  }: UseProfileParams = {},
+): Promise<FirefoxProfile> {
+  const profile = new FirefoxProfile({destinationDirectory: profilePath});
+  return await configureThisProfile(profile, {app, customPrefs});
+}
+
 
 // createProfile types and implementation.
 
@@ -254,12 +277,12 @@ export async function createProfile(
 
 // copyProfile types and implementation.
 
-export type CopyProfileOptions = {
+export type CopyProfileOptions = {|
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
   copyFromUserProfile?: Function,
   customPrefs?: FirefoxPreferences,
-};
+|};
 
 /*
  * Copies an existing Firefox profile and creates a new temporary profile.
@@ -309,12 +332,12 @@ export async function copyProfile(
 
 // installExtension types and implementation.
 
-export type InstallExtensionParams = {
+export type InstallExtensionParams = {|
   asProxy?: boolean,
   manifestData: ExtensionManifest,
   profile: FirefoxProfile,
   extensionPath: string,
-};
+|};
 
 /*
  * Installs an extension into the given Firefox profile object.
@@ -378,7 +401,7 @@ export async function installExtension(
     const writeStream = nodeFs.createWriteStream(destPath);
     writeStream.write(extensionPath);
     writeStream.end();
-    await streamToPromise(writeStream);
+    return await eventToPromise(writeStream, 'close');
   } else {
     // Write the XPI file to the profile.
     const readStream = nodeFs.createReadStream(extensionPath);
@@ -389,8 +412,8 @@ export async function installExtension(
     readStream.pipe(writeStream);
 
     return await Promise.all([
-      streamToPromise(readStream),
-      streamToPromise(writeStream),
+      eventToPromise(readStream, 'close'),
+      eventToPromise(writeStream, 'close'),
     ]);
   }
 }

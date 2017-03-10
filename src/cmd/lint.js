@@ -2,8 +2,11 @@
 import {createInstance as defaultLinterCreator} from 'addons-linter';
 
 import {createLogger} from '../util/logger';
-import {FileFilter} from './build';
-
+import {
+  createFileFilter as defaultFileFilterCreator,
+} from '../util/file-filter';
+// import flow types
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
 
@@ -12,8 +15,8 @@ const log = createLogger(__filename);
 
 export type LinterOutputType = 'text' | 'json';
 
-export type LinterCreatorParams = {
-  config: {
+export type LinterCreatorParams = {|
+  config: {|
     logLevel: 'debug' | 'fatal',
     stack: boolean,
     pretty?: boolean,
@@ -24,19 +27,20 @@ export type LinterCreatorParams = {
     selfHosted?: boolean,
     shouldScanFile: (fileName: string) => boolean,
     _: Array<string>,
-  },
-};
+  |},
+  runAsBinary: boolean,
+|};
 
-export type Linter = {
+export type Linter = {|
   run: () => Promise<void>,
-};
+|};
 
 export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
 
 
 // Lint command types and implementation.
 
-export type LintCmdParams = {
+export type LintCmdParams = {|
   sourceDir: string,
   verbose?: boolean,
   selfHosted?: boolean,
@@ -45,23 +49,27 @@ export type LintCmdParams = {
   metadata?: boolean,
   pretty?: boolean,
   warningsAsErrors?: boolean,
-};
+  ignoreFiles?: Array<string>,
+  artifactsDir?: string,
+|};
 
-export type LintCmdOptions = {
+export type LintCmdOptions = {|
   createLinter?: LinterCreatorFn,
-  fileFilter?: FileFilter,
-};
+  createFileFilter?: FileFilterCreatorFn,
+|};
 
 export default function lint(
   {
     verbose, sourceDir, selfHosted, boring, output,
-    metadata, pretty, warningsAsErrors,
+    metadata, pretty, warningsAsErrors, ignoreFiles, artifactsDir,
   }: LintCmdParams,
   {
     createLinter = defaultLinterCreator,
-    fileFilter = new FileFilter(),
+    createFileFilter = defaultFileFilterCreator,
   }: LintCmdOptions = {}
 ): Promise<void> {
+  const fileFilter = createFileFilter({sourceDir, ignoreFiles, artifactsDir});
+
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({
     config: {

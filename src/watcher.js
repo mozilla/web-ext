@@ -3,7 +3,6 @@ import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
 import {createLogger} from './util/logger';
-import {FileFilter} from './cmd/build';
 
 
 const log = createLogger(__filename);
@@ -15,16 +14,17 @@ export type ShouldWatchFn = (filePath: string) => boolean;
 
 export type OnChangeFn = () => any;
 
-export type OnSourceChangeParams = {
+export type OnSourceChangeParams = {|
   sourceDir: string,
   artifactsDir: string,
   onChange: OnChangeFn,
-  shouldWatchFile?: ShouldWatchFn,
-};
+  shouldWatchFile: ShouldWatchFn,
+|};
 
 // NOTE: this fix an issue with flow and default exports (which currently
 // lose their type signatures) by explicitly declare the default export
 // signature. Reference: https://github.com/facebook/flow/issues/449
+// eslint-disable-next-line no-shadow
 declare function exports(params: OnSourceChangeParams): Watchpack;
 
 export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
@@ -54,20 +54,16 @@ export default function onSourceChange(
 
 // proxyFileChanges types and implementation.
 
-export type ProxyFileChangesParams = {
+export type ProxyFileChangesParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   filePath: string,
-  shouldWatchFile?: ShouldWatchFn,
-};
+  shouldWatchFile: ShouldWatchFn,
+|};
 
 export function proxyFileChanges(
   {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams
 ): void {
-  if (!shouldWatchFile) {
-    const fileFilter = new FileFilter();
-    shouldWatchFile = (...args) => fileFilter.wantFile(...args);
-  }
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
     log.debug(`Ignoring change to: ${filePath}`);
   } else {

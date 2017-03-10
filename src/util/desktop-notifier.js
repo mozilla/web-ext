@@ -6,16 +6,16 @@ import type {Logger} from './logger';
 
 const defaultLog = createLogger(__filename);
 
-type desktopNotificationsParams = {
+type desktopNotificationsParams = {|
   title: string,
   message: string,
   icon?: string,
-};
+|};
 
-export type desktopNotificationsOptions = {
+export type desktopNotificationsOptions = {|
   notifier?: typeof defaultNotifier,
   log?: Logger,
-};
+|};
 
 export function showDesktopNotification(
   {

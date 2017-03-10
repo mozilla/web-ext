@@ -303,6 +303,18 @@ describe('sign', () => {
     }
   ));
 
+  it('passes the ignoreFiles flag to the builder', () => withTempDir(
+    (tmpDir) => {
+      const stubs = getStubs();
+      const ignoreFiles = ['*'];
+      return sign(tmpDir, stubs, {extraArgs: {ignoreFiles}})
+        .then(() => {
+          assert.equal(stubs.signAddon.called, true);
+          assert.equal(stubs.build.firstCall.args[0].ignoreFiles, ignoreFiles);
+        });
+    }
+  ));
+
   it('passes through a signing exception', () => withTempDir(
     (tmpDir) => {
       const stubs = getStubs();

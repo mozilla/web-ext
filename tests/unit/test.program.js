@@ -10,7 +10,7 @@ import {assert} from 'chai';
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {onlyInstancesOf, UsageError} from '../../src/errors';
-import {fake, makeSureItFails} from './helpers';
+import {fake, makeSureItFails, ErrorWithCode} from './helpers';
 import {ConsoleStream} from '../../src/util/logger';
 
 
@@ -84,14 +84,6 @@ describe('program.Program', () => {
   });
 
   it('handles errors that have codes', () => {
-
-    class ErrorWithCode extends Error {
-      code: string;
-      constructor() {
-        super('pretend this is a system error');
-        this.code = 'SOME_CODE';
-      }
-    }
 
     const program = new Program(['cmd'])
       .command('cmd', 'some command', () => {
@@ -229,9 +221,9 @@ describe('program.Program', () => {
     return execProgram(new Program(['--nope']))
       .then(makeSureItFails())
       .catch((error) => {
-        // It's a bit weird that yargs calls this an argument rather
-        // than an option but, hey, it's an error.
-        assert.match(error.message, /Unknown argument: nope/);
+        // Make sure that the option name is in the error message.
+        // Be careful not to rely on any text from yargs since it's localized.
+        assert.match(error.message, /nope/);
       });
   });
 
@@ -241,8 +233,9 @@ describe('program.Program', () => {
     return execProgram(program)
       .then(makeSureItFails())
       .catch((error) => {
-        // Again, yargs calls this an argument not an option for some reason.
-        assert.match(error.message, /Unknown argument: nope/);
+        // Make sure that the option name is in the error message.
+        // Be careful not to rely on any text from yargs since it's localized.
+        assert.match(error.message, /nope/);
       });
   });
 
@@ -422,23 +415,27 @@ describe('program.main', () => {
 });
 
 describe('program.defaultVersionGetter', () => {
-  const root = path.join(__dirname, '..', '..');
+  const projectRoot = path.join(__dirname, '..', '..');
 
   it('returns the package version in production', () => {
-    const pkgFile = path.join(root, 'package.json');
+    const pkgFile = path.join(projectRoot, 'package.json');
     return fs.readFile(pkgFile)
       .then((pkgData) => {
         const testBuildEnv = {globalEnv: 'production'};
-        assert.equal(defaultVersionGetter(root, testBuildEnv),
+        assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
                    JSON.parse(pkgData).version);
       });
   });
 
-  it('returns git commit information in development', () => {
+  it('returns git commit information in development', function() {
+    if (process.env.APPVEYOR) {
+      // Test skipped because of $APPVEYOR' issues with git-rev-sync (mozilla/web-ext#774)
+      this.skip();
+      return;
+    }
     const commit = `${git.branch()}-${git.long()}`;
     const testBuildEnv = {globalEnv: 'development'};
-    assert.equal(defaultVersionGetter(root, testBuildEnv),
+    assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
                  commit);
   });
-
 });

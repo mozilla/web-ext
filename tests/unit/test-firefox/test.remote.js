@@ -114,7 +114,7 @@ describe('firefox.remote', () => {
           .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.equal(
               error.message,
-              'requestTypes response error: unknownError: some actor failure');
+              'unknownError: some actor failure');
           }));
       });
     });
@@ -208,11 +208,11 @@ describe('firefox.remote', () => {
         conn.addonRequest =
           sinon.spy(() => Promise.resolve({requestTypes: ['reload']}));
         return conn.checkForAddonReloading(addon)
-          .then((addon) => conn.checkForAddonReloading(addon))
-          .then((returnedAddon) => {
+          .then((checkedAddon) => conn.checkForAddonReloading(checkedAddon))
+          .then((finalAddon) => {
             // This should remember not to check a second time.
             assert.equal(conn.addonRequest.callCount, 1);
-            assert.deepEqual(returnedAddon, addon);
+            assert.deepEqual(finalAddon, addon);
           });
       });
     });
@@ -293,7 +293,8 @@ describe('firefox.remote', () => {
         // $FLOW_IGNORE: override class method for testing reasons.
         conn.getInstalledAddon = sinon.spy(() => Promise.resolve(addon));
         // $FLOW_IGNORE: override class method for testing reasons.
-        conn.checkForAddonReloading = (addon) => Promise.resolve(addon);
+        conn.checkForAddonReloading =
+          (addonToCheck) => Promise.resolve(addonToCheck);
         // $FLOW_IGNORE: override class method for testing reasons.
         conn.addonRequest = sinon.spy(() => Promise.resolve({}));
 
@@ -316,7 +317,7 @@ describe('firefox.remote', () => {
         conn.getInstalledAddon = () => Promise.resolve(addon);
         // $FLOW_IGNORE: override class method for testing reasons.
         conn.checkForAddonReloading =
-          sinon.spy((addon) => Promise.resolve(addon));
+          sinon.spy((addonToCheck) => Promise.resolve(addonToCheck));
 
         return conn.reloadAddon(addon.id)
           .then(() => {
