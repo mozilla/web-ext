@@ -30,7 +30,7 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-#Picking an issue
+# Picking an issue
 
 If you're looking for a small task to work on so you can get familiar with the
 process of contributing patches, have a read through these
