@@ -497,8 +497,9 @@ describe('run', () => {
     };
 
     it('reloads addon', () => {
-      const client = createFakeRemoteFirefox(fakeFirefoxClient(),
-        {reloadAddon: () => Promise.resolve()});
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(), {
+        reloadAddon: () => Promise.resolve(),
+      });
       return defaultAddonReload({client, ...args})
         .then(() => {
           assert.ok(client.reloadAddon.called, true);
@@ -508,8 +509,9 @@ describe('run', () => {
     });
 
     it('notifies user on error from source change handler', () => {
-      const client = createFakeRemoteFirefox(fakeFirefoxClient(),
-        {reloadAddon: () => Promise.reject(new Error('an error'))});
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(), {
+        reloadAddon: () => Promise.reject(new Error('an error')),
+      });
       return defaultAddonReload({client, ...args})
         .then(makeSureItFails())
         .catch((error) => {
@@ -524,8 +526,9 @@ describe('run', () => {
     });
 
     it('throws errors from source change handler', () => {
-      const client = createFakeRemoteFirefox(fakeFirefoxClient(),
-        {reloadAddon: () => Promise.reject(new Error('an error'))});
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(), {
+        reloadAddon: () => Promise.reject(new Error('an error')),
+      });
       return defaultAddonReload({client, ...args})
         .then(makeSureItFails())
         .catch((error) => {
