@@ -482,20 +482,30 @@ describe('run', () => {
   });
 
   describe('defaultAddonReload', () => {
-    const client = new RemoteFirefox(fakeFirefoxClient());
-    sinon.stub(client, 'reloadAddon',
-               sinon.spy(() => Promise.reject(new Error('an error')))
-             );
     const desktopNotifications = sinon.spy(() => Promise.resolve());
 
     const args = {
       addonId: 'some-addon@test-suite',
-      client,
       desktopNotifications,
     };
 
+    it('reloads addon', () => {
+      const client = fake(RemoteFirefox.prototype, {
+        reloadAddon: sinon.spy(() => Promise.resolve()),
+      });
+      return defaultAddonReload({client, ...args})
+        .then(() => {
+          assert.ok(client.reloadAddon.called, true);
+          const reloadArgs = client.reloadAddon.firstCall.args;
+          assert.equal(reloadArgs[0], args.addonId);
+        });
+    });
+
     it('notifies user on error from source change handler', () => {
-      return defaultAddonReload(args)
+      const client = fake(RemoteFirefox.prototype, {
+        reloadAddon: sinon.spy(() => Promise.reject(new Error('an error'))),
+      });
+      return defaultAddonReload({client, ...args})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(
@@ -509,7 +519,10 @@ describe('run', () => {
     });
 
     it('throws errors from source change handler', () => {
-      return defaultAddonReload(args)
+      const client = fake(RemoteFirefox.prototype, {
+        reloadAddon: sinon.spy(() => Promise.reject(new Error('an error'))),
+      });
+      return defaultAddonReload({client, ...args})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, 'an error');
