@@ -14,40 +14,43 @@ const log = createLogger(__filename);
 const defaultAsyncMkdirp = promisify(mkdirp);
 
 export type CreateParams = {|
-  name: string,
-  pause?: typeof process.stdin.pause,
+  dirPath: string,
+  stdin?: stream$Readable,
 |};
 
 export default async function create(
   {
-    name,
-    pause = process.stdin.pause,
+    dirPath,
+    stdin = process.stdin,
   }: CreateParams
 ): Promise<void> {
-  const targetPath = path.join(process.cwd(), name);
-  log.info(targetPath);
+  const targetPath = path.join(process.cwd(), dirPath);
+  const name = path.basename(dirPath);
+  log.info(name, targetPath);
 
   let userAbort = true;
 
   try {
     const stats = await fs.stat(targetPath);
     if (stats.isDirectory()) {
-      if (process.stdin.isTTY &&
-         (process.stdin instanceof tty.ReadStream)) {
-        process.stdin.setRawMode(true);
-        readline.emitKeypressEvents(process.stdin);
+      if (stdin.isTTY && (stdin instanceof tty.ReadStream)) {
+        stdin.setRawMode(true);
+        readline.emitKeypressEvents(stdin);
+        let userConfirmation = false;
 
-        while (true) {
+        while (!userConfirmation) {
           log.info(`The ${targetPath} already exists. Are you sure you want ` +
                    'to use this directory and overwrite existing files? Y/N');
 
           const pressed = await new Promise((resolve) => {
-            process.stdin.once('keypress', (str, key) => resolve(key));
+            stdin.once('keypress', (str, key) => resolve(key));
           });
 
           if (pressed.name === 'n' || (pressed.ctrl && pressed.name === 'c')) {
+            userConfirmation = true;
             break;
           } else if (pressed.name === 'y') {
+            userConfirmation = true;
             userAbort = false;
             break;
           }
@@ -60,12 +63,12 @@ export default async function create(
 
     if (userAbort) {
       log.info('User aborted the command.');
-      pause();
+      stdin.pause();
       return;
     }
 
     return await createFiles(name, targetPath).then(() => {
-      pause();
+      stdin.pause();
     });
   } catch (statErr) {
     if (!isErrorWithCode('ENOENT', statErr)) {

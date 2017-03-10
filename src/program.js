@@ -374,15 +374,10 @@ Example: $0 --help run.
     .command(
       'create',
       'Create basic structure of a new addon', commands.create, {
-        'name': {
-          desc: 'Name of the project and its directory',
-          type: 'string',
-          demand: true,
-          requiresArg: true,
-        },
-        'path': {
+        'dir-path': {
           desc: 'Optional path to a directory',
           type: 'string',
+          demand: true,
           requiresArg: true,
         },
       });
