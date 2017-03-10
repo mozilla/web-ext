@@ -388,6 +388,13 @@ Example: $0 --help run.
         demand: false,
         type: 'boolean',
       },
+      'experiments': {
+        describe: 'Install one or more WebExtensions Experiments ' +
+                  'alongside the WebExtension Addon.',
+        demand: false,
+        requiresArg: true,
+        type: 'array',
+      },
     })
     .command('lint', 'Validate the web extension source', commands.lint, {
       'output': {
