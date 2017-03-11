@@ -4,10 +4,14 @@ Hi! Thanks for your interest in helping make
 [WebExtension](https://developer.mozilla.org/en-US/Add-ons/WebExtensions)
 development more awesome by contributing to the `web-ext` tool. Here are links to all the sections in this document:
 
+<!-- If you change any of the headings in this document, remember to update the table of contents. -->
+<!-- To update the TOC, run the command `npm run gen-contributing-toc` from the main directory of your repo and you will auto generate a new TOC. -->
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [Picking an issue](#picking-an-issue)
 - [Installation](#installation)
   - [Develop all the things](#develop-all-the-things)
   - [Run all application tests](#run-all-application-tests)
