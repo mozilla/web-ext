@@ -31,8 +31,11 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
   - [Writing commit messages](#writing-commit-messages)
     - [Checking commit message formatting](#checking-commit-message-formatting)
   - [Creating a release](#creating-a-release)
+- [Documentation](#documentation)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 
 # Picking an issue
 
@@ -381,5 +384,10 @@ To release a new version of `web-ext`, follow these steps:
   [the user docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
   need updating.
 
+# Documentation
+
+If the issue you're working on involves changing any of the headings in this document [CONTRIBUTING.md](https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md),
+before making a commit and submitting a pull request, please remember to update the table of contents.
+To update the TOC, run the command `npm run gen-contributing-toc` from your root directory and you will auto generate a new TOC.
 
 [Flow]: http://flowtype.org/
