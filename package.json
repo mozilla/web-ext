@@ -108,7 +108,7 @@
     "grunt-flowbin": "0.1.7",
     "grunt-mocha-test": "0.13.2",
     "grunt-newer": "1.2.0",
-    "grunt-webpack": "1.0.18",
+    "grunt-webpack": "2.0.1",
     "load-grunt-configs": "1.0.0",
     "load-grunt-tasks": "3.5.2",
     "mocha": "3.2.0",
