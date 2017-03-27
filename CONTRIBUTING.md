@@ -4,7 +4,7 @@ Hi! Thanks for your interest in helping make
 [WebExtension](https://developer.mozilla.org/en-US/Add-ons/WebExtensions)
 development more awesome by contributing to the `web-ext` tool.
 
-#Picking an issue
+# Picking an issue
 
 If you're looking for a small task to work on so you can get familiar with the
 process of contributing patches, have a read through these
