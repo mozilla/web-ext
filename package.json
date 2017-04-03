@@ -50,7 +50,7 @@
     "babel-polyfill": "6.20.0",
     "babel-runtime": "6.23.0",
     "bunyan": "1.8.9",
-    "camelcase": "4.0.0",
+    "camelcase": "4.1.0",
     "debounce": "1.0.0",
     "decamelize": "1.2.0",
     "es6-error": "4.0.2",
