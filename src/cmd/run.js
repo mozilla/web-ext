@@ -234,7 +234,6 @@ export type CmdRunOptions = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
-  addonReload: typeof defaultAddonReload,
   ExtensionRunnerClass?: typeof ExtensionRunner,
 |};
 
@@ -248,7 +247,6 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
-    addonReload = defaultAddonReload,
     ExtensionRunnerClass = ExtensionRunner,
   }: CmdRunOptions = {}): Promise<Object> {
 

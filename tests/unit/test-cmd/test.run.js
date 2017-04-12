@@ -54,7 +54,6 @@ describe('run', () => {
       reloadStrategy: sinon.spy(() => {
         log.debug('fake: reloadStrategy()');
       }),
-      addonReload: sinon.spy(),
     };
 
     return {
