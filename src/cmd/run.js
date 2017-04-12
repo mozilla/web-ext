@@ -46,17 +46,16 @@ export type WatcherCreatorParams = {|
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
-  addonReload?: typeof defaultAddonReload,
+  addonReload: typeof defaultAddonReload,
 |};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    addonId, client, sourceDir, artifactsDir, ignoreFiles,
+    addonId, addonReload, client, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator,
-    addonReload = defaultAddonReload,
   }: WatcherCreatorParams
  ): Watchpack {
   const fileFilter = createFileFilter(
@@ -76,23 +75,24 @@ export type ReloadParams = {|
   desktopNotifications?: typeof defaultDesktopNotifications,
 |};
 
-export function defaultAddonReload(
+export async function defaultAddonReload(
   {
     addonId, client,
     desktopNotifications = defaultDesktopNotifications,
   }: ReloadParams
 ): Promise<void> {
   log.debug(`Reloading add-on ID ${addonId}`);
-  return client.reloadAddon(addonId)
-    .catch((error) => {
-      log.error('\n');
-      log.error(error.stack);
-      desktopNotifications({
-        title: 'web-ext run: error occurred',
-        message: error.message,
-      });
-      throw error;
+  try {
+    await client.reloadAddon(addonId);
+  } catch (reloadError) {
+    log.error('\n');
+    log.error(reloadError.stack);
+    desktopNotifications({
+      title: 'web-ext run: error occurred',
+      message: reloadError.message,
     });
+    throw reloadError;
+  }
 }
 
 
@@ -109,8 +109,10 @@ export type ReloadStrategyParams = {|
 |};
 
 export type ReloadStrategyOptions = {|
+  addonReload?: typeof defaultAddonReload,
   createWatcher?: WatcherCreatorFn,
   createFileFilter?: FileFilterCreatorFn,
+  stdin: stream$Readable,
 |};
 
 export function defaultReloadStrategy(
@@ -119,18 +121,49 @@ export function defaultReloadStrategy(
     sourceDir, artifactsDir, ignoreFiles,
   }: ReloadStrategyParams,
   {
+    addonReload = defaultAddonReload,
     createWatcher = defaultWatcherCreator,
+    stdin = process.stdin,
   }: ReloadStrategyOptions = {}
 ): void {
-  const watcher: Watchpack = (
-    createWatcher({addonId, client, sourceDir, artifactsDir, ignoreFiles})
-  );
+  const watcher: Watchpack = createWatcher({
+    addonId, addonReload, client, sourceDir, artifactsDir, ignoreFiles,
+  });
 
   firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
+    stdin.pause();
   });
 
+  if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+    readline.emitKeypressEvents(stdin);
+    stdin.setRawMode(true);
+
+    // NOTE: this `Promise.resolve().then(...)` is basically used to spawn a "co-routine" that is executed
+    // before the callback attached to the Promise returned by this function (and it allows the `run` function
+    // to not be stuck in the while loop).
+    Promise.resolve().then(async function() {
+      log.info('Press R to reload (and Ctrl-C to quit)');
+
+      let userExit = false;
+
+      while (!userExit) {
+        const keyPressed = await new Promise((resolve) => {
+          stdin.once('keypress', (str, key) => resolve(key));
+        });
+
+        if (keyPressed.ctrl && keyPressed.name === 'c') {
+          userExit = true;
+        } else if (keyPressed.name === 'r' && addonId) {
+          await addonReload({addonId, client});
+        }
+      }
+
+      log.info('\nExiting web-ext on user request');
+      firefoxProcess.kill();
+    });
+  }
 }
 
 
@@ -195,7 +228,6 @@ export type CmdRunParams = {|
   customPrefs?: FirefoxPreferences,
   startUrl?: string | Array<string>,
   ignoreFiles?: Array<string>,
-  stdin: stream$Readable,
 |};
 
 export type CmdRunOptions = {|
@@ -203,7 +235,7 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   addonReload: typeof defaultAddonReload,
-  AddonRunner: typeof ExtensionRunner
+  ExtensionRunnerClass?: typeof ExtensionRunner,
 |};
 
 export default async function run(
@@ -211,14 +243,13 @@ export default async function run(
     sourceDir, artifactsDir, firefox, firefoxProfile,
     keepProfileChanges = false, preInstall = false, noReload = false,
     browserConsole = false, customPrefs, startUrl, ignoreFiles,
-    stdin = process.stdin,
   }: CmdRunParams,
   {
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
     addonReload = defaultAddonReload,
-    AddonRunner = ExtensionRunner,
+    ExtensionRunnerClass = ExtensionRunner,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -237,7 +268,7 @@ export default async function run(
 
   const manifestData = await getValidatedManifest(sourceDir);
 
-  const runner = new AddonRunner({
+  const runner = new ExtensionRunnerClass({
     sourceDir,
     firefoxApp,
     firefox,
@@ -291,36 +322,6 @@ export default async function run(
         throw new WebExtError(
           'Unexpected missing addonId in the installAsTemporaryAddon result'
         );
-      }
-
-      if (stdin.isTTY && stdin instanceof tty.ReadStream) {
-        readline.emitKeypressEvents(stdin);
-        stdin.setRawMode(true);
-
-        // NOTE: this `Promise.resolve().then(...)` is basically used to spawn a "co-routine" that is executed
-        // before the callback attached to the Promise returned by this function (and it allows the `run` function
-        // to not be stuck in the while loop).
-        Promise.resolve().then(async function() {
-          log.info('Press R to reload (and Ctrl-C to quit)');
-
-          let userExit = false;
-
-          while (!userExit) {
-            const keyPressed = await new Promise((resolve) => {
-              stdin.once('keypress', (str, key) => resolve(key));
-            });
-
-            if (keyPressed.ctrl && keyPressed.name === 'c') {
-              userExit = true;
-            } else if (keyPressed.name === 'r' && addonId) {
-              await addonReload({addonId, client});
-            }
-          }
-
-          log.info('\nExiting web-ext on user request');
-          runningFirefox.kill();
-          stdin.pause();
-        });
       }
 
       log.info('The extension will reload if any source file changes');

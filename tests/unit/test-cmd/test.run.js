@@ -11,12 +11,9 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
-  defaultAddonReload, ExtensionRunner,
+  defaultAddonReload,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
-import type {
-  FirefoxProcess, // eslint-disable-line import/named
-} from '../../../src/firefox/index';
 import {RemoteFirefox} from '../../../src/firefox/remote';
 import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
   from '../helpers';
@@ -37,15 +34,11 @@ describe('run', () => {
 
   function prepareRun(fakeInstallResult) {
     const sourceDir = fixturePath('minimal-web-ext');
-    const fakeStdin = new tty.ReadStream();
-    sinon.spy(fakeStdin, 'pause');
-    sinon.spy(fakeStdin, 'setRawMode');
 
     const argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
-      stdin: fakeStdin,
       keepProfileChanges: false,
     };
     const options = {
@@ -246,55 +239,6 @@ describe('run', () => {
     });
   });
 
-  it('can reload when user presses R in shell console', () => {
-    const cmd = prepareRun();
-    const {addonReload} = cmd.options;
-    const fakeStdin = cmd.argv.stdin;
-
-    return cmd.run({noReload: false})
-      .then(() => {
-        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-      })
-      .then(() => {
-        assert.ok(fakeStdin.setRawMode.called);
-        assert.ok(addonReload.called);
-        assert.equal(addonReload.firstCall.args[0].addonId,
-          tempInstallResult.addon.id);
-      });
-  });
-
-
-  it('logs and exits on user request (CTRL+C in shell console)', () => {
-    const cmd = prepareRun();
-    const fakeStdin = cmd.argv.stdin;
-    const {reloadStrategy} = cmd.options;
-
-    class StubChildProcess extends EventEmitter {
-      stderr = new EventEmitter();
-      stdout = new EventEmitter();
-      kill = sinon.spy(() => Promise.resolve());
-    }
-    const fakeFirefox = new StubChildProcess();
-
-    class FakeExtensionRunner extends ExtensionRunner {
-      run(): Promise<FirefoxProcess> {
-        return Promise.resolve(fakeFirefox);
-      }
-    }
-
-    return cmd.run({noReload: false}, {AddonRunner: FakeExtensionRunner})
-      .then(() => {
-        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
-      })
-      .then(() => {
-        assert.ok(fakeStdin.pause.called);
-        assert.ok(reloadStrategy.called);
-        assert.equal(reloadStrategy.firstCall.args[0].firefoxProcess,
-          fakeFirefox);
-        assert.ok(fakeFirefox.kill.called);
-      });
-  });
-
   it('raise an error on addonId missing from installTemporaryAddon result',
     () => {
       const cmd = prepareRun(tempInstallResultMissingAddonId);
@@ -430,6 +374,10 @@ describe('run', () => {
       const watcher = {
         close: sinon.spy(() => {}),
       };
+      const fakeStdin = new tty.ReadStream();
+      sinon.spy(fakeStdin, 'pause');
+      sinon.spy(fakeStdin, 'setRawMode');
+
       const args = {
         addonId: 'some-addon@test-suite',
         client,
@@ -440,14 +388,16 @@ describe('run', () => {
         ignoreFiles: ['first/file', 'second/file'],
       };
       const options = {
+        addonReload: sinon.spy(() => Promise.resolve()),
         createWatcher: sinon.spy(() => watcher),
+        stdin: fakeStdin,
       };
       return {
         ...args,
         ...options,
         client,
         watcher,
-        reloadStrategy: (argOverride = {}, optOverride = {}) => {
+        reloadStrategy: async (argOverride = {}, optOverride = {}) => {
           return defaultReloadStrategy(
             {...args, ...argOverride},
             {...options, ...optOverride});
@@ -456,11 +406,14 @@ describe('run', () => {
     }
 
     it('cleans up connections when firefox closes', () => {
-      const {firefoxProcess, client, watcher, reloadStrategy} = prepare();
+      const {
+        firefoxProcess, client, watcher, reloadStrategy, stdin,
+      } = prepare();
       reloadStrategy();
       firefoxProcess.emit('close');
       assert.equal(client.client.disconnect.called, true);
       assert.equal(watcher.close.called, true);
+      assert.ok(stdin.pause.called);
     });
 
     it('configures a watcher', () => {
@@ -477,6 +430,33 @@ describe('run', () => {
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
       assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
+    });
+
+    it('can reload when user presses R in shell console', () => {
+      const {addonReload, stdin, reloadStrategy} = prepare();
+
+      return reloadStrategy()
+        .then(() => {
+          stdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+        })
+        .then(() => {
+          assert.ok(stdin.setRawMode.called);
+          assert.ok(addonReload.called);
+          assert.equal(addonReload.firstCall.args[0].addonId,
+            tempInstallResult.addon.id);
+        });
+    });
+
+
+    it('shuts down firefox on user request (CTRL+C in shell console)', () => {
+      const {firefoxProcess, stdin, reloadStrategy} = prepare();
+
+      return reloadStrategy()
+        .then(() => {
+          stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        }).then(() => {
+          assert.ok(firefoxProcess.kill.called);
+        });
     });
 
   });
