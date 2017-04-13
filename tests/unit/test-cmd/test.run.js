@@ -2,6 +2,7 @@
 import path from 'path';
 import EventEmitter from 'events';
 import tty from 'tty';
+import stream from 'stream';
 
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
@@ -373,9 +374,7 @@ describe('run', () => {
       const watcher = {
         close: sinon.spy(() => {}),
       };
-      const fakeStdin = new tty.ReadStream();
-      sinon.spy(fakeStdin, 'pause');
-      sinon.spy(fakeStdin, 'setRawMode');
+      const fakeStdin = new stream.Readable();
 
       const args = {
         addonId: 'some-addon@test-suite',
@@ -408,6 +407,9 @@ describe('run', () => {
       const {
         firefoxProcess, client, watcher, reloadStrategy, stdin,
       } = prepare();
+
+      sinon.spy(stdin, 'pause');
+
       reloadStrategy();
       firefoxProcess.emit('close');
       assert.equal(client.client.disconnect.called, true);
@@ -432,27 +434,30 @@ describe('run', () => {
     });
 
     it('can reload when user presses R in shell console', () => {
-      const {addonReload, stdin, reloadStrategy} = prepare();
+      const {addonReload, reloadStrategy} = prepare();
 
-      return reloadStrategy()
+      const fakeStdin = new tty.ReadStream();
+      sinon.spy(fakeStdin, 'setRawMode');
+
+      return reloadStrategy({}, {stdin: fakeStdin})
         .then(() => {
-          stdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+          fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
         })
         .then(() => {
-          assert.ok(stdin.setRawMode.called);
+          assert.ok(fakeStdin.setRawMode.called);
           assert.ok(addonReload.called);
           assert.equal(addonReload.firstCall.args[0].addonId,
             tempInstallResult.addon.id);
         });
     });
 
-
     it('shuts down firefox on user request (CTRL+C in shell console)', () => {
-      const {firefoxProcess, stdin, reloadStrategy} = prepare();
+      const {firefoxProcess, reloadStrategy} = prepare();
+      const fakeStdin = new tty.ReadStream();
 
-      return reloadStrategy()
+      return reloadStrategy({}, {stdin: fakeStdin})
         .then(() => {
-          stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
         }).then(() => {
           assert.ok(firefoxProcess.kill.called);
         });

@@ -285,7 +285,7 @@ describe('program.main', () => {
       getVersion: () => 'not-a-real-version',
       checkForUpdates: spy(),
       shouldExitProgram: false,
-      systemProcess: createFakeProcess,
+      systemProcess: createFakeProcess(),
     };
     return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
