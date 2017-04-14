@@ -156,7 +156,7 @@ export function defaultReloadStrategy(
         if (keyPressed.ctrl && keyPressed.name === 'c') {
           userExit = true;
         } else if (keyPressed.name === 'r' && addonId) {
-          log.info('\nReloading extension on user request');
+          log.debug('Reloading extension on user request');
           await addonReload({addonId, client});
         }
       }

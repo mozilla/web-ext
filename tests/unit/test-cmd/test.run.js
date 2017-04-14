@@ -374,8 +374,6 @@ describe('run', () => {
       const watcher = {
         close: sinon.spy(() => {}),
       };
-      const fakeStdin = new stream.Readable();
-
       const args = {
         addonId: 'some-addon@test-suite',
         client,
@@ -388,7 +386,7 @@ describe('run', () => {
       const options = {
         addonReload: sinon.spy(() => Promise.resolve()),
         createWatcher: sinon.spy(() => watcher),
-        stdin: fakeStdin,
+        stdin: new stream.Readable(),
       };
       return {
         ...args,
