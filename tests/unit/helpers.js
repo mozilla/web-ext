@@ -149,7 +149,9 @@ export function makeSureItFails(): Function {
  *
  */
  // $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
-export function fake<T>(original: Object, methods: Object = {}): T {
+export function fake<T>(
+  original: Object, methods: Object = {}, skipProperties: Array<string> = []
+): T {
   var stub = {};
 
   // Provide stubs for all original members:
@@ -162,7 +164,8 @@ export function fake<T>(original: Object, methods: Object = {}): T {
 
   var proto = Object.getPrototypeOf(original);
   for (const key of props) {
-    if (!original.hasOwnProperty(key) && !proto.hasOwnProperty(key)) {
+    if (skipProperties.indexOf(key) >= 0 ||
+       (!original.hasOwnProperty(key) && !proto.hasOwnProperty(key))) {
       continue;
     }
     const definition = original[key] || proto[key];
@@ -188,6 +191,10 @@ export function fake<T>(original: Object, methods: Object = {}): T {
   });
 
   return stub;
+}
+
+export function createFakeProcess() {
+  return fake(process, {}, ['EventEmitter', 'stdin']);
 }
 
 
