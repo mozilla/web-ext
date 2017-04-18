@@ -1,6 +1,8 @@
 /* @flow */
 import path from 'path';
 import EventEmitter from 'events';
+import tty from 'tty';
+import stream from 'stream';
 
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
@@ -10,6 +12,7 @@ import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
   from '../../../src/errors';
 import run, {
   defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
+  defaultAddonReload,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
 import {RemoteFirefox} from '../../../src/firefox/remote';
@@ -32,6 +35,7 @@ describe('run', () => {
 
   function prepareRun(fakeInstallResult) {
     const sourceDir = fixturePath('minimal-web-ext');
+
     const argv = {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
@@ -293,8 +297,8 @@ describe('run', () => {
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),
-        desktopNotifications: sinon.spy(() => Promise.resolve()),
         ignoreFiles: ['path/to/file', 'path/to/file2'],
+        addonReload: sinon.spy(() => Promise.resolve()),
       };
       return {
         config,
@@ -347,42 +351,11 @@ describe('run', () => {
       // Simulate executing the handler when a source file changes.
       return callArgs.onChange()
         .then(() => {
-          assert.equal(config.client.reloadAddon.called, true);
-          const reloadArgs = config.client.reloadAddon.firstCall.args;
+          assert.equal(config.addonReload.called, true);
+          const reloadArgs = config.addonReload.firstCall.args;
           assert.ok(config.addonId);
-          assert.equal(reloadArgs[0], config.addonId);
-        });
-    });
-
-    it('notifies user on error from source change handler', () => {
-      const {config, createWatcher} = prepare();
-      config.client.reloadAddon = () => Promise.reject(new Error('an error'));
-      createWatcher();
-
-      assert.equal(config.onSourceChange.called, true);
-      // Simulate executing the handler when a source file changes.
-      return config.onSourceChange.firstCall.args[0].onChange()
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(config.desktopNotifications.called, true);
-          assert.equal(
-            config.desktopNotifications.lastCall.args[0].message,
-            error.message
-          );
-        });
-    });
-
-    it('throws errors from source change handler', () => {
-      const {createWatcher, config} = prepare();
-      config.client.reloadAddon = () => Promise.reject(new Error('an error'));
-      createWatcher();
-
-      assert.equal(config.onSourceChange.called, true);
-      // Simulate executing the handler when a source file changes.
-      return config.onSourceChange.firstCall.args[0].onChange()
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(error.message, 'an error');
+          assert.equal(reloadArgs[0].addonId, config.addonId);
+          assert.equal(reloadArgs[0].client, config.client);
         });
     });
 
@@ -393,6 +366,7 @@ describe('run', () => {
     class StubChildProcess extends EventEmitter {
       stderr = new EventEmitter();
       stdout = new EventEmitter();
+      kill = sinon.spy(() => {});
     }
 
     function prepare() {
@@ -410,14 +384,16 @@ describe('run', () => {
         ignoreFiles: ['first/file', 'second/file'],
       };
       const options = {
+        addonReload: sinon.spy(() => Promise.resolve()),
         createWatcher: sinon.spy(() => watcher),
+        stdin: new stream.Readable(),
       };
       return {
         ...args,
         ...options,
         client,
         watcher,
-        reloadStrategy: (argOverride = {}, optOverride = {}) => {
+        reloadStrategy: async (argOverride = {}, optOverride = {}) => {
           return defaultReloadStrategy(
             {...args, ...argOverride},
             {...options, ...optOverride});
@@ -426,11 +402,17 @@ describe('run', () => {
     }
 
     it('cleans up connections when firefox closes', () => {
-      const {firefoxProcess, client, watcher, reloadStrategy} = prepare();
+      const {
+        firefoxProcess, client, watcher, reloadStrategy, stdin,
+      } = prepare();
+
+      sinon.spy(stdin, 'pause');
+
       reloadStrategy();
       firefoxProcess.emit('close');
       assert.equal(client.client.disconnect.called, true);
       assert.equal(watcher.close.called, true);
+      assert.ok(stdin.pause.called);
     });
 
     it('configures a watcher', () => {
@@ -447,6 +429,93 @@ describe('run', () => {
       assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
       assert.equal(receivedArgs.addonId, sentArgs.addonId);
       assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
+    });
+
+    it('can reload when user presses R in shell console', () => {
+      const {addonReload, reloadStrategy} = prepare();
+
+      const fakeStdin = new tty.ReadStream();
+      sinon.spy(fakeStdin, 'setRawMode');
+
+      return reloadStrategy({}, {stdin: fakeStdin})
+        .then(() => {
+          fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+        })
+        .then(() => {
+          assert.ok(fakeStdin.setRawMode.called);
+          assert.ok(addonReload.called);
+          assert.equal(addonReload.firstCall.args[0].addonId,
+            tempInstallResult.addon.id);
+        });
+    });
+
+    it('shuts down firefox on user request (CTRL+C in shell console)', () => {
+      const {firefoxProcess, reloadStrategy} = prepare();
+      const fakeStdin = new tty.ReadStream();
+
+      return reloadStrategy({}, {stdin: fakeStdin})
+        .then(() => {
+          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        }).then(() => {
+          assert.ok(firefoxProcess.kill.called);
+        });
+    });
+
+  });
+
+  describe('defaultAddonReload', () => {
+    function createFakeRemoteFirefox(firefoxClient, {reloadAddon}) {
+      class FakeRemoteFirefox extends RemoteFirefox {
+        reloadAddon = sinon.spy(reloadAddon)
+      }
+      const client = new FakeRemoteFirefox(firefoxClient);
+      return client;
+    }
+
+    const desktopNotifications = sinon.spy(() => Promise.resolve());
+    const args = {
+      addonId: 'some-addon@test-suite',
+      desktopNotifications,
+    };
+
+    it('reloads addon', () => {
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(), {
+        reloadAddon: () => Promise.resolve(),
+      });
+      return defaultAddonReload({client, ...args})
+        .then(() => {
+          assert.ok(client.reloadAddon.called, true);
+          const reloadArgs = client.reloadAddon.firstCall.args;
+          assert.equal(reloadArgs[0], args.addonId);
+        });
+    });
+
+    it('notifies user on error from source change handler', () => {
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(), {
+        reloadAddon: () => Promise.reject(new Error('an error')),
+      });
+      return defaultAddonReload({client, ...args})
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(
+            desktopNotifications.called, true
+          );
+          assert.equal(
+            desktopNotifications.firstCall.args[0].message,
+            error.message
+          );
+        });
+    });
+
+    it('throws errors from source change handler', () => {
+      const client = createFakeRemoteFirefox(fakeFirefoxClient(), {
+        reloadAddon: () => Promise.reject(new Error('an error')),
+      });
+      return defaultAddonReload({client, ...args})
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(error.message, 'an error');
+        });
     });
 
   });
