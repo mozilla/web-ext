@@ -64,7 +64,7 @@
     "mz": "2.6.0",
     "node-firefox-connect": "1.2.0",
     "open": "0.0.5",
-    "node-notifier": "5.0.2",
+    "node-notifier": "5.1.2",
     "parse-json": "2.2.0",
     "regenerator-runtime": "0.10.2",
     "require-uncached": "1.0.3",
