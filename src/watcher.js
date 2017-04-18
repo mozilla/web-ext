@@ -40,7 +40,7 @@ export default function onSourceChange(
   const executeImmediately = true;
   onChange = debounce(onChange, 1000, executeImmediately);
 
-  watcher.on('change', async (filePath) => {
+  watcher.on('change', (filePath) => {
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
   });
 

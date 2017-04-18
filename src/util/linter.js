@@ -1,60 +1,94 @@
+/* @flow */
 import path from 'path';
 
 import {createInstance as defaultLinterCreator} from 'addons-linter';
 
-import {
-  createFileFilter as defaultFileFilterCreator,
-} from './file-filter';
+import {createFileFilter as defaultFileFilterCreator} from './file-filter';
+import type {FileFilterCreatorFn} from '../util/file-filter';
 
+
+export type LinterOutputType = 'text' | 'json';
+
+export type Linter = {|
+  run: () => Promise<void>,
+|};
+
+export type LinterCreatorParams = {|
+  config: {|
+    logLevel: 'debug' | 'fatal',
+    stack: boolean,
+    pretty?: boolean,
+    warningsAsErrors?: boolean,
+    metadata?: boolean,
+    output?: LinterOutputType,
+    boring?: boolean,
+    selfHosted?: boolean,
+    scanFile?: ?Array<string>,
+    shouldScanFile: ?ShouldScanFn,
+    _: Array<string>,
+  |},
+  runAsBinary: boolean,
+|};
+
+export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
 
 export type linterParams = {|
   sourceDir: string,
-  artifactsDir: string,
-  createLinter?: typeof defaultLinterCreator,
-  fileFilterCreator?: typeof defaultFileFilterCreator,
-  filePath?: string | null,
+  artifactsDir?: string,
   ignoreFiles?: Array<string>,
+  verbose?: boolean,
+  filePath?: ?string,
 |};
 
+export type linterOptions = {|
+  createLinter?: LinterCreatorFn,
+  fileFilterCreator?: FileFilterCreatorFn,
+|};
+
+export type ShouldScanFn = (fileName: string) => boolean;
 
 export type linterConfig = {|
-  logLevel?: string,
+  logLevel?: 'debug' | 'fatal',
   stack?: boolean,
   pretty?: boolean,
   warningsAsErrors?: boolean,
   metadata?: boolean,
-  scanFile?: string | null,
-  shouldScanFile?: Function | null,
+  selfHosted?: boolean,
+  boring?: boolean,
+  output?: LinterOutputType,
+  scanFile?: ?Array<string>,
+  shouldScanFile?: ?ShouldScanFn,
+  runAsBinary?: boolean,
 |};
-
-const defaultConfig = {
-  logLevel: 'fatal',
-  stack: true,
-  pretty: true,
-  warningsAsErrors: false,
-  metadata: false,
-  scanFile: null,
-  shouldScanFile: null,
-};
 
 export async function linter(
   {
-    sourceDir, artifactsDir, ignoreFiles = [], filePath = null,
+    sourceDir, artifactsDir, ignoreFiles = [], verbose = false, filePath,
+  }: linterParams,
+  {
+    logLevel = 'fatal', stack = false, pretty = true, warningsAsErrors = false,
+    metadata = false, shouldScanFile, boring = false, selfHosted = false,
+    output = 'text', runAsBinary = false,
+  }: linterConfig = {},
+  {
     createLinter = defaultLinterCreator,
     fileFilterCreator = defaultFileFilterCreator,
-  }: linterParams,
-  additionalConfig: linterConfig = {},
+  }: linterOptions = {},
 ): Promise<void> {
+
   const config = {
-    ...defaultConfig,
-    ...additionalConfig,
+    _: [sourceDir],
+    logLevel: verbose ? 'debug' : logLevel,
+    stack: verbose ? true : stack,
+    pretty,
+    warningsAsErrors,
+    metadata,
+    selfHosted,
+    scanFile: filePath ? [path.relative(sourceDir, filePath)] : null,
+    shouldScanFile,
   };
 
-  config._ = [sourceDir];
-
-  config.scanFile = filePath ? [path.relative(sourceDir, filePath)]
-    : filePath;
-  if (!filePath) {
+  if (!filePath && !shouldScanFile) {
     const fileFilter = fileFilterCreator({
       sourceDir, artifactsDir, ignoreFiles,
     });
@@ -63,7 +97,7 @@ export async function linter(
 
   const linterInstance = createLinter({
     config,
-    runAsBinary: false,
+    runAsBinary,
   });
   return linterInstance.run();
 }

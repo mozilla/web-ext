@@ -1,12 +1,6 @@
 /* @flow */
-import {createInstance as defaultLinterCreator} from 'addons-linter';
-
 import {createLogger} from '../util/logger';
-import {
-  createFileFilter as defaultFileFilterCreator,
-} from '../util/file-filter';
-// import flow types
-import type {FileFilterCreatorFn} from '../util/file-filter';
+import {linter as defaultLinter} from '../util/linter';
 
 const log = createLogger(__filename);
 
@@ -14,29 +8,6 @@ const log = createLogger(__filename);
 // Define the needed 'addons-linter' module flow types.
 
 export type LinterOutputType = 'text' | 'json';
-
-export type LinterCreatorParams = {|
-  config: {|
-    logLevel: 'debug' | 'fatal',
-    stack: boolean,
-    pretty?: boolean,
-    warningsAsErrors?: boolean,
-    metadata?: boolean,
-    output?: LinterOutputType,
-    boring?: boolean,
-    selfHosted?: boolean,
-    shouldScanFile: (fileName: string) => boolean,
-    _: Array<string>,
-  |},
-  runAsBinary: boolean,
-|};
-
-export type Linter = {|
-  run: () => Promise<void>,
-|};
-
-export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
-
 
 // Lint command types and implementation.
 
@@ -54,12 +25,10 @@ export type LintCmdParams = {|
 |};
 
 export type LintCmdOptions = {|
-  createLinter?: LinterCreatorFn,
-  createFileFilter?: FileFilterCreatorFn,
-  shouldExitProgram?: boolean,
+  linter?: typeof defaultLinter,
 |};
 
-export default function lint(
+export default async function lint(
   {
     artifactsDir,
     boring,
@@ -73,30 +42,15 @@ export default function lint(
     warningsAsErrors,
   }: LintCmdParams,
   {
-    createLinter = defaultLinterCreator,
-    createFileFilter = defaultFileFilterCreator,
-    shouldExitProgram = true,
+    linter = defaultLinter,
   }: LintCmdOptions = {}
 ): Promise<void> {
-  const fileFilter = createFileFilter({sourceDir, ignoreFiles, artifactsDir});
 
   log.debug(`Running addons-linter on ${sourceDir}`);
-  const linter = createLinter({
-    config: {
-      logLevel: verbose ? 'debug' : 'fatal',
-      stack: Boolean(verbose),
-      pretty,
-      warningsAsErrors,
-      metadata,
-      output,
-      boring,
-      selfHosted,
-      shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
-      // This mimics the first command line argument from yargs,
-      // which should be the directory to the extension.
-      _: [sourceDir],
-    },
-    runAsBinary: shouldExitProgram,
+
+  return linter({
+    sourceDir, artifactsDir, ignoreFiles, verbose,
+  }, {
+    pretty, warningsAsErrors, metadata, output, boring, selfHosted,
   });
-  return linter.run();
 }
