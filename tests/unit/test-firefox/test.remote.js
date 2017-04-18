@@ -114,7 +114,7 @@ describe('firefox.remote', () => {
           .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.equal(
               error.message,
-              'requestTypes response error: unknownError: some actor failure');
+              'unknownError: some actor failure');
           }));
       });
     });

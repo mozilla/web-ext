@@ -96,6 +96,7 @@ export type FirefoxRunnerParams = {|
 export interface FirefoxProcess extends events$EventEmitter {
   stderr: events$EventEmitter;
   stdout: events$EventEmitter;
+  kill: Function;
 }
 
 export type FirefoxRunnerResults = {|
@@ -130,7 +131,7 @@ export async function run(
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxProcess> {
 
-  log.info(`Running Firefox with profile at ${profile.path()}`);
+  log.debug(`Running Firefox with profile at ${profile.path()}`);
 
   const remotePort = await findRemotePort();
 
@@ -225,6 +226,28 @@ export function configureProfile(
   }
   profile.updatePreferences();
   return Promise.resolve(profile);
+}
+
+// useProfile types and implementation.
+
+export type UseProfileParams = {
+  app?: PreferencesAppName,
+  configureThisProfile?: ConfigureProfileFn,
+  customPrefs?: FirefoxPreferences,
+};
+
+// Use the target path as a Firefox profile without cloning it
+
+export async function useProfile(
+  profilePath: string,
+  {
+    app,
+    configureThisProfile = configureProfile,
+    customPrefs = {},
+  }: UseProfileParams = {},
+): Promise<FirefoxProfile> {
+  const profile = new FirefoxProfile({destinationDirectory: profilePath});
+  return await configureThisProfile(profile, {app, customPrefs});
 }
 
 
