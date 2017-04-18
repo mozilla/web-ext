@@ -51,7 +51,6 @@ describe('watcher', () => {
     }
   ));
 
-
   describe('proxyFileChanges', () => {
 
     const defaults = {
