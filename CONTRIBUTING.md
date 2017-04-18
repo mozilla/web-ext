@@ -31,6 +31,7 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
   - [Writing commit messages](#writing-commit-messages)
     - [Checking commit message formatting](#checking-commit-message-formatting)
   - [Creating a release](#creating-a-release)
+    - [Release schedule](#release-schedule)
 - [Documentation](#documentation)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -383,6 +384,12 @@ To release a new version of `web-ext`, follow these steps:
   label to see if
   [the user docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
   need updating.
+
+### Release schedule
+
+The `web-ext lint` command uses the [addons-linter](https://github.com/mozilla/addons-linter) library. That library contains a copy of the schema from Firefox. Since Firefox schema changes regularly we'd like to release new versions of web-ext around the time that Firefox creates a Beta release. That means developers will have a `lint` command that closely matches Firefox.
+
+The schedule is flexible, if a release is due to happen close to a Firefox release, then it might make sense to try and sync the two releases into one. A full release schedule for [Firefox is available](https://wiki.mozilla.org/RapidRelease/Calendar).
 
 # Documentation
 
