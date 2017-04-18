@@ -107,7 +107,7 @@
     "grunt-contrib-watch": "1.0.0",
     "grunt-coveralls": "1.0.1",
     "grunt-eslint": "19.0.0",
-    "grunt-flowbin": "0.1.7",
+    "grunt-flowbin": "0.1.8",
     "grunt-mocha-test": "0.13.2",
     "grunt-newer": "1.3.0",
     "grunt-webpack": "1.0.18",
