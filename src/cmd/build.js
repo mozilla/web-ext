@@ -100,13 +100,11 @@ export type PackageCreatorFn =
 async function defaultPackageCreator({
   manifestData, sourceDir, fileFilter, artifactsDir, showReadyMessage,
 }: PackageCreatorParams): Promise<ExtensionBuildResult> {
-  let id;
-  if (manifestData) {
-    id = getManifestId(manifestData);
-    log.debug(`Using manifest id=${id || '[not specified]'}`);
-  } else {
+  if (!manifestData) {
     manifestData = await getValidatedManifest(sourceDir);
   }
+  const id = getManifestId(manifestData);
+  log.debug(`Using manifest id=${id || '[not specified]'}`);
 
   const buffer = await zipDir(sourceDir, {
     filter: (...args) => fileFilter.wantFile(...args),
@@ -131,7 +129,13 @@ async function defaultPackageCreator({
   await eventToPromise(stream, 'close');
 
   if (showReadyMessage) {
-    log.info(`Your web extension is ready: ${extensionPath}`);
+    if (!id) {
+      log.info(`Your web extension is ready for submitting: ${extensionPath}`);
+      log.info('NOTE: applications.gecko.id in manifest.json is required to ' +
+               'install the generated zip file to Firefox without signing.');
+    } else {
+      log.info(`Your web extension is ready: ${extensionPath}`);
+    }
   }
   return {extensionPath};
 }
