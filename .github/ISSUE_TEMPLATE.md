@@ -1,4 +1,4 @@
-### Is this a bug or feature request?
+### Is this a feature request or a bug?
 
 
 ### What is the current behavior?
