@@ -25,7 +25,7 @@ import {
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
 import type {
-  FirefoxProcess, // eslint-disable-line import/named
+  FirefoxProcess, FirefoxInfo, // eslint-disable-line import/named
 } from '../firefox/index';
 import type {
   FirefoxConnectorFn, RemoteFirefox,
@@ -172,15 +172,16 @@ export function defaultReloadStrategy(
 
 export type CreateFirefoxClientParams = {|
   connectToFirefox?: FirefoxConnectorFn,
-  maxRetries: number,
-  retryInterval: number,
+  maxRetries?: number,
+  retryInterval?: number,
+  port: number,
 |};
 
 export function defaultFirefoxClient(
   {
     connectToFirefox = defaultFirefoxConnector,
     // A max of 250 will try connecting for 30 seconds.
-    maxRetries = 250, retryInterval = 120,
+    maxRetries = 250, retryInterval = 120, port,
   }: CreateFirefoxClientParams = {}
 ): Promise<RemoteFirefox> {
   async function establishConnection() {
@@ -188,7 +189,7 @@ export function defaultFirefoxClient(
 
     for (let retries = 0; retries <= maxRetries; retries++) {
       try {
-        return await connectToFirefox();
+        return await connectToFirefox(port);
       } catch (error) {
         if (isErrorWithCode('ECONNREFUSED', error)) {
           // Wait for `retryInterval` ms.
@@ -290,13 +291,13 @@ export default async function run(
     installed = true;
   }
 
-  const runningFirefox = await runner.run(profile);
+  const { firefox: runningFirefox, debuggerPort } = await runner.run(profile);
 
   if (installed) {
     log.debug('Not installing as temporary add-on because the ' +
               'add-on was already installed');
   } else if (requiresRemote) {
-    client = await firefoxClient();
+    client = await firefoxClient({ port: debuggerPort });
 
     try {
       addonId = await runner.installAsTemporaryAddon(client).then(
@@ -419,7 +420,7 @@ export class ExtensionRunner {
       .then(() => getManifestId(manifestData));
   }
 
-  run(profile: FirefoxProfile): Promise<FirefoxProcess> {
+  run(profile: FirefoxProfile): Promise<FirefoxInfo> {
     const binaryArgs = [];
     const {firefoxApp, firefox, startUrl} = this;
     if (this.browserConsole) {
@@ -431,6 +432,7 @@ export class ExtensionRunner {
         binaryArgs.push('--url', url);
       }
     }
+
     return firefoxApp.run(profile, {
       firefoxBinary: firefox, binaryArgs,
     });

@@ -67,14 +67,15 @@ describe('run', () => {
     };
   }
 
-  function getFakeFirefox(implementations = {}) {
+  function getFakeFirefox(implementations = {}, port = 6005) {
     const profile = {}; // empty object just to avoid errors.
+    const firefox = () => Promise.resolve();
     const allImplementations = {
       createProfile: () => Promise.resolve(profile),
       copyProfile: () => Promise.resolve(profile),
       useProfile: () => Promise.resolve(profile),
       installExtension: () => Promise.resolve(),
-      run: () => Promise.resolve(),
+      run: () => Promise.resolve({firefox, debuggerPort: port}),
       ...implementations,
     };
     return fake(defaultFirefoxApp, allImplementations);
@@ -101,6 +102,21 @@ describe('run', () => {
 
       assert.equal(firefoxApp.run.called, true);
       assert.deepEqual(firefoxApp.run.firstCall.args[0], profile);
+    });
+  });
+
+  it('runs extension in correct port', () => {
+    const cmd = prepareRun();
+    const {firefoxClient} = cmd.options;
+    const port = 6008;
+    const firefoxApp = getFakeFirefox({}, port);
+
+    return cmd.run({}, {
+      firefoxApp,
+    }).then(() => {
+      assert.equal(firefoxApp.run.called, true);
+
+      assert.equal(firefoxClient.firstCall.args[0].port, port);
     });
   });
 
@@ -523,7 +539,9 @@ describe('run', () => {
   describe('firefoxClient', () => {
 
     function firefoxClient(opt = {}) {
-      return defaultFirefoxClient({maxRetries: 0, retryInterval: 1, ...opt});
+      return defaultFirefoxClient({
+        maxRetries: 0, retryInterval: 1, port: 6005, ...opt,
+      });
     }
 
     it('retries after a connection error', () => {

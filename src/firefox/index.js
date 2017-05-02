@@ -109,6 +109,11 @@ export type FirefoxRunnerFn =
   (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
 
 
+export type FirefoxInfo = {|
+  firefox: FirefoxProcess,
+  debuggerPort: number,
+|}
+
 // Run command types and implementaion.
 
 export type FirefoxRunOptions = {|
@@ -129,7 +134,7 @@ export async function run(
     findRemotePort = defaultRemotePortFinder,
     firefoxBinary, binaryArgs,
   }: FirefoxRunOptions = {}
-): Promise<FirefoxProcess> {
+): Promise<FirefoxInfo> {
 
   log.debug(`Running Firefox with profile at ${profile.path()}`);
 
@@ -180,7 +185,7 @@ export async function run(
     log.debug('Firefox closed');
   });
 
-  return firefox;
+  return { firefox, debuggerPort: remotePort };
 }
 
 
