@@ -237,6 +237,7 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   ExtensionRunnerClass?: typeof ExtensionRunner,
+  shouldExitProgram?: boolean,
 |};
 
 export default async function run(
