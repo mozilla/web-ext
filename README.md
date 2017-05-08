@@ -24,7 +24,7 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 ## Installation from source
 
 You'll need:
-* [Node.js](https://nodejs.org/en/), 4.0.0 or higher
+* [Node.js](https://nodejs.org/en/), 6.0.0 or higher
 * [npm](https://www.npmjs.com/), 3.0.0 or higher is recommended
 
 Optionally, you may like:
