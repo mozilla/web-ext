@@ -417,6 +417,16 @@ describe('program.main', () => {
         assert.equal(customPrefs.prop2, 'value2');
       });
   });
+
+  it('passes shouldExitProgram option to commands', () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    return execProgram(['lint'], {commands: fakeCommands}).then(() => {
+      const options = fakeCommands.lint.firstCall.args[1];
+      assert.strictEqual(options.shouldExitProgram, false);
+    });
+  });
 });
 
 describe('program.defaultVersionGetter', () => {

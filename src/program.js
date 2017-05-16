@@ -147,7 +147,7 @@ export class Program {
         });
       }
 
-      await runCommand(argv);
+      await runCommand(argv, {shouldExitProgram});
 
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';

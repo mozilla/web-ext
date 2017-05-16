@@ -36,6 +36,7 @@ export type SignOptions = {
   build?: typeof defaultBuilder,
   signAddon?: typeof defaultAddonSigner,
   preValidatedManifest?: ExtensionManifest,
+  shouldExitProgram?: boolean,
 };
 
 export type SignResult = {|

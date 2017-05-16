@@ -153,6 +153,7 @@ export type BuildCmdOptions = {|
   packageCreator?: PackageCreatorFn,
   showReadyMessage?: boolean,
   createFileFilter?: FileFilterCreatorFn,
+  shouldExitProgram?: boolean,
 |};
 
 export default async function build(
