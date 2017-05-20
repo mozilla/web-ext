@@ -403,6 +403,7 @@ describe('run', () => {
         addonReload: sinon.spy(() => Promise.resolve()),
         createWatcher: sinon.spy(() => watcher),
         stdin: new stream.Readable(),
+        kill: sinon.spy(() => Promise.resolve()),
       };
       return {
         ...args,
@@ -474,6 +475,18 @@ describe('run', () => {
           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
         }).then(() => {
           assert.ok(firefoxProcess.kill.called);
+        });
+    });
+
+    it('pauses the web-ext process (CTRL+Z in shell console)', () => {
+      const {reloadStrategy, kill} = prepare();
+      const fakeStdin = new tty.ReadStream();
+
+      return reloadStrategy({}, {stdin: fakeStdin})
+        .then(() => {
+          fakeStdin.emit('keypress', 'z', {name: 'z', ctrl: true});
+        }).then(() => {
+          assert.ok(kill.called);
         });
     });
 
