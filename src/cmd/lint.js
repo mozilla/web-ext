@@ -26,6 +26,7 @@ export type LintCmdParams = {|
 
 export type LintCmdOptions = {|
   linter?: typeof defaultLinter,
+  shouldExitProgram?: boolean,
 |};
 
 export default async function lint(
@@ -42,7 +43,7 @@ export default async function lint(
     warningsAsErrors,
   }: LintCmdParams,
   {
-    linter = defaultLinter,
+    linter = defaultLinter, shouldExitProgram = true,
   }: LintCmdOptions = {}
 ): Promise<void> {
 
@@ -51,6 +52,12 @@ export default async function lint(
   return linter({
     sourceDir, artifactsDir, ignoreFiles, verbose,
   }, {
-    pretty, warningsAsErrors, metadata, output, boring, selfHosted,
+    pretty,
+    warningsAsErrors,
+    metadata,
+    output,
+    boring,
+    selfHosted,
+    runAsBinary: shouldExitProgram,
   });
 }
