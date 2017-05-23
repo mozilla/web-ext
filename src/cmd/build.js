@@ -11,7 +11,7 @@ import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
-import {UsageError} from '../errors';
+import {UsageError, isErrorWithCode} from '../errors';
 import {
   createFileFilter as defaultFileFilterCreator,
   FileFilter,
@@ -135,7 +135,9 @@ async function defaultPackageCreator({
     destStat = await fs.stat(extensionPath);
   } catch (error) {
     destStat = false;
-    throw error;
+    if (!isErrorWithCode('ENOENT', error)) {
+      throw error;
+    }
   }
   const destinationFileExists = destStat && destStat.isFile();
 
@@ -145,12 +147,12 @@ async function defaultPackageCreator({
       'Use --overwrite-dest to enable overwriting.');
   }
 
+  if (!overwriteDest && destinationFileExists) {
+    throwExtensionExists();
+  }
+
   if (destinationFileExists) {
-    if (overwriteDest) {
-      log.info(`Destination exists, overwriting: ${extensionPath}`);
-    } else {
-      throwExtensionExists();
-    }
+    log.info(`Destination exists, overwriting: ${extensionPath}`);
   }
 
   const stream = overwriteDest ?
@@ -180,6 +182,7 @@ export type BuildCmdParams = {|
   sourceDir: string,
   artifactsDir: string,
   asNeeded?: boolean,
+  overwriteDest?: boolean,
   ignoreFiles?: Array<string>,
 |};
 
@@ -195,7 +198,13 @@ export type BuildCmdOptions = {|
 |};
 
 export default async function build(
-  {sourceDir, artifactsDir, asNeeded = false, ignoreFiles = []}: BuildCmdParams,
+  {
+    sourceDir,
+    artifactsDir,
+    asNeeded = false,
+    overwriteDest = false,
+    ignoreFiles = [],
+  }: BuildCmdParams,
   {
     manifestData,
     createFileFilter = defaultFileFilterCreator,
@@ -206,7 +215,6 @@ export default async function build(
     }),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
-    overwriteDest = false,
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {

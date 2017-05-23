@@ -320,6 +320,44 @@ describe('build', () => {
     }
   ));
 
+  it('raises a UsageError if zip file exists', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const testFileName =
+          path.join(tmpDir.path(), 'minimal_extension-1.0.zip');
+        return fs.writeFile(testFileName, 'test')
+          .then(() =>
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+        }))
+          .catch ((error) => {
+            assert.instanceOf(error, UsageError);
+          });
+
+      });
+  });
+
+  it('overwrites zip file if it exists', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const testFileName =
+          path.join(tmpDir.path(), 'minimal_extension-1.0.zip');
+        return fs.writeFile(testFileName, 'test')
+          .then(() =>
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+          overwriteDest: true,
+        }))
+          .then((buildResult) => {
+            assert.match(buildResult.extensionPath,
+                         /minimal_extension-1\.0\.zip$/);
+            return buildResult.extensionPath;
+          });
+      });
+  });
+
   describe('safeFileName', () => {
 
     it('makes names safe for writing to a file system', () => {
