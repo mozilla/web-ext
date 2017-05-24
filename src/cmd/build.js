@@ -130,16 +130,6 @@ async function defaultPackageCreator({
   const packageName = safeFileName(
     `${extensionName}-${manifestData.version}.zip`);
   const extensionPath = path.join(artifactsDir, packageName);
-  let destStat;
-  try {
-    destStat = await fs.stat(extensionPath);
-  } catch (error) {
-    destStat = false;
-    if (!isErrorWithCode('ENOENT', error)) {
-      throw error;
-    }
-  }
-  const destinationFileExists = destStat && destStat.isFile();
 
   function throwExtensionExists() {
     throw new UsageError(
@@ -147,11 +137,8 @@ async function defaultPackageCreator({
       'Use --overwrite-dest to enable overwriting.');
   }
 
-  if (!overwriteDest && destinationFileExists) {
-    throwExtensionExists();
-  }
 
-  if (destinationFileExists) {
+  if (overwriteDest) {
     log.info(`Destination exists, overwriting: ${extensionPath}`);
   }
 
@@ -164,7 +151,7 @@ async function defaultPackageCreator({
   try {
     await eventToPromise(stream, 'close');
   } catch (error) {
-    if (error.code === 'EEXIST') {
+    if (isErrorWithCode('EEXIST', error)) {
       throwExtensionExists();
     }
   }
