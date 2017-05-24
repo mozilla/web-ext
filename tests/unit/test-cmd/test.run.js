@@ -489,7 +489,7 @@ describe('run', () => {
           fakeStdin.emit('keypress', 'z', {name: 'z', ctrl: true});
         }).then(() => {
           assert.ok(kill.called);
-          assert.equal(kill.firstCall.args[0], process.pid);
+          assert.deepEqual(kill.firstCall.args, [process.pid, 'SIGTSTP']);
           sinon.assert.callOrder(setRawMode, setRawMode, kill, setRawMode);
           sinon.assert.calledThrice(setRawMode);
           assert.equal(setRawMode.firstCall.args[0], true);
