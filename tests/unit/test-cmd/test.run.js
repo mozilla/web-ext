@@ -469,6 +469,7 @@ describe('run', () => {
     it('shuts down firefox on user request (CTRL+C in shell console)', () => {
       const {firefoxProcess, reloadStrategy} = prepare();
       const fakeStdin = new tty.ReadStream();
+      sinon.spy(fakeStdin, 'setRawMode');
 
       return reloadStrategy({}, {stdin: fakeStdin})
         .then(() => {
@@ -481,12 +482,19 @@ describe('run', () => {
     it('pauses the web-ext process (CTRL+Z in shell console)', () => {
       const {reloadStrategy, kill} = prepare();
       const fakeStdin = new tty.ReadStream();
+      const setRawMode = sinon.spy(fakeStdin, 'setRawMode');
 
       return reloadStrategy({}, {stdin: fakeStdin})
         .then(() => {
           fakeStdin.emit('keypress', 'z', {name: 'z', ctrl: true});
         }).then(() => {
           assert.ok(kill.called);
+          assert.equal(kill.firstCall.args[0], process.pid);
+          sinon.assert.callOrder(setRawMode, setRawMode, kill, setRawMode);
+          sinon.assert.calledThrice(setRawMode);
+          assert.equal(setRawMode.firstCall.args[0], true);
+          assert.equal(setRawMode.secondCall.args[0], false);
+          assert.equal(setRawMode.lastCall.args[0], true);
         });
     });
 
