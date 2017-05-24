@@ -9,6 +9,7 @@ import sinon from 'sinon';
 import build, {
   safeFileName,
   getDefaultLocalizedName,
+  defaultPackageCreator,
 } from '../../../src/cmd/build';
 import {FileFilter} from '../../../src/util/file-filter';
 import {withTempDir} from '../../../src/util/temp-dir';
@@ -363,6 +364,29 @@ describe('build', () => {
     it('makes names safe for writing to a file system', () => {
       assert.equal(safeFileName('Bob Loblaw\'s 2005 law-blog.net'),
                    'bob_loblaw_s_2005_law-blog.net');
+    });
+
+  });
+
+  describe('defaultPackageCreator', () => {
+
+    it('should reject on Unexpected errors', () => {
+      const fakeEventToPromise = sinon.spy(
+        () => Promise.reject(new Error('Unexpected error')));
+      const params = {
+        manifestData: basicManifest,
+        sourceDir: fixturePath('minimal-web-ext'),
+        fileFilter: {wantFile: () => true},
+        artifactsDir: 'artifacts',
+        eventToPromise: fakeEventToPromise,
+        overwriteDest: false,
+        showReadyMessage: false,
+      };// $FLOW_FIXME: flow complains about the fileFiler type
+      return defaultPackageCreator(params)
+        .then(() => assert.fail('The expected error has not been raised'))
+        .catch ((error) => {
+          assert.match(error.message, /Unexpected error/);
+        });
     });
 
   });

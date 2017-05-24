@@ -4,7 +4,7 @@ import {createWriteStream} from 'fs';
 
 import {fs} from 'mz';
 import parseJSON from 'parse-json';
-import eventToPromise from 'event-to-promise';
+import {eventToPromise as defaultEventToPromise} from 'event-to-promise';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
@@ -40,6 +40,7 @@ export type PackageCreatorParams = {|
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
+  eventToPromise: typeof defaultEventToPromise,
   overwriteDest: boolean,
   showReadyMessage: boolean
 |};
@@ -98,11 +99,12 @@ export async function getDefaultLocalizedName(
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
-async function defaultPackageCreator({
+export async function defaultPackageCreator({
   manifestData,
   sourceDir,
   fileFilter,
   artifactsDir,
+  eventToPromise = defaultEventToPromise,
   overwriteDest,
   showReadyMessage,
 }: PackageCreatorParams): Promise<ExtensionBuildResult> {
@@ -131,20 +133,7 @@ async function defaultPackageCreator({
     `${extensionName}-${manifestData.version}.zip`);
   const extensionPath = path.join(artifactsDir, packageName);
 
-  function throwExtensionExists() {
-    throw new UsageError(
-      `Extension exists at the destination path: ${extensionPath}\n` +
-      'Use --overwrite-dest to enable overwriting.');
-  }
-
-
-  if (overwriteDest) {
-    log.info(`Destination exists, overwriting: ${extensionPath}`);
-  }
-
-  const stream = overwriteDest ?
-            createWriteStream(extensionPath)
-           : createWriteStream(extensionPath, {flags: 'wx'}); // double-check if destination file exists
+  let stream = createWriteStream(extensionPath, {flags: 'wx'});
 
   stream.write(buffer, () => stream.end());
 
@@ -152,7 +141,17 @@ async function defaultPackageCreator({
     await eventToPromise(stream, 'close');
   } catch (error) {
     if (isErrorWithCode('EEXIST', error)) {
-      throwExtensionExists();
+      if (!overwriteDest) {
+        throw new UsageError(
+          `Extension exists at the destination path: ${extensionPath}\n` +
+          'Use --overwrite-dest to enable overwriting.');
+      }
+      log.info(`Destination exists, overwriting: ${extensionPath}`);
+      stream = createWriteStream(extensionPath);
+      stream.write(buffer, () => stream.end());
+      await eventToPromise(stream, 'close');
+    } else {
+      throw error;
     }
   }
 
