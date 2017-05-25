@@ -398,7 +398,7 @@ describe('build', () => {
           };
 
           return defaultPackageCreator(params, options)
-            .then(() => makeSureItFails())
+            .then(makeSureItFails())
             .catch ((error) => {
               assert.match(error.message, /Unexpected error/);
             });
