@@ -140,6 +140,7 @@ export async function defaultPackageCreator(
     `${extensionName}-${manifestData.version}.zip`);
   const extensionPath = path.join(artifactsDir, packageName);
 
+  //Added 'wx' flags to avoid overwriting of existing package
   let stream = createWriteStream(extensionPath, {flags: 'wx'});
 
   stream.write(buffer, () => stream.end());
@@ -184,7 +185,6 @@ export type BuildCmdOptions = {|
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
   packageCreator?: PackageCreatorFn,
-  overwriteDest?: boolean,
   showReadyMessage?: boolean,
   createFileFilter?: FileFilterCreatorFn,
   shouldExitProgram?: boolean,

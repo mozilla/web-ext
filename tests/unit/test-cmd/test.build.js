@@ -322,21 +322,21 @@ describe('build', () => {
     }
   ));
 
-  it('raises a UsageError if zip file exists', () => {
+  it('raises an UsageError if zip file exists', () => {
     return withTempDir(
       (tmpDir) => {
         const testFileName =
-          path.join(tmpDir.path(), 'minimal_extension-1.0.zip');
+          path.join(tmpDir.path(),
+                    'minimal_extension-1.0.zip');
         return fs.writeFile(testFileName, 'test')
-          .then(() =>
-            build({
+          .then(() => build(
+            {
               sourceDir: fixturePath('minimal-web-ext'),
               artifactsDir: tmpDir.path(),
             }))
           .catch ((error) => {
             assert.instanceOf(error, UsageError);
           });
-
       });
   });
 
@@ -344,10 +344,11 @@ describe('build', () => {
     return withTempDir(
       (tmpDir) => {
         const testFileName =
-          path.join(tmpDir.path(), 'minimal_extension-1.0.zip');
+          path.join(tmpDir.path(),
+                    'minimal_extension-1.0.zip');
         return fs.writeFile(testFileName, 'test')
-          .then(() =>
-            build({
+          .then(() => build(
+            {
               sourceDir: fixturePath('minimal-web-ext'),
               artifactsDir: tmpDir.path(),
               overwriteDest: true,
@@ -355,7 +356,6 @@ describe('build', () => {
           .then((buildResult) => {
             assert.match(buildResult.extensionPath,
                          /minimal_extension-1\.0\.zip$/);
-            return buildResult.extensionPath;
           });
       });
   });
@@ -370,11 +370,12 @@ describe('build', () => {
   });
 
   describe('defaultPackageCreator', () => {
-
-    it('should reject on Unexpected errors', () => withTempDir(
+    it('should reject on Unexpected errors', () => {
+      return withTempDir(
       (tmpDir) => {
         const fakeEventToPromise = sinon.spy(async (stream) => {
           await defaultEventToPromise(stream, 'close');
+          //Remove contents of tmpDir before removal of directory
           const files = await fs.readdir(tmpDir.path());
           for (const file of files) {
             await fs.unlink(path.join(tmpDir.path(), file));
@@ -401,8 +402,8 @@ describe('build', () => {
           .catch ((error) => {
             assert.match(error.message, /Unexpected error/);
           });
-      }
-  ));
+      });
+    });
 
   });
 
