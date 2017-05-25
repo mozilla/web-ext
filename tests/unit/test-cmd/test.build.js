@@ -335,6 +335,8 @@ describe('build', () => {
             }))
           .catch ((error) => {
             assert.instanceOf(error, UsageError);
+            assert.match(error.message,
+                         /Extension exists at the destination path/);
           });
       });
   });
@@ -396,7 +398,7 @@ describe('build', () => {
           };
 
           return defaultPackageCreator(params, options)
-            .then(() => assert.fail('The expected error has not been raised'))
+            .then(() => makeSureItFails())
             .catch ((error) => {
               assert.match(error.message, /Unexpected error/);
             });

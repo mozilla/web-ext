@@ -288,6 +288,7 @@ Example: $0 --help run.
           type: 'boolean',
         },
         'overwrite-dest': {
+          alias: 'o',
           describe: 'Overwrite destination package if it exists.',
           type: 'boolean',
         },
