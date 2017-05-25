@@ -113,7 +113,7 @@ export async function defaultPackageCreator(
   }: PackageCreatorParams,
   {
     eventToPromise = defaultEventToPromise,
-  }:PackageCreatorOptions = {}
+  }: PackageCreatorOptions = {}
 ): Promise<ExtensionBuildResult> {
   let id;
   if (manifestData) {

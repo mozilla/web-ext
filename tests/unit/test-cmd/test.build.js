@@ -375,8 +375,10 @@ describe('build', () => {
       (tmpDir) => {
         const fakeEventToPromise = sinon.spy(async (stream) => {
           await defaultEventToPromise(stream, 'close');
-          await fs.unlink(
-            path.join(tmpDir.path(), 'minimal_extension-1.0.zip'));
+          const files = await fs.readdir(tmpDir.path());
+          for (const file of files) {
+            await fs.unlink(path.join(tmpDir.path(), file));
+          }
           return Promise.reject(new Error('Unexpected error'));
         });
         const sourceDir = fixturePath('minimal-web-ext');
