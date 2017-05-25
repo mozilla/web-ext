@@ -328,10 +328,10 @@ describe('build', () => {
           path.join(tmpDir.path(), 'minimal_extension-1.0.zip');
         return fs.writeFile(testFileName, 'test')
           .then(() =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        }))
+            build({
+              sourceDir: fixturePath('minimal-web-ext'),
+              artifactsDir: tmpDir.path(),
+            }))
           .catch ((error) => {
             assert.instanceOf(error, UsageError);
           });
@@ -346,15 +346,19 @@ describe('build', () => {
           path.join(tmpDir.path(), 'minimal_extension-1.0.zip');
         return fs.writeFile(testFileName, 'test')
           .then(() =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-          overwriteDest: true,
-        }))
+            build({
+              sourceDir: fixturePath('minimal-web-ext'),
+              artifactsDir: tmpDir.path(),
+              overwriteDest: true,
+            }))
           .then((buildResult) => {
             assert.match(buildResult.extensionPath,
                          /minimal_extension-1\.0\.zip$/);
             return buildResult.extensionPath;
+          })
+          .then(() => fs.unlink(testFileName))
+          .then(() => {
+            return;
           });
       });
   });
