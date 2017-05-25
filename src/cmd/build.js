@@ -4,7 +4,7 @@ import {createWriteStream} from 'fs';
 
 import {fs} from 'mz';
 import parseJSON from 'parse-json';
-import {eventToPromise as defaultEventToPromise} from 'event-to-promise';
+import defaultEventToPromise from 'event-to-promise';
 
 import defaultSourceWatcher from '../watcher';
 import {zipDir} from '../util/zip-dir';
