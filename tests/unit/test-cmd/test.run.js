@@ -495,6 +495,9 @@ describe('run', () => {
           assert.equal(setRawMode.firstCall.args[0], true);
           assert.equal(setRawMode.secondCall.args[0], false);
           assert.equal(setRawMode.lastCall.args[0], true);
+        })
+        .then(() => {
+          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
         });
     });
 
