@@ -40,7 +40,6 @@ export type PackageCreatorParams = {|
   sourceDir: string,
   fileFilter: FileFilter,
   artifactsDir: string,
-  eventToPromise: typeof defaultEventToPromise,
   overwriteDest: boolean,
   showReadyMessage: boolean
 |};
@@ -49,6 +48,10 @@ export type LocalizedNameParams = {|
   messageFile: string,
   manifestData: ExtensionManifest,
 |}
+
+export type PackageCreatorOptions = {|
+  eventToPromise: typeof defaultEventToPromise,
+|};
 
 // This defines the _locales/messages.json type. See:
 // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Internationalization#Providing_localized_strings_in__locales
@@ -99,15 +102,19 @@ export async function getDefaultLocalizedName(
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
-export async function defaultPackageCreator({
-  manifestData,
-  sourceDir,
-  fileFilter,
-  artifactsDir,
-  eventToPromise = defaultEventToPromise,
-  overwriteDest,
-  showReadyMessage,
-}: PackageCreatorParams): Promise<ExtensionBuildResult> {
+export async function defaultPackageCreator(
+  {
+    manifestData,
+    sourceDir,
+    fileFilter,
+    artifactsDir,
+    overwriteDest,
+    showReadyMessage,
+  }: PackageCreatorParams,
+  {
+    eventToPromise = defaultEventToPromise,
+  }:PackageCreatorOptions = {}
+): Promise<ExtensionBuildResult> {
   let id;
   if (manifestData) {
     id = getManifestId(manifestData);

@@ -370,24 +370,32 @@ describe('build', () => {
 
   describe('defaultPackageCreator', () => {
 
-    it('should reject on Unexpected errors', () => {
-      const fakeEventToPromise = sinon.spy(
-        () => Promise.reject(new Error('Unexpected error')));
-      const params = {
-        manifestData: basicManifest,
-        sourceDir: fixturePath('minimal-web-ext'),
-        fileFilter: {wantFile: () => true},
-        artifactsDir: 'artifacts',
-        eventToPromise: fakeEventToPromise,
-        overwriteDest: false,
-        showReadyMessage: false,
-      };// $FLOW_FIXME: flow complains about the fileFiler type
-      return defaultPackageCreator(params)
-        .then(() => assert.fail('The expected error has not been raised'))
-        .catch ((error) => {
-          assert.match(error.message, /Unexpected error/);
-        });
-    });
+    it('should reject on Unexpected errors', () => withTempDir(
+      (tmpDir) => {
+        const fakeEventToPromise = sinon.spy(
+          () => Promise.reject(new Error('Unexpected error')));
+        const sourceDir = fixturePath('minimal-web-ext');
+        const artifactsDir = tmpDir.path();
+        const fileFilter = new FileFilter({sourceDir, artifactsDir});
+        const params = {
+          manifestData: basicManifest,
+          sourceDir,
+          fileFilter,
+          artifactsDir,
+          overwriteDest: false,
+          showReadyMessage: false,
+        };
+        const options = {
+          eventToPromise: fakeEventToPromise,
+        };
+
+        return defaultPackageCreator(params, options)
+          .then(() => assert.fail('The expected error has not been raised'))
+          .catch ((error) => {
+            assert.match(error.message, /Unexpected error/);
+          });
+      }
+  ));
 
   });
 
