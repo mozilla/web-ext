@@ -373,7 +373,7 @@ describe('build', () => {
         (tmpDir) => {
           const fakeEventToPromise = sinon.spy(async (stream) => {
             await defaultEventToPromise(stream, 'close');
-            //Remove contents of tmpDir before removal of directory
+            // Remove contents of tmpDir before removal of directory.
             const files = await fs.readdir(tmpDir.path());
             for (const file of files) {
               await fs.unlink(path.join(tmpDir.path(), file));

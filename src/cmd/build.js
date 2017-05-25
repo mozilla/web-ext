@@ -140,7 +140,7 @@ export async function defaultPackageCreator(
     `${extensionName}-${manifestData.version}.zip`);
   const extensionPath = path.join(artifactsDir, packageName);
 
-  //Added 'wx' flags to avoid overwriting of existing package
+  // Added 'wx' flags to avoid overwriting of existing package.
   let stream = createWriteStream(extensionPath, {flags: 'wx'});
 
   stream.write(buffer, () => stream.end());
@@ -148,19 +148,18 @@ export async function defaultPackageCreator(
   try {
     await eventToPromise(stream, 'close');
   } catch (error) {
-    if (isErrorWithCode('EEXIST', error)) {
-      if (!overwriteDest) {
-        throw new UsageError(
-          `Extension exists at the destination path: ${extensionPath}\n` +
-          'Use --overwrite-dest to enable overwriting.');
-      }
-      log.info(`Destination exists, overwriting: ${extensionPath}`);
-      stream = createWriteStream(extensionPath);
-      stream.write(buffer, () => stream.end());
-      await eventToPromise(stream, 'close');
-    } else {
+    if (!isErrorWithCode('EEXIST', error)) {
       throw error;
     }
+    if (!overwriteDest) {
+      throw new UsageError(
+        `Extension exists at the destination path: ${extensionPath}\n` +
+        'Use --overwrite-dest to enable overwriting.');
+    }
+    log.info(`Destination exists, overwriting: ${extensionPath}`);
+    stream = createWriteStream(extensionPath);
+    stream.write(buffer, () => stream.end());
+    await eventToPromise(stream, 'close');
   }
 
   if (showReadyMessage) {
