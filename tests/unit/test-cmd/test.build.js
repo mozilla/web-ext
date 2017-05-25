@@ -5,10 +5,12 @@ import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+import defaultEventToPromise from 'event-to-promise';
 
 import build, {
   safeFileName,
   getDefaultLocalizedName,
+  defaultPackageCreator,
 } from '../../../src/cmd/build';
 import {FileFilter} from '../../../src/util/file-filter';
 import {withTempDir} from '../../../src/util/temp-dir';
@@ -320,11 +322,87 @@ describe('build', () => {
     }
   ));
 
+  it('raises an UsageError if zip file exists', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const testFileName = path.join(tmpDir.path(),
+                                       'minimal_extension-1.0.zip');
+        return fs.writeFile(testFileName, 'test')
+          .then(() => build(
+            {
+              sourceDir: fixturePath('minimal-web-ext'),
+              artifactsDir: tmpDir.path(),
+            }))
+          .catch ((error) => {
+            assert.instanceOf(error, UsageError);
+            assert.match(error.message,
+                         /Extension exists at the destination path/);
+          });
+      });
+  });
+
+  it('overwrites zip file if it exists', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const testFileName = path.join(tmpDir.path(),
+                                       'minimal_extension-1.0.zip');
+        return fs.writeFile(testFileName, 'test')
+          .then(() => build(
+            {
+              sourceDir: fixturePath('minimal-web-ext'),
+              artifactsDir: tmpDir.path(),
+              overwriteDest: true,
+            }))
+          .then((buildResult) => {
+            assert.match(buildResult.extensionPath,
+                         /minimal_extension-1\.0\.zip$/);
+          });
+      });
+  });
+
   describe('safeFileName', () => {
 
     it('makes names safe for writing to a file system', () => {
       assert.equal(safeFileName('Bob Loblaw\'s 2005 law-blog.net'),
                    'bob_loblaw_s_2005_law-blog.net');
+    });
+
+  });
+
+  describe('defaultPackageCreator', () => {
+    it('should reject on Unexpected errors', () => {
+      return withTempDir(
+        (tmpDir) => {
+          const fakeEventToPromise = sinon.spy(async (stream) => {
+            await defaultEventToPromise(stream, 'close');
+            // Remove contents of tmpDir before removal of directory.
+            const files = await fs.readdir(tmpDir.path());
+            for (const file of files) {
+              await fs.unlink(path.join(tmpDir.path(), file));
+            }
+            return Promise.reject(new Error('Unexpected error'));
+          });
+          const sourceDir = fixturePath('minimal-web-ext');
+          const artifactsDir = tmpDir.path();
+          const fileFilter = new FileFilter({sourceDir, artifactsDir});
+          const params = {
+            manifestData: basicManifest,
+            sourceDir,
+            fileFilter,
+            artifactsDir,
+            overwriteDest: false,
+            showReadyMessage: false,
+          };
+          const options = {
+            eventToPromise: fakeEventToPromise,
+          };
+
+          return defaultPackageCreator(params, options)
+            .then(makeSureItFails())
+            .catch ((error) => {
+              assert.match(error.message, /Unexpected error/);
+            });
+        });
     });
 
   });
