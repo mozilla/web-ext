@@ -325,9 +325,8 @@ describe('build', () => {
   it('raises an UsageError if zip file exists', () => {
     return withTempDir(
       (tmpDir) => {
-        const testFileName =
-          path.join(tmpDir.path(),
-                    'minimal_extension-1.0.zip');
+        const testFileName = path.join(tmpDir.path(),
+                                       'minimal_extension-1.0.zip');
         return fs.writeFile(testFileName, 'test')
           .then(() => build(
             {
