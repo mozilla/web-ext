@@ -5,6 +5,7 @@ import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+import defaultEventToPromise from 'event-to-promise';
 
 import build, {
   safeFileName,
@@ -355,10 +356,6 @@ describe('build', () => {
             assert.match(buildResult.extensionPath,
                          /minimal_extension-1\.0\.zip$/);
             return buildResult.extensionPath;
-          })
-          .then(() => fs.unlink(testFileName))
-          .then(() => {
-            return;
           });
       });
   });
@@ -376,8 +373,12 @@ describe('build', () => {
 
     it('should reject on Unexpected errors', () => withTempDir(
       (tmpDir) => {
-        const fakeEventToPromise = sinon.spy(
-          () => Promise.reject(new Error('Unexpected error')));
+        const fakeEventToPromise = sinon.spy(async (stream) => {
+          await defaultEventToPromise(stream, 'close');
+          await fs.unlink(
+            path.join(tmpDir.path(), 'minimal_extension-1.0.zip'));
+          return Promise.reject(new Error('Unexpected error'));
+        });
         const sourceDir = fixturePath('minimal-web-ext');
         const artifactsDir = tmpDir.path();
         const fileFilter = new FileFilter({sourceDir, artifactsDir});
