@@ -163,7 +163,8 @@ export async function defaultPackageCreator(
   }
 
   if (showReadyMessage) {
-    log.info(`Your web extension is ready: ${extensionPath}`);
+    log.info('Your web extension is ready for being submitted on ' +
+             `addons.mozilla.org: ${extensionPath}`);
   }
   return {extensionPath};
 }
