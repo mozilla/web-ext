@@ -149,7 +149,7 @@ export function defaultReloadStrategy(
     const keypressUsageInfo = 'Press R to reload (and Ctrl-C to quit)';
 
     Promise.resolve().then(async function() {
-      log.info('Press R to reload (and Ctrl-C to quit)');
+      log.info(keypressUsageInfo);
 
       let userExit = false;
 
