@@ -1,5 +1,6 @@
 /* @flow */
 import path from 'path';
+import EventEmitter from 'events';
 
 import sinon from 'sinon';
 import yauzl from 'yauzl';
@@ -7,6 +8,8 @@ import ExtendableError from 'es6-error';
 import promisify from 'es6-promisify';
 
 import {createLogger} from '../../src/util/logger';
+import * as defaultFirefoxApp from '../../src/firefox';
+import {RemoteFirefox} from '../../src/firefox/remote';
 
 const log = createLogger(__filename);
 
@@ -197,6 +200,11 @@ export function createFakeProcess() {
   return fake(process, {}, ['EventEmitter', 'stdin']);
 }
 
+export class StubChildProcess extends EventEmitter {
+  stderr = new EventEmitter();
+  stdout = new EventEmitter();
+  kill = sinon.spy(() => {});
+}
 
 /*
  * Returns a fake Firefox client as would be returned by
@@ -266,4 +274,40 @@ export class ErrorWithCode extends Error {
     super(message || 'pretend this is a system error');
     this.code = code || 'SOME_CODE';
   }
+}
+
+/*
+ * A class that implements an empty IExtensionRunner interface.
+ */
+export class FakeExtensionRunner {
+  params: any;
+  deps: any;
+
+  async run() {}
+  async exit() {}
+  async reloadAllExtensions() {}
+  async reloadExtensionBySourceDir(sourceDir: string) {} // eslint-disable-line no-unused-vars
+  registerCleanup(fn: Function) {} // eslint-disable-line no-unused-vars
+}
+
+export function getFakeFirefox(
+  implementations: Object = {}, port: number = 6005
+) {
+  const profile = {}; // empty object just to avoid errors.
+  const firefox = () => Promise.resolve();
+  const allImplementations = {
+    createProfile: () => Promise.resolve(profile),
+    copyProfile: () => Promise.resolve(profile),
+    useProfile: () => Promise.resolve(profile),
+    installExtension: () => Promise.resolve(),
+    run: () => Promise.resolve({firefox, debuggerPort: port}),
+    ...implementations,
+  };
+  return fake(defaultFirefoxApp, allImplementations);
+}
+
+export function getFakeRemoteFirefox(
+  implementations: Object = {}
+) {
+  return fake(RemoteFirefox.prototype, implementations);
 }
