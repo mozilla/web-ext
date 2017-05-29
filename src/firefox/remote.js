@@ -5,6 +5,7 @@ import type FirefoxClient from 'firefox-client'; //eslint-disable-line import/no
 
 import {createLogger} from '../util/logger';
 import {
+  isErrorWithCode,
   RemoteTempInstallNotSupported,
   UsageError,
   WebExtError,
@@ -190,15 +191,7 @@ export type ConnectOptions = {|
   connectToFirefox: FirefoxConnectorFn,
 |};
 
-// NOTE: this fixes an issue with flow and default exports (which currently
-// lose their type signatures) by explicitly declaring the default export
-// signature. Reference: https://github.com/facebook/flow/issues/449
-// eslint-disable-next-line no-shadow
-declare function exports(
-  port: number, options?: ConnectOptions
-): Promise<RemoteFirefox>;
-
-export default async function connect(
+export async function connect(
   port: number = REMOTE_PORT,
   {connectToFirefox = defaultFirefoxConnector}: ConnectOptions = {}
 ): Promise<RemoteFirefox> {
@@ -206,4 +199,53 @@ export default async function connect(
   const client = await connectToFirefox(port);
   log.debug(`Connected to the remote Firefox debugger on port ${port}`);
   return new RemoteFirefox(client);
+}
+
+
+// ConnectWithMaxRetries types and implementation
+
+export type ConnectWithMaxRetriesParams = {|
+  maxRetries?: number,
+  retryInterval?: number,
+  port: number,
+|};
+
+export type ConnectWithMaxRetriesDeps = {|
+  connectToFirefox: typeof connect,
+|};
+
+export async function connectWithMaxRetries(
+  // A max of 250 will try connecting for 30 seconds.
+  {maxRetries = 250, retryInterval = 120, port}: ConnectWithMaxRetriesParams,
+  {connectToFirefox = connect}: ConnectWithMaxRetriesDeps = {}
+): Promise<RemoteFirefox> {
+  async function establishConnection() {
+    var lastError;
+
+    for (let retries = 0; retries <= maxRetries; retries++) {
+      try {
+        return await connectToFirefox(port);
+      } catch (error) {
+        if (isErrorWithCode('ECONNREFUSED', error)) {
+          // Wait for `retryInterval` ms.
+          await new Promise((resolve) => {
+            setTimeout(resolve, retryInterval);
+          });
+
+          lastError = error;
+          log.debug(
+            `Retrying Firefox (${retries}); connection error: ${error}`);
+        } else {
+          log.error(error.stack);
+          throw error;
+        }
+      }
+    }
+
+    log.debug('Connect to Firefox debugger: too many retries');
+    throw lastError;
+  }
+
+  log.debug('Connecting to the remote Firefox debugger');
+  return establishConnection();
 }

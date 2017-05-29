@@ -3,11 +3,22 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import {RemoteTempInstallNotSupported, UsageError, WebExtError, onlyInstancesOf}
-  from '../../../src/errors';
-import {fakeFirefoxClient, makeSureItFails} from '../helpers';
-import {default as defaultConnector, RemoteFirefox}
-  from '../../../src/firefox/remote';
+import {
+  onlyInstancesOf,
+  RemoteTempInstallNotSupported,
+  UsageError,
+  WebExtError,
+} from '../../../src/errors';
+import {
+  connect as defaultConnector,
+  connectWithMaxRetries,
+  RemoteFirefox,
+} from '../../../src/firefox/remote';
+import {
+  fakeFirefoxClient,
+  makeSureItFails,
+  TCPConnectError,
+} from '../helpers';
 
 
 describe('firefox.remote', () => {
@@ -170,9 +181,8 @@ describe('firefox.remote', () => {
       it('checks for reload requestType in remote debugger', () => {
         const addon = fakeAddon();
         const stubResponse = {requestTypes: ['reload']};
-
         const conn = makeInstance();
-        // $FLOW_IGNORE: override class method for testing reasons.
+
         conn.addonRequest = sinon.spy(() => Promise.resolve(stubResponse));
 
         return conn.checkForAddonReloading(addon)
@@ -191,7 +201,7 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const stubResponse = {requestTypes: ['install']};
         const conn = makeInstance();
-        // $FLOW_IGNORE: override class method for testing reasons.
+
         conn.addonRequest = () => Promise.resolve(stubResponse);
 
         return conn.checkForAddonReloading(addon)
@@ -204,7 +214,7 @@ describe('firefox.remote', () => {
       it('only checks for reloading once', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
-        // $FLOW_IGNORE: override class method for testing reasons.
+
         conn.addonRequest =
           sinon.spy(() => Promise.resolve({requestTypes: ['reload']}));
         return conn.checkForAddonReloading(addon)
@@ -290,12 +300,10 @@ describe('firefox.remote', () => {
       it('asks the actor to reload the add-on', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
-        // $FLOW_IGNORE: override class method for testing reasons.
+
         conn.getInstalledAddon = sinon.spy(() => Promise.resolve(addon));
-        // $FLOW_IGNORE: override class method for testing reasons.
         conn.checkForAddonReloading =
           (addonToCheck) => Promise.resolve(addonToCheck);
-        // $FLOW_IGNORE: override class method for testing reasons.
         conn.addonRequest = sinon.spy(() => Promise.resolve({}));
 
         return conn.reloadAddon('some-id')
@@ -313,9 +321,8 @@ describe('firefox.remote', () => {
       it('makes sure the addon can be reloaded', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
-        // $FLOW_IGNORE: override class method for testing reasons.
+
         conn.getInstalledAddon = () => Promise.resolve(addon);
-        // $FLOW_IGNORE: override class method for testing reasons.
         conn.checkForAddonReloading =
           sinon.spy((addonToCheck) => Promise.resolve(addonToCheck));
 
@@ -327,6 +334,62 @@ describe('firefox.remote', () => {
           });
       });
 
+    });
+
+  });
+
+  describe('connectWithMaxRetries', () => {
+
+    function firefoxClient(
+      opt = {}, deps,
+    ) {
+      return connectWithMaxRetries({
+        maxRetries: 0, retryInterval: 1, port: 6005, ...opt,
+      }, deps);
+    }
+
+    it('retries after a connection error', () => {
+      const client = new RemoteFirefox(fakeFirefoxClient());
+      var tryCount = 0;
+      const connectToFirefox = sinon.spy(() => new Promise(
+        (resolve, reject) => {
+          tryCount ++;
+          if (tryCount === 1) {
+            reject(new TCPConnectError('first connection fails'));
+          } else {
+            // The second connection succeeds.
+            resolve(client);
+          }
+        }));
+
+      return firefoxClient({maxRetries: 3}, {connectToFirefox})
+        .then(() => {
+          assert.equal(connectToFirefox.callCount, 2);
+        });
+    });
+
+    it('only retries connection errors', () => {
+      const connectToFirefox = sinon.spy(
+        () => Promise.reject(new Error('not a connection error')));
+
+      return firefoxClient({maxRetries: 2}, {connectToFirefox})
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(connectToFirefox.callCount, 1);
+          assert.equal(error.message, 'not a connection error');
+        });
+    });
+
+    it('gives up connecting after too many retries', () => {
+      const connectToFirefox = sinon.spy(
+        () => Promise.reject(new TCPConnectError('failure')));
+
+      return firefoxClient({maxRetries: 2}, {connectToFirefox})
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.equal(connectToFirefox.callCount, 3);
+          assert.equal(error.message, 'failure');
+        });
     });
 
   });

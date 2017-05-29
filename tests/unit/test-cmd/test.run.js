@@ -8,16 +8,24 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import {onlyInstancesOf, WebExtError, RemoteTempInstallNotSupported}
-  from '../../../src/errors';
+import {
+  onlyInstancesOf,
+  WebExtError,
+  RemoteTempInstallNotSupported,
+} from '../../../src/errors';
 import run, {
-  defaultFirefoxClient, defaultWatcherCreator, defaultReloadStrategy,
+  defaultWatcherCreator,
+  defaultReloadStrategy,
   defaultAddonReload,
 } from '../../../src/cmd/run';
 import * as defaultFirefoxApp from '../../../src/firefox';
 import {RemoteFirefox} from '../../../src/firefox/remote';
-import {TCPConnectError, fakeFirefoxClient, makeSureItFails, fake, fixturePath}
-  from '../helpers';
+import {
+  fakeFirefoxClient,
+  fake,
+  fixturePath,
+  makeSureItFails,
+} from '../helpers';
 import {createLogger} from '../../../src/util/logger';
 
 const log = createLogger(__filename);
@@ -531,60 +539,6 @@ describe('run', () => {
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, 'an error');
-        });
-    });
-
-  });
-
-  describe('firefoxClient', () => {
-
-    function firefoxClient(opt = {}) {
-      return defaultFirefoxClient({
-        maxRetries: 0, retryInterval: 1, port: 6005, ...opt,
-      });
-    }
-
-    it('retries after a connection error', () => {
-      const client = new RemoteFirefox(fakeFirefoxClient());
-      var tryCount = 0;
-      const connectToFirefox = sinon.spy(() => new Promise(
-        (resolve, reject) => {
-          tryCount ++;
-          if (tryCount === 1) {
-            reject(new TCPConnectError('first connection fails'));
-          } else {
-            // The second connection succeeds.
-            resolve(client);
-          }
-        }));
-
-      return firefoxClient({connectToFirefox, maxRetries: 3})
-        .then(() => {
-          assert.equal(connectToFirefox.callCount, 2);
-        });
-    });
-
-    it('only retries connection errors', () => {
-      const connectToFirefox = sinon.spy(
-        () => Promise.reject(new Error('not a connection error')));
-
-      return firefoxClient({connectToFirefox, maxRetries: 2})
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(connectToFirefox.callCount, 1);
-          assert.equal(error.message, 'not a connection error');
-        });
-    });
-
-    it('gives up connecting after too many retries', () => {
-      const connectToFirefox = sinon.spy(
-        () => Promise.reject(new TCPConnectError('failure')));
-
-      return firefoxClient({connectToFirefox, maxRetries: 2})
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(connectToFirefox.callCount, 3);
-          assert.equal(error.message, 'failure');
         });
     });
 

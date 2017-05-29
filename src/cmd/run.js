@@ -9,9 +9,10 @@ import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
 import * as defaultFirefoxApp from '../firefox';
-import defaultFirefoxConnector from '../firefox/remote';
 import {
-  isErrorWithCode,
+  connectWithMaxRetries as defaultFirefoxClient,
+} from '../firefox/remote';
+import {
   RemoteTempInstallNotSupported,
   WebExtError,
 } from '../errors';
@@ -28,7 +29,7 @@ import type {
   FirefoxProcess, FirefoxInfo, // eslint-disable-line import/named
 } from '../firefox/index';
 import type {
-  FirefoxConnectorFn, RemoteFirefox,
+  RemoteFirefox,
   FirefoxRDPResponseAddon,
 } from '../firefox/remote';
 import type {ExtensionManifest} from '../util/manifest';
@@ -165,54 +166,6 @@ export function defaultReloadStrategy(
       firefoxProcess.kill();
     });
   }
-}
-
-
-// defaultFirefoxClient types and implementation.
-
-export type CreateFirefoxClientParams = {|
-  connectToFirefox?: FirefoxConnectorFn,
-  maxRetries?: number,
-  retryInterval?: number,
-  port: number,
-|};
-
-export function defaultFirefoxClient(
-  {
-    connectToFirefox = defaultFirefoxConnector,
-    // A max of 250 will try connecting for 30 seconds.
-    maxRetries = 250, retryInterval = 120, port,
-  }: CreateFirefoxClientParams = {}
-): Promise<RemoteFirefox> {
-  async function establishConnection() {
-    var lastError;
-
-    for (let retries = 0; retries <= maxRetries; retries++) {
-      try {
-        return await connectToFirefox(port);
-      } catch (error) {
-        if (isErrorWithCode('ECONNREFUSED', error)) {
-          // Wait for `retryInterval` ms.
-          await new Promise((resolve) => {
-            setTimeout(resolve, retryInterval);
-          });
-
-          lastError = error;
-          log.debug(
-            `Retrying Firefox (${retries}); connection error: ${error}`);
-        } else {
-          log.error(error.stack);
-          throw error;
-        }
-      }
-    }
-
-    log.debug('Connect to Firefox debugger: too many retries');
-    throw lastError;
-  }
-
-  log.debug('Connecting to the remote Firefox debugger');
-  return establishConnection();
 }
 
 
