@@ -6,13 +6,13 @@ import type {Logger} from './logger';
 
 const defaultLog = createLogger(__filename);
 
-type desktopNotificationsParams = {|
+export type DesktopNotificationsParams = {|
   title: string,
   message: string,
   icon?: string,
 |};
 
-export type desktopNotificationsOptions = {|
+export type DesktopNotificationsOptions = {|
   notifier?: typeof defaultNotifier,
   log?: Logger,
 |};
@@ -20,11 +20,11 @@ export type desktopNotificationsOptions = {|
 export function showDesktopNotification(
   {
     title, message, icon,
-  }: desktopNotificationsParams,
+  }: DesktopNotificationsParams,
   {
     notifier = defaultNotifier,
     log = defaultLog,
-  }: desktopNotificationsOptions = {}
+  }: DesktopNotificationsOptions = {}
 ): Promise<void> {
 
   return new Promise((resolve, reject) => {
