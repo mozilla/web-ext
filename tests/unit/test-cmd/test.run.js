@@ -405,11 +405,11 @@ describe('run', () => {
       assert.equal(reloadArgs[0], undefined);
     });
 
-    it('notifies user on error from source change handler', () => {
+    it('notifies user on error from source change handler', async () => {
       const extensionRunner = createFakeExtensionRunner({}, {}, {
         reloadExtensionBySourceDir: () => Promise.reject(new Error('an error')),
       });
-      return defaultAddonReload({extensionRunner, ...args})
+      await defaultAddonReload({extensionRunner, ...args})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(
@@ -422,11 +422,11 @@ describe('run', () => {
         });
     });
 
-    it('throws errors from source change handler', () => {
+    it('throws errors from source change handler', async () => {
       const extensionRunner = createFakeExtensionRunner({}, {}, {
         reloadExtensionBySourceDir: () => Promise.reject(new Error('an error')),
       });
-      return defaultAddonReload({extensionRunner, ...args})
+      await defaultAddonReload({extensionRunner, ...args})
         .then(makeSureItFails())
         .catch((error) => {
           assert.equal(error.message, 'an error');
