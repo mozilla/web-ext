@@ -1,9 +1,11 @@
 /* @flow */
 
 import {
+  UsageError,
+} from '../../errors';
+import {
   default as createFirefoxDesktopExtensionRunner,
 } from './firefox-desktop';
-import {createLogger} from '../logger';
 import type {
   IExtensionRunner,  // eslint-disable-line import/named
   ExtensionRunnerParams,
@@ -32,8 +34,6 @@ export default function createExtensionRunner(
 ): IExtensionRunner {
   return new MultipleTargetsExtensionRunner(params, injectedDeps);
 }
-
-const log = createLogger(__filename);
 
 // Collection of the supported extension runners.
 const defaultExtensionRunnerFactories = {
@@ -68,15 +68,11 @@ export class MultipleTargetsExtensionRunner {
         if (createRunner) {
           this.extensionRunners.push(createRunner(params, deps));
         } else {
-          log.warn(`No extension runner has been found for ${target}`);
+          throw new UsageError(
+            `Unsupported extension runner target: ${target}`
+          );
         }
       }
-    }
-
-    if (this.extensionRunners.length === 0) {
-      throw new Error(
-        'None of the requested extension runner targets is available'
-      );
     }
   }
 

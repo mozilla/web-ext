@@ -5,6 +5,9 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {
+  UsageError,
+} from '../../../src/errors';
+import {
   default as createExtensionRunner,
   MultipleTargetsExtensionRunner,
 } from '../../../src/util/extension-runners';
@@ -111,7 +114,7 @@ describe('util/extension-runners', () => {
     }
   });
 
-  it('does not fail when one of the targets has been found', () => {
+  it('raises an UsageError when one of the targets has not been found', () => {
     const {params, deps} = prepareExtensionRunnerParams();
 
     const fakeExtensionRunner = new FakeExtensionRunner();
@@ -126,26 +129,18 @@ describe('util/extension-runners', () => {
     // Override the default targets.
     params.targets = ['non-existent-runner', 'firefox-desktop'];
 
-    const runnerInstance = createExtensionRunner(params, allDeps);
-
-    if (runnerInstance instanceof MultipleTargetsExtensionRunner) {
-      assert.equal(runnerInstance.extensionRunners.length, 1);
-      assert.equal(runnerInstance.extensionRunners[0],
-                   fakeExtensionRunner);
-    } else {
-      throw Error('Unexpected extension runner type');
+    let actualError;
+    try {
+      createExtensionRunner(params, allDeps);
+    } catch (error) {
+      actualError = error;
     }
-  });
 
-  it('fails when none of the target ExtensionRunner has been found', () => {
-    const {params, deps} = prepareExtensionRunnerParams();
-
-    // Override the default targets.
-    params.targets = ['non-existent-runner'];
-
-    assert.throws(() => {
-      createExtensionRunner(params, deps);
-    }, /None of the requested extension runner targets is available/);
+    assert.ok(actualError instanceof UsageError);
+    assert.equal(
+      actualError && actualError.message,
+      'Unsupported extension runner target: non-existent-runner'
+    );
   });
 
   function prepareMultipleTargetsTest() {
