@@ -5,9 +5,8 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {
-  default as createExtensionRunner,
   FirefoxDesktopExtensionRunner,
-} from '../../../src/util/extension-runners/firefox-desktop';
+} from '../../../src/extension-runners/firefox-desktop';
 import {
   getFakeFirefox,
   getFakeRemoteFirefox,
@@ -38,7 +37,7 @@ type PrepareParams = {
 }
 
 function prepareExtensionRunnerParams({
-  params, deps, fakeFirefoxApp, fakeRemoteFirefox, debuggerPort,
+  params, fakeFirefoxApp, fakeRemoteFirefox, debuggerPort,
 }: PrepareParams = {}) {
   const remoteFirefox = getFakeRemoteFirefox({
     installTemporaryAddon: sinon.spy(
@@ -70,9 +69,6 @@ function prepareExtensionRunnerParams({
       firefoxBinary: 'firefox',
       preInstall: false,
       noReload: false,
-      ...(params || {}),
-    },
-    deps: {
       firefoxApp: getFakeFirefox({
         run: sinon.spy(() => {
           return Promise.resolve({
@@ -85,61 +81,43 @@ function prepareExtensionRunnerParams({
       firefoxClient: () => {
         return Promise.resolve(remoteFirefox);
       },
-      ...(deps || {}),
+      ...(params || {}),
     },
   };
 }
 
 describe('util/extension-runners/firefox-desktop', () => {
 
-  describe('defines a default exported function', () => {
-
-    it('creates instances of FirefoxDesktopExtensionRunner', () => {
-      const {params, deps} = prepareExtensionRunnerParams();
-      const extensionRunnerInstance = createExtensionRunner(params, deps);
-
-      assert.ok(
-        extensionRunnerInstance instanceof FirefoxDesktopExtensionRunner
-      );
-
-      if (extensionRunnerInstance instanceof FirefoxDesktopExtensionRunner) {
-        assert.deepEqual(extensionRunnerInstance.params, params);
-        assert.deepEqual(extensionRunnerInstance.deps, deps);
-      }
-    });
-
-  });
-
   it('installs and runs the extension', async () => {
-    const {params, deps, remoteFirefox} = prepareExtensionRunnerParams();
+    const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
     assert.ok(remoteFirefox.installTemporaryAddon.calledOnce);
     assert.equal(remoteFirefox.installTemporaryAddon.firstCall.args[0],
                  params.extensions[0].sourceDir);
-    assert.ok(deps.firefoxApp.run.calledOnce);
-    assert.ok(deps.firefoxApp.run.firstCall.args[0], params.profilePath);
+    assert.ok(params.firefoxApp.run.calledOnce);
+    assert.ok(params.firefoxApp.run.firstCall.args[0], params.profilePath);
   });
 
   it('runs extension in correct port', async () => {
-    const {params, deps} = prepareExtensionRunnerParams({
+    const {params} = prepareExtensionRunnerParams({
       debuggerPort: 6008,
     });
 
-    sinon.spy(deps, 'firefoxClient');
+    sinon.spy(params, 'firefoxClient');
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
-    assert.ok(deps.firefoxApp.run.calledOnce);
-    assert.ok(deps.firefoxClient.calledOnce);
-    assert.equal(deps.firefoxClient.firstCall.args[0].port, 6008);
+    assert.ok(params.firefoxApp.run.calledOnce);
+    assert.ok(params.firefoxClient.calledOnce);
+    assert.equal(params.firefoxClient.firstCall.args[0].port, 6008);
   });
 
   it('suggests --pre-install when remote install not supported', async () => {
-    const {params, deps, remoteFirefox} = prepareExtensionRunnerParams({
+    const {params, remoteFirefox} = prepareExtensionRunnerParams({
       fakeRemoteFirefox: {
         // Simulate an older Firefox that will throw this error.
         installTemporaryAddon: sinon.spy(
@@ -148,10 +126,10 @@ describe('util/extension-runners/firefox-desktop', () => {
       },
     });
 
-    sinon.spy(deps, 'firefoxClient');
+    sinon.spy(params, 'firefoxClient');
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    return extensionRunnerInstance.run()
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    return runnerInstance.run()
       .then(makeSureItFails())
       .catch(onlyInstancesOf(WebExtError, (error) => {
         assert.equal(remoteFirefox.installTemporaryAddon.called, true);
@@ -160,19 +138,19 @@ describe('util/extension-runners/firefox-desktop', () => {
   });
 
   async function testBinaryArgs(extensionRunnerParams, expectedBinaryArgs) {
-    const {params, deps} = prepareExtensionRunnerParams({
+    const {params} = prepareExtensionRunnerParams({
       params: {
         ...extensionRunnerParams,
       },
     });
 
-    sinon.spy(deps, 'firefoxClient');
+    sinon.spy(params, 'firefoxClient');
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
-    assert.ok(deps.firefoxApp.run.calledOnce);
-    assert.deepEqual(deps.firefoxApp.run.firstCall.args[1].binaryArgs,
+    assert.ok(params.firefoxApp.run.calledOnce);
+    assert.deepEqual(params.firefoxApp.run.firstCall.args[1].binaryArgs,
                      expectedBinaryArgs);
   }
 
@@ -201,41 +179,41 @@ describe('util/extension-runners/firefox-desktop', () => {
   });
 
   it('passes a custom Firefox profile when specified', async () => {
-    const {params, deps} = prepareExtensionRunnerParams({
+    const {params} = prepareExtensionRunnerParams({
       params: {
         profilePath: '/path/to/profile',
       },
     });
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
-    assert.equal(deps.firefoxApp.createProfile.called, false);
-    assert.ok(deps.firefoxApp.copyProfile.calledOnce);
-    assert.equal(deps.firefoxApp.copyProfile.firstCall.args[0],
+    assert.equal(params.firefoxApp.createProfile.called, false);
+    assert.ok(params.firefoxApp.copyProfile.calledOnce);
+    assert.equal(params.firefoxApp.copyProfile.firstCall.args[0],
                  params.profilePath);
   });
 
   it('keeps changes in custom profile when specified', async () => {
-    const {params, deps} = prepareExtensionRunnerParams({
+    const {params} = prepareExtensionRunnerParams({
       params: {
         profilePath: '/path/to/profile',
         keepProfileChanges: true,
       },
     });
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
-    assert.equal(deps.firefoxApp.createProfile.called, false);
-    assert.ok(deps.firefoxApp.useProfile.calledOnce);
-    assert.equal(deps.firefoxApp.useProfile.firstCall.args[0],
+    assert.equal(params.firefoxApp.createProfile.called, false);
+    assert.ok(params.firefoxApp.useProfile.calledOnce);
+    assert.equal(params.firefoxApp.useProfile.firstCall.args[0],
                  params.profilePath);
   });
 
   it('can pre-install into the profile before startup', async () => {
     const fakeProfile = {};
-    const {params, deps, remoteFirefox} = prepareExtensionRunnerParams({
+    const {params, remoteFirefox} = prepareExtensionRunnerParams({
       fakeFirefoxApp: {
         copyProfile: () => fakeProfile,
       },
@@ -245,17 +223,17 @@ describe('util/extension-runners/firefox-desktop', () => {
     });
 
 
-    sinon.spy(deps, 'firefoxClient');
+    sinon.spy(params, 'firefoxClient');
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
     // Install the extension without connecting to the RDP server.
-    assert.equal(deps.firefoxClient.called, false);
+    assert.equal(params.firefoxClient.called, false);
     assert.equal(remoteFirefox.installTemporaryAddon.called, false);
-    assert.equal(deps.firefoxApp.installExtension.called, true);
+    assert.equal(params.firefoxApp.installExtension.called, true);
 
-    const install = deps.firefoxApp.installExtension.firstCall.args[0];
+    const install = params.firefoxApp.installExtension.firstCall.args[0];
     const {manifestData, sourceDir} = params.extensions[0];
     assert.equal(install.asProxy, true);
     assert.equal(install.manifestData.applications.gecko.id,
@@ -267,7 +245,7 @@ describe('util/extension-runners/firefox-desktop', () => {
 
   it('raise an error on addonId missing from installTemporaryAddon result',
      async () => {
-       const {params, deps} = prepareExtensionRunnerParams({
+       const {params} = prepareExtensionRunnerParams({
          fakeRemoteFirefox: {
            installTemporaryAddon: sinon.spy(
              () => Promise.resolve(tempInstallResultMissingAddonId)
@@ -275,8 +253,8 @@ describe('util/extension-runners/firefox-desktop', () => {
          },
        });
 
-       const extensionRunnerInstance = createExtensionRunner(params, deps);
-       await extensionRunnerInstance.run()
+       const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+       await runnerInstance.run()
          .catch((error) => error)
          .then((error) => {
            assert.equal(
@@ -292,18 +270,18 @@ describe('util/extension-runners/firefox-desktop', () => {
 
   it('calls the callback registered on cleanup when firefox closes',
      async () => {
-       const {params, deps, firefoxProcess} = prepareExtensionRunnerParams();
+       const {params, firefoxProcess} = prepareExtensionRunnerParams();
 
-       const extensionRunnerInstance = createExtensionRunner(params, deps);
+       const runnerInstance = new FirefoxDesktopExtensionRunner(params);
        const cleanupCallback = sinon.spy(() => {
          throw new Error('cleanup callback error');
        });
        const anotherCallback = sinon.spy();
 
-       extensionRunnerInstance.registerCleanup(cleanupCallback);
-       extensionRunnerInstance.registerCleanup(anotherCallback);
+       runnerInstance.registerCleanup(cleanupCallback);
+       runnerInstance.registerCleanup(anotherCallback);
 
-       await extensionRunnerInstance.run();
+       await runnerInstance.run();
 
        firefoxProcess.emit('close');
        await Promise.resolve();
@@ -312,30 +290,30 @@ describe('util/extension-runners/firefox-desktop', () => {
      });
 
   it('kills Firefox when the exit method is called', async () => {
-    const {params, deps, firefoxProcess} = prepareExtensionRunnerParams();
+    const {params, firefoxProcess} = prepareExtensionRunnerParams();
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     const cleanupCallback = sinon.spy(() => {
       throw new Error('cleanup callback error');
     });
     const anotherCallback = sinon.spy();
 
-    extensionRunnerInstance.registerCleanup(cleanupCallback);
-    extensionRunnerInstance.registerCleanup(anotherCallback);
+    runnerInstance.registerCleanup(cleanupCallback);
+    runnerInstance.registerCleanup(anotherCallback);
 
-    await extensionRunnerInstance.run();
-    await extensionRunnerInstance.exit();
+    await runnerInstance.run();
+    await runnerInstance.exit();
 
     assert.ok(firefoxProcess.kill.calledOnce);
   });
 
   it('raises an Error when exit method is called on a non-started runner',
      async () => {
-       const {params, deps} = prepareExtensionRunnerParams();
+       const {params} = prepareExtensionRunnerParams();
 
-       const extensionRunnerInstance = createExtensionRunner(params, deps);
+       const runnerInstance = new FirefoxDesktopExtensionRunner(params);
 
-       await extensionRunnerInstance.exit()
+       await runnerInstance.exit()
          .catch((error) => error)
          .then((error) => {
            assert.equal(
@@ -351,23 +329,23 @@ describe('util/extension-runners/firefox-desktop', () => {
 
   it('reloads all reloadable extensions when reloadAllExtensions is called',
      async () => {
-       const {params, deps, remoteFirefox} = prepareExtensionRunnerParams();
+       const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
-       const extensionRunnerInstance = createExtensionRunner(params, deps);
-       await extensionRunnerInstance.run();
+       const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+       await runnerInstance.run();
 
-       await extensionRunnerInstance.reloadAllExtensions();
+       await runnerInstance.reloadAllExtensions();
 
        assert.ok(remoteFirefox.reloadAddon.calledOnce);
      });
 
   it('reloads an extension by sourceDir', async () => {
-    const {params, deps, remoteFirefox} = prepareExtensionRunnerParams();
+    const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
-    await extensionRunnerInstance.reloadExtensionBySourceDir(
+    await runnerInstance.reloadExtensionBySourceDir(
       params.extensions[0].sourceDir,
     );
 
@@ -375,12 +353,12 @@ describe('util/extension-runners/firefox-desktop', () => {
   });
 
   it('raises an error when the extension is not reloadable', async () => {
-    const {params, deps, remoteFirefox} = prepareExtensionRunnerParams();
+    const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
-    const extensionRunnerInstance = createExtensionRunner(params, deps);
-    await extensionRunnerInstance.run();
+    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+    await runnerInstance.run();
 
-    await extensionRunnerInstance.reloadExtensionBySourceDir(
+    await runnerInstance.reloadExtensionBySourceDir(
       '/non-existent/source-dir'
     )
       .catch((error) => error)
@@ -400,7 +378,7 @@ describe('util/extension-runners/firefox-desktop', () => {
 
   it('rejects an AllExtensionsReloadError if any extension fails to reload',
      async () => {
-       const {params, deps, remoteFirefox} = prepareExtensionRunnerParams({
+       const {params, remoteFirefox} = prepareExtensionRunnerParams({
          fakeRemoteFirefox: {
            reloadAddon: sinon.spy(
              () => Promise.reject(Error('Reload failure'))
@@ -408,10 +386,10 @@ describe('util/extension-runners/firefox-desktop', () => {
          },
        });
 
-       const extensionRunnerInstance = createExtensionRunner(params, deps);
-       await extensionRunnerInstance.run();
+       const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+       await runnerInstance.run();
 
-       await extensionRunnerInstance.reloadAllExtensions()
+       await runnerInstance.reloadAllExtensions()
          .catch((error) => error)
          .then((error) => {
            assert.equal(

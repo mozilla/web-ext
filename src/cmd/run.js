@@ -18,14 +18,15 @@ import {
   createFileFilter as defaultFileFilterCreator,
 } from '../util/file-filter';
 import {
-  default as defaultCreateExtensionRunner,
-} from '../util/extension-runners';
+  MultipleTargetsExtensionRunner as defaultMultipleTargetsExtensionRunner,
+  FirefoxDesktopExtensionRunner as defaultFirefoxDesktopExtensionRunner,
+} from '../extension-runners';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
 import type {
   IExtensionRunner, // eslint-disable-line import/named
-} from '../util/extension-runners/base';
+} from '../extension-runners/base';
 import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
@@ -185,8 +186,9 @@ export type CmdRunOptions = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
-  createExtensionRunner?: typeof defaultCreateExtensionRunner,
   shouldExitProgram?: boolean,
+  FirefoxDesktopExtensionRunner?: typeof defaultFirefoxDesktopExtensionRunner,
+  MultipleTargetsExtensionRunner?: typeof defaultMultipleTargetsExtensionRunner,
 |};
 
 export default async function run(
@@ -199,7 +201,8 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
-    createExtensionRunner = defaultCreateExtensionRunner,
+    FirefoxDesktopExtensionRunner = defaultFirefoxDesktopExtensionRunner,
+    MultipleTargetsExtensionRunner = defaultMultipleTargetsExtensionRunner,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -211,20 +214,34 @@ export default async function run(
 
   const manifestData = await getValidatedManifest(sourceDir);
 
-  const runner = createExtensionRunner({
-    targets: ['firefox-desktop'],
-    // Common
+  const commonRunnerParams = {
     extensions: [{sourceDir, manifestData}],
-    profilePath: firefoxProfile,
     keepProfileChanges,
     startUrl,
-    // Firefox specific
+    noReload,
+  };
+
+  const firefoxDesktopRunnerParams = {
+    // Firefox specific CLI options.
     firefoxBinary: firefox,
+    profilePath: firefoxProfile,
     customPrefs,
     browserConsole,
     preInstall,
-    noReload,
-  }, {firefoxApp, firefoxClient});
+
+    // Firefox runner injected dependencies.
+    firefoxApp,
+    firefoxClient,
+  };
+
+  const firefoxDesktopRunner = new FirefoxDesktopExtensionRunner({
+    ...commonRunnerParams,
+    ...firefoxDesktopRunnerParams,
+  });
+
+  const runner = new MultipleTargetsExtensionRunner({
+    runners: [firefoxDesktopRunner],
+  });
 
   await runner.run();
 

@@ -64,7 +64,7 @@ describe('run', () => {
       reloadStrategy: sinon.spy(() => {
         log.debug('fake: reloadStrategy()');
       }),
-      createExtensionRunner: sinon.spy(createFakeExtensionRunner),
+      FirefoxDesktopExtensionRunner: sinon.spy(FakeExtensionRunner),
     };
 
     return {
@@ -80,41 +80,28 @@ describe('run', () => {
   it('passes a custom Firefox binary when specified', async () => {
     const firefox = '/pretend/path/to/Firefox/firefox-bin';
     const cmd = prepareRun();
-    const {createExtensionRunner} = cmd.options;
-
-    await cmd.run({firefox});
-    assert.equal(createExtensionRunner.called, true);
-    assert.equal(createExtensionRunner.firstCall.args[0].firefoxBinary,
+    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+    await cmd.run({firefox}, {FirefoxDesktopExtensionRunner});
+    assert.equal(FirefoxDesktopExtensionRunner.called, true);
+    assert.equal(FirefoxDesktopExtensionRunner.firstCall.args[0].firefoxBinary,
                  firefox);
   });
 
-  it('passes single url parameter to Firefox when specified', async () => {
+  it('passes startUrl parameter to Firefox when specified', async () => {
     const cmd = prepareRun();
-    const {createExtensionRunner} = cmd.options;
     const expectedStartUrls = 'www.example.com';
+    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
 
-    await cmd.run({startUrl: expectedStartUrls});
-    assert.ok(createExtensionRunner.called);
-    assert.deepEqual(createExtensionRunner.firstCall.args[0].startUrl,
-                     expectedStartUrls);
-  });
+    await cmd.run({startUrl: expectedStartUrls},
+                  {FirefoxDesktopExtensionRunner});
 
-  it('passes multiple url parameters to Firefox when specified', async () => {
-    const cmd = prepareRun();
-    const {createExtensionRunner} = cmd.options;
-    const expectedStartUrls = [
-      'www.one.com', 'www.two.com', 'www.three.com',
-    ];
-
-    await cmd.run({startUrl: expectedStartUrls});
-    assert.ok(createExtensionRunner.called);
-    assert.deepEqual(createExtensionRunner.firstCall.args[0].startUrl,
+    assert.ok(FirefoxDesktopExtensionRunner.called);
+    assert.deepEqual(FirefoxDesktopExtensionRunner.firstCall.args[0].startUrl,
                      expectedStartUrls);
   });
 
   it('passes the expected parameters to the extension runner', async () => {
     const cmd = prepareRun();
-    const {createExtensionRunner} = cmd.options;
     const runOptions = {
       preInstall: true,
       keepProfileChanges: true,
@@ -125,9 +112,12 @@ describe('run', () => {
       firefoxProfile: '/path/to/custom/profile',
     };
 
-    await cmd.run(runOptions);
-    assert.ok(createExtensionRunner.called);
-    const runnerParams = createExtensionRunner.firstCall.args[0];
+    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+
+    await cmd.run(runOptions, {FirefoxDesktopExtensionRunner});
+
+    assert.ok(FirefoxDesktopExtensionRunner.called);
+    const runnerParams = FirefoxDesktopExtensionRunner.firstCall.args[0];
     assert.deepEqual({
       preInstall: runnerParams.preInstall,
       keepProfileChanges: runnerParams.keepProfileChanges,
@@ -139,17 +129,20 @@ describe('run', () => {
     }, runOptions);
     assert.equal(runnerParams.extensions.length, 1);
     assert.equal(runnerParams.extensions[0].sourceDir, cmd.argv.sourceDir);
-    assert.deepEqual(runnerParams.targets, ['firefox-desktop']);
   });
 
   it('passes the expected dependencies to the extension runner', async () => {
     const cmd = prepareRun();
-    const {createExtensionRunner, firefoxApp, firefoxClient} = cmd.options;
+    const {firefoxApp, firefoxClient} = cmd.options;
+    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
 
-    await cmd.run();
-    assert.ok(createExtensionRunner.called);
-    const runnerDeps = createExtensionRunner.firstCall.args[1];
-    assert.deepEqual(runnerDeps, {firefoxApp, firefoxClient});
+    await cmd.run({}, {FirefoxDesktopExtensionRunner});
+    assert.ok(FirefoxDesktopExtensionRunner.called);
+    const runnerParams = FirefoxDesktopExtensionRunner.firstCall.args[0];
+    assert.deepEqual({
+      firefoxApp: runnerParams.firefoxApp,
+      firefoxClient: runnerParams.firefoxClient,
+    }, {firefoxApp, firefoxClient});
   });
 
   it('can watch and reload the extension', async () => {
@@ -185,10 +178,6 @@ describe('run', () => {
 
     function prepare() {
       const config = {
-        //addonId: 'some-addon@test-suite',
-        /*client: fake(RemoteFirefox.prototype, {
-          reloadAddon: () => Promise.resolve(),
-        }),*/
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         onSourceChange: sinon.spy(() => {}),

@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {ExtensionManifest} from '../manifest';
+import type {ExtensionManifest} from '../util/manifest';
 
 export type Extension = {|
   sourceDir: string,

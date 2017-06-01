@@ -6,36 +6,35 @@ import type FirefoxProfile from 'firefox-profile';
 import {
   RemoteTempInstallNotSupported,
   WebExtError,
-} from '../../errors';
-import * as defaultFirefoxApp from '../../firefox';
+} from '../errors';
+import * as defaultFirefoxApp from '../firefox';
 import {
   connectWithMaxRetries as defaultFirefoxConnector,
-} from '../../firefox/remote';
-import {createLogger} from '../logger';
+} from '../firefox/remote';
+import {createLogger} from '../util/logger';
 // Import flow types from project files.
 import type {
   FirefoxRDPResponseAddon,
   RemoteFirefox,
-} from '../../firefox/remote';
+} from '../firefox/remote';
 import type {
-  IExtensionRunner,  // eslint-disable-line import/named
   ExtensionRunnerParams,
 } from './base';
 import type {
   FirefoxPreferences,
-} from '../../firefox/preferences';
+} from '../firefox/preferences';
 import type {
   FirefoxInfo, // eslint-disable-line import/named
-} from '../../firefox/index';
+} from '../firefox/index';
 
 export type FirefoxDesktopExtensionRunnerParams = ExtensionRunnerParams & {
+  // Firefox desktop CLI params.
   customPrefs?: FirefoxPreferences,
   browserConsole: boolean,
   firefoxBinary: string,
   preInstall: boolean,
-};
 
-export type FirefoxDesktopExtensionRunnerDeps = {
+  // Firefox desktop injected dependencies.
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxConnector,
 };
@@ -59,7 +58,6 @@ export class AllExtensionsReloadError extends WebExtError {
 
 export class FirefoxDesktopExtensionRunner {
   params: FirefoxDesktopExtensionRunnerParams;
-  deps: FirefoxDesktopExtensionRunnerDeps;
   reloadableExtensions: Map<string, string>;
   cleanupCallbacks: Set<Function>;
   profile: FirefoxProfile;
@@ -68,10 +66,8 @@ export class FirefoxDesktopExtensionRunner {
 
   constructor(
     params: FirefoxDesktopExtensionRunnerParams,
-    deps: FirefoxDesktopExtensionRunnerDeps
   ) {
     this.params = params;
-    this.deps = deps;
 
     this.reloadableExtensions = new Map();
     this.cleanupCallbacks = new Set();
@@ -136,8 +132,8 @@ export class FirefoxDesktopExtensionRunner {
       keepProfileChanges,
       preInstall,
       profilePath,
+      firefoxApp,
     } = this.params;
-    const {firefoxApp} = this.deps;
 
     if (profilePath) {
       if (keepProfileChanges) {
@@ -172,8 +168,9 @@ export class FirefoxDesktopExtensionRunner {
       firefoxBinary,
       preInstall,
       startUrl,
+      firefoxApp,
+      firefoxClient,
     } = this.params;
-    const {firefoxApp, firefoxClient} = this.deps;
 
     const binaryArgs = [];
 
@@ -238,11 +235,4 @@ export class FirefoxDesktopExtensionRunner {
       }
     }
   }
-}
-
-export default function createExtensionRunner(
-  params: FirefoxDesktopExtensionRunnerParams,
-  injectedDeps: FirefoxDesktopExtensionRunnerDeps,
-): IExtensionRunner {
-  return new FirefoxDesktopExtensionRunner(params, injectedDeps);
 }
