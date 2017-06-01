@@ -289,6 +289,20 @@ describe('util/extension-runners', () => {
          assert.ok(anotherFakeExtensionRunner.registerCleanup.calledOnce);
 
          fakeExtensionRunner.registerCleanup.firstCall.args[0]();
+
+         const checkIncompleteCleanup = await Promise.race([
+           waitRegisterCleanup,
+           new Promise((resolve) => {
+             setTimeout(
+               () => resolve('waitRegisterCleanup should not be resolved yet'),
+               1000
+             );
+           }),
+         ]);
+
+         assert.equal(checkIncompleteCleanup,
+                      'waitRegisterCleanup should not be resolved yet');
+
          anotherFakeExtensionRunner.registerCleanup.firstCall.args[0]();
 
          await waitRegisterCleanup;
