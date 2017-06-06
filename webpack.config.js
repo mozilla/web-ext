@@ -16,16 +16,22 @@ fs.readdirSync('node_modules')
     nodeModules[mod] = 'commonjs ' + mod;
   });
 
-var preLoaders = [];
+var rules = [
+  {
+    exclude: /(node_modules|bower_components)/,
+    test: /\.js$/,
+    // babel options are in .babelrc
+    loaders: ['babel-loader'],
+  },
+];
 
 if (process.env.COVERAGE === 'y') {
-  preLoaders.push([
-    {
-      test: /\.js$/,
-      exclude: /(node_modules|bower_components|test)/,
-      loader: 'babel-istanbul',
-    },
-  ]);
+  rules.push({
+    test: /\.js$/,
+    enforce: 'pre',
+    exclude: /(node_modules|bower_components|test)/,
+    loaders: 'babel-istanbul-loader',
+  });
 }
 
 module.exports = {
@@ -41,20 +47,15 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   module: {
-    preLoaders,
-    loaders: [
-      {
-        exclude: /(node_modules|bower_components)/,
-        test: /\.js$/,
-        // babel options are in .babelrc
-        loaders: ['babel'],
-      },
-    ],
+    rules,
   },
   externals: nodeModules,
   plugins: [
-    new webpack.BannerPlugin('require("source-map-support").install();',
-                             { raw: true, entryOnly: false }),
+    new webpack.BannerPlugin({
+      banner: 'require("source-map-support").install();',
+      raw: true,
+      entryOnly: false,
+    }),
     // This seems necessary to work with the 'when' module, which is
     // required by some things such as fx-runner.
     new webpack.IgnorePlugin(/vertx/),
@@ -65,10 +66,10 @@ module.exports = {
     }),
   ],
   resolve: {
-    extensions: ['', '.js', '.json'],
-    modulesDirectories: [
-      'src',
-      'node_modules',
+    extensions: ['.js', '.json'],
+    modules: [
+      path.join(__dirname, 'src'),
+      path.resolve(__dirname, 'node_modules'),
     ],
   },
   devtool: 'sourcemap',

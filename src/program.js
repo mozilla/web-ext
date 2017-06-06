@@ -147,7 +147,7 @@ export class Program {
         });
       }
 
-      await runCommand(argv);
+      await runCommand(argv, {shouldExitProgram});
 
     } catch (error) {
       const prefix = cmd ? `${cmd}: ` : '';
@@ -285,6 +285,11 @@ Example: $0 --help run.
       commands.build, {
         'as-needed': {
           describe: 'Watch for file changes and re-build as needed',
+          type: 'boolean',
+        },
+        'overwrite-dest': {
+          alias: 'o',
+          describe: 'Overwrite destination package if it exists.',
           type: 'boolean',
         },
       })

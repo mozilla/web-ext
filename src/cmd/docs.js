@@ -7,6 +7,7 @@ const log = createLogger(__filename);
 
 type DocsOptions = {
   openUrl?: typeof defaultUrlOpener,
+  shouldExitProgram?: boolean,
 }
 
 export const url = 'https://developer.mozilla.org/en-US/Add-ons' +

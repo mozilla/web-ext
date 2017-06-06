@@ -1,4 +1,7 @@
 /* @flow */
+import readline from 'readline';
+import tty from 'tty';
+
 import type FirefoxProfile from 'firefox-profile';
 import type Watchpack from 'watchpack';
 
@@ -22,7 +25,7 @@ import {
 import type {FirefoxPreferences} from '../firefox/preferences';
 import type {OnSourceChangeFn} from '../watcher';
 import type {
-  FirefoxProcess, // eslint-disable-line import/named
+  FirefoxProcess, FirefoxInfo, // eslint-disable-line import/named
 } from '../firefox/index';
 import type {
   FirefoxConnectorFn, RemoteFirefox,
@@ -41,18 +44,17 @@ export type WatcherCreatorParams = {|
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
-  desktopNotifications?: typeof defaultDesktopNotifications,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
+  addonReload: typeof defaultAddonReload,
 |};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    addonId, client, sourceDir, artifactsDir, ignoreFiles,
+    addonId, addonReload, client, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
-    desktopNotifications = defaultDesktopNotifications,
     createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
  ): Watchpack {
@@ -62,22 +64,35 @@ export function defaultWatcherCreator(
   return onSourceChange({
     sourceDir,
     artifactsDir,
-    onChange: () => {
-      log.debug(`Reloading add-on ID ${addonId}`);
-
-      return client.reloadAddon(addonId)
-        .catch((error) => {
-          log.error('\n');
-          log.error(error.stack);
-          desktopNotifications({
-            title: 'web-ext run: error occurred',
-            message: error.message,
-          });
-          throw error;
-        });
-    },
+    onChange: () => addonReload({addonId, client}),
     shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
+}
+
+export type ReloadParams = {|
+  addonId: string,
+  client: RemoteFirefox,
+  desktopNotifications?: typeof defaultDesktopNotifications,
+|};
+
+export async function defaultAddonReload(
+  {
+    addonId, client,
+    desktopNotifications = defaultDesktopNotifications,
+  }: ReloadParams
+): Promise<void> {
+  log.debug(`Reloading add-on ID ${addonId}`);
+  try {
+    await client.reloadAddon(addonId);
+  } catch (reloadError) {
+    log.error('\n');
+    log.error(reloadError.stack);
+    desktopNotifications({
+      title: 'web-ext run: error occurred',
+      message: reloadError.message,
+    });
+    throw reloadError;
+  }
 }
 
 
@@ -94,8 +109,10 @@ export type ReloadStrategyParams = {|
 |};
 
 export type ReloadStrategyOptions = {|
+  addonReload?: typeof defaultAddonReload,
   createWatcher?: WatcherCreatorFn,
   createFileFilter?: FileFilterCreatorFn,
+  stdin: stream$Readable,
 |};
 
 export function defaultReloadStrategy(
@@ -104,18 +121,50 @@ export function defaultReloadStrategy(
     sourceDir, artifactsDir, ignoreFiles,
   }: ReloadStrategyParams,
   {
+    addonReload = defaultAddonReload,
     createWatcher = defaultWatcherCreator,
+    stdin = process.stdin,
   }: ReloadStrategyOptions = {}
 ): void {
-  const watcher: Watchpack = (
-    createWatcher({addonId, client, sourceDir, artifactsDir, ignoreFiles})
-  );
+  const watcher: Watchpack = createWatcher({
+    addonId, addonReload, client, sourceDir, artifactsDir, ignoreFiles,
+  });
 
   firefoxProcess.on('close', () => {
     client.disconnect();
     watcher.close();
+    stdin.pause();
   });
 
+  if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+    readline.emitKeypressEvents(stdin);
+    stdin.setRawMode(true);
+
+    // NOTE: this `Promise.resolve().then(...)` is basically used to spawn a "co-routine" that is executed
+    // before the callback attached to the Promise returned by this function (and it allows the `run` function
+    // to not be stuck in the while loop).
+    Promise.resolve().then(async function() {
+      log.info('Press R to reload (and Ctrl-C to quit)');
+
+      let userExit = false;
+
+      while (!userExit) {
+        const keyPressed = await new Promise((resolve) => {
+          stdin.once('keypress', (str, key) => resolve(key));
+        });
+
+        if (keyPressed.ctrl && keyPressed.name === 'c') {
+          userExit = true;
+        } else if (keyPressed.name === 'r' && addonId) {
+          log.debug('Reloading extension on user request');
+          await addonReload({addonId, client});
+        }
+      }
+
+      log.info('\nExiting web-ext on user request');
+      firefoxProcess.kill();
+    });
+  }
 }
 
 
@@ -123,15 +172,16 @@ export function defaultReloadStrategy(
 
 export type CreateFirefoxClientParams = {|
   connectToFirefox?: FirefoxConnectorFn,
-  maxRetries: number,
-  retryInterval: number,
+  maxRetries?: number,
+  retryInterval?: number,
+  port: number,
 |};
 
 export function defaultFirefoxClient(
   {
     connectToFirefox = defaultFirefoxConnector,
     // A max of 250 will try connecting for 30 seconds.
-    maxRetries = 250, retryInterval = 120,
+    maxRetries = 250, retryInterval = 120, port,
   }: CreateFirefoxClientParams = {}
 ): Promise<RemoteFirefox> {
   async function establishConnection() {
@@ -139,7 +189,7 @@ export function defaultFirefoxClient(
 
     for (let retries = 0; retries <= maxRetries; retries++) {
       try {
-        return await connectToFirefox();
+        return await connectToFirefox(port);
       } catch (error) {
         if (isErrorWithCode('ECONNREFUSED', error)) {
           // Wait for `retryInterval` ms.
@@ -186,6 +236,8 @@ export type CmdRunOptions = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
+  ExtensionRunnerClass?: typeof ExtensionRunner,
+  shouldExitProgram?: boolean,
 |};
 
 export default async function run(
@@ -198,6 +250,7 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
+    ExtensionRunnerClass = ExtensionRunner,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -216,7 +269,7 @@ export default async function run(
 
   const manifestData = await getValidatedManifest(sourceDir);
 
-  const runner = new ExtensionRunner({
+  const runner = new ExtensionRunnerClass({
     sourceDir,
     firefoxApp,
     firefox,
@@ -239,13 +292,13 @@ export default async function run(
     installed = true;
   }
 
-  const runningFirefox = await runner.run(profile);
+  const { firefox: runningFirefox, debuggerPort } = await runner.run(profile);
 
   if (installed) {
     log.debug('Not installing as temporary add-on because the ' +
               'add-on was already installed');
   } else if (requiresRemote) {
-    client = await firefoxClient();
+    client = await firefoxClient({ port: debuggerPort });
 
     try {
       addonId = await runner.installAsTemporaryAddon(client).then(
@@ -368,7 +421,7 @@ export class ExtensionRunner {
       .then(() => getManifestId(manifestData));
   }
 
-  run(profile: FirefoxProfile): Promise<FirefoxProcess> {
+  run(profile: FirefoxProfile): Promise<FirefoxInfo> {
     const binaryArgs = [];
     const {firefoxApp, firefox, startUrl} = this;
     if (this.browserConsole) {
@@ -380,6 +433,7 @@ export class ExtensionRunner {
         binaryArgs.push('--url', url);
       }
     }
+
     return firefoxApp.run(profile, {
       firefoxBinary: firefox, binaryArgs,
     });

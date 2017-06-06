@@ -204,6 +204,6 @@ export default async function connect(
 ): Promise<RemoteFirefox> {
   log.debug(`Connecting to Firefox on port ${port}`);
   const client = await connectToFirefox(port);
-  log.debug('Connected to the remote Firefox debugger');
+  log.debug(`Connected to the remote Firefox debugger on port ${port}`);
   return new RemoteFirefox(client);
 }

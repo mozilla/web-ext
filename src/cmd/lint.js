@@ -56,6 +56,7 @@ export type LintCmdParams = {|
 export type LintCmdOptions = {|
   createLinter?: LinterCreatorFn,
   createFileFilter?: FileFilterCreatorFn,
+  shouldExitProgram?: boolean,
 |};
 
 export default function lint(
@@ -66,6 +67,7 @@ export default function lint(
   {
     createLinter = defaultLinterCreator,
     createFileFilter = defaultFileFilterCreator,
+    shouldExitProgram = true,
   }: LintCmdOptions = {}
 ): Promise<void> {
   const fileFilter = createFileFilter({sourceDir, ignoreFiles, artifactsDir});
@@ -86,7 +88,7 @@ export default function lint(
       // which should be the directory to the extension.
       _: [sourceDir],
     },
-    runAsBinary: true,
+    runAsBinary: shouldExitProgram,
   });
   return linter.run();
 }

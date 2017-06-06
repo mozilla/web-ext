@@ -25,13 +25,14 @@ describe('lint', () => {
       lintResult,
       createLinter,
       runLinter,
-      lint: (params = {}) => {
+      lint: (params = {}, options = {}) => {
         return defaultLintCommand({
           sourceDir: '/fake/source/dir',
           ...params,
         }, {
           createLinter,
           createFileFilter,
+          ...options,
         });
       },
     };
@@ -63,6 +64,14 @@ describe('lint', () => {
     return lint().then(() => {
       const args = createLinter.firstCall.args[0];
       assert.equal(args.runAsBinary, true);
+    });
+  });
+
+  it('sets runAsBinary according shouldExitProgram option', () => {
+    const {lint, createLinter} = setUp();
+    return lint({}, {shouldExitProgram: false}).then(() => {
+      const args = createLinter.firstCall.args[0];
+      assert.strictEqual(args.runAsBinary, false);
     });
   });
 
