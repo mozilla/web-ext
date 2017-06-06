@@ -483,7 +483,6 @@ describe('run', () => {
           assert.ok(firefoxProcess.kill.called);
         })
         .then(loopExiter(fakeStdin), loopExiter(fakeStdin));
-
     });
 
     it('pauses the web-ext process (CTRL+Z in shell console)', () => {
