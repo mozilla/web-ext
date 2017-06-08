@@ -258,33 +258,15 @@ export async function useProfile(
 
     if (dirExists) {
       log.debug(`Copying profile directory from "${profilePath}"`);
-      finder.getPath("default")
-      .then((err, profileDirectory) => {
-        if (err) {
-          throw err;
-        }
-        if (profileDirectory === profilePath) {
-          throw new UsageError(
-            `Cannot use named profile "${profilePath}"`
-          );
-        }
-      })
-      .then(finder.getPath("default-dev-edition"))
-      .then((err, profileDirectory) => {
-            if (err) {
-              throw err;
-            }
-            if (profileDirectory === profilePath) {
-              throw new UsageError(
-                `Cannot use named profile "${profilePath}"`
-              );
-            } else {
-              profile = new FirefoxProfile({destinationDirectory: profilePath});
-            }
-          })
-      .catch((error) => {
-
-      });
+      const defaultProfilePath = finder.getPath('default');
+      const defaultDevProfilePath = finder.getPath('default-dev-edition');
+      if (profilePath === defaultProfilePath ||
+        profilePath === defaultDevProfilePath) {
+        throw new UsageError(
+          `Cannot use named profile "${profilePath}"`
+        );
+      }
+      profile = new FirefoxProfile({destinationDirectory: profilePath});
     } else {
       log.debug(`Assuming ${profilePath} is a named profile`);
       if (profilePath === 'default' || profilePath === 'default-dev-edition') {
