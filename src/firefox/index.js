@@ -251,7 +251,54 @@ export async function useProfile(
     customPrefs = {},
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
-  const profile = new FirefoxProfile({destinationDirectory: profilePath});
+  let profile;
+  try {
+    const dirExists = await isDirectory(profilePath);
+    var finder = new FirefoxProfile.Finder();
+
+    if (dirExists) {
+      log.debug(`Copying profile directory from "${profilePath}"`);
+      finder.getPath("default", function(err, profileDirectory) {
+        if (err) {
+          throw err;
+        }
+        if (profileDirectory === profilePath) {
+          throw new UsageError(
+            `Cannot use named profile "${profilePath}"`
+          );
+        } else {
+          finder.getPath("default-dev-edition", function(err, profileDirectory) {
+            if (err) {
+              throw err;
+            }
+            if (profileDirectory === profilePath) {
+              throw new UsageError(
+                `Cannot use named profile "${profilePath}"`
+              );
+            } else {
+              profile = new FirefoxProfile({destinationDirectory: profilePath});
+            }
+          });
+        }
+      });
+    } else {
+      log.debug(`Assuming ${profilePath} is a named profile`);
+      if (profilePath === 'default' || profilePath === 'default-dev-edition') {
+        throw new UsageError(
+          `Cannot use named profile "${profilePath}"`
+        );
+      }
+      finder.getPath(profilePath, function(err, profileDirectory) {
+        if (err) {
+          throw err;
+        }
+        profile = new FirefoxProfile({destinationDirectory: profileDirectory});
+      });
+    }
+  } catch (error) {
+    throw new WebExtError(
+      `Could not copy Firefox profile from ${profilePath}: ${error}`);
+  }
   return await configureThisProfile(profile, {app, customPrefs});
 }
 
