@@ -258,7 +258,8 @@ export async function useProfile(
 
     if (dirExists) {
       log.debug(`Copying profile directory from "${profilePath}"`);
-      finder.getPath("default", function(err, profileDirectory) {
+      finder.getPath("default")
+      .then((err, profileDirectory) => {
         if (err) {
           throw err;
         }
@@ -266,8 +267,10 @@ export async function useProfile(
           throw new UsageError(
             `Cannot use named profile "${profilePath}"`
           );
-        } else {
-          finder.getPath("default-dev-edition", function(err, profileDirectory) {
+        }
+      })
+      .then(finder.getPath("default-dev-edition"))
+      .then((err, profileDirectory) => {
             if (err) {
               throw err;
             }
@@ -278,8 +281,9 @@ export async function useProfile(
             } else {
               profile = new FirefoxProfile({destinationDirectory: profilePath});
             }
-          });
-        }
+          })
+      .catch((error) => {
+
       });
     } else {
       log.debug(`Assuming ${profilePath} is a named profile`);
