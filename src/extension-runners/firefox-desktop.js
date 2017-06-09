@@ -4,6 +4,7 @@
 import type FirefoxProfile from 'firefox-profile';
 
 import {
+  MultipleExtensionsReloadError,
   RemoteTempInstallNotSupported,
   WebExtError,
 } from '../errors';
@@ -40,16 +41,6 @@ export type FirefoxDesktopExtensionRunnerParams = ExtensionRunnerParams & {
 };
 
 const log = createLogger(__filename);
-
-export class AllExtensionsReloadError extends WebExtError {
-  constructor(errorsMap: Map<string, Error>) {
-    const failedDirs = Array.from(errorsMap.keys()).join(', ');
-    const message = `Reload failure on: ${failedDirs}`;
-
-    super(message);
-    this.errorsBySourceDir = errorsMap;
-  }
-}
 
 /**
  * This module provide an ExtensionRunner subclass that manage an extension executed
@@ -98,7 +89,7 @@ export class FirefoxDesktopExtensionRunner {
     }
 
     if (reloadErrors.size > 0) {
-      return Promise.reject(new AllExtensionsReloadError(reloadErrors));
+      return Promise.reject(new MultipleExtensionsReloadError(reloadErrors));
     }
   }
 
