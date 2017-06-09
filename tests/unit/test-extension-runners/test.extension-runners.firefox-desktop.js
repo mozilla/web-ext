@@ -396,10 +396,9 @@ describe('util/extension-runners/firefox-desktop', () => {
              error instanceof WebExtError,
              true
            );
-           assert.match(
-             error.message,
-               /Reload failure on:/
-           );
+           assert.ok(error.message.includes(
+             `Error on extension from ${params.extensions[0].sourceDir}: `
+           ));
          });
 
        assert.equal(remoteFirefox.reloadAddon.called, true);

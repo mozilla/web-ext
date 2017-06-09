@@ -155,7 +155,7 @@ export function defaultReloadStrategy(
           userExit = true;
         } else if (keyPressed.name === 'r') {
           log.debug('Reloading installed extensions on user request');
-          await addonReload({extensionRunner});
+          addonReload({extensionRunner});
         }
       }
 

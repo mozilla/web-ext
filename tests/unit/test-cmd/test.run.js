@@ -342,6 +342,39 @@ describe('run', () => {
       assert.equal(addonReload.firstCall.args[0].sourceDir, undefined);
     });
 
+    it('can still reload when user presses R after a reload error',
+      async () => {
+        const {reloadStrategy} = prepare();
+
+        const fakeStdin = new tty.ReadStream();
+        sinon.spy(fakeStdin, 'setRawMode');
+
+        const fakeAddonReload = sinon.spy(
+          () => Promise.reject(Error('fake reload error'))
+        );
+
+        reloadStrategy({}, {
+          stdin: fakeStdin,
+          addonReload: fakeAddonReload,
+        });
+        // Wait for one tick for reloadStrategy's keypress processing loop
+        // to be ready.
+        await Promise.resolve();
+
+        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+        // Wait for one tick to give reloadStrategy the chance to handle
+        // the keypress event.
+        await Promise.resolve();
+        assert.ok(fakeStdin.setRawMode.called);
+        assert.equal(fakeAddonReload.callCount, 1);
+        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+        await Promise.resolve();
+        assert.equal(fakeAddonReload.callCount, 2);
+
+        // Exit the keypress processing loop.
+        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+      });
+
     it('shuts down firefox on user request (CTRL+C in shell console)',
       async () => {
         const {extensionRunner, reloadStrategy} = prepare({
