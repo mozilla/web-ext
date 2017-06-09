@@ -239,18 +239,19 @@ export default async function run(
     ...firefoxDesktopRunnerParams,
   });
 
-  const runner = new MultipleTargetsExtensionRunner({
+  const extensionRunner = new MultipleTargetsExtensionRunner({
     runners: [firefoxDesktopRunner],
   });
 
-  await runner.run();
+  await extensionRunner.run();
 
   if (noReload) {
     log.info('Automatic extension reloading has been disabled');
   } else {
     log.info('The extension will reload if any source file changes');
+
     reloadStrategy({
-      extensionRunner: runner,
+      extensionRunner,
       sourceDir,
       artifactsDir,
       ignoreFiles,
