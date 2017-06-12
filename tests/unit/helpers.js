@@ -294,7 +294,10 @@ export const basicManifest = {
  */
 export class FakeExtensionRunner {
   params: any;
-  deps: any;
+
+  constructor(params: any) {
+    this.params = params;
+  }
 
   async run() {}
   async exit() {}
@@ -319,8 +322,6 @@ export function getFakeFirefox(
   return fake(defaultFirefoxApp, allImplementations);
 }
 
-export function getFakeRemoteFirefox(
-  implementations: Object = {}
-) {
+export function getFakeRemoteFirefox(implementations: Object = {}) {
   return fake(RemoteFirefox.prototype, implementations);
 }

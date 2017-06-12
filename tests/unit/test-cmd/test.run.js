@@ -28,9 +28,7 @@ const tempInstallResult = {
 };
 
 function createFakeExtensionRunner(params, deps, overriddenMethods = {}) {
-  const runner = new FakeExtensionRunner();
-  runner.params = params;
-  runner.deps = deps;
+  const runner = new FakeExtensionRunner(params);
 
   for (const [fnName, fn] of Object.entries(overriddenMethods)) {
     sinon.stub(runner, fnName).callsFake(fn);
