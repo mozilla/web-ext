@@ -299,10 +299,19 @@ export class FakeExtensionRunner {
     this.params = params;
   }
 
+  getName() {
+    return 'Fake Extension Runner';
+  }
+
   async run() {}
   async exit() {}
-  async reloadAllExtensions() {}
-  async reloadExtensionBySourceDir(sourceDir: string) {} // eslint-disable-line no-unused-vars
+  async reloadAllExtensions() {
+    return [];
+  }
+  async reloadExtensionBySourceDir(sourceDir: string) {
+    const runnerName = this.getName();
+    return [{runnerName, sourceDir}];
+  }
   registerCleanup(fn: Function) {} // eslint-disable-line no-unused-vars
 }
 

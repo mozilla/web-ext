@@ -1,24 +1,52 @@
 /* @flow */
 
+import readline from 'readline';
+import tty from 'tty';
+
+import type Watchpack from 'watchpack';
+
 import type {
   IExtensionRunner,  // eslint-disable-line import/named
+  ExtensionRunnerReloadResult,
 } from './base';
+import {
+  showDesktopNotification as defaultDesktopNotifications,
+} from '../util/desktop-notifier';
+import {createLogger} from '../util/logger';
+import type {FileFilterCreatorFn} from '../util/file-filter';
+import {
+  createFileFilter as defaultFileFilterCreator,
+} from '../util/file-filter';
+import defaultSourceWatcher from '../watcher';
+import type {OnSourceChangeFn} from '../watcher';
 
-export type MultipleTargetsExtensionRunnerParams = {
+
+const log = createLogger(__filename);
+
+
+export type MultiExtensionRunnerParams = {|
   runners: Array<IExtensionRunner>,
-};
+  desktopNotifications: typeof defaultDesktopNotifications,
+|};
 
 // Export everything exported by the firefox-desktop runner.
 export * from './firefox-desktop';
+
 
 // This class implements an extension runner which allow the caller to
 // manage multiple extension runners at the same time (e.g. by running
 // a Firefox Desktop instance alongside to a Firefox for Android instance).
 export class MultiExtensionRunner {
   extensionRunners: Array<IExtensionRunner>;
+  desktopNotifications: typeof defaultDesktopNotifications;
 
-  constructor(params: MultipleTargetsExtensionRunnerParams) {
+  constructor(params: MultiExtensionRunnerParams) {
     this.extensionRunners = params.runners;
+    this.desktopNotifications = params.desktopNotifications;
+  }
+
+  getName() {
+    return 'Multi Extension Runner';
   }
 
   async run(): Promise<void> {
@@ -30,22 +58,59 @@ export class MultiExtensionRunner {
     await Promise.all(promises);
   }
 
-  async reloadAllExtensions(): Promise<void> {
+  async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
+    log.debug('Reloading all reloadable add-ons');
+
     const promises = [];
     for (const runner of this.extensionRunners) {
-      promises.push(runner.reloadAllExtensions());
+      const reloadPromise = runner.reloadAllExtensions().then(
+        () => {
+          return {runnerName: runner.getName()};
+        },
+        (error) => {
+          return {
+            runnerName: runner.getName(),
+            reloadError: error,
+          };
+        }
+      );
+
+      promises.push(reloadPromise);
     }
 
-    await Promise.all(promises);
+    return await Promise.all(promises).then((results) => {
+      this.handleReloadResults(results);
+      return results;
+    });
   }
 
-  async reloadExtensionBySourceDir(sourceDir: string): Promise<void> {
+  async reloadExtensionBySourceDir(
+    sourceDir: string
+  ): Promise<Array<ExtensionRunnerReloadResult>> {
+    log.debug(`Reloading add-on at ${sourceDir}`);
+
     const promises = [];
     for (const runner of this.extensionRunners) {
-      promises.push(runner.reloadExtensionBySourceDir(sourceDir));
+      const reloadPromise = runner.reloadExtensionBySourceDir(sourceDir).then(
+        () => {
+          return {runnerName: runner.getName(), sourceDir};
+        },
+        (error) => {
+          return {
+            runnerName: runner.getName(),
+            reloadError: error,
+            sourceDir,
+          };
+        }
+      );
+
+      promises.push(reloadPromise);
     }
 
-    await Promise.all(promises);
+    return await Promise.all(promises).then((results) => {
+      this.handleReloadResults(results);
+      return results;
+    });
   }
 
   registerCleanup(cleanupCallback: Function): void {
@@ -73,5 +138,127 @@ export class MultiExtensionRunner {
     }
 
     await Promise.all(promises);
+  }
+
+  handleReloadResults(results: Array<ExtensionRunnerReloadResult>): void {
+    for (const {runnerName, reloadError, sourceDir} of results) {
+      if (reloadError instanceof Error) {
+        let message = 'Error occurred while reloading';
+        if (sourceDir) {
+          message += ` "${sourceDir}" `;
+        }
+
+        message += `on "${runnerName}" - ${reloadError.message}`;
+
+        log.error(`\n${message}`);
+        log.debug(reloadError.stack);
+
+        this.desktopNotifications({
+          title: 'web-ext run: extension reload error',
+          message,
+        });
+      }
+    }
+  }
+}
+
+// defaultWatcherCreator types and implementation.
+
+export type WatcherCreatorParams = {|
+  reloadExtension: (string) => void,
+  sourceDir: string,
+  artifactsDir: string,
+  onSourceChange?: OnSourceChangeFn,
+  ignoreFiles?: Array<string>,
+  createFileFilter?: FileFilterCreatorFn,
+|};
+
+export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
+
+export function defaultWatcherCreator(
+  {
+    reloadExtension, sourceDir, artifactsDir, ignoreFiles,
+    onSourceChange = defaultSourceWatcher,
+    createFileFilter = defaultFileFilterCreator,
+  }: WatcherCreatorParams
+ ): Watchpack {
+  const fileFilter = createFileFilter(
+    {sourceDir, artifactsDir, ignoreFiles}
+  );
+  return onSourceChange({
+    sourceDir,
+    artifactsDir,
+    onChange: () => reloadExtension(sourceDir),
+    shouldWatchFile: (file) => fileFilter.wantFile(file),
+  });
+}
+
+
+// defaultReloadStrategy types and implementation.
+
+export type ReloadStrategyParams = {|
+  extensionRunner: IExtensionRunner,
+  sourceDir: string,
+  artifactsDir: string,
+  ignoreFiles?: Array<string>,
+|};
+
+export type ReloadStrategyOptions = {|
+  createWatcher?: WatcherCreatorFn,
+  stdin: stream$Readable,
+|};
+
+export function defaultReloadStrategy(
+  {
+    extensionRunner,
+    sourceDir, artifactsDir, ignoreFiles,
+  }: ReloadStrategyParams,
+  {
+    createWatcher = defaultWatcherCreator,
+    stdin = process.stdin,
+  }: ReloadStrategyOptions = {}
+): void {
+  const watcher: Watchpack = createWatcher({
+    reloadExtension: (watchedSourceDir) => {
+      extensionRunner.reloadExtensionBySourceDir(watchedSourceDir);
+    },
+    sourceDir,
+    artifactsDir,
+    ignoreFiles,
+  });
+
+  extensionRunner.registerCleanup(() => {
+    watcher.close();
+    stdin.pause();
+  });
+
+  if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+    readline.emitKeypressEvents(stdin);
+    stdin.setRawMode(true);
+
+    // NOTE: this `Promise.resolve().then(...)` is basically used to spawn a "co-routine" that is executed
+    // before the callback attached to the Promise returned by this function (and it allows the `run` function
+    // to not be stuck in the while loop).
+    Promise.resolve().then(async function() {
+      log.info('Press R to reload (and Ctrl-C to quit)');
+
+      let userExit = false;
+
+      while (!userExit) {
+        const keyPressed = await new Promise((resolve) => {
+          stdin.once('keypress', (str, key) => resolve(key));
+        });
+
+        if (keyPressed.ctrl && keyPressed.name === 'c') {
+          userExit = true;
+        } else if (keyPressed.name === 'r') {
+          log.debug('Reloading installed extensions on user request');
+          extensionRunner.reloadAllExtensions();
+        }
+      }
+
+      log.info('\nExiting web-ext on user request');
+      extensionRunner.exit();
+    });
   }
 }

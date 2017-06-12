@@ -20,6 +20,7 @@ import type {
 } from '../firefox/remote';
 import type {
   ExtensionRunnerParams,
+  ExtensionRunnerReloadResult,
 } from './base';
 import type {
   FirefoxPreferences,
@@ -67,6 +68,10 @@ export class FirefoxDesktopExtensionRunner {
     this.cleanupCallbacks = new Set();
   }
 
+  getName() {
+    return 'Firefox Desktop';
+  }
+
   // Method exported from the IExtensionRunner interface.
 
   async run(): Promise<void> {
@@ -81,28 +86,51 @@ export class FirefoxDesktopExtensionRunner {
     await this.startFirefoxInstance();
   }
 
-  async reloadAllExtensions(): Promise<void> {
+  async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
+    const runnerName = this.getName();
     const reloadErrors = new Map();
     for (const {sourceDir} of this.params.extensions) {
-      try {
-        await this.reloadExtensionBySourceDir(sourceDir);
-      } catch (error) {
-        reloadErrors.set(sourceDir, error);
+      const [res] = await this.reloadExtensionBySourceDir(sourceDir);
+      if (res.reloadError instanceof Error) {
+        reloadErrors.set(sourceDir, res.reloadError);
       }
     }
 
     if (reloadErrors.size > 0) {
-      return Promise.reject(new MultipleExtensionsReloadError(reloadErrors));
+      return [{
+        runnerName,
+        reloadError: new MultipleExtensionsReloadError(reloadErrors),
+      }];
     }
+
+    return [{runnerName}];
   }
 
-  async reloadExtensionBySourceDir(extensionSourceDir: string): Promise<void> {
+  async reloadExtensionBySourceDir(
+    extensionSourceDir: string
+  ): Promise<Array<ExtensionRunnerReloadResult>> {
+    const runnerName = this.getName();
     const addonId = this.reloadableExtensions.get(extensionSourceDir);
+
     if (!addonId) {
-      throw new WebExtError('Extension not reloadable');
+      return [{
+        sourceDir: extensionSourceDir,
+        reloadError: new WebExtError('Extension not reloadable'),
+        runnerName,
+      }];
     }
 
-    await this.remoteFirefox.reloadAddon(addonId);
+    try {
+      await this.remoteFirefox.reloadAddon(addonId);
+    } catch (error) {
+      return [{
+        sourceDir: extensionSourceDir,
+        reloadError: error,
+        runnerName,
+      }];
+    }
+
+    return [{runnerName, sourceDir: extensionSourceDir}];
   }
 
   registerCleanup(fn: Function): void {

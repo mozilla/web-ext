@@ -92,6 +92,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     await runnerInstance.run();
 
+    assert.ok(runnerInstance.getName(), 'Firefox Desktop');
     assert.ok(remoteFirefox.installTemporaryAddon.calledOnce);
     assert.equal(remoteFirefox.installTemporaryAddon.firstCall.args[0],
                  params.extensions[0].sourceDir);
@@ -369,17 +370,17 @@ describe('util/extension-runners/firefox-desktop', () => {
     assert.ok(remoteFirefox.reloadAddon.calledOnce);
   });
 
-  it('raises an error when the extension is not reloadable', async () => {
-    const {params, remoteFirefox} = prepareExtensionRunnerParams();
+  it('returns an error in the results when the extension is not reloadable',
+    async () => {
+      const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
-    const runnerInstance = new FirefoxDesktopExtensionRunner(params);
-    await runnerInstance.run();
+      const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+      await runnerInstance.run();
 
-    await runnerInstance.reloadExtensionBySourceDir(
-      '/non-existent/source-dir'
-    )
-      .catch((error) => error)
-      .then((error) => {
+      await runnerInstance.reloadExtensionBySourceDir(
+        '/non-existent/source-dir'
+      ).then((results) => {
+        const error = results[0].reloadError;
         assert.equal(
           error instanceof WebExtError,
           true
@@ -390,8 +391,8 @@ describe('util/extension-runners/firefox-desktop', () => {
         );
       });
 
-    assert.equal(remoteFirefox.reloadAddon.called, false);
-  });
+      assert.equal(remoteFirefox.reloadAddon.called, false);
+    });
 
   it('rejects an AllExtensionsReloadError if any extension fails to reload',
      async () => {
@@ -407,14 +408,15 @@ describe('util/extension-runners/firefox-desktop', () => {
        await runnerInstance.run();
 
        await runnerInstance.reloadAllExtensions()
-         .catch((error) => error)
-         .then((error) => {
+         .then((results) => {
+           const error = results[0].reloadError;
            assert.equal(
              error instanceof WebExtError,
              true
            );
+           const {sourceDir} = params.extensions[0];
            assert.ok(error && error.message.includes(
-             `Error on extension from ${params.extensions[0].sourceDir}: `
+             `Error on extension loaded from ${sourceDir}: `
            ));
          });
 

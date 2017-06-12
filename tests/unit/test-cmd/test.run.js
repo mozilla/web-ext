@@ -1,20 +1,13 @@
 /* @flow */
 import path from 'path';
-import stream from 'stream';
-import tty from 'tty';
 
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import run, {
-  defaultWatcherCreator,
-  defaultReloadStrategy,
-  defaultAddonReload,
-} from '../../../src/cmd/run';
+import run from '../../../src/cmd/run';
 import {
   fixturePath,
-  makeSureItFails,
   FakeExtensionRunner,
   getFakeFirefox,
   getFakeRemoteFirefox,
@@ -26,16 +19,6 @@ const log = createLogger(__filename);
 const tempInstallResult = {
   addon: {id: 'some-addon@test-suite'},
 };
-
-function createFakeExtensionRunner(params, deps, overriddenMethods = {}) {
-  const runner = new FakeExtensionRunner(params);
-
-  for (const [fnName, fn] of Object.entries(overriddenMethods)) {
-    sinon.stub(runner, fnName).callsFake(fn);
-  }
-
-  return runner;
-}
 
 describe('run', () => {
 
@@ -63,6 +46,7 @@ describe('run', () => {
         log.debug('fake: reloadStrategy()');
       }),
       FirefoxDesktopExtensionRunner: sinon.spy(FakeExtensionRunner),
+      desktopNotifications: sinon.spy(() => {}),
     };
 
     return {
@@ -168,289 +152,6 @@ describe('run', () => {
 
     await cmd.run({noReload: true});
     assert.equal(reloadStrategy.called, false);
-  });
-
-  describe('defaultWatcherCreator', () => {
-
-    function prepare() {
-      const config = {
-        sourceDir: '/path/to/extension/source/',
-        artifactsDir: '/path/to/web-ext-artifacts',
-        onSourceChange: sinon.spy(() => {}),
-        ignoreFiles: ['path/to/file', 'path/to/file2'],
-        addonReload: sinon.spy(() => Promise.resolve()),
-      };
-      return {
-        config,
-        createWatcher: (customConfig = {}) => {
-          return defaultWatcherCreator({...config, ...customConfig});
-        },
-      };
-    }
-
-    it('configures a source watcher', () => {
-      const {config, createWatcher} = prepare();
-      createWatcher();
-      assert.equal(config.onSourceChange.called, true);
-      const callArgs = config.onSourceChange.firstCall.args[0];
-      assert.equal(callArgs.sourceDir, config.sourceDir);
-      assert.equal(callArgs.artifactsDir, config.artifactsDir);
-      assert.typeOf(callArgs.onChange, 'function');
-    });
-
-    it('configures a run command with the expected fileFilter', () => {
-      const fileFilter = {wantFile: sinon.spy()};
-      const createFileFilter = sinon.spy(() => fileFilter);
-      const {config, createWatcher} = prepare();
-      createWatcher({createFileFilter});
-      assert.ok(createFileFilter.called);
-      assert.deepEqual(createFileFilter.firstCall.args[0], {
-        sourceDir: config.sourceDir,
-        artifactsDir: config.artifactsDir,
-        ignoreFiles: config.ignoreFiles,
-      });
-      const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
-      shouldWatchFile('path/to/file');
-      assert.ok(fileFilter.wantFile.called);
-      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
-    });
-
-    it('returns a watcher', () => {
-      const watcher = {};
-      const onSourceChange = sinon.spy(() => watcher);
-      const createdWatcher = prepare().createWatcher({onSourceChange});
-      assert.equal(createdWatcher, watcher);
-    });
-
-    it('reloads the extension', async () => {
-      const {config, createWatcher} = prepare();
-      createWatcher();
-
-      const callArgs = config.onSourceChange.firstCall.args[0];
-      assert.typeOf(callArgs.onChange, 'function');
-      // Simulate executing the handler when a source file changes.
-      await callArgs.onChange();
-      assert.equal(config.addonReload.called, true);
-      const reloadArgs = config.addonReload.firstCall.args;
-      assert.equal(reloadArgs[0], config.sourceDir);
-    });
-
-  });
-
-  describe('defaultReloadStrategy', () => {
-
-    function prepare({stubExtensionRunner} = {}) {
-      const watcher = {
-        close: sinon.spy(() => {}),
-      };
-      const extensionRunner = createFakeExtensionRunner({}, {},
-                                                        stubExtensionRunner);
-      const args = {
-        extensionRunner,
-        sourceDir: '/path/to/extension/source',
-        artifactsDir: '/path/to/web-ext-artifacts/',
-        ignoreFiles: ['first/file', 'second/file'],
-      };
-      const options = {
-        addonReload: sinon.spy(() => Promise.resolve()),
-        createWatcher: sinon.spy(() => watcher),
-        stdin: new stream.Readable(),
-      };
-      return {
-        ...args,
-        ...options,
-        watcher,
-        extensionRunner,
-        reloadStrategy: async (argOverride = {}, optOverride = {}) => {
-          return defaultReloadStrategy(
-            {...args, ...argOverride},
-            {...options, ...optOverride});
-        },
-      };
-    }
-
-    it('configures a watcher', () => {
-      const {
-        createWatcher, reloadStrategy, extensionRunner,
-        ...sentArgs
-      } = prepare();
-
-      reloadStrategy();
-      assert.ok(createWatcher.called);
-      const receivedArgs = createWatcher.firstCall.args[0];
-      assert.equal(receivedArgs.client, sentArgs.client);
-      assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
-      assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
-      assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
-      assert.equal(typeof receivedArgs.addonReload, 'function');
-
-      receivedArgs.addonReload('fake/src/dir');
-
-      assert.ok(sentArgs.addonReload.called);
-      assert.equal(sentArgs.addonReload.firstCall.args[0].sourceDir,
-                   'fake/src/dir');
-      assert.equal(sentArgs.addonReload.firstCall.args[0].extensionRunner,
-                   extensionRunner);
-    });
-
-    it('cleans up when the extension runner closes', () => {
-      const {
-        extensionRunner, watcher, reloadStrategy, stdin,
-      } = prepare({
-        stubExtensionRunner: {
-          registerCleanup() {},
-        },
-      });
-
-      sinon.spy(stdin, 'pause');
-
-      reloadStrategy();
-
-      assert.ok(extensionRunner.registerCleanup.called);
-      assert.ok(extensionRunner.registerCleanup.calledOnce);
-
-      const registeredCb = extensionRunner.registerCleanup.firstCall.args[0];
-
-      assert.equal(typeof registeredCb, 'function');
-
-      registeredCb();
-
-      assert.equal(watcher.close.called, true);
-      assert.ok(stdin.pause.called);
-    });
-
-    it('can reload when user presses R in shell console', async () => {
-      const {addonReload, reloadStrategy} = prepare();
-
-      const fakeStdin = new tty.ReadStream();
-      sinon.spy(fakeStdin, 'setRawMode');
-
-      await reloadStrategy({}, {stdin: fakeStdin});
-      fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-
-      // Wait for one tick.
-      await Promise.resolve();
-
-      assert.ok(fakeStdin.setRawMode.called);
-      assert.ok(addonReload.called);
-      // pressing R reloads all the extensions by not including a sourceDir
-      // in the options.
-      assert.equal(addonReload.firstCall.args[0].sourceDir, undefined);
-    });
-
-    it('can still reload when user presses R after a reload error',
-      async () => {
-        const {reloadStrategy} = prepare();
-
-        const fakeStdin = new tty.ReadStream();
-        sinon.spy(fakeStdin, 'setRawMode');
-
-        const fakeAddonReload = sinon.spy(
-          () => Promise.reject(Error('fake reload error'))
-        );
-
-        reloadStrategy({}, {
-          stdin: fakeStdin,
-          addonReload: fakeAddonReload,
-        });
-        // Wait for one tick for reloadStrategy's keypress processing loop
-        // to be ready.
-        await Promise.resolve();
-
-        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-        // Wait for one tick to give reloadStrategy the chance to handle
-        // the keypress event.
-        await Promise.resolve();
-        assert.ok(fakeStdin.setRawMode.called);
-        assert.equal(fakeAddonReload.callCount, 1);
-        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-        await Promise.resolve();
-        assert.equal(fakeAddonReload.callCount, 2);
-
-        // Exit the keypress processing loop.
-        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
-      });
-
-    it('shuts down firefox on user request (CTRL+C in shell console)',
-      async () => {
-        const {extensionRunner, reloadStrategy} = prepare({
-          stubExtensionRunner: {
-            async exit() {},
-          },
-        });
-        const fakeStdin = new tty.ReadStream();
-
-        await reloadStrategy({}, {stdin: fakeStdin});
-
-        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
-
-        // Wait for one tick.
-        await Promise.resolve();
-
-        assert.ok(extensionRunner.exit.called);
-      });
-
-  });
-
-  describe('defaultAddonReload', () => {
-    const desktopNotifications = sinon.spy(() => Promise.resolve());
-    const args = {
-      sourceDir: '/path/to/some-addon',
-      desktopNotifications,
-    };
-
-    it('reloads an addon by sourceDir', async () => {
-      const extensionRunner = createFakeExtensionRunner({}, {}, {
-        reloadExtensionBySourceDir: () => Promise.resolve(),
-      });
-      await defaultAddonReload({extensionRunner, ...args});
-
-      assert.ok(extensionRunner.reloadExtensionBySourceDir.called, true);
-      const reloadArgs = extensionRunner.reloadExtensionBySourceDir
-                                        .firstCall.args;
-      assert.equal(reloadArgs[0], args.sourceDir);
-    });
-
-    it('reloads all addons', async () => {
-      const extensionRunner = createFakeExtensionRunner({}, {}, {
-        reloadAllExtensions: () => Promise.resolve(),
-      });
-      await defaultAddonReload({extensionRunner});
-
-      assert.ok(extensionRunner.reloadAllExtensions.called, true);
-      const reloadArgs = extensionRunner.reloadAllExtensions
-                                        .firstCall.args;
-      assert.equal(reloadArgs[0], undefined);
-    });
-
-    it('notifies user on error from source change handler', async () => {
-      const extensionRunner = createFakeExtensionRunner({}, {}, {
-        reloadExtensionBySourceDir: () => Promise.reject(new Error('an error')),
-      });
-      await defaultAddonReload({extensionRunner, ...args})
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(
-            desktopNotifications.called, true
-          );
-          assert.equal(
-            desktopNotifications.firstCall.args[0].message,
-            error.message
-          );
-        });
-    });
-
-    it('throws errors from source change handler', async () => {
-      const extensionRunner = createFakeExtensionRunner({}, {}, {
-        reloadExtensionBySourceDir: () => Promise.reject(new Error('an error')),
-      });
-      await defaultAddonReload({extensionRunner, ...args})
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.equal(error.message, 'an error');
-        });
-    });
-
   });
 
 });

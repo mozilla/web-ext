@@ -49,7 +49,8 @@ export class MultipleExtensionsReloadError extends WebExtError {
   constructor(errorsMap: Map<string, Error>) {
     let errors = '';
     for (const [sourceDir, error] of errorsMap) {
-      errors += `\nError on extension from ${sourceDir}: ${String(error)}\n`;
+      const msg = String(error);
+      errors += `\nError on extension loaded from ${sourceDir}: ${msg}\n`;
     }
     const message = `Reload errors: ${errors}`;
 
