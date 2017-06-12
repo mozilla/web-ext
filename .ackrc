@@ -1,0 +1,6 @@
+# This sets some defaults for ack (https://beyondgrep.com/)
+# that make searching the web-ext code a bit easier.
+
+--ignore-dir=artifacts
+--ignore-dir=dist
+--ignore-dir=node_modules
