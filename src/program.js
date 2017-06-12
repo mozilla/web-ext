@@ -322,6 +322,13 @@ Example: $0 --help run.
         },
       })
     .command('run', 'Run the extension', commands.run, {
+      'target': {
+        alias: 't',
+        describe: 'The extensions runners to enable (e.g. firefox-desktop, ' +
+          'firefox-android).',
+        demand: false,
+        type: 'string',
+      },
       'firefox': {
         alias: ['f', 'firefox-binary'],
         describe: 'Path or alias to a Firefox executable such as firefox-bin ' +
@@ -381,6 +388,34 @@ Example: $0 --help run.
         describe: 'Open the DevTools Browser Console.',
         demand: false,
         type: 'boolean',
+      },
+      // Firefox for Android CLI options.
+      'adb-binary': {
+        alias: ['adb-bin'],
+        describe: 'Select a specific adb binary.',
+        demand: false,
+        type: 'string',
+      },
+      'adb-host': {
+        describe: 'Connect to adb on the specified host',
+        demand: false,
+        type: 'string',
+      },
+      'adb-port': {
+        describe: 'Connect to adb on the specified port',
+        demand: false,
+        type: 'string',
+      },
+      'adb-device': {
+        alias: ['android-device'],
+        describe: 'Connect to the specified adb device name',
+        demand: false,
+        type: 'string',
+      },
+      'firefox-apk': {
+        describe: 'Use a specific Firefox for Android apk id',
+        demand: false,
+        type: 'string',
       },
     })
     .command('lint', 'Validate the extension source', commands.lint, {

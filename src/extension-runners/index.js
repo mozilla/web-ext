@@ -31,6 +31,7 @@ export type MultiExtensionRunnerParams = {|
 
 // Export everything exported by the firefox-desktop runner.
 export * from './firefox-desktop';
+export * from './firefox-android';
 
 
 /**
