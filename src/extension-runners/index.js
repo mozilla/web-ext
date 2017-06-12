@@ -11,7 +11,10 @@ export type MultipleTargetsExtensionRunnerParams = {
 // Export everything exported by the firefox-desktop runner.
 export * from './firefox-desktop';
 
-export class MultipleTargetsExtensionRunner {
+// This class implements an extension runner which allow the caller to
+// manage multiple extension runners at the same time (e.g. by running
+// a Firefox Desktop instance alongside to a Firefox for Android instance).
+export class MultiExtensionRunner {
   extensionRunners: Array<IExtensionRunner>;
 
   constructor(params: MultipleTargetsExtensionRunnerParams) {
@@ -45,15 +48,22 @@ export class MultipleTargetsExtensionRunner {
     await Promise.all(promises);
   }
 
-  registerCleanup(fn: Function): void {
+  registerCleanup(cleanupCallback: Function): void {
     const promises = [];
+
+    // Create a promise for every extension runner managed by this instance,
+    // the promise will be resolved when the particular runner calls its
+    // registered cleanup callbacks.
     for (const runner of this.extensionRunners) {
       promises.push(new Promise((resolve) => {
         runner.registerCleanup(resolve);
       }));
     }
 
-    Promise.all(promises).then(fn, fn);
+    // Wait for all the created promises to be resolved or rejected
+    // (once each one of the runners has cleaned up) and then call
+    // the cleanup callback registered to this runner.
+    Promise.all(promises).then(cleanupCallback, cleanupCallback);
   }
 
   async exit(): Promise<void> {

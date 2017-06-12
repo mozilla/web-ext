@@ -5,7 +5,7 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {
-  MultipleTargetsExtensionRunner,
+  MultiExtensionRunner,
 } from '../../../src/extension-runners';
 import {
   FakeExtensionRunner,
@@ -35,7 +35,7 @@ describe('util/extension-runners', () => {
     sinon.spy(fakeExtensionRunner, 'run');
     sinon.spy(anotherFakeExtensionRunner, 'run');
 
-    const runnerInstance = new MultipleTargetsExtensionRunner(params);
+    const runnerInstance = new MultiExtensionRunner(params);
 
     await runnerInstance.run();
 
@@ -53,7 +53,7 @@ describe('util/extension-runners', () => {
        sinon.spy(fakeExtensionRunner, 'reloadAllExtensions');
        sinon.spy(anotherFakeExtensionRunner, 'reloadAllExtensions');
 
-       const runnerInstance = new MultipleTargetsExtensionRunner(params);
+       const runnerInstance = new MultiExtensionRunner(params);
 
        await runnerInstance.reloadAllExtensions();
 
@@ -71,7 +71,7 @@ describe('util/extension-runners', () => {
        sinon.spy(fakeExtensionRunner, 'reloadExtensionBySourceDir');
        sinon.spy(anotherFakeExtensionRunner, 'reloadExtensionBySourceDir');
 
-       const runnerInstance = new MultipleTargetsExtensionRunner(params);
+       const runnerInstance = new MultiExtensionRunner(params);
 
        await runnerInstance.reloadExtensionBySourceDir(
          '/fake/source/dir'
@@ -102,7 +102,7 @@ describe('util/extension-runners', () => {
     sinon.spy(fakeExtensionRunner, 'exit');
     sinon.spy(anotherFakeExtensionRunner, 'exit');
 
-    const runnerInstance = new MultipleTargetsExtensionRunner(params);
+    const runnerInstance = new MultiExtensionRunner(params);
 
     await runnerInstance.exit();
 
@@ -122,7 +122,7 @@ describe('util/extension-runners', () => {
          sinon.spy(fakeExtensionRunner, 'registerCleanup');
          sinon.spy(anotherFakeExtensionRunner, 'registerCleanup');
 
-         const runnerInstance = new MultipleTargetsExtensionRunner(params);
+         const runnerInstance = new MultiExtensionRunner(params);
 
          const waitRegisterCleanup = new Promise((resolve) => {
            runnerInstance.registerCleanup(resolve);

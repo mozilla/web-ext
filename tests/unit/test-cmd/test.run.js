@@ -105,7 +105,6 @@ describe('run', () => {
     const runOptions = {
       preInstall: true,
       keepProfileChanges: true,
-      noReload: true,
       browserConsole: true,
       firefox: '/path/to/custom/bin/firefox',
       customPrefs: {'my.custom.pref': 'value'},
@@ -121,7 +120,6 @@ describe('run', () => {
     assert.deepEqual({
       preInstall: runnerParams.preInstall,
       keepProfileChanges: runnerParams.keepProfileChanges,
-      noReload: runnerParams.noReload,
       browserConsole: runnerParams.browserConsole,
       firefox: runnerParams.firefoxBinary,
       customPrefs: runnerParams.customPrefs,

@@ -18,8 +18,8 @@ import {
   createFileFilter as defaultFileFilterCreator,
 } from '../util/file-filter';
 import {
-  MultipleTargetsExtensionRunner as defaultMultipleTargetsExtensionRunner,
-  FirefoxDesktopExtensionRunner as defaultFirefoxDesktopExtensionRunner,
+  MultiExtensionRunner as DefaultMultiExtensionRunner,
+  FirefoxDesktopExtensionRunner as DefaultFirefoxDesktopExtensionRunner,
 } from '../extension-runners';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
@@ -187,8 +187,8 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   shouldExitProgram?: boolean,
-  FirefoxDesktopExtensionRunner?: typeof defaultFirefoxDesktopExtensionRunner,
-  MultipleTargetsExtensionRunner?: typeof defaultMultipleTargetsExtensionRunner,
+  FirefoxDesktopExtensionRunner?: typeof DefaultFirefoxDesktopExtensionRunner,
+  MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
 |};
 
 export default async function run(
@@ -201,8 +201,8 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
-    FirefoxDesktopExtensionRunner = defaultFirefoxDesktopExtensionRunner,
-    MultipleTargetsExtensionRunner = defaultMultipleTargetsExtensionRunner,
+    FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
+    MultiExtensionRunner = DefaultMultiExtensionRunner,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -218,7 +218,6 @@ export default async function run(
     extensions: [{sourceDir, manifestData}],
     keepProfileChanges,
     startUrl,
-    noReload,
   };
 
   const firefoxDesktopRunnerParams = {
@@ -239,7 +238,7 @@ export default async function run(
     ...firefoxDesktopRunnerParams,
   });
 
-  const extensionRunner = new MultipleTargetsExtensionRunner({
+  const extensionRunner = new MultiExtensionRunner({
     runners: [firefoxDesktopRunner],
   });
 

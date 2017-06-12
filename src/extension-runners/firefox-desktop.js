@@ -28,8 +28,7 @@ import type {
   FirefoxInfo, // eslint-disable-line import/named
 } from '../firefox/index';
 
-export type FirefoxDesktopExtensionRunnerParams = ExtensionRunnerParams & {
-  // Firefox desktop CLI params.
+type FirefoxDesktopSpecificRunnerParams = {|
   customPrefs?: FirefoxPreferences,
   browserConsole: boolean,
   firefoxBinary: string,
@@ -38,7 +37,13 @@ export type FirefoxDesktopExtensionRunnerParams = ExtensionRunnerParams & {
   // Firefox desktop injected dependencies.
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxConnector,
-};
+|};
+
+export type FirefoxDesktopExtensionRunnerParams = {|
+  ...ExtensionRunnerParams,
+  // Firefox desktop CLI params.
+  ...FirefoxDesktopSpecificRunnerParams,
+|};
 
 const log = createLogger(__filename);
 
@@ -55,9 +60,7 @@ export class FirefoxDesktopExtensionRunner {
   runningInfo: FirefoxInfo;
   remoteFirefox: RemoteFirefox;
 
-  constructor(
-    params: FirefoxDesktopExtensionRunnerParams,
-  ) {
+  constructor(params: FirefoxDesktopExtensionRunnerParams) {
     this.params = params;
 
     this.reloadableExtensions = new Map();
