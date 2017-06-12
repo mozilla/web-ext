@@ -11,11 +11,15 @@ import promisify from 'es6-promisify';
 import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
 import {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
+import {manifestWithoutApps} from '../test-util/test.manifest';
 import completeSignCommand, {
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
 } from '../../../src/cmd/sign';
-import {makeSureItFails, fixturePath} from '../helpers';
+import {
+  basicManifest,
+  makeSureItFails,
+  fixturePath,
+} from '../helpers';
 // Import flow type
 import type {ExtensionManifestApplications} from '../../../src/util/manifest';
 

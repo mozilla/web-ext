@@ -11,6 +11,7 @@ import type {
   FirefoxDesktopExtensionRunnerParams,
 } from '../../../src/extension-runners/firefox-desktop';
 import {
+  basicManifest,
   getFakeFirefox,
   getFakeRemoteFirefox,
   makeSureItFails,
@@ -54,15 +55,7 @@ function prepareExtensionRunnerParams({
   const runnerParams: FirefoxDesktopExtensionRunnerParams = {
     extensions: [{
       sourceDir: '/fake/sourceDir',
-      manifestData: {
-        name: 'fake-addon',
-        version: '0.1',
-        applications: {
-          gecko: {
-            id: 'test@fake.id',
-          },
-        },
-      },
+      manifestData: basicManifest,
     }],
     keepProfileChanges: false,
     browserConsole: false,

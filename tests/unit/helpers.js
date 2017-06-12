@@ -277,6 +277,19 @@ export class ErrorWithCode extends Error {
 }
 
 /*
+ * A basic manifest fixtus using in unit tests.
+ */
+export const basicManifest = {
+  name: 'the extension',
+  version: '0.0.1',
+  applications: {
+    gecko: {
+      id: 'basic-manifest@web-ext-test-suite',
+    },
+  },
+};
+
+/*
  * A class that implements an empty IExtensionRunner interface.
  */
 export class FakeExtensionRunner {

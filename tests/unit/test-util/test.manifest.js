@@ -9,18 +9,8 @@ import {fs} from 'mz';
 import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
 import getValidatedManifest, {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {makeSureItFails} from '../helpers';
+import {basicManifest, makeSureItFails} from '../helpers';
 
-
-export const basicManifest = {
-  name: 'the extension',
-  version: '0.0.1',
-  applications: {
-    gecko: {
-      id: 'basic-manifest@web-ext-test-suite',
-    },
-  },
-};
 
 export const manifestWithoutApps = deepcopy(basicManifest);
 delete manifestWithoutApps.applications;
