@@ -459,9 +459,9 @@ describe('run', () => {
         })
         .then(() => {
           assert.ok(fakeStdin.setRawMode.called);
-          assert.ok(addonReload.called);
-          assert.equal(addonReload.firstCall.args[0].addonId,
-            tempInstallResult.addon.id);
+          sinon.assert.calledWith(
+          addonReload, sinon.match({addonId: tempInstallResult.addon.id})
+          );
         });
     });
 
