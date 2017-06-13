@@ -460,7 +460,7 @@ describe('run', () => {
         .then(() => {
           assert.ok(fakeStdin.setRawMode.called);
           sinon.assert.calledWith(
-          addonReload, sinon.match({addonId: tempInstallResult.addon.id})
+            addonReload, sinon.match({addonId: tempInstallResult.addon.id})
           );
         });
     });
