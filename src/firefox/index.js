@@ -255,7 +255,6 @@ export async function useProfile(
   let profile;
   try {
     const dirExists = await isDirectory(profilePath);
-    var finder = new FirefoxProfile.Finder();
 
     if (dirExists) {
       log.debug(`Copying profile directory from "${profilePath}"`);
@@ -275,7 +274,7 @@ export async function useProfile(
           `Cannot use named profile "${profilePath}"`
         );
       }
-      let profileDirectory = await finderGetPath(profilePath);
+      const profileDirectory = await finderGetPath(profilePath);
       profile = new FirefoxProfile({destinationDirectory: profileDirectory});
     }
   } catch (error) {
