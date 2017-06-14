@@ -211,11 +211,11 @@ export class FirefoxDesktopExtensionRunner {
     });
 
     this.runningInfo.firefox.on('close', () => {
-      for (const fn of this.cleanupCallbacks) {
+      for (const cleanupCb of this.cleanupCallbacks) {
         try {
-          fn();
+          cleanupCb();
         } catch (error) {
-          log.debug(`Exception on executing cleanup callback: ${error}`);
+          log.error(`Exception on executing cleanup callback: ${error}`);
         }
       }
     });
