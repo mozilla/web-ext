@@ -14,7 +14,6 @@ import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
-import {finderGetPath} from '../util/finder';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 // Import flow types
 import type {FirefoxConnectorFn} from './remote';
@@ -253,6 +252,8 @@ export async function useProfile(
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
   let profile;
+  const finder = new FirefoxProfile.Finder();
+  const finderGetPath = promisify(finder.getPath.bind(finder));
   try {
     const dirExists = await isDirectory(profilePath);
 
