@@ -27,12 +27,8 @@ import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
 } from './base';
-import type {
-  FirefoxPreferences,
-} from '../firefox/preferences';
-import type {
-  FirefoxInfo, // eslint-disable-line import/named
-} from '../firefox/index';
+import type {FirefoxPreferences} from '../firefox/preferences';
+import type {FirefoxInfo} from '../firefox/index'; // eslint-disable-line import/named
 
 type FirefoxDesktopSpecificRunnerParams = {|
   customPrefs?: FirefoxPreferences,

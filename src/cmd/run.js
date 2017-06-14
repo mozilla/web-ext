@@ -70,14 +70,13 @@ export default async function run(
 
   const manifestData = await getValidatedManifest(sourceDir);
 
-  const commonRunnerParams = {
+  const firefoxDesktopRunnerParams = {
+    // Common options.
     extensions: [{sourceDir, manifestData}],
     keepProfileChanges,
     startUrl,
     desktopNotifications,
-  };
 
-  const firefoxDesktopRunnerParams = {
     // Firefox specific CLI options.
     firefoxBinary: firefox,
     profilePath: firefoxProfile,
@@ -90,10 +89,9 @@ export default async function run(
     firefoxClient,
   };
 
-  const firefoxDesktopRunner = new FirefoxDesktopExtensionRunner({
-    ...commonRunnerParams,
-    ...firefoxDesktopRunnerParams,
-  });
+  const firefoxDesktopRunner = new FirefoxDesktopExtensionRunner(
+    firefoxDesktopRunnerParams
+  );
 
   const extensionRunner = new MultiExtensionRunner({
     runners: [firefoxDesktopRunner],
