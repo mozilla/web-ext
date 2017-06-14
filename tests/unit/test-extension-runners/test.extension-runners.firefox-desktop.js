@@ -388,7 +388,8 @@ describe('util/extension-runners/firefox-desktop', () => {
         );
         assert.equal(
           error && error.message,
-          'Extension not reloadable'
+          'Extension not reloadable: no addonId has been mapped to ' +
+          '"/non-existent/source-dir"'
         );
       });
 

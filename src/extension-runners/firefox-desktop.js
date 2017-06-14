@@ -129,7 +129,10 @@ export class FirefoxDesktopExtensionRunner {
     if (!addonId) {
       return [{
         sourceDir: extensionSourceDir,
-        reloadError: new WebExtError('Extension not reloadable'),
+        reloadError: new WebExtError(
+          'Extension not reloadable: ' +
+          `no addonId has been mapped to "${extensionSourceDir}"`
+        ),
         runnerName,
       }];
     }
