@@ -33,9 +33,11 @@ export type MultiExtensionRunnerParams = {|
 export * from './firefox-desktop';
 
 
-// This class implements an extension runner which allow the caller to
-// manage multiple extension runners at the same time (e.g. by running
-// a Firefox Desktop instance alongside to a Firefox for Android instance).
+/**
+ * Implements an IExtensionRunner which allow the caller to
+ * manage multiple extension runners at the same time (e.g. by running
+ * a Firefox Desktop instance alongside to a Firefox for Android instance).
+ */
 export class MultiExtensionRunner {
   extensionRunners: Array<IExtensionRunner>;
   desktopNotifications: typeof defaultDesktopNotifications;
@@ -45,10 +47,19 @@ export class MultiExtensionRunner {
     this.desktopNotifications = params.desktopNotifications;
   }
 
+  // Method exported from the IExtensionRunner interface.
+
+  /**
+   * Returns the runner name.
+   */
   getName() {
     return 'Multi Extension Runner';
   }
 
+  /**
+   * Call the `run` method on all the managed extension runners,
+   * and awaits that all the runners has been successfully started.
+   */
   async run(): Promise<void> {
     const promises = [];
     for (const runner of this.extensionRunners) {
@@ -58,6 +69,14 @@ export class MultiExtensionRunner {
     await Promise.all(promises);
   }
 
+  /**
+   * Reloads all the extensions on all the managed extension runners,
+   * collect any reload error, and resolves to an array composed by
+   * a ExtensionRunnerReloadResult object per managed runner.
+   *
+   * Any detected reload error is also logged on the terminal and shows as a
+   * desktop notification.
+   */
   async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
     log.debug('Reloading all reloadable add-ons');
 
@@ -84,6 +103,14 @@ export class MultiExtensionRunner {
     });
   }
 
+  /**
+   * Reloads a single extension on all the managed extension runners,
+   * collect any reload error and resolves to an array composed by
+   * a ExtensionRunnerReloadResult object per managed runner.
+   *
+   * Any detected reload error is also logged on the terminal and shows as a
+   * desktop notification.
+   */
   async reloadExtensionBySourceDir(
     sourceDir: string
   ): Promise<Array<ExtensionRunnerReloadResult>> {
@@ -113,6 +140,9 @@ export class MultiExtensionRunner {
     });
   }
 
+  /**
+   * Register a callback to be called when all the managed runners has been exited.
+   */
   registerCleanup(cleanupCallback: Function): void {
     const promises = [];
 
@@ -131,6 +161,9 @@ export class MultiExtensionRunner {
     Promise.all(promises).then(cleanupCallback, cleanupCallback);
   }
 
+  /**
+   * Exits all the managed runner has been exited.
+   */
   async exit(): Promise<void> {
     const promises = [];
     for (const runner of this.extensionRunners) {
@@ -139,6 +172,8 @@ export class MultiExtensionRunner {
 
     await Promise.all(promises);
   }
+
+  // Private helper methods.
 
   handleReloadResults(results: Array<ExtensionRunnerReloadResult>): void {
     for (const {runnerName, reloadError, sourceDir} of results) {

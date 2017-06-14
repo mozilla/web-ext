@@ -53,7 +53,9 @@ export type FirefoxDesktopExtensionRunnerParams = {|
 
 const log = createLogger(__filename);
 
-
+/**
+ * Implements an IExtensionRunner which manages a Firefox Desktop instance.
+ */
 export class FirefoxDesktopExtensionRunner {
   cleanupCallbacks: Set<Function>;
   params: FirefoxDesktopExtensionRunnerParams;
@@ -70,12 +72,18 @@ export class FirefoxDesktopExtensionRunner {
     this.cleanupCallbacks = new Set();
   }
 
+  // Method exported from the IExtensionRunner interface.
+
+  /**
+   * Returns the runner name.
+   */
   getName() {
     return 'Firefox Desktop';
   }
 
-  // Method exported from the IExtensionRunner interface.
-
+  /**
+   * Setup the Firefox Profile and run a Firefox Desktop instance.
+   */
   async run(): Promise<void> {
     // Get a firefox profile with the custom Prefs set (a new or a cloned one).
     // Pre-install extensions as proxy if needed (and disable auto-reload if you do)
@@ -88,6 +96,10 @@ export class FirefoxDesktopExtensionRunner {
     await this.startFirefoxInstance();
   }
 
+  /**
+   * Reloads all the extensions, collect any reload error and resolves to
+   * an array composed by a single ExtensionRunnerReloadResult object.
+   */
   async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
     const runnerName = this.getName();
     const reloadErrors = new Map();
@@ -108,6 +120,10 @@ export class FirefoxDesktopExtensionRunner {
     return [{runnerName}];
   }
 
+  /**
+   * Reloads a single extension, collect any reload error and resolves to
+   * an array composed by a single ExtensionRunnerReloadResult object.
+   */
   async reloadExtensionBySourceDir(
     extensionSourceDir: string
   ): Promise<Array<ExtensionRunnerReloadResult>> {
@@ -135,10 +151,18 @@ export class FirefoxDesktopExtensionRunner {
     return [{runnerName, sourceDir: extensionSourceDir}];
   }
 
+  /**
+   * Register a callback to be called when the runner has been exited
+   * (e.g. the Firefox instance exits or the user has requested web-ext
+   * to exit).
+   */
   registerCleanup(fn: Function): void {
     this.cleanupCallbacks.add(fn);
   }
 
+  /**
+   * Exits the runner, by closing the managed Firefox instance.
+   */
   async exit(): Promise<void> {
     if (!this.runningInfo || !this.runningInfo.firefox) {
       throw new WebExtError('No firefox instance is currently running');
@@ -147,7 +171,7 @@ export class FirefoxDesktopExtensionRunner {
     this.runningInfo.firefox.kill();
   }
 
-  // Private methods.
+  // Private helper methods.
 
   async setupProfileDir() {
     const {
