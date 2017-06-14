@@ -1,5 +1,10 @@
 /* @flow */
 
+/**
+ * This module provide an ExtensionRunner subclass that manage an extension executed
+ * in a Firefox for Desktop instance.
+ */
+
 // Import flow types from npm dependencies.
 import type FirefoxProfile from 'firefox-profile';
 
@@ -48,18 +53,15 @@ export type FirefoxDesktopExtensionRunnerParams = {|
 
 const log = createLogger(__filename);
 
-/**
- * This module provide an ExtensionRunner subclass that manage an extension executed
- * in a Firefox for Desktop instance.
- */
 
 export class FirefoxDesktopExtensionRunner {
-  params: FirefoxDesktopExtensionRunnerParams;
-  reloadableExtensions: Map<string, string>;
   cleanupCallbacks: Set<Function>;
+  params: FirefoxDesktopExtensionRunnerParams;
   profile: FirefoxProfile;
-  runningInfo: FirefoxInfo;
+  // Map extensions sourceDir to their related addon ids.
+  reloadableExtensions: Map<string, string>;
   remoteFirefox: RemoteFirefox;
+  runningInfo: FirefoxInfo;
 
   constructor(params: FirefoxDesktopExtensionRunnerParams) {
     this.params = params;
