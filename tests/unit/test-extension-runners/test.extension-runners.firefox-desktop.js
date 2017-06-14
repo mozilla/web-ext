@@ -1,7 +1,8 @@
 /* @flow */
 
-import {describe, it} from 'mocha';
 import {assert} from 'chai';
+import {describe, it} from 'mocha';
+import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 
 import {
@@ -55,7 +56,7 @@ function prepareExtensionRunnerParams({
   const runnerParams: FirefoxDesktopExtensionRunnerParams = {
     extensions: [{
       sourceDir: '/fake/sourceDir',
-      manifestData: basicManifest,
+      manifestData: deepcopy(basicManifest),
     }],
     keepProfileChanges: false,
     browserConsole: false,
