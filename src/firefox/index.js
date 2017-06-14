@@ -14,6 +14,7 @@ import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';
 import {createLogger} from '../util/logger';
+import {finderGetPath} from '../util/finder';
 import {default as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 // Import flow types
 import type {FirefoxConnectorFn} from './remote';
@@ -258,8 +259,8 @@ export async function useProfile(
 
     if (dirExists) {
       log.debug(`Copying profile directory from "${profilePath}"`);
-      const defaultProfilePath = finder.getPath('default');
-      const defaultDevProfilePath = finder.getPath('default-dev-edition');
+      const defaultProfilePath = await finderGetPath('default');
+      const defaultDevProfilePath = await finderGetPath('default-dev-edition');
       if (profilePath === defaultProfilePath ||
         profilePath === defaultDevProfilePath) {
         throw new UsageError(
@@ -274,12 +275,8 @@ export async function useProfile(
           `Cannot use named profile "${profilePath}"`
         );
       }
-      finder.getPath(profilePath, function(err, profileDirectory) {
-        if (err) {
-          throw err;
-        }
-        profile = new FirefoxProfile({destinationDirectory: profileDirectory});
-      });
+      let profileDirectory = await finderGetPath(profilePath);
+      profile = new FirefoxProfile({destinationDirectory: profileDirectory});
     }
   } catch (error) {
     throw new WebExtError(
