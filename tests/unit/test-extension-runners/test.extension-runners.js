@@ -67,8 +67,8 @@ describe('util/extension-runners', () => {
 
         await runnerInstance.run();
 
-        assert.ok(fakeExtensionRunner.run.calledOnce);
-        assert.ok(anotherFakeExtensionRunner.run.calledOnce);
+        sinon.assert.calledOnce(fakeExtensionRunner.run);
+        sinon.assert.calledOnce(anotherFakeExtensionRunner.run);
       });
 
     it('calls the "reloadAllExtensions" on all the created runners',
@@ -85,8 +85,10 @@ describe('util/extension-runners', () => {
 
          await runnerInstance.reloadAllExtensions();
 
-         assert.ok(fakeExtensionRunner.reloadAllExtensions.calledOnce);
-         assert.ok(anotherFakeExtensionRunner.reloadAllExtensions.calledOnce);
+         sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
+         sinon.assert.calledOnce(
+           anotherFakeExtensionRunner.reloadAllExtensions
+         );
        });
 
     it('calls the "reloadExtensionBySourceDir" on all the created runners',
@@ -105,19 +107,20 @@ describe('util/extension-runners', () => {
            '/fake/source/dir'
          );
 
-         assert.ok(fakeExtensionRunner.reloadExtensionBySourceDir.calledOnce);
-         assert.ok(
-           anotherFakeExtensionRunner.reloadExtensionBySourceDir.calledOnce
+         sinon.assert.calledOnce(
+           fakeExtensionRunner.reloadExtensionBySourceDir
+         );
+         sinon.assert.calledOnce(
+           anotherFakeExtensionRunner.reloadExtensionBySourceDir
          );
 
-         assert.equal(
-           fakeExtensionRunner.reloadExtensionBySourceDir.firstCall.args[0],
-           '/fake/source/dir'
+         sinon.assert.calledWith(
+           fakeExtensionRunner.reloadExtensionBySourceDir,
+           sinon.match('/fake/source/dir')
          );
-         assert.equal(
-           anotherFakeExtensionRunner.reloadExtensionBySourceDir
-             .firstCall.args[0],
-           '/fake/source/dir'
+         sinon.assert.calledWith(
+           anotherFakeExtensionRunner.reloadExtensionBySourceDir,
+           sinon.match('/fake/source/dir')
          );
        });
 
@@ -134,8 +137,8 @@ describe('util/extension-runners', () => {
 
       await runnerInstance.exit();
 
-      assert.ok(fakeExtensionRunner.exit.calledOnce);
-      assert.ok(anotherFakeExtensionRunner.exit.calledOnce);
+      sinon.assert.calledOnce(fakeExtensionRunner.exit);
+      sinon.assert.calledOnce(anotherFakeExtensionRunner.exit);
     });
 
     it('shows a desktop notification on errors while reloading all extensions',
@@ -164,14 +167,16 @@ describe('util/extension-runners', () => {
 
         await runnerInstance.reloadAllExtensions();
 
-        assert.ok(fakeExtensionRunner.reloadAllExtensions.calledOnce);
-        assert.ok(anotherFakeExtensionRunner.reloadAllExtensions.calledOnce);
-        assert.equal(params.desktopNotifications.callCount, 2);
-
-        assert.match(params.desktopNotifications.firstCall.args[0].title,
-                     /web-ext run: extension reload error/);
-        assert.match(params.desktopNotifications.firstCall.args[0].message,
-                    /on "fakeExtensionRunner" - reload error 1/);
+        sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
+        sinon.assert.calledOnce(anotherFakeExtensionRunner.reloadAllExtensions);
+        sinon.assert.callCount(params.desktopNotifications, 2);
+        sinon.assert.calledWith(
+          params.desktopNotifications,
+          sinon.match({
+            title: sinon.match(/web-ext run: extension reload error/),
+            message: sinon.match(/on "fakeExtensionRunner" - reload error 1/),
+          })
+        );
       });
 
     it('shows a desktop notification on errors while reloading an extension',
@@ -202,17 +207,20 @@ describe('util/extension-runners', () => {
         assert.equal(res.length, 2);
         assert.equal(errors.length, 1);
 
-        assert.ok(fakeExtensionRunner.reloadExtensionBySourceDir.calledOnce);
-        assert.ok(
-          anotherFakeExtensionRunner.reloadExtensionBySourceDir.calledOnce
+        sinon.assert.calledOnce(fakeExtensionRunner.reloadExtensionBySourceDir);
+        sinon.assert.calledOnce(
+          anotherFakeExtensionRunner.reloadExtensionBySourceDir
         );
-        assert.equal(params.desktopNotifications.callCount, 1);
+        sinon.assert.calledOnce(params.desktopNotifications);
 
-        assert.match(params.desktopNotifications.firstCall.args[0].title,
-                     /web-ext run: extension reload error/);
-        assert.match(
-          params.desktopNotifications.firstCall.args[0].message,
-          /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/
+        sinon.assert.calledWith(
+          params.desktopNotifications,
+          sinon.match({
+            title: sinon.match(/web-ext run: extension reload error/),
+            message: sinon.match(
+              /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/
+            ),
+          })
         );
       });
 
@@ -234,9 +242,10 @@ describe('util/extension-runners', () => {
              runnerInstance.registerCleanup(resolve);
            });
 
-           assert.ok(fakeExtensionRunner.registerCleanup.calledOnce);
-           assert.ok(anotherFakeExtensionRunner.registerCleanup.calledOnce);
+           sinon.assert.calledOnce(fakeExtensionRunner.registerCleanup);
+           sinon.assert.calledOnce(anotherFakeExtensionRunner.registerCleanup);
 
+           // Call the cleanup callback on the first runner.
            fakeExtensionRunner.registerCleanup.firstCall.args[0]();
 
            const checkIncompleteCleanup = await Promise.race([
@@ -251,6 +260,7 @@ describe('util/extension-runners', () => {
            assert.equal(checkIncompleteCleanup,
                         'waitRegisterCleanup should not be resolved yet');
 
+           // Call the cleanup callback on the second and last runner.
            anotherFakeExtensionRunner.registerCleanup.firstCall.args[0]();
 
            await waitRegisterCleanup;
@@ -281,11 +291,15 @@ describe('util/extension-runners', () => {
     it('configures a source watcher', () => {
       const {config, createWatcher} = prepare();
       createWatcher();
-      assert.equal(config.onSourceChange.called, true);
-      const callArgs = config.onSourceChange.firstCall.args[0];
-      assert.equal(callArgs.sourceDir, config.sourceDir);
-      assert.equal(callArgs.artifactsDir, config.artifactsDir);
-      assert.typeOf(callArgs.onChange, 'function');
+      sinon.assert.called(config.onSourceChange);
+      sinon.assert.calledWith(
+        config.onSourceChange,
+        sinon.match({
+          sourceDir: config.sourceDir,
+          artifactsDir: config.artifactsDir,
+          onChange: sinon.match.typeOf('function'),
+        })
+      );
     });
 
     it('configures a run command with the expected fileFilter', () => {
@@ -293,16 +307,19 @@ describe('util/extension-runners', () => {
       const createFileFilter = sinon.spy(() => fileFilter);
       const {config, createWatcher} = prepare();
       createWatcher({createFileFilter});
-      assert.ok(createFileFilter.called);
-      assert.deepEqual(createFileFilter.firstCall.args[0], {
-        sourceDir: config.sourceDir,
-        artifactsDir: config.artifactsDir,
-        ignoreFiles: config.ignoreFiles,
-      });
+      sinon.assert.called(createFileFilter);
+      sinon.assert.calledWith(
+        createFileFilter,
+        sinon.match({
+          sourceDir: config.sourceDir,
+          artifactsDir: config.artifactsDir,
+          ignoreFiles: config.ignoreFiles,
+        })
+      );
       const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
       shouldWatchFile('path/to/file');
-      assert.ok(fileFilter.wantFile.called);
-      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
+      sinon.assert.called(fileFilter.wantFile);
+      sinon.assert.calledWith(fileFilter.wantFile, sinon.match('path/to/file'));
     });
 
     it('returns a watcher', () => {
@@ -316,13 +333,22 @@ describe('util/extension-runners', () => {
       const {config, createWatcher} = prepare();
       createWatcher();
 
-      const callArgs = config.onSourceChange.firstCall.args[0];
-      assert.typeOf(callArgs.onChange, 'function');
+      sinon.assert.called(config.onSourceChange);
+      sinon.assert.calledWith(
+        config.onSourceChange,
+        sinon.match({
+          onChange: sinon.match.typeOf('function'),
+        })
+      );
+
+      const {onChange} = config.onSourceChange.firstCall.args[0];
       // Simulate executing the handler when a source file changes.
-      await callArgs.onChange();
-      assert.equal(config.reloadExtension.called, true);
-      const reloadArgs = config.reloadExtension.firstCall.args;
-      assert.equal(reloadArgs[0], config.sourceDir);
+      await onChange();
+      sinon.assert.called(config.reloadExtension);
+      sinon.assert.calledWith(
+        config.reloadExtension,
+        sinon.match(config.sourceDir)
+      );
     });
 
   });
@@ -366,12 +392,16 @@ describe('util/extension-runners', () => {
       } = prepare();
 
       reloadStrategy();
-      assert.ok(createWatcher.called);
-      const receivedArgs = createWatcher.firstCall.args[0];
-      assert.equal(receivedArgs.client, sentArgs.client);
-      assert.equal(receivedArgs.sourceDir, sentArgs.sourceDir);
-      assert.equal(receivedArgs.artifactsDir, sentArgs.artifactsDir);
-      assert.deepEqual(receivedArgs.ignoreFiles, sentArgs.ignoreFiles);
+      sinon.assert.called(createWatcher);
+      sinon.assert.calledWith(
+        createWatcher,
+        sinon.match({
+          client: sentArgs.client,
+          sourceDir: sentArgs.sourceDir,
+          artifactsDir: sentArgs.artifactsDir,
+          ignoreFiles: sentArgs.ignoreFiles,
+        })
+      );
     });
 
     it('configure the watcher to reload an extension by sourceDir', () => {
@@ -385,17 +415,24 @@ describe('util/extension-runners', () => {
 
       reloadStrategy();
 
-      assert.ok(createWatcher.calledOnce);
-
-      const {reloadExtension} = createWatcher.firstCall.args[0];
-      assert.equal(typeof reloadExtension, 'function');
+      sinon.assert.calledOnce(createWatcher);
+      sinon.assert.calledWith(
+        createWatcher,
+        sinon.match({
+          reloadExtension: sinon.match.typeOf('function'),
+        })
+      );
 
       const sourceDir = '/fake/sourceDir';
+      const {reloadExtension} = createWatcher.firstCall.args[0];
       reloadExtension(sourceDir);
 
       const {reloadExtensionBySourceDir} = extensionRunner;
-      assert.ok(reloadExtensionBySourceDir.calledOnce);
-      assert.equal(reloadExtensionBySourceDir.firstCall.args[0], sourceDir);
+      sinon.assert.calledOnce(reloadExtensionBySourceDir);
+      sinon.assert.calledWith(
+        reloadExtensionBySourceDir,
+        sinon.match(sourceDir)
+      );
     });
 
     it('cleans up when the extension runner closes', () => {
@@ -411,17 +448,18 @@ describe('util/extension-runners', () => {
 
       reloadStrategy();
 
-      assert.ok(extensionRunner.registerCleanup.called);
-      assert.ok(extensionRunner.registerCleanup.calledOnce);
+      sinon.assert.called(extensionRunner.registerCleanup);
+      sinon.assert.calledOnce(extensionRunner.registerCleanup);
+      sinon.assert.calledWith(
+        extensionRunner.registerCleanup,
+        sinon.match.typeOf('function')
+      );
 
       const registeredCb = extensionRunner.registerCleanup.firstCall.args[0];
-
-      assert.equal(typeof registeredCb, 'function');
-
       registeredCb();
 
-      assert.equal(watcher.close.called, true);
-      assert.ok(stdin.pause.called);
+      sinon.assert.called(watcher.close);
+      sinon.assert.called(stdin.pause);
     });
 
     it('can reload when user presses R in shell console', async () => {
@@ -437,21 +475,22 @@ describe('util/extension-runners', () => {
       // Wait for one tick.
       await Promise.resolve();
 
-      assert.ok(fakeStdin.setRawMode.called);
-      assert.ok(extensionRunner.reloadAllExtensions.called);
+      sinon.assert.called(fakeStdin.setRawMode);
+      sinon.assert.called(extensionRunner.reloadAllExtensions);
     });
 
     it('can still reload when user presses R after a reload error',
       async () => {
-        const {extensionRunner, reloadStrategy} = prepare();
+        const {extensionRunner, reloadStrategy} = prepare({
+          stubExtensionRunner: {
+            reloadAllExtensions: sinon.spy(
+              () => Promise.reject(Error('fake reload error'))
+            ),
+          },
+        });
 
         const fakeStdin = new tty.ReadStream();
         sinon.spy(fakeStdin, 'setRawMode');
-
-        // $FLOW_FIXME: override method with a sinon spy.
-        extensionRunner.reloadAllExtensions = sinon.spy(
-          () => Promise.reject(Error('fake reload error'))
-        );
 
         reloadStrategy({}, {stdin: fakeStdin});
         // Wait for one tick for reloadStrategy's keypress processing loop
@@ -462,11 +501,11 @@ describe('util/extension-runners', () => {
         // Wait for one tick to give reloadStrategy the chance to handle
         // the keypress event.
         await Promise.resolve();
-        assert.ok(fakeStdin.setRawMode.called);
-        assert.equal(extensionRunner.reloadAllExtensions.callCount, 1);
+        sinon.assert.called(fakeStdin.setRawMode);
+        sinon.assert.calledOnce(extensionRunner.reloadAllExtensions);
         fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
         await Promise.resolve();
-        assert.equal(extensionRunner.reloadAllExtensions.callCount, 2);
+        sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
 
         // Exit the keypress processing loop.
         fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
@@ -488,7 +527,7 @@ describe('util/extension-runners', () => {
         // Wait for one tick.
         await Promise.resolve();
 
-        assert.ok(extensionRunner.exit.called);
+        sinon.assert.called(extensionRunner.exit);
       });
 
   });

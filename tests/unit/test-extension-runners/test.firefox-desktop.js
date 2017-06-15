@@ -88,7 +88,16 @@ function prepareExtensionRunnerParams({
 describe('util/extension-runners/firefox-desktop', () => {
 
   it('installs and runs the extension', async () => {
-    const {params, remoteFirefox} = prepareExtensionRunnerParams();
+    const fakeProfile = {};
+    const customPrefs = {};
+    const {params, remoteFirefox} = prepareExtensionRunnerParams({
+      fakeFirefoxApp: {
+        createProfile: sinon.spy(() => fakeProfile),
+      },
+      params: {
+        customPrefs,
+      },
+    });
 
     const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     await runnerInstance.run();
@@ -98,10 +107,15 @@ describe('util/extension-runners/firefox-desktop', () => {
     assert.equal(remoteFirefox.installTemporaryAddon.firstCall.args[0],
                  params.extensions[0].sourceDir);
 
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.ok(params.firefoxApp.run.calledOnce);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.ok(params.firefoxApp.run.firstCall.args[0], params.profilePath);
+    sinon.assert.calledOnce(params.firefoxApp.createProfile);
+    sinon.assert.calledWith(params.firefoxApp.createProfile,
+                            sinon.match({customPrefs}));
+
+    sinon.assert.calledOnce(params.firefoxApp.run);
+    sinon.assert.calledWith(
+      params.firefoxApp.run,
+      sinon.match(fakeProfile)
+    );
   });
 
   it('runs extension in correct port', async () => {
@@ -114,12 +128,10 @@ describe('util/extension-runners/firefox-desktop', () => {
     const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     await runnerInstance.run();
 
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.ok(params.firefoxApp.run.calledOnce);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.ok(params.firefoxClient.calledOnce);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.equal(params.firefoxClient.firstCall.args[0].port, 6008);
+    sinon.assert.calledOnce(params.firefoxApp.run);
+    sinon.assert.calledOnce(params.firefoxClient);
+    sinon.assert.calledWith(params.firefoxClient,
+                            sinon.match({port: 6008}));
   });
 
   it('suggests --pre-install when remote install not supported', async () => {
@@ -155,11 +167,15 @@ describe('util/extension-runners/firefox-desktop', () => {
     const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     await runnerInstance.run();
 
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.ok(params.firefoxApp.run.calledOnce);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.deepEqual(params.firefoxApp.run.firstCall.args[1].binaryArgs,
-                     expectedBinaryArgs);
+    sinon.assert.calledOnce(params.firefoxApp.run);
+    sinon.assert.calledWith(
+      params.firefoxApp.run,
+      sinon.match.any,
+      sinon.match.has(
+        'binaryArgs',
+        sinon.match.array.deepEquals(expectedBinaryArgs)
+      )
+    );
   }
 
   it('passes -jsconsole when --browser-console is specified', async () => {
@@ -196,13 +212,11 @@ describe('util/extension-runners/firefox-desktop', () => {
     const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     await runnerInstance.run();
 
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.equal(params.firefoxApp.createProfile.called, false);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.ok(params.firefoxApp.copyProfile.calledOnce);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.equal(params.firefoxApp.copyProfile.firstCall.args[0],
-                 params.profilePath);
+    sinon.assert.notCalled(params.firefoxApp.createProfile);
+    sinon.assert.notCalled(params.firefoxApp.useProfile);
+    sinon.assert.calledOnce(params.firefoxApp.copyProfile);
+    sinon.assert.calledWith(params.firefoxApp.copyProfile,
+                            sinon.match(params.profilePath));
   });
 
   it('keeps changes in custom profile when specified', async () => {
@@ -216,13 +230,11 @@ describe('util/extension-runners/firefox-desktop', () => {
     const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     await runnerInstance.run();
 
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.equal(params.firefoxApp.createProfile.called, false);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.ok(params.firefoxApp.useProfile.calledOnce);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.equal(params.firefoxApp.useProfile.firstCall.args[0],
-                 params.profilePath);
+    sinon.assert.notCalled(params.firefoxApp.createProfile);
+    sinon.assert.notCalled(params.firefoxApp.copyProfile);
+    sinon.assert.calledOnce(params.firefoxApp.useProfile);
+    sinon.assert.calledWith(params.firefoxApp.useProfile,
+                            sinon.match(params.profilePath));
   });
 
   it('can pre-install into the profile before startup', async () => {
@@ -244,15 +256,24 @@ describe('util/extension-runners/firefox-desktop', () => {
 
     // Install the extension without connecting to the RDP server.
 
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.equal(params.firefoxClient.called, false);
-    assert.equal(remoteFirefox.installTemporaryAddon.called, false);
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
-    assert.equal(params.firefoxApp.installExtension.called, true);
+    sinon.assert.notCalled(params.firefoxClient);
+    sinon.assert.notCalled(remoteFirefox.installTemporaryAddon);
+    sinon.assert.called(params.firefoxApp.installExtension);
 
+    const {manifestData, sourceDir} = params.extensions[0];
+
+    sinon.assert.calledWith(
+      params.firefoxApp.installExtension,
+      sinon.match({
+        asProxy: true,
+        manifestData,
+        profile: fakeProfile,
+        extensionPath: sourceDir,
+      })
+    );
     // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
     const install = params.firefoxApp.installExtension.firstCall.args[0];
-    const {manifestData, sourceDir} = params.extensions[0];
+
     assert.equal(install.asProxy, true);
     assert.equal(install.manifestData.applications.gecko.id,
                  manifestData.applications &&
@@ -304,8 +325,8 @@ describe('util/extension-runners/firefox-desktop', () => {
 
        firefoxProcess.emit('close');
        await Promise.resolve();
-       assert.equal(cleanupCallback.calledOnce, true);
-       assert.equal(anotherCallback.calledOnce, true);
+       sinon.assert.calledOnce(cleanupCallback);
+       sinon.assert.calledOnce(anotherCallback);
      });
 
   it('kills Firefox when the exit method is called', async () => {
@@ -323,7 +344,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     await runnerInstance.run();
     await runnerInstance.exit();
 
-    assert.ok(firefoxProcess.kill.calledOnce);
+    sinon.assert.calledOnce(firefoxProcess.kill);
   });
 
   it('raises an Error when exit method is called on a non-started runner',
@@ -355,7 +376,7 @@ describe('util/extension-runners/firefox-desktop', () => {
 
        await runnerInstance.reloadAllExtensions();
 
-       assert.ok(remoteFirefox.reloadAddon.calledOnce);
+       sinon.assert.calledOnce(remoteFirefox.reloadAddon);
      });
 
   it('reloads an extension by sourceDir', async () => {
@@ -368,7 +389,7 @@ describe('util/extension-runners/firefox-desktop', () => {
       params.extensions[0].sourceDir,
     );
 
-    assert.ok(remoteFirefox.reloadAddon.calledOnce);
+    sinon.assert.calledOnce(remoteFirefox.reloadAddon);
   });
 
   it('returns an error in the results when the extension is not reloadable',
@@ -393,7 +414,7 @@ describe('util/extension-runners/firefox-desktop', () => {
         );
       });
 
-      assert.equal(remoteFirefox.reloadAddon.called, false);
+      sinon.assert.notCalled(remoteFirefox.reloadAddon);
     });
 
   it('rejects an AllExtensionsReloadError if any extension fails to reload',
@@ -422,7 +443,7 @@ describe('util/extension-runners/firefox-desktop', () => {
            ));
          });
 
-       assert.equal(remoteFirefox.reloadAddon.called, true);
+       sinon.assert.called(remoteFirefox.reloadAddon);
      });
 
 });

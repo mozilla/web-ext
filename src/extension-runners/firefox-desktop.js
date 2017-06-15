@@ -9,7 +9,7 @@
 import type FirefoxProfile from 'firefox-profile';
 
 import {
-  MultipleExtensionsReloadError,
+  MultiExtensionsReloadError,
   RemoteTempInstallNotSupported,
   WebExtError,
 } from '../errors';
@@ -109,7 +109,7 @@ export class FirefoxDesktopExtensionRunner {
     if (reloadErrors.size > 0) {
       return [{
         runnerName,
-        reloadError: new MultipleExtensionsReloadError(reloadErrors),
+        reloadError: new MultiExtensionsReloadError(reloadErrors),
       }];
     }
 

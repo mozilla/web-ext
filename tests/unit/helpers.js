@@ -277,7 +277,7 @@ export class ErrorWithCode extends Error {
 }
 
 /*
- * A basic manifest fixtus using in unit tests.
+ * A basic manifest fixture using in unit tests.
  */
 export const basicManifest = {
   name: 'the extension',
