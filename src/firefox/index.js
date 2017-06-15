@@ -239,6 +239,7 @@ export type UseProfileParams = {
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
   customPrefs?: FirefoxPreferences,
+  searchProfilesPath?: string,
 };
 
 // Use the target path as a Firefox profile without cloning it
@@ -249,33 +250,50 @@ export async function useProfile(
     app,
     configureThisProfile = configureProfile,
     customPrefs = {},
+    searchProfilesPath = '',
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
   let profile;
-  const finder = new FirefoxProfile.Finder();
-  const finderGetPath = promisify(finder.getPath.bind(finder));
+  const finder = new FirefoxProfile.Finder(searchProfilesPath);
+  const finderGetPath = promisify(finder.getPath, finder);
+  const finderReadProfiles = promisify(finder.readProfiles, finder);
+
+  // Read the profiles list from the profiles.ini file from `searchProfilesPath`.
+  await finderReadProfiles();
+  // Helper function which returns true if the profile name exists in the profiles.ini file.
+  const hasProfileName = (profileName) => {
+    return finder.profiles.filter(
+      (profileDef) => profileDef.Name === profileName
+    ).length !== 0;
+  };
+
   try {
     const dirExists = await isDirectory(profilePath);
-
+    const defaultProfilePath = (
+      hasProfileName('default') && await finderGetPath('default')
+    );
+    const defaultDevProfilePath = (
+      hasProfileName('dev-edition-default') &&
+        await finderGetPath('dev-edition-default')
+    );
     if (dirExists) {
       log.debug(`Copying profile directory from "${profilePath}"`);
-      const defaultProfilePath = await finderGetPath('default');
-      const defaultDevProfilePath = await finderGetPath('default-dev-edition');
       if (profilePath === defaultProfilePath ||
         profilePath === defaultDevProfilePath) {
         throw new UsageError(
-          `Cannot use named profile "${profilePath}"`
+          `Cannot use profile at "${profilePath}"`
         );
       }
       profile = new FirefoxProfile({destinationDirectory: profilePath});
     } else {
       log.debug(`Assuming ${profilePath} is a named profile`);
-      if (profilePath === 'default' || profilePath === 'default-dev-edition') {
+      const profileDirectory = await finderGetPath(profilePath);
+      if (profileDirectory === defaultProfilePath ||
+            profileDirectory === defaultDevProfilePath) {
         throw new UsageError(
           `Cannot use named profile "${profilePath}"`
         );
       }
-      const profileDirectory = await finderGetPath(profilePath);
       profile = new FirefoxProfile({destinationDirectory: profileDirectory});
     }
   } catch (error) {
