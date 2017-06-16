@@ -324,6 +324,32 @@ describe('firefox', () => {
       }
     ));
 
+    it('configures a named profile', () => withTempDir(
+      (tmpDir) => {
+        var profileContents = `[Profile0]
+Name=test
+IsRelative=1
+Path=fake-profile.test`;
+        const configureProfile =
+          sinon.spy((profile) => Promise.resolve(profile));
+        const filePath = path.join(tmpDir.path(), 'profiles.ini');
+        return fs.writeFile(filePath, profileContents)
+          .then(() => {
+            return firefox.useProfile('test',
+              {
+                app: 'fennec',
+                configureThisProfile: configureProfile,
+                searchProfilesPath: tmpDir.path(),
+              });
+          })
+          .then((profile) => {
+            assert.equal(configureProfile.called, true);
+            assert.equal(configureProfile.firstCall.args[0], profile);
+            assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
+          });
+      }
+    ));
+
     it('does not configure named profile default', () => withTempDir(
       (tmpDir) => {
         var profileContents = `[Profile0]
