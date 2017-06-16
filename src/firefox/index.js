@@ -256,11 +256,6 @@ export async function useProfile(
   let profile;
   const finder = new FirefoxProfile.Finder(searchProfilesPath);
   const finderGetPath = promisify(finder.getPath, finder);
-  const finderReadProfiles = promisify(finder.readProfiles, finder);
-
-  // Read the profiles list from the profiles.ini file from `searchProfilesPath`.
-  await finderReadProfiles();
-  // Helper function which returns true if the profile name exists in the profiles.ini file.
   const hasProfileName = (profileName) => {
     return finder.profiles.filter(
       (profileDef) => profileDef.Name === profileName
