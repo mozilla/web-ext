@@ -99,6 +99,11 @@ export interface FirefoxProcess extends events$EventEmitter {
   kill: Function;
 }
 
+export interface IProfileFinder {
+  hasProfileName(): Promise<boolean>;
+  getPath(): Promise<string>;
+}
+
 export type FirefoxRunnerResults = {|
   process: FirefoxProcess,
   binary: string,
@@ -239,8 +244,23 @@ export type UseProfileParams = {
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
   customPrefs?: FirefoxPreferences,
-  searchProfilesPath?: string,
+  createProfileFinder?: typeof defaultCreateProfileFinder,
 };
+
+function defaultCreateProfileFinder() {
+  const finder = new FirefoxProfile.Finder();
+  const readProfiles = promisify(finder.readProfiles, finder);
+  return {
+    getPath: promisify(finder.getPath, finder),
+    hasProfileName: async (profileName) => {
+      await readProfiles();
+      return finder.profiles.filter(
+          (profileDef) => profileDef.Name === profileName
+       ).length !== 0;
+    },
+  };
+}
+
 
 // Use the target path as a Firefox profile without cloning it
 
@@ -250,50 +270,42 @@ export async function useProfile(
     app,
     configureThisProfile = configureProfile,
     customPrefs = {},
-    searchProfilesPath = '',
+    createProfileFinder = defaultCreateProfileFinder,
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
   let profile;
-  const finder = new FirefoxProfile.Finder(searchProfilesPath);
-  const finderGetPath = promisify(finder.getPath, finder);
-  const hasProfileName = (profileName) => {
-    return finder.profiles.filter(
-      (profileDef) => profileDef.Name === profileName
-    ).length !== 0;
-  };
-
+  const finder = createProfileFinder();
   try {
     const dirExists = await isDirectory(profilePath);
     const defaultProfilePath = (
-      hasProfileName('default') && await finderGetPath('default')
+      finder.hasProfileName('default') && await finder.getPath('default')
     );
     const defaultDevProfilePath = (
-      hasProfileName('dev-edition-default') &&
-        await finderGetPath('dev-edition-default')
+      finder.hasProfileName('dev-edition-default') &&
+        await finder.getPath('dev-edition-default')
     );
     if (dirExists) {
-      log.debug(`Copying profile directory from "${profilePath}"`);
+      log.debug(`Using profile directory from "${profilePath}"`);
       if (profilePath === defaultProfilePath ||
         profilePath === defaultDevProfilePath) {
-        throw new UsageError(
+        throw new WebExtError(
           `Cannot use profile at "${profilePath}"`
         );
       }
       profile = new FirefoxProfile({destinationDirectory: profilePath});
     } else {
       log.debug(`Assuming ${profilePath} is a named profile`);
-      const profileDirectory = await finderGetPath(profilePath);
-      if (profileDirectory === defaultProfilePath ||
-            profileDirectory === defaultDevProfilePath) {
-        throw new UsageError(
-          `Cannot use named profile "${profilePath}"`
+      if (profilePath === 'default' ||
+            profilePath === 'dev-edition-default') {
+        throw new WebExtError(
+          `Cannot use the blacklisted named profile "${profilePath}"`
         );
       }
-      profile = new FirefoxProfile({destinationDirectory: profileDirectory});
+      profile = new FirefoxProfile({destinationDirectory: profilePath});
     }
   } catch (error) {
     throw new WebExtError(
-      `Could not copy Firefox profile from ${profilePath}: ${error}`);
+      `Could not use Firefox profile from ${profilePath}: ${error}`);
   }
   return await configureThisProfile(profile, {app, customPrefs});
 }

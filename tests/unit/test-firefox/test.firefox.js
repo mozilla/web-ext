@@ -350,24 +350,68 @@ Path=fake-profile.test`;
       }
     ));
 
-    it('does not configure named profile default', () => withTempDir(
+    it('does not configure named profile default', () => {
+      const configureProfile =
+        sinon.spy((profile) => Promise.resolve(profile));
+      const profileFinder =
+        sinon.spy(() => Promise.resolve());
+      return firefox.useProfile('default',
+        {
+          app: 'fennec',
+          configureThisProfile: configureProfile,
+          createProfileFinder: profileFinder,
+        })
+        .then((profile) => {
+          assert.equal(configureProfile.called, true);
+          assert.equal(configureProfile.firstCall.args[0], profile);
+          assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
+        })
+        .catch((error) => {
+          assert.instanceOf(error, WebExtError);
+          assert.match(error.message,
+                      /Cannot use blacklisted named profile "default"+/);
+        });
+    });
+
+    it('does not configure named profile dev-edition-default', () => {
+      const configureProfile =
+        sinon.spy((profile) => Promise.resolve(profile));
+      const profileFinder =
+        sinon.spy(() => Promise.resolve());
+      return firefox.useProfile('dev-edition-default',
+        {
+          app: 'fennec',
+          configureThisProfile: configureProfile,
+          createProfileFinder: profileFinder,
+        })
+        .then((profile) => {
+          assert.equal(configureProfile.called, true);
+          assert.equal(configureProfile.firstCall.args[0], profile);
+          assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
+        })
+        .catch((error) => {
+          assert.instanceOf(error, WebExtError);
+          assert.match(error.message,
+                /Cannot use blacklisted named profile "dev-edition-default"+/);
+        });
+    });
+
+    it('does not configure  profile at default', () => withTempDir(
       (tmpDir) => {
-        var profileContents = `[Profile0]
-Name=default
-IsRelative=1
-Path=fake-profile.default
-Default=1`;
         const configureProfile =
           sinon.spy((profile) => Promise.resolve(profile));
-        const filePath = path.join(tmpDir.path(), 'profiles.ini');
-        return fs.writeFile(filePath, profileContents)
-          .then(() => {
-            return firefox.useProfile('default',
-              {
-                app: 'fennec',
-                configureThisProfile: configureProfile,
-                searchProfilesPath: tmpDir.path(),
-              });
+        const defaultPath = path.join(tmpDir.path(), 'fake-profile.default');
+        const profileFinder = () => {
+          return {
+            getPath: (profilePath) => Promise.resolve(profilePath),
+            hasProfileName: () => Promise.resolve(true),
+          };
+        };
+        return firefox.useProfile(defaultPath,
+          {
+            app: 'fennec',
+            configureThisProfile: configureProfile,
+            createProfileFinder: profileFinder,
           })
           .then((profile) => {
             assert.equal(configureProfile.called, true);
@@ -377,63 +421,28 @@ Default=1`;
           .catch((error) => {
             assert.instanceOf(error, WebExtError);
             assert.match(error.message,
-              /Cannot use named profile "default"+/);
+                      /Cannot use profile at+/);
           });
       }
     ));
 
-    it('does not configure named profile dev-edition-default', () =>
-      withTempDir(
-        (tmpDir) => {
-          var profileContents = `[Profile0]
-Name=dev-edition-default
-IsRelative=1
-Path=fake-profile.dev-edition-default`;
-          const configureProfile =
-            sinon.spy((profile) => Promise.resolve(profile));
-          const filePath = path.join(tmpDir.path(), 'profiles.ini');
-          return fs.writeFile(filePath, profileContents)
-            .then(() => {
-              return firefox.useProfile('dev-edition-default',
-                {
-                  app: 'fennec',
-                  configureThisProfile: configureProfile,
-                  searchProfilesPath: tmpDir.path(),
-                });
-            })
-            .then((profile) => {
-              assert.equal(configureProfile.called, true);
-              assert.equal(configureProfile.firstCall.args[0], profile);
-              assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
-            })
-            .catch((error) => {
-              assert.instanceOf(error, WebExtError);
-              assert.match(error.message,
-                            /Cannot use named profile "dev-edition-default"+/);
-            });
-        }
-    ));
-
-    it('does not configure  profile at default', () => withTempDir(
+    it('does not configure  profile at dev-edition-default', () => withTempDir(
       (tmpDir) => {
-        var profileContents = `[Profile0]
-Name=default
-IsRelative=1
-Path=fake-profile.default
-Default=1`;
         const configureProfile =
           sinon.spy((profile) => Promise.resolve(profile));
-        const defaultPath = path.join(tmpDir.path(), 'fake-profile.default');
-        const filePath = path.join(tmpDir.path(), 'profiles.ini');
-        return fs.writeFile(filePath, profileContents)
-          .then(() => fs.mkdir(defaultPath))
-          .then(() => {
-            return firefox.useProfile(defaultPath,
-              {
-                app: 'fennec',
-                configureThisProfile: configureProfile,
-                searchProfilesPath: tmpDir.path(),
-              });
+        const defaultDevPath = path.join(tmpDir.path(),
+                                        'fake-profile.dev-edition-default');
+        const profileFinder = () => {
+          return {
+            getPath: (profilePath) => Promise.resolve(profilePath),
+            hasProfileName: () => Promise.resolve(true),
+          };
+        };
+        return firefox.useProfile(defaultDevPath,
+          {
+            app: 'fennec',
+            configureThisProfile: configureProfile,
+            createProfileFinder: profileFinder,
           })
           .then((profile) => {
             assert.equal(configureProfile.called, true);
@@ -443,7 +452,7 @@ Default=1`;
           .catch((error) => {
             assert.instanceOf(error, WebExtError);
             assert.match(error.message,
-              /Cannot use profile at+/);
+                      /Cannot use profile at+/);
           });
       }
     ));
