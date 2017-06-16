@@ -353,8 +353,12 @@ Path=fake-profile.test`;
     it('does not configure named profile default', () => {
       const configureProfile =
         sinon.spy((profile) => Promise.resolve(profile));
-      const profileFinder =
-        sinon.spy(() => Promise.resolve());
+      const profileFinder = () => {
+        return {
+          getPath: () => Promise.resolve(),
+          hasProfileName: () => Promise.resolve(true),
+        };
+      };
       return firefox.useProfile('default',
         {
           app: 'fennec',
@@ -369,15 +373,19 @@ Path=fake-profile.test`;
         .catch((error) => {
           assert.instanceOf(error, WebExtError);
           assert.match(error.message,
-                      /Cannot use blacklisted named profile "default"+/);
+                      /Cannot use the blacklisted named profile "default"+/);
         });
     });
 
     it('does not configure named profile dev-edition-default', () => {
       const configureProfile =
         sinon.spy((profile) => Promise.resolve(profile));
-      const profileFinder =
-        sinon.spy(() => Promise.resolve());
+      const profileFinder = () => {
+        return {
+          getPath: () => Promise.resolve(),
+          hasProfileName: () => Promise.resolve(true),
+        };
+      };
       return firefox.useProfile('dev-edition-default',
         {
           app: 'fennec',
@@ -392,7 +400,7 @@ Path=fake-profile.test`;
         .catch((error) => {
           assert.instanceOf(error, WebExtError);
           assert.match(error.message,
-                /Cannot use blacklisted named profile "dev-edition-default"+/);
+            /Cannot use the blacklisted named profile "dev-edition-default"+/);
         });
     });
 
