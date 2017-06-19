@@ -326,26 +326,29 @@ describe('firefox', () => {
 
     it('configures a named profile', () => withTempDir(
       (tmpDir) => {
-        var profileContents = `[Profile0]
-Name=test
-IsRelative=1
-Path=fake-profile.test`;
         const configureProfile =
           sinon.spy((profile) => Promise.resolve(profile));
-        const filePath = path.join(tmpDir.path(), 'profiles.ini');
-        return fs.writeFile(filePath, profileContents)
-          .then(() => {
-            return firefox.useProfile('test',
-              {
-                app: 'fennec',
-                configureThisProfile: configureProfile,
-                searchProfilesPath: tmpDir.path(),
-              });
+        const app = 'fennec';
+        const profilePath = tmpDir.path();
+        const profileFinder = () => {
+          return {
+            getPath: sinon.spy((pathToProfile) =>
+                                    Promise.resolve(pathToProfile)),
+            hasProfileName: () => Promise.resolve(true),
+          };
+        };
+        const spy = sinon.spy(profileFinder, "getPath");
+        return firefox.useProfile(profilePath,
+          {
+            app: 'fennec',
+            configureThisProfile: configureProfile,
+            createProfileFinder: profileFinder,
           })
           .then((profile) => {
             assert.equal(configureProfile.called, true);
             assert.equal(configureProfile.firstCall.args[0], profile);
-            assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
+            assert.equal(configureProfile.firstCall.args[1].app, app);
+            // assert.equal(profileFinder.getPath.callCount, 2)
           });
       }
     ));

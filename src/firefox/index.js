@@ -247,12 +247,22 @@ export type UseProfileParams = {
   createProfileFinder?: typeof defaultCreateProfileFinder,
 };
 
-function defaultCreateProfileFinder() {
+export function defaultCreateProfileFinder() {
   const finder = new FirefoxProfile.Finder();
   const readProfiles = promisify(finder.readProfiles, finder);
   return {
     getPath: promisify(finder.getPath, finder),
-    hasProfileName: async (profileName) => {
+    hasProfileName: async (profileName: string) => {
+      try {
+        await fs.stat(path.join(FirefoxProfile.Finder.locateUserDirectory(),
+                                                              'profile.ini'));
+      } catch (error) {
+        if (isErrorWithCode('ENOENT', error)) {
+          log.info('No firefox profiles exist');
+        } else {
+          throw error;
+        }
+      }
       await readProfiles();
       return finder.profiles.filter(
           (profileDef) => profileDef.Name === profileName
@@ -301,7 +311,8 @@ export async function useProfile(
           `Cannot use the blacklisted named profile "${profilePath}"`
         );
       }
-      profile = new FirefoxProfile({destinationDirectory: profilePath});
+      const profileDirectory = await finder.getPath(profilePath);
+      profile = new FirefoxProfile({destinationDirectory: profileDirectory});
     }
   } catch (error) {
     throw new WebExtError(
