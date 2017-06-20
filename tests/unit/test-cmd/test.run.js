@@ -389,6 +389,13 @@ describe('run', () => {
       return () => stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
     }
 
+    function exitLoopOnError(stdin) {
+      return (error) => {
+        loopExiter(stdin);
+        throw error;
+      };
+    }
+
     function prepare() {
       const client = new RemoteFirefox(fakeFirefoxClient());
       const watcher = {
@@ -468,7 +475,7 @@ describe('run', () => {
           assert.equal(addonReload.firstCall.args[0].addonId,
             tempInstallResult.addon.id);
         })
-        .then(loopExiter(fakeStdin), loopExiter(fakeStdin));
+        .then(loopExiter(fakeStdin), exitLoopOnError(fakeStdin));
     });
 
     it('shuts down firefox on user request (CTRL+C in shell console)', () => {
@@ -482,7 +489,7 @@ describe('run', () => {
         }).then(() => {
           assert.ok(firefoxProcess.kill.called);
         })
-        .then(loopExiter(fakeStdin), loopExiter(fakeStdin));
+        .then(loopExiter(fakeStdin), exitLoopOnError(fakeStdin));
     });
 
     it('pauses the web-ext process (CTRL+Z in shell console)', () => {
@@ -502,7 +509,7 @@ describe('run', () => {
           assert.equal(setRawMode.secondCall.args[0], false);
           assert.equal(setRawMode.lastCall.args[0], true);
         })
-        .then(loopExiter(fakeStdin), loopExiter(fakeStdin));
+        .then(loopExiter(fakeStdin), exitLoopOnError(fakeStdin));
     });
 
   });
