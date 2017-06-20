@@ -255,18 +255,16 @@ export function defaultCreateProfileFinder() {
     hasProfileName: async (profileName: string) => {
       try {
         await fs.stat(path.join(FirefoxProfile.Finder.locateUserDirectory(),
-                                                              'profile.ini'));
+                                                              'profiles.ini'));
+        await readProfiles();
+        return finder.profiles.filter(
+          (profileDef) => profileDef.Name === profileName).length !== 0;
       } catch (error) {
         if (isErrorWithCode('ENOENT', error)) {
-          log.info('No firefox profiles exist');
-        } else {
-          throw error;
+          log.warn('No firefox profiles exist');
+          return false;
         }
       }
-      await readProfiles();
-      return finder.profiles.filter(
-          (profileDef) => profileDef.Name === profileName
-       ).length !== 0;
     },
   };
 }
@@ -284,16 +282,17 @@ export async function useProfile(
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
   let profile;
+  let defaultProfilePath = '';
+  let defaultDevProfilePath = '';
   const finder = createProfileFinder();
   try {
     const dirExists = await isDirectory(profilePath);
-    const defaultProfilePath = (
-      finder.hasProfileName('default') && await finder.getPath('default')
-    );
-    const defaultDevProfilePath = (
-      finder.hasProfileName('dev-edition-default') &&
-        await finder.getPath('dev-edition-default')
-    );
+    if (await finder.hasProfileName('default')) {
+      defaultProfilePath = await finder.getPath('default');
+    }
+    if (await finder.hasProfileName('dev-edition-default')) {
+      defaultDevProfilePath = await finder.getPath('dev-edition-default');
+    }
     if (dirExists) {
       log.debug(`Using profile directory from "${profilePath}"`);
       if (profilePath === defaultProfilePath ||
