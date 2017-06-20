@@ -385,6 +385,17 @@ describe('run', () => {
       kill = sinon.spy(() => {});
     }
 
+    function loopExiter(stdin) {
+      return () => stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+    }
+
+    function exitLoopOnError(stdin) {
+      return (error) => {
+        loopExiter(stdin);
+        throw error;
+      };
+    }
+
     function prepare() {
       const client = new RemoteFirefox(fakeFirefoxClient());
       const watcher = {
@@ -403,6 +414,7 @@ describe('run', () => {
         addonReload: sinon.spy(() => Promise.resolve()),
         createWatcher: sinon.spy(() => watcher),
         stdin: new stream.Readable(),
+        kill: sinon.spy(() => Promise.resolve()),
       };
       return {
         ...args,
@@ -462,19 +474,42 @@ describe('run', () => {
           assert.ok(addonReload.called);
           assert.equal(addonReload.firstCall.args[0].addonId,
             tempInstallResult.addon.id);
-        });
+        })
+        .then(loopExiter(fakeStdin), exitLoopOnError(fakeStdin));
     });
 
     it('shuts down firefox on user request (CTRL+C in shell console)', () => {
       const {firefoxProcess, reloadStrategy} = prepare();
       const fakeStdin = new tty.ReadStream();
+      sinon.spy(fakeStdin, 'setRawMode');
 
       return reloadStrategy({}, {stdin: fakeStdin})
         .then(() => {
           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
         }).then(() => {
           assert.ok(firefoxProcess.kill.called);
-        });
+        })
+        .then(loopExiter(fakeStdin), exitLoopOnError(fakeStdin));
+    });
+
+    it('pauses the web-ext process (CTRL+Z in shell console)', () => {
+      const {reloadStrategy, kill} = prepare();
+      const fakeStdin = new tty.ReadStream();
+      const setRawMode = sinon.spy(fakeStdin, 'setRawMode');
+
+      return reloadStrategy({}, {stdin: fakeStdin})
+        .then(() => {
+          fakeStdin.emit('keypress', 'z', {name: 'z', ctrl: true});
+        }).then(() => {
+          assert.ok(kill.called);
+          assert.deepEqual(kill.firstCall.args, [process.pid, 'SIGTSTP']);
+          sinon.assert.callOrder(setRawMode, setRawMode, kill, setRawMode);
+          sinon.assert.calledThrice(setRawMode);
+          assert.equal(setRawMode.firstCall.args[0], true);
+          assert.equal(setRawMode.secondCall.args[0], false);
+          assert.equal(setRawMode.lastCall.args[0], true);
+        })
+        .then(loopExiter(fakeStdin), exitLoopOnError(fakeStdin));
     });
 
   });

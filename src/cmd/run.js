@@ -113,6 +113,7 @@ export type ReloadStrategyOptions = {|
   createWatcher?: WatcherCreatorFn,
   createFileFilter?: FileFilterCreatorFn,
   stdin: stream$Readable,
+  kill: typeof process.kill;
 |};
 
 export function defaultReloadStrategy(
@@ -124,6 +125,7 @@ export function defaultReloadStrategy(
     addonReload = defaultAddonReload,
     createWatcher = defaultWatcherCreator,
     stdin = process.stdin,
+    kill = process.kill,
   }: ReloadStrategyOptions = {}
 ): void {
   const watcher: Watchpack = createWatcher({
@@ -143,8 +145,11 @@ export function defaultReloadStrategy(
     // NOTE: this `Promise.resolve().then(...)` is basically used to spawn a "co-routine" that is executed
     // before the callback attached to the Promise returned by this function (and it allows the `run` function
     // to not be stuck in the while loop).
+
+    const keypressUsageInfo = 'Press R to reload (and Ctrl-C to quit)';
+
     Promise.resolve().then(async function() {
-      log.info('Press R to reload (and Ctrl-C to quit)');
+      log.info(keypressUsageInfo);
 
       let userExit = false;
 
@@ -155,6 +160,25 @@ export function defaultReloadStrategy(
 
         if (keyPressed.ctrl && keyPressed.name === 'c') {
           userExit = true;
+        } else if (keyPressed.ctrl && keyPressed.name === 'z') {
+          // Prepare to suspend.
+
+          // NOTE: Switch the raw mode off before suspending (needed to make the keypress event to work correctly
+          // when the nodejs process is resumed).
+          if (stdin instanceof tty.ReadStream) {
+            stdin.setRawMode(false);
+          }
+
+          log.info('\nweb-ext has been suspended on user request');
+          kill(process.pid, 'SIGTSTP');
+
+          // Prepare to resume.
+
+          log.info(`\nweb-ext has been resumed. ${keypressUsageInfo}`);
+          // Switch the raw mode on on resume.
+          if (stdin instanceof tty.ReadStream) {
+            stdin.setRawMode(true);
+          }
         } else if (keyPressed.name === 'r' && addonId) {
           log.debug('Reloading extension on user request');
           await addonReload({addonId, client});
