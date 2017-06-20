@@ -782,10 +782,21 @@ describe('firefox', () => {
 
   });
 
-  // describe('defaultRemotePortFinder', () => {
-  //
-  //   it('resolves to an open port', () => {
-  //   });
-  //
-  // });
+  describe('defaultCreateProfileFinder', () => {
+
+    it('gives a warning if no firefox profiles exist', () => withTempDir(
+      async (tmpDir) => {
+        try {
+          const profilesPath = tmpDir.path();
+          const profileFinder = firefox.defaultCreateProfileFinder(
+                                    profilesPath);
+          const profileExists = await profileFinder.hasProfileName('test');
+          assert.equal(profileExists, false);
+        } catch (e) {
+          throw e;
+        }
+      }
+  ));
+
+  });
 });
