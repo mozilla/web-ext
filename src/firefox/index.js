@@ -247,8 +247,8 @@ export type UseProfileParams = {
   createProfileFinder?: typeof defaultCreateProfileFinder,
 };
 
-export function defaultCreateProfileFinder() {
-  const finder = new FirefoxProfile.Finder();
+export function defaultCreateProfileFinder(userDirectoryPath: string = '') {
+  const finder = new FirefoxProfile.Finder(userDirectoryPath);
   const readProfiles = promisify(finder.readProfiles, finder);
   return {
     getPath: promisify(finder.getPath, finder),

@@ -300,218 +300,224 @@ describe('firefox', () => {
   describe('useProfile', () => {
 
     it('resolves to a FirefoxProfile instance', () => withBaseProfile(
-      (baseProfile) => {
-        const configureProfile = (profile) => Promise.resolve(profile);
-        const profileFinder = () => {
-          return {
-            getPath: (profilePath) => Promise.resolve(profilePath),
-            hasProfileName: () => Promise.resolve(true),
+      async (baseProfile) => {
+        try {
+          const app = 'fennec';
+          const configureThisProfile = (profile) => Promise.resolve(profile);
+          const createProfileFinder = () => {
+            return {
+              getPath: (profilePath) => Promise.resolve(profilePath),
+              hasProfileName: () => Promise.resolve(true),
+            };
           };
-        };
-        return firefox.useProfile(baseProfile.path(),
-          {
-            app: 'fennec',
-            configureThisProfile: configureProfile,
-            createProfileFinder: profileFinder,
-          })
-          .then((profile) => {
-            assert.instanceOf(profile, FirefoxProfile);
+          const profile = await firefox.useProfile(baseProfile.path(), {
+            app,
+            configureThisProfile,
+            createProfileFinder,
           });
+          assert.instanceOf(profile, FirefoxProfile);
+        } catch (error) {
+          throw error;
+        }
       }
-    ));
+      ));
 
     it('configures a profile', () => withBaseProfile(
-      (baseProfile) => {
-        const configureProfile =
-          sinon.spy((profile) => Promise.resolve(profile));
-        const profileFinder = () => {
-          return {
-            getPath: (profilePath) => Promise.resolve(profilePath),
-            hasProfileName: () => Promise.resolve(true),
+      async (baseProfile) => {
+        try {
+          const app = 'fennec';
+          const configureThisProfile =
+            sinon.spy((profile) => Promise.resolve(profile));
+          const createProfileFinder = () => {
+            return {
+              getPath: (profilePath) => Promise.resolve(profilePath),
+              hasProfileName: () => Promise.resolve(true),
+            };
           };
-        };
-        const app = 'fennec';
-        const profilePath = baseProfile.path();
-        return firefox.useProfile(profilePath,
-          {
-            app: 'fennec',
-            configureThisProfile: configureProfile,
-            createProfileFinder: profileFinder,
-          })
-          .then((profile) => {
-            assert.equal(configureProfile.called, true);
-            assert.equal(configureProfile.firstCall.args[0], profile);
-            assert.equal(configureProfile.firstCall.args[1].app, app);
-          });
+          const profilePath = baseProfile.path();
+          const profile = await firefox.useProfile(profilePath,
+            {
+              app,
+              configureThisProfile,
+              createProfileFinder,
+            });
+          assert.equal(configureThisProfile.called, true);
+          assert.equal(configureThisProfile.firstCall.args[0], profile);
+          assert.equal(configureThisProfile.firstCall.args[1].app, app);
+        } catch (error) {
+          throw error;
+        }
       }
     ));
 
-    it('configures a named profile', () => {
-      const configureProfile =
-        sinon.spy((profile) => Promise.resolve(profile));
-      const app = 'fennec';
-      const profileName = 'test';
-      const profileFinder = {
-        getPath: sinon.spy((name) =>
-                                  Promise.resolve(name)),
-        hasProfileName: () => Promise.resolve(true),
-      };
-      const createProfileFinderFn = () => profileFinder;
-      return firefox.useProfile(profileName,
-        {
-          app: 'fennec',
-          configureThisProfile: configureProfile,
-          createProfileFinder: createProfileFinderFn,
-        })
-        .then((profile) => {
-          assert.equal(configureProfile.called, true);
-          assert.equal(configureProfile.firstCall.args[0], profile);
-          assert.equal(configureProfile.firstCall.args[1].app, app);
-          assert.equal(profileFinder.getPath.callCount, 3);
-        });
+    it('configures a named profile', async () => {
+      try {
+        const app = 'fennec';
+        const configureThisProfile =
+          sinon.spy((profile) => Promise.resolve(profile));
+        const profileName = 'test';
+        const profileFinder = {
+          getPath: sinon.spy((name) =>
+                                    Promise.resolve(name)),
+          hasProfileName: () => Promise.resolve(true),
+        };
+        const createProfileFinder = () => profileFinder;
+        const profile = await firefox.useProfile(profileName,
+          {
+            app,
+            configureThisProfile,
+            createProfileFinder,
+          });
+        assert.equal(configureThisProfile.called, true);
+        assert.equal(configureThisProfile.firstCall.args[0], profile);
+        assert.equal(configureThisProfile.firstCall.args[1].app, app);
+        assert.equal(profileFinder.getPath.callCount, 3);
+      } catch (error) {
+        throw error;
+      }
     }
   );
 
     it('configures a profile with given path', () => withTempDir(
-      (tmpDir) => {
-        const configureProfile =
-          sinon.spy((profile) => Promise.resolve(profile));
-        const app = 'fennec';
-        const profilePath = tmpDir.path();
-        const profileFinder = {
-          getPath: sinon.spy((pathToProfile) =>
-                                    Promise.resolve(pathToProfile)),
-          hasProfileName: () => Promise.resolve(true),
-        };
-        const createProfileFinderFn = () => profileFinder;
-        return firefox.useProfile(profilePath,
-          {
-            app: 'fennec',
-            configureThisProfile: configureProfile,
-            createProfileFinder: createProfileFinderFn,
-          })
-          .then((profile) => {
-            assert.equal(configureProfile.called, true);
-            assert.equal(configureProfile.firstCall.args[0], profile);
-            assert.equal(configureProfile.firstCall.args[1].app, app);
-            assert.equal(profileFinder.getPath.callCount, 2);
-          });
+      async (tmpDir) => {
+        try {
+          const app = 'fennec';
+          const configureThisProfile =
+            sinon.spy((profile) => Promise.resolve(profile));
+          const profilePath = tmpDir.path();
+          const profileFinder = {
+            getPath: sinon.spy((pathToProfile) =>
+                                      Promise.resolve(pathToProfile)),
+            hasProfileName: () => Promise.resolve(true),
+          };
+          const createProfileFinder = () => profileFinder;
+          const profile = await firefox.useProfile(profilePath,
+            {
+              app,
+              configureThisProfile,
+              createProfileFinder,
+            });
+          assert.equal(configureThisProfile.called, true);
+          assert.equal(configureThisProfile.firstCall.args[0], profile);
+          assert.equal(configureThisProfile.firstCall.args[1].app, app);
+          assert.equal(profileFinder.getPath.callCount, 2);
+        } catch (error) {
+          throw error;
+        }
       }
     ));
 
-
-    it('does not configure named profile default', () => {
-      const configureProfile =
-        sinon.spy((profile) => Promise.resolve(profile));
-      const profileFinder = () => {
-        return {
-          getPath: () => Promise.resolve(),
-          hasProfileName: () => Promise.resolve(true),
-        };
-      };
-      return firefox.useProfile('default',
-        {
-          app: 'fennec',
-          configureThisProfile: configureProfile,
-          createProfileFinder: profileFinder,
-        })
-        .then((profile) => {
-          assert.equal(configureProfile.called, true);
-          assert.equal(configureProfile.firstCall.args[0], profile);
-          assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
-        })
-        .catch((error) => {
-          assert.instanceOf(error, WebExtError);
-          assert.match(error.message,
-                      /Cannot use the blacklisted named profile "default"+/);
-        });
-    });
-
-    it('does not configure named profile dev-edition-default', () => {
-      const configureProfile =
-        sinon.spy((profile) => Promise.resolve(profile));
-      const profileFinder = () => {
-        return {
-          getPath: () => Promise.resolve(),
-          hasProfileName: () => Promise.resolve(true),
-        };
-      };
-      return firefox.useProfile('dev-edition-default',
-        {
-          app: 'fennec',
-          configureThisProfile: configureProfile,
-          createProfileFinder: profileFinder,
-        })
-        .then((profile) => {
-          assert.equal(configureProfile.called, true);
-          assert.equal(configureProfile.firstCall.args[0], profile);
-          assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
-        })
-        .catch((error) => {
-          assert.instanceOf(error, WebExtError);
-          assert.match(error.message,
-            /Cannot use the blacklisted named profile "dev-edition-default"+/);
-        });
-    });
-
-    it('does not configure  profile at default', () => withTempDir(
-      (tmpDir) => {
-        const configureProfile =
+    it('does not configure named profile default', async () => {
+      try {
+        const app = 'fennec';
+        const configureThisProfile =
           sinon.spy((profile) => Promise.resolve(profile));
-        const defaultPath = path.join(tmpDir.path(), 'fake-profile.default');
-        const profileFinder = () => {
+        const createProfileFinder = () => {
           return {
-            getPath: (profilePath) => Promise.resolve(profilePath),
+            getPath: () => Promise.resolve(),
             hasProfileName: () => Promise.resolve(true),
           };
         };
-        return firefox.useProfile(defaultPath,
+        const profile = await firefox.useProfile('default',
           {
-            app: 'fennec',
-            configureThisProfile: configureProfile,
-            createProfileFinder: profileFinder,
-          })
-          .then((profile) => {
-            assert.equal(configureProfile.called, true);
-            assert.equal(configureProfile.firstCall.args[0], profile);
-            assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
-          })
-          .catch((error) => {
-            assert.instanceOf(error, WebExtError);
-            assert.match(error.message,
-                      /Cannot use profile at+/);
+            app,
+            configureThisProfile,
+            createProfileFinder,
           });
+        assert.equal(configureThisProfile.called, true);
+        assert.equal(configureThisProfile.firstCall.args[0], profile);
+        assert.equal(configureThisProfile.firstCall.args[1].app, app);
+      } catch (error) {
+        assert.instanceOf(error, WebExtError);
+        assert.match(error.message,
+                    /Cannot use the blacklisted named profile "default"+/);
+      }
+    });
+
+    it('does not configure named profile dev-edition-default', async () => {
+      try {
+        const app = 'fennec';
+        const configureThisProfile =
+          sinon.spy((profile) => Promise.resolve(profile));
+        const createProfileFinder = () => {
+          return {
+            getPath: () => Promise.resolve(),
+            hasProfileName: () => Promise.resolve(true),
+          };
+        };
+        const profile = await firefox.useProfile('dev-edition-default',
+          {
+            app,
+            configureThisProfile,
+            createProfileFinder,
+          });
+        assert.equal(configureThisProfile.called, true);
+        assert.equal(configureThisProfile.firstCall.args[0], profile);
+        assert.equal(configureThisProfile.firstCall.args[1].app, app);
+      } catch (error) {
+        assert.instanceOf(error, WebExtError);
+        assert.match(error.message,
+          /Cannot use the blacklisted named profile "dev-edition-default"+/);
+      }
+    });
+
+    it('does not configure  profile at default', () => withTempDir(
+      async (tmpDir) => {
+        try {
+          const app = 'fennec';
+          const configureThisProfile =
+            sinon.spy((profile) => Promise.resolve(profile));
+          const defaultPath = tmpDir.path();
+          const createProfileFinder = () => {
+            return {
+              getPath: () => Promise.resolve(defaultPath),
+              hasProfileName: () => Promise.resolve(true),
+            };
+          };
+          const profile = await firefox.useProfile(defaultPath,
+            {
+              app,
+              configureThisProfile,
+              createProfileFinder,
+            });
+          assert.equal(configureThisProfile.called, true);
+          assert.equal(configureThisProfile.firstCall.args[0], profile);
+          assert.equal(configureThisProfile.firstCall.args[1].app, app);
+        } catch (error) {
+          assert.instanceOf(error, WebExtError);
+          assert.match(error.message,
+                    /Cannot use profile at+/);
+        }
       }
     ));
 
     it('does not configure  profile at dev-edition-default', () => withTempDir(
-      (tmpDir) => {
-        const configureProfile =
-          sinon.spy((profile) => Promise.resolve(profile));
-        const defaultDevPath = path.join(tmpDir.path(),
-                                        'fake-profile.dev-edition-default');
-        const profileFinder = () => {
-          return {
-            getPath: (profilePath) => Promise.resolve(profilePath),
-            hasProfileName: () => Promise.resolve(true),
+      async (tmpDir) => {
+        try {
+          const app = 'fennec';
+          const configureThisProfile =
+            sinon.spy((profile) => Promise.resolve(profile));
+          const defaultDevPath = tmpDir.path();
+          const createProfileFinder = () => {
+            return {
+              getPath: () => Promise.resolve(defaultDevPath),
+              hasProfileName: () => Promise.resolve(true),
+            };
           };
-        };
-        return firefox.useProfile(defaultDevPath,
-          {
-            app: 'fennec',
-            configureThisProfile: configureProfile,
-            createProfileFinder: profileFinder,
-          })
-          .then((profile) => {
-            assert.equal(configureProfile.called, true);
-            assert.equal(configureProfile.firstCall.args[0], profile);
-            assert.equal(configureProfile.firstCall.args[1].app, 'fennec');
-          })
-          .catch((error) => {
-            assert.instanceOf(error, WebExtError);
-            assert.match(error.message,
-                      /Cannot use profile at+/);
-          });
+          const profile = await firefox.useProfile(defaultDevPath,
+            {
+              app,
+              configureThisProfile,
+              createProfileFinder,
+            });
+          assert.equal(configureThisProfile.called, true);
+          assert.equal(configureThisProfile.firstCall.args[0], profile);
+          assert.equal(configureThisProfile.firstCall.args[1].app, app);
+        } catch (error) {
+          assert.instanceOf(error, WebExtError);
+          assert.match(error.message,
+                    /Cannot use profile at+/);
+        }
       }
     ));
   });
@@ -775,4 +781,11 @@ describe('firefox', () => {
     });
 
   });
+
+  // describe('defaultRemotePortFinder', () => {
+  //
+  //   it('resolves to an open port', () => {
+  //   });
+  //
+  // });
 });
