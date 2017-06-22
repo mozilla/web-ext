@@ -494,6 +494,7 @@ describe('util/extension-runners', () => {
         sinon.assert.called(fakeStdin.setRawMode);
         sinon.assert.called(extensionRunner.reloadAllExtensions);
       } finally {
+        // Ensure that the keypress processing loop is exited.
         exitKeypressLoop(fakeStdin);
       }
     });
@@ -527,6 +528,7 @@ describe('util/extension-runners', () => {
           await Promise.resolve();
           sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
         } finally {
+          // Ensure that the keypress processing loop is exited.
           exitKeypressLoop(fakeStdin);
         }
       });
@@ -553,6 +555,7 @@ describe('util/extension-runners', () => {
 
           sinon.assert.called(extensionRunner.exit);
         } finally {
+          // Ensure that the keypress processing loop is exited.
           exitKeypressLoop(fakeStdin);
         }
       });
@@ -586,6 +589,7 @@ describe('util/extension-runners', () => {
         sinon.assert.calledWith(setRawMode, sinon.match(false));
         sinon.assert.calledWith(setRawMode, sinon.match(true));
       } finally {
+        // Ensure that the keypress processing loop is exited.
         exitKeypressLoop(fakeStdin);
       }
     });
