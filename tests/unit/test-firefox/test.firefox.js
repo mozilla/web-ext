@@ -783,7 +783,6 @@ describe('firefox', () => {
   });
 
   describe('defaultCreateProfileFinder', () => {
-
     it('gives a warning if no firefox profiles exist', () => withTempDir(
       async (tmpDir) => {
         try {
@@ -797,6 +796,24 @@ describe('firefox', () => {
         }
       }
   ));
-
+    it('gives a warning if no firefox profiles exist', () => withTempDir(
+      async (tmpDir) => {
+        try {
+          const profilesPath = tmpDir.path();
+          const profileFinder = firefox.defaultCreateProfileFinder(
+                                  profilesPath);
+          const profilesIniPath = path.join(profilesPath, 'profiles.ini');
+          const profileContents = `[Profile0]
+Name=test
+IsRelative=1
+Path=fake-profile.test`;
+          await fs.writeFile(profilesIniPath, profileContents);
+          const profileExists = await profileFinder.hasProfileName('test');
+          assert.equal(profileExists, true);
+        } catch (e) {
+          throw e;
+        }
+      }
+    ));
   });
 });

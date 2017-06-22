@@ -247,15 +247,18 @@ export type UseProfileParams = {
   createProfileFinder?: typeof defaultCreateProfileFinder,
 };
 
-export function defaultCreateProfileFinder(userDirectoryPath: string = '') {
+export function defaultCreateProfileFinder(userDirectoryPath?: string) {
   const finder = new FirefoxProfile.Finder(userDirectoryPath);
   const readProfiles = promisify(finder.readProfiles, finder);
   return {
     getPath: promisify(finder.getPath, finder),
     hasProfileName: async (profileName: string) => {
       try {
-        await fs.stat(path.join(FirefoxProfile.Finder.locateUserDirectory(),
-                                                              'profiles.ini'));
+        const profilesIniPath = path.join(
+          userDirectoryPath || FirefoxProfile.Finder.locateUserDirectory(),
+          'profiles.ini');
+
+        await fs.stat(profilesIniPath);
         await readProfiles();
         return finder.profiles.filter(
           (profileDef) => profileDef.Name === profileName).length !== 0;
