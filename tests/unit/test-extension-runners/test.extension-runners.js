@@ -47,6 +47,18 @@ function prepareExtensionRunnerParams(params) {
   };
 }
 
+function exitKeypressLoop(stdin) {
+  try {
+    stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+  } catch (error) {
+    // NOTE: exceptions raised by this helper are logged on the console
+    // and ignored (so that we don't hide an exception raised by a try block
+    // if this helper is used in a finally block).
+    console.error("ERROR in exitKeypressLoop test helper - " +
+                  "Unexpected exception while exiting the keypress loop", error);
+  }
+}
+
 describe('util/extension-runners', () => {
 
   describe('MultiExtensionRunner', () => {
@@ -479,8 +491,7 @@ describe('util/extension-runners', () => {
         sinon.assert.called(fakeStdin.setRawMode);
         sinon.assert.called(extensionRunner.reloadAllExtensions);
       } finally {
-        // Ensure that the keypress processing loop is exited.
-        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        exitKeypressLoop(fakeStdin);
       }
     });
 
@@ -513,8 +524,7 @@ describe('util/extension-runners', () => {
           await Promise.resolve();
           sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
         } finally {
-          // Ensure that the keypress processing loop is exited.
-          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+          exitKeypressLoop(fakeStdin);
         }
       });
 
@@ -540,8 +550,7 @@ describe('util/extension-runners', () => {
 
           sinon.assert.called(extensionRunner.exit);
         } finally {
-          // Ensure that the keypress processing loop is exited.
-          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+          exitKeypressLoop(fakeStdin);
         }
       });
 
@@ -574,8 +583,7 @@ describe('util/extension-runners', () => {
         sinon.assert.calledWith(setRawMode, sinon.match(false));
         sinon.assert.calledWith(setRawMode, sinon.match(true));
       } finally {
-        // Ensure that the keypress processing loop is exited.
-        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        exitKeypressLoop(fakeStdin);
       }
     });
 
