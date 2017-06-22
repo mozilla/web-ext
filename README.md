@@ -62,13 +62,10 @@ need to relink it.
 
 ## Should I Use It?
 
-The web-ext tool enables you to build and ship web extensions for Firefox.
+Yes! The web-ext tool enables you to build and ship web extensions for Firefox.
 This platform stabilized in
 [Firefox 48](https://blog.mozilla.org/addons/2016/04/29/webextensions-in-firefox-48/)
-but you may need to develop with a
-[nightly build](https://nightly.mozilla.org/) of Firefox for some newer web-ext
-features. If you are looking to ship an add-on that runs in older versions of
-Firefox, consider [jpm](https://github.com/mozilla-jetpack/jpm/).
+which was released in April of 2016.
 
 ## Get Involved
 
