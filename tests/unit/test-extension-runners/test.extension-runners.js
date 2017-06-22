@@ -54,8 +54,11 @@ function exitKeypressLoop(stdin) {
     // NOTE: exceptions raised by this helper are logged on the console
     // and ignored (so that we don't hide an exception raised by a try block
     // if this helper is used in a finally block).
-    console.error("ERROR in exitKeypressLoop test helper - " +
-                  "Unexpected exception while exiting the keypress loop", error);
+
+    // eslint-disable-next-line no-console
+    console.error('ERROR in exitKeypressLoop test helper - ' +
+                  'Unexpected exception while exiting the keypress loop',
+                  error);
   }
 }
 
