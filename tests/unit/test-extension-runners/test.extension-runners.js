@@ -469,14 +469,19 @@ describe('util/extension-runners', () => {
       sinon.spy(fakeStdin, 'setRawMode');
       sinon.spy(extensionRunner, 'reloadAllExtensions');
 
-      await reloadStrategy({}, {stdin: fakeStdin});
-      fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+      try {
+        await reloadStrategy({}, {stdin: fakeStdin});
+        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
 
-      // Wait for one tick.
-      await Promise.resolve();
+        // Wait for one tick.
+        await Promise.resolve();
 
-      sinon.assert.called(fakeStdin.setRawMode);
-      sinon.assert.called(extensionRunner.reloadAllExtensions);
+        sinon.assert.called(fakeStdin.setRawMode);
+        sinon.assert.called(extensionRunner.reloadAllExtensions);
+      } finally {
+        // Ensure that the keypress processing loop is exited.
+        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+      }
     });
 
     it('can still reload when user presses R after a reload error',
@@ -492,23 +497,25 @@ describe('util/extension-runners', () => {
         const fakeStdin = new tty.ReadStream();
         sinon.spy(fakeStdin, 'setRawMode');
 
-        reloadStrategy({}, {stdin: fakeStdin});
-        // Wait for one tick for reloadStrategy's keypress processing loop
-        // to be ready.
-        await Promise.resolve();
+        try {
+          await reloadStrategy({}, {stdin: fakeStdin});
+          // Wait for one tick for reloadStrategy's keypress processing loop
+          // to be ready.
+          await Promise.resolve();
 
-        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-        // Wait for one tick to give reloadStrategy the chance to handle
-        // the keypress event.
-        await Promise.resolve();
-        sinon.assert.called(fakeStdin.setRawMode);
-        sinon.assert.calledOnce(extensionRunner.reloadAllExtensions);
-        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-        await Promise.resolve();
-        sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
-
-        // Exit the keypress processing loop.
-        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+          fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+          // Wait for one tick to give reloadStrategy the chance to handle
+          // the keypress event.
+          await Promise.resolve();
+          sinon.assert.called(fakeStdin.setRawMode);
+          sinon.assert.calledOnce(extensionRunner.reloadAllExtensions);
+          fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+          await Promise.resolve();
+          sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
+        } finally {
+          // Ensure that the keypress processing loop is exited.
+          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        }
       });
 
     it('shuts down firefox on user request (CTRL+C in shell console)',
@@ -520,15 +527,57 @@ describe('util/extension-runners', () => {
         });
         const fakeStdin = new tty.ReadStream();
 
-        await reloadStrategy({}, {stdin: fakeStdin});
+        try {
+          await reloadStrategy({}, {stdin: fakeStdin});
 
-        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+          // Wait for one tick.
+          await Promise.resolve();
+
+          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+
+          // Wait for one tick.
+          await Promise.resolve();
+
+          sinon.assert.called(extensionRunner.exit);
+        } finally {
+          // Ensure that the keypress processing loop is exited.
+          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        }
+      });
+
+    it('pauses the web-ext process (CTRL+Z in shell console)', async () => {
+      const {reloadStrategy} = prepare();
+      const fakeStdin = new tty.ReadStream();
+      const setRawMode = sinon.spy(fakeStdin, 'setRawMode');
+      const fakeKill = sinon.spy(() => {});
+
+      try {
+        reloadStrategy({}, {stdin: fakeStdin, kill: fakeKill});
 
         // Wait for one tick.
         await Promise.resolve();
 
-        sinon.assert.called(extensionRunner.exit);
-      });
+        fakeStdin.emit('keypress', 'z', {name: 'z', ctrl: true});
+
+        // Wait for one tick.
+        await Promise.resolve();
+
+        sinon.assert.called(fakeKill);
+        sinon.assert.calledWith(
+          fakeKill,
+          sinon.match(process.pid),
+          sinon.match('SIGTSTP')
+        );
+        sinon.assert.callOrder(setRawMode, setRawMode, fakeKill, setRawMode);
+        sinon.assert.calledThrice(setRawMode);
+        sinon.assert.calledWith(setRawMode, sinon.match(true));
+        sinon.assert.calledWith(setRawMode, sinon.match(false));
+        sinon.assert.calledWith(setRawMode, sinon.match(true));
+      } finally {
+        // Ensure that the keypress processing loop is exited.
+        fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+      }
+    });
 
   });
 

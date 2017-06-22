@@ -19,7 +19,6 @@ import type {FirefoxPreferences} from '../firefox/preferences';
 
 const log = createLogger(__filename);
 
-
 // Run command types and implementation.
 
 export type CmdRunParams = {|
