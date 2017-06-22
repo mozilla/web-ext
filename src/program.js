@@ -187,13 +187,13 @@ function setDefaultValues(options: Object): Object {
 }
 
 //A defintion of type of argument for defaultVersionGetter
-type versionGetterOptions = {
+type VersionGetterOptions = {
   globalEnv?: string,
 };
 
 export function defaultVersionGetter(
   absolutePackageDir: string,
-  {globalEnv = WEBEXT_BUILD_ENV}: versionGetterOptions = {}
+  {globalEnv = WEBEXT_BUILD_ENV}: VersionGetterOptions = {}
 ): string {
   if (globalEnv === 'production') {
     log.debug('Getting the version from package.json');

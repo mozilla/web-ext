@@ -11,8 +11,14 @@ import {fs} from 'mz';
 import * as firefox from '../../../src/firefox';
 import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {TCPConnectError, fixturePath, fake, makeSureItFails} from '../helpers';
-import {basicManifest, manifestWithoutApps} from '../test-util/test.manifest';
+import {
+  basicManifest,
+  fixturePath,
+  fake,
+  makeSureItFails,
+  TCPConnectError,
+} from '../helpers';
+import {manifestWithoutApps} from '../test-util/test.manifest';
 import {RemoteFirefox} from '../../../src/firefox/remote';
 import type {RemotePortFinderParams} from '../../../src/firefox/index';
 

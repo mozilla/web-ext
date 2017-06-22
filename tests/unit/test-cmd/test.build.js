@@ -14,11 +14,13 @@ import build, {
 } from '../../../src/cmd/build';
 import {FileFilter} from '../../../src/util/file-filter';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {fixturePath, makeSureItFails, ZipFile} from '../helpers';
 import {
   basicManifest,
-  manifestWithoutApps,
-} from '../test-util/test.manifest';
+  fixturePath,
+  makeSureItFails,
+  ZipFile,
+} from '../helpers';
+import {manifestWithoutApps} from '../test-util/test.manifest';
 import {UsageError} from '../../../src/errors';
 import {createLogger} from '../../../src/util/logger';
 

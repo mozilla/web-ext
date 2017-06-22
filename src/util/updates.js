@@ -1,7 +1,7 @@
 /* @flow */
 import defaultUpdateNotifier from 'update-notifier';
 
-type checkForUpdatesParams = {|
+type CheckForUpdatesParams = {|
   version: string,
   updateNotifier?: typeof defaultUpdateNotifier,
 |};
@@ -10,7 +10,7 @@ export function checkForUpdates(
   {
     version,
     updateNotifier = defaultUpdateNotifier,
-  }: checkForUpdatesParams
+  }: CheckForUpdatesParams
 ) {
   const pkg = {name: 'web-ext', version};
 

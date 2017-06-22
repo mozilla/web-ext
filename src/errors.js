@@ -41,6 +41,23 @@ export class RemoteTempInstallNotSupported extends WebExtError {
   }
 }
 
+/*
+ * The errors collected when reloading all extensions at once
+ * (initialized from a map of errors by extensionSourceDir string).
+ */
+export class MultiExtensionsReloadError extends WebExtError {
+  constructor(errorsMap: Map<string, Error>) {
+    let errors = '';
+    for (const [sourceDir, error] of errorsMap) {
+      const msg = String(error);
+      errors += `\nError on extension loaded from ${sourceDir}: ${msg}\n`;
+    }
+    const message = `Reload errors: ${errors}`;
+
+    super(message);
+    this.errorsBySourceDir = errorsMap;
+  }
+}
 
 /*
  * Sugar-y way to catch only instances of a certain error.
