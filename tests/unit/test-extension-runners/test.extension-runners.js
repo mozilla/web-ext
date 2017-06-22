@@ -49,6 +49,8 @@ function prepareExtensionRunnerParams(params) {
 
 function exitKeypressLoop(stdin) {
   try {
+    // Ensure that the keypress processing loop (defined in defaultReloadStrategy)
+    // is exited.
     stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
   } catch (error) {
     // NOTE: exceptions raised by this helper are logged on the console
