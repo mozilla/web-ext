@@ -276,6 +276,10 @@ Example: $0 --help run.
       requiresArg: true,
       type: 'array',
     },
+    'no-default-ignore-files': {
+      describe: 'Not use default ignore files',
+      type: 'boolean',
+    },
   });
 
   program

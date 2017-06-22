@@ -177,6 +177,7 @@ export type BuildCmdParams = {|
   asNeeded?: boolean,
   overwriteDest?: boolean,
   ignoreFiles?: Array<string>,
+  noDefaultIgnoreFiles?: boolean,
 |};
 
 export type BuildCmdOptions = {|
@@ -196,6 +197,7 @@ export default async function build(
     asNeeded = false,
     overwriteDest = false,
     ignoreFiles = [],
+    noDefaultIgnoreFiles = false,
   }: BuildCmdParams,
   {
     manifestData,
@@ -204,6 +206,7 @@ export default async function build(
       sourceDir,
       artifactsDir,
       ignoreFiles,
+      noDefaultIgnoreFiles,
     }),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,

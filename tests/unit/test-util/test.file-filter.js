@@ -94,6 +94,13 @@ describe('util/file-filter', () => {
       assert.equal(filter.wantFile('dist/file'), true);
     });
 
+    it('clean default ignore', () => {
+      const filter = newFileFilter({
+        noDefaultIgnoreFiles: true,
+      });
+      assert.equal(filter.wantFile('some.xpi'), true);
+    });
+
     it('resolve relative path', () => {
       const filter = newFileFilter({
         sourceDir: '/src',
