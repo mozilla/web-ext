@@ -99,11 +99,6 @@ export interface FirefoxProcess extends events$EventEmitter {
   kill: Function;
 }
 
-export interface IProfileFinder {
-  hasProfileName(): Promise<boolean>;
-  getPath(): Promise<string>;
-}
-
 export type FirefoxRunnerResults = {|
   process: FirefoxProcess,
   binary: string,
@@ -247,28 +242,31 @@ export type UseProfileParams = {
   createProfileFinder?: typeof defaultCreateProfileFinder,
 };
 
+export interface IProfileFinder {
+  getPath(string): Promise<string>;
+}
+
 export function defaultCreateProfileFinder(userDirectoryPath?: string) {
   const finder = new FirefoxProfile.Finder(userDirectoryPath);
   const readProfiles = promisify(finder.readProfiles, finder);
-  return {
-    getPath: promisify(finder.getPath, finder),
-    hasProfileName: async (profileName: string) => {
-      try {
-        const profilesIniPath = path.join(
-          userDirectoryPath || FirefoxProfile.Finder.locateUserDirectory(),
-          'profiles.ini');
-
-        await fs.stat(profilesIniPath);
-        await readProfiles();
-        return finder.profiles.filter(
-          (profileDef) => profileDef.Name === profileName).length !== 0;
-      } catch (error) {
-        if (isErrorWithCode('ENOENT', error)) {
-          log.warn('No firefox profiles exist');
-          return false;
-        }
+  const getPath = promisify(finder.getPath, finder);
+  return async (profileName: string) => {
+    const profilesIniPath = path.join(
+      userDirectoryPath || FirefoxProfile.Finder.locateUserDirectory(),
+      'profiles.ini');
+    try {
+      await fs.stat(profilesIniPath);
+    } catch (error) {
+      if (isErrorWithCode('ENOENT', error)) {
+        log.warn('No firefox profiles exist');
       }
-    },
+    }
+    await readProfiles();
+    const hasProfileName = finder.profiles.filter(
+      (profileDef) => profileDef.Name === profileName).length !== 0;
+    if (hasProfileName) {
+      return await getPath(profileName);
+    }
   };
 }
 
@@ -284,42 +282,35 @@ export async function useProfile(
     createProfileFinder = defaultCreateProfileFinder,
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
-  let profile;
-  let defaultProfilePath = '';
-  let defaultDevProfilePath = '';
-  const finder = createProfileFinder();
-  try {
-    const dirExists = await isDirectory(profilePath);
-    if (await finder.hasProfileName('default')) {
-      defaultProfilePath = await finder.getPath('default');
+  let destinationDirectory;
+  const getProfilePath = createProfileFinder();
+  const dirExists = await isDirectory(profilePath);
+  if (dirExists) {
+    log.debug(`Using profile directory from "${profilePath}"`);
+    if (profilePath === getProfilePath('default') ||
+      profilePath === getProfilePath('dev-edition-default')) {
+      throw new WebExtError(
+        `Cannot use profile at "${profilePath}"`
+      );
     }
-    if (await finder.hasProfileName('dev-edition-default')) {
-      defaultDevProfilePath = await finder.getPath('dev-edition-default');
+    destinationDirectory = profilePath;
+  } else {
+    log.debug(`Assuming ${profilePath} is a named profile`);
+    if (profilePath === 'default' ||
+          profilePath === 'dev-edition-default') {
+      throw new WebExtError(
+        `Cannot use the blacklisted named profile "${profilePath}"`
+      );
     }
-    if (dirExists) {
-      log.debug(`Using profile directory from "${profilePath}"`);
-      if (profilePath === defaultProfilePath ||
-        profilePath === defaultDevProfilePath) {
-        throw new WebExtError(
-          `Cannot use profile at "${profilePath}"`
-        );
-      }
-      profile = new FirefoxProfile({destinationDirectory: profilePath});
-    } else {
-      log.debug(`Assuming ${profilePath} is a named profile`);
-      if (profilePath === 'default' ||
-            profilePath === 'dev-edition-default') {
-        throw new WebExtError(
-          `Cannot use the blacklisted named profile "${profilePath}"`
-        );
-      }
-      const profileDirectory = await finder.getPath(profilePath);
-      profile = new FirefoxProfile({destinationDirectory: profileDirectory});
+    destinationDirectory = getProfilePath(profilePath);
+    if (!destinationDirectory) {
+      throw new UsageError(
+        `The request "${profilePath}" profile name
+          cannot be resolved to a profile path`
+      );
     }
-  } catch (error) {
-    throw new WebExtError(
-      `Could not use Firefox profile from ${profilePath}: ${error}`);
   }
+  const profile = new FirefoxProfile({destinationDirectory});
   return await configureThisProfile(profile, {app, customPrefs});
 }
 
