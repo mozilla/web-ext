@@ -1,6 +1,5 @@
 /* @flow */
 import {it, describe} from 'mocha';
-import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {showDesktopNotification} from '../../../src/util/desktop-notifier';
@@ -22,13 +21,12 @@ describe('util/desktop-notifier', () => {
         notifier: fakeNotifier,
       })
         .then(() => {
-          assert.ok(fakeNotifier.notify.called);
-          assert.equal(
-            fakeNotifier.notify.firstCall.args[0].title,
-            'web-ext run: title',
+          sinon.assert.calledWith(
+            fakeNotifier.notify, sinon.match({
+              title: 'web-ext run: title',
+              message: 'message',
+            })
           );
-          assert.equal(fakeNotifier.notify.firstCall.args[0].message,
-                      'message');
         });
     });
 
@@ -48,10 +46,12 @@ describe('util/desktop-notifier', () => {
       })
         .then(makeSureItFails())
         .catch(() => {
-          assert.ok(fakeLog.debug.called);
-          assert.equal(fakeLog.debug.firstCall.args[0],
-                      `Desktop notifier error: ${expectedError.message}, ` +
-                      'response: response');
+          sinon.assert.calledWith(
+            fakeLog.debug, sinon.match(
+              `Desktop notifier error: ${expectedError.message}, ` +
+              'response: response'
+            )
+          );
         });
     });
 
