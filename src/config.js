@@ -44,12 +44,13 @@ export function applyConfigToArgv({
         configFileName});
       continue;
     }
+    let expectedType = optionTypes[option] === 'count' ? 'number' : optionTypes[option];
     const optionType = typeof(configObject[option]);
-    if (optionType !== optionTypes[option] &&
-      optionTypes[option] !== undefined &&
-      !(optionTypes[option] === 'count' && optionType === 'number')) {
+    if (optionType !== expectedType &&
+      expectedType !== undefined &&
+      !(expectedType === 'count' && optionType === 'number')) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
-        `the type of "${option}" incorrectly`);
+        `the type of "${option}" incorrectly (expected type ${expectedType})`);
     }
 
     // we assume the value was set on the CLI if the default value is
