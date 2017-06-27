@@ -44,7 +44,8 @@ export function applyConfigToArgv({
         configFileName});
       continue;
     }
-    let expectedType = optionTypes[option] === 'count' ? 'number' : optionTypes[option];
+    const expectedType = optionTypes[option] ===
+      'count' ? 'number' : optionTypes[option];
     const optionType = typeof(configObject[option]);
     if (optionType !== expectedType &&
       expectedType !== undefined &&

@@ -58,7 +58,7 @@ describe('config', () => {
     it('preserves a string value on the command line over configured', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
 
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         userCmd: ['fakecommand', '--source-dir', cmdLineSrcDir],
         globalOpt: {
           'source-dir': {
@@ -71,15 +71,13 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
     it('preserves configured value over default', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'source-dir': {
             requiresArg: true,
@@ -92,16 +90,14 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
     });
 
     it('preserves a string value on the command line over all others', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         userCmd: ['fakecommand', '--sourceDir', cmdLineSrcDir],
         globalOpt: {
           'source-dir': {
@@ -115,15 +111,13 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
     it('preserves default value of option if not in config', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'source-dir': {
             requiresArg: true,
@@ -140,16 +134,14 @@ describe('config', () => {
       const configObject = {
         artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.sourceDir, 'default/value/option/definition');
     });
 
     it('preserves value on the command line if not in config', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         userCmd: ['fakecommand', '--sourceDir', cmdLineSrcDir],
         globalOpt: {
           'source-dir': {
@@ -167,15 +159,13 @@ describe('config', () => {
       const configObject = {
         artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
     it('uses a configured boolean value over an implicit default', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'overwrite-files': {
             type: 'boolean',
@@ -187,15 +177,13 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
     it('uses a configured boolean value over an explicit default', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'overwrite-files': {
             type: 'boolean',
@@ -206,15 +194,13 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
     it('uses a CLI boolean value over a configured one', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         userCmd: ['fakecommand', '--overwrite-files'],
         globalOpt: {
           'overwrite-files': {
@@ -225,16 +211,14 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: false,
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
     it('uses CLI option over undefined configured option and default', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         userCmd: ['fakecommand', '--source-dir', cmdLineSrcDir],
         globalOpt: {
           'source-dir': {
@@ -248,15 +232,13 @@ describe('config', () => {
       const configObject = {
         verbose: true,
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
     it('uses a configured number value over a falsey default', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         userCmd: ['fakecommand'],
         globalOpt: {
           'number-of-retries': {
@@ -268,15 +250,13 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.numberOfRetries, 1);
     });
 
     it('uses a falsey CLI number value over a configured one', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         userCmd: ['fakecommand', '--number-of-retries=0'],
         globalOpt: {
           'number-of-retries': {
@@ -288,15 +268,13 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.numberOfRetries, 0);
     });
 
     it('uses configured value even when option defaults to undefined', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'source-dir': {
             type: 'string',
@@ -307,15 +285,13 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/directory',
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.sourceDir, '/configured/directory');
     });
 
     it('throws an error when an option is not camel cased', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'source-dir': {
             type: 'string',
@@ -327,16 +303,14 @@ describe('config', () => {
         'source-dir': 'fake/value/',
       };
       assert.throws(() => {
-        applyConf({argv,
-          configObject,
-          defaultValues,
-          optionTypes});
+        applyConf({...params,
+          configObject});
       }, UsageError, 'UsageError: The config option "source-dir" must be ' +
         'specified in camel case: "sourceDir"');
     });
 
     it('throws an error when an option is invalid', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'source-dir': {
             type: 'string',
@@ -348,16 +322,14 @@ describe('config', () => {
         randomDir: 'fake/artifacts/dir',
       };
       assert.throws(() => {
-        applyConf({argv,
-          configObject,
-          defaultValues,
-          optionTypes});
+        applyConf({...params,
+          configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified an unknown option: "randomDir"');
     });
 
     it('throws an error when the type of option value is invalid', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           'source-dir': {
             type: 'string',
@@ -369,16 +341,14 @@ describe('config', () => {
         sourceDir: {randomKey: 'randomValue'},
       };
       assert.throws(() => {
-        applyConf({argv,
-          configObject,
-          defaultValues,
-          optionTypes});
+        applyConf({...params,
+          configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "sourceDir" incorrectly');
     });
 
     it('does not throw an error when the type of option value is count', () => {
-      const {argv, defaultValues, optionTypes} = makeArgv({
+      const params = makeArgv({
         globalOpt: {
           verbose: {
             type: 'count',
@@ -388,17 +358,15 @@ describe('config', () => {
       const configObject = {
         verbose: 2,
       };
-      const newArgv = applyConf({argv,
-        configObject,
-        defaultValues,
-        optionTypes});
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.verbose, 0);
     });
   });
 
   describe('sub commands', () => {
     it('preserves configured value over default', () => {
-      const {argv, defaultValues, optionTypes, commandExecuted} = makeArgv({
+      const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
         commandOpt: {
@@ -415,19 +383,14 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({
-        argv,
-        configObject,
-        defaultValues,
-        optionTypes,
-        commandExecuted,
-      });
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.apiKey, configObject.sign.apiKey);
     });
 
     it('preserves CLI value over default and configured', () => {
       const cmdApiKey = 'api-key-cmd';
-      const {argv, defaultValues, optionTypes, commandExecuted} = makeArgv({
+      const params = makeArgv({
         userCmd: ['sign', '--api-key', cmdApiKey],
         command: 'sign',
         commandOpt: {
@@ -444,19 +407,14 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({
-        argv,
-        configObject,
-        defaultValues,
-        optionTypes,
-        commandExecuted,
-      });
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
     it('preserves CLI value over configured', () => {
       const cmdApiKey = 'api-key-cmd';
-      const {argv, defaultValues, optionTypes, commandExecuted} = makeArgv({
+      const params = makeArgv({
         userCmd: ['sign', '--api-key', cmdApiKey],
         command: 'sign',
         commandOpt: {
@@ -472,18 +430,13 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({
-        argv,
-        configObject,
-        defaultValues,
-        optionTypes,
-        commandExecuted,
-      });
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
     it('preserves default value if not in config', () => {
-      const {argv, defaultValues, optionTypes, commandExecuted} = makeArgv({
+      const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
         commandOpt: {
@@ -506,19 +459,14 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({
-        argv,
-        configObject,
-        defaultValues,
-        optionTypes,
-        commandExecuted,
-      });
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.apiUrl, 'pretend-default-value-of-apiUrl');
     });
 
     it('preserves CLI value if not in config', () => {
       const cmdApiKey = 'api-key-cmd';
-      const {argv, defaultValues, optionTypes, commandExecuted} = makeArgv({
+      const params = makeArgv({
         userCmd: ['sign', '--api-key', cmdApiKey],
         command: 'sign',
         commandOpt: {
@@ -541,18 +489,13 @@ describe('config', () => {
           apiUrl: 'custom-configured-url',
         },
       };
-      const newArgv = applyConf({
-        argv,
-        configObject,
-        defaultValues,
-        optionTypes,
-        commandExecuted,
-      });
+      const newArgv = applyConf({...params,
+        configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
     it('throws an error when the type of sub option is invalid', () => {
-      const {argv, defaultValues, optionTypes, commandExecuted} = makeArgv({
+      const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
         commandOpt: {
@@ -570,11 +513,8 @@ describe('config', () => {
         },
       };
       assert.throws(() => {
-        applyConf({argv,
-          configObject,
-          defaultValues,
-          optionTypes,
-          commandExecuted});
+        applyConf({...params,
+          configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly');
     });
