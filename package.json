@@ -115,6 +115,7 @@
     "load-grunt-tasks": "3.5.2",
     "mocha": "3.4.2",
     "mocha-multi": "0.11.0",
+    "mock-stdin": "0.3.1",
     "nsp": "2.6.3",
     "object.entries": "1.0.4",
     "object.values": "1.0.4",

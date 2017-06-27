@@ -431,6 +431,16 @@ Example: $0 --help run.
         default: false,
       },
     })
+    .command(
+      'create',
+      'Create basic structure of a new addon', commands.create, {
+        'dir-path': {
+          desc: 'Optional path to a directory',
+          type: 'string',
+          demand: true,
+          requiresArg: true,
+        },
+      })
     .command('docs', 'Open the web-ext documentation in a browser',
       commands.docs, {});
 
