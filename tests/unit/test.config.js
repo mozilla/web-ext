@@ -518,6 +518,54 @@ describe('config', () => {
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly');
     });
+
+    it('throws an error when the type of an unrelated sub option is invalid',
+    () => {
+      const userCmd = ['run'];
+      const program = new Program(userCmd);
+
+      const commandDesc = 'this is a fake command';
+      const commandExecutor = sinon.stub();
+
+      const runCommand = 'run';
+      const commandOptRun = {
+        'no-reload': {
+          type: 'boolean',
+          demand: false,
+        },
+      };
+      program.command(runCommand, commandDesc, commandExecutor, commandOptRun);
+
+      const signCommand = 'sign';
+      const commandOptSign = {
+        'api-url': {
+          requiresArg: true,
+          type: 'string',
+          demand: false,
+          default: 'pretend-default-value-of-apiKey',
+        },
+      };
+      program.command(signCommand, commandDesc,
+        commandExecutor, commandOptSign);
+
+      const configObject = {
+        sign: {
+          apiUrl: 2,
+        },
+      };
+      const params = {
+        argv: program.yargs.exitProcess(false).argv,
+        defaultValues: program.defaultValues,
+        commandExecuted: 'sign',
+        optionTypes: program.optionTypes,
+      };
+
+      assert.throws(() => {
+        applyConf({...params,
+          configObject});
+      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+        'specified the type of "apiUrl" incorrectly');
+    });
   });
 
   describe('loadJSConfigFile', () => {
