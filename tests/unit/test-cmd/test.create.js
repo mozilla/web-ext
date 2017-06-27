@@ -7,6 +7,7 @@ import {describe, it, afterEach} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 import mockStdin from 'mock-stdin';
+import rimraf from 'rimraf';
 
 import create from '../../../src/cmd/create';
 import {withTempDir} from '../../../src/util/temp-dir';
@@ -20,6 +21,14 @@ describe('create', () => {
   afterEach(() => {
     process.chdir(homeDir);
   });
+
+  async function cleanTmpDir(dir) {
+    rimraf(dir, (error) => {
+      if (error) {
+        throw error;
+      }
+    });
+  }
 
   it('creates files including manifest with correct name', () => withTempDir(
     (tmpDir) => {
@@ -38,7 +47,11 @@ describe('create', () => {
                     .then((data) => {
                       const parsed = JSON.parse(data);
                       assert.equal(parsed.name, 'target (name)');
-                    });
+                    })
+                    .then(
+                      () => cleanTmpDir(targetDir),
+                      () => cleanTmpDir(targetDir)
+                    );
                 });
             });
         });
@@ -58,7 +71,11 @@ describe('create', () => {
                 .then((data) => {
                   const parsed = JSON.parse(data);
                   assert.equal(parsed.name, 'target (name)');
-                });
+                })
+                .then(
+                  () => cleanTmpDir(targetDir),
+                  () => cleanTmpDir(targetDir)
+                );
             });
         });
     }));
@@ -71,14 +88,18 @@ describe('create', () => {
         fs.mkdir('target');
         setTimeout(() => {
           fakeStdin.emit('keypress', 'n', {name: 'n', ctrl: false});
-        }, 100);
+        }, 50);
         return create({dirPath: 'target', stdin: fakeStdin})
           .then(() => {
             return fs.readFile(path.join(targetDir, 'manifest.json'), 'utf-8')
               .then(makeSureItFails())
               .catch((error) => {
                 assert.equal(error.code, 'ENOENT');
-              });
+              })
+              .then(
+                () => cleanTmpDir(targetDir),
+                () => cleanTmpDir(targetDir)
+              );
           });
       }));
 
@@ -91,7 +112,7 @@ describe('create', () => {
       fs.mkdir('target');
       setTimeout(() => {
         fakeStdin.emit('keypress', 'y', {name: 'y', ctrl: false});
-      }, 100);
+      }, 50);
       return create({dirPath: 'target', stdin: fakeStdin})
         .then(() => {
           return fs.readFile(path.join(targetDir, 'manifest.json'), 'utf-8')
@@ -99,7 +120,11 @@ describe('create', () => {
               const manifest = JSON.parse(data);
               assert.equal(manifest.name, 'target (name)');
               assert.ok(fakeStdin.pause.called);
-            });
+            })
+            .then(
+              () => cleanTmpDir(targetDir),
+              () => cleanTmpDir(targetDir)
+            );
         });
     }));
 
@@ -112,7 +137,11 @@ describe('create', () => {
         .then(makeSureItFails())
         .catch(onlyInstancesOf(UsageError, (error) => {
           assert.match(error.message, /without user confirmation/);
-        }));
+        }))
+        .then(
+          () => cleanTmpDir(path.join(tmpDir.path(), 'target')),
+          () => cleanTmpDir(path.join(tmpDir.path(), 'target'))
+        );
     }));
 
 });
