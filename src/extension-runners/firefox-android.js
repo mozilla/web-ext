@@ -379,14 +379,8 @@ export class FirefoxAndroidExtensionRunner {
       if (filteredPackages.length === 0) {
         const pkgsList = pkgsListMsg(filteredPackages);
         throw new UsageError(`Package not found: ${firefoxApk} in ${pkgsList}`);
-      } else if (filteredPackages.length > 1) {
-        log.info(`\nPackages found:\n${pkgsListMsg(packages)}`);
-        throw new UsageError(
-          'Select one of the packages using a more specific --firefox-apk'
-        );
       }
 
-      // Select the single installed Firefox package.
       this.selectedFirefoxApk = filteredPackages[0];
       log.info(`Selected Firefox for Android APK: ${this.selectedFirefoxApk}`);
 
@@ -409,11 +403,14 @@ export class FirefoxAndroidExtensionRunner {
       adbClient,
       selectedAdbDevice,
       selectedFirefoxApk,
+      params: {
+        adb,
+      },
     } = this;
     log.info(`Stop any existent instance of ${selectedFirefoxApk}...`);
     await adbClient.shell(selectedAdbDevice.id, [
       'am', 'force-stop', selectedFirefoxApk,
-    ]);
+    ]).then(adb.util.readAll);
   }
 
   async adbPrepareProfileDir() {
@@ -433,7 +430,6 @@ export class FirefoxAndroidExtensionRunner {
 
     const deviceProfileDir = this.getDeviceProfileDir();
 
-    //const adbExtensionPath = `/sdcard/web-ext-artifacts/addon-${Date.now()}.xpi`;
     await adbClient.shell(selectedAdbDevice.id, [
       'mkdir', '-p', deviceProfileDir,
     ]);
@@ -543,8 +539,8 @@ export class FirefoxAndroidExtensionRunner {
         'cat', '/proc/net/unix',
       ]).then(adb.util.readAll);
 
-      androidUnixSockets = androidUnixSockets
-        .toString().split('\n').filter((line) => {
+      androidUnixSockets = androidUnixSockets.toString()
+        .split('\n').filter((line) => {
           return line.trim().endsWith('firefox-debugger-socket');
         });
 
