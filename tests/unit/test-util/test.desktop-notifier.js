@@ -21,11 +21,11 @@ describe('util/desktop-notifier', () => {
         notifier: fakeNotifier,
       })
         .then(() => {
-          sinon.assert.calledWith(
-            fakeNotifier.notify, sinon.match({
+          sinon.assert.calledWithMatch(
+            fakeNotifier.notify, {
               title: 'web-ext run: title',
               message: 'message',
-            })
+            }
           );
         });
     });
@@ -46,12 +46,7 @@ describe('util/desktop-notifier', () => {
       })
         .then(makeSureItFails())
         .catch(() => {
-          sinon.assert.calledWith(
-            fakeLog.debug, sinon.match(
-              `Desktop notifier error: ${expectedError.message}, ` +
-              'response: response'
-            )
-          );
+          sinon.assert.calledWith(fakeLog.debug);
         });
     });
 

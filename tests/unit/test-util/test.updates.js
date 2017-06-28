@@ -18,16 +18,11 @@ describe('util/updates', () => {
         updateNotifier: updateNotifierStub,
       });
 
-      sinon.assert.calledWith(
-        updateNotifierStub, sinon.match({
-          updateCheckInterval: sinon.match.number,
-        })
-      );
-      sinon.assert.calledWith(
-        updateNotifierStub, sinon.match({
+      sinon.assert.calledWithMatch(
+        updateNotifierStub, {
           updateCheckInterval: 1000 * 60 * 60 * 24 * 3,
           pkg: { name: 'web-ext', version: '1.0.0' },
-        })
+        }
       );
     });
   });
