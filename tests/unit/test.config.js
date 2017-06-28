@@ -540,32 +540,28 @@ describe('config', () => {
 
     it('throws an error when the type of an unrelated sub option is invalid',
     () => {
-      const userCmd = ['run'];
-      const program = new Program(userCmd);
+      const program = new Program(['run']);
 
       const commandDesc = 'this is a fake command';
       const commandExecutor = sinon.stub();
 
-      const runCommand = 'run';
-      const commandOptRun = {
-        'no-reload': {
-          type: 'boolean',
-          demand: false,
-        },
-      };
-      program.command(runCommand, commandDesc, commandExecutor, commandOptRun);
+      program.command('run', commandDesc, commandExecutor,
+        {
+          'no-reload': {
+            type: 'boolean',
+            demand: false,
+          },
+        });
 
-      const signCommand = 'sign';
-      const commandOptSign = {
-        'api-url': {
-          requiresArg: true,
-          type: 'string',
-          demand: false,
-          default: 'pretend-default-value-of-apiKey',
-        },
-      };
-      program.command(signCommand, commandDesc,
-        commandExecutor, commandOptSign);
+      program.command('sign', commandDesc,
+        commandExecutor, {
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
+          },
+        });
 
       const configObject = {
         sign: {

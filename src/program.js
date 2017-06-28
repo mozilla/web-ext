@@ -41,8 +41,8 @@ export class Program {
   shouldExitProgram: boolean;
   defaultValues: Object;
   optionTypes: Object;
-  optionsList: Array<any>;
-  mainCommandsList: Array<any>;
+  optionsList: Array<string>;
+  mainCommandsList: Array<string>;
 
   constructor(
     argv: ?Array<string>,
