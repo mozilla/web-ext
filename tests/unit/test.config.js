@@ -496,6 +496,31 @@ describe('config', () => {
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
+    it('throws an error when the option is not camel cased', () => {
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
+          },
+        },
+      });
+      const configObject = {
+        sign: {
+          'api-url': 2,
+        },
+      };
+      assert.throws(() => {
+        applyConf({...params,
+          configObject});
+      }, UsageError, 'UsageError: The config option "api-url"' +
+        ' must be specified in camel case: "apiUrl"');
+    });
+
     it('throws an error when the type is invalid', () => {
       const params = makeArgv({
         userCmd: ['sign'],
