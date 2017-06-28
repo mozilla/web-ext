@@ -58,7 +58,8 @@ export function applyConfigToArgv({
       expectedType !== undefined &&
       !(expectedType === 'count' && optionType === 'number')) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
-        `the type of "${option}" incorrectly (expected type: ${expectedType})`);
+        `the type of "${option}" incorrectly as "${optionType}"` +
+        ` (expected type: "${expectedType}")`);
     }
 
     // we assume the value was set on the CLI if the default value is

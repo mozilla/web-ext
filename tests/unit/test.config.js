@@ -496,7 +496,7 @@ describe('config', () => {
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
-    it('throws an error when the type of sub option is invalid', () => {
+    it('throws an error when the type is invalid', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
@@ -521,7 +521,39 @@ describe('config', () => {
         'specified the type of "apiUrl" incorrectly');
     });
 
-    it('throws an error when the type of options is missing', () => {
+    it('throws an error when the type of one of them is invalid', () => {
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
+          },
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
+          },
+        },
+      });
+      const configObject = {
+        sign: {
+          apiUrl: 2,
+          apiKey: 'fake-api-key',
+        },
+      };
+      assert.throws(() => {
+        applyConf({...params,
+          configObject});
+      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+        'specified the type of "apiUrl" incorrectly');
+    });
+
+    it('throws an error when the type of the option is missing', () => {
       assert.throws(() => {
         makeArgv({
           userCmd: ['sign'],
@@ -530,6 +562,29 @@ describe('config', () => {
             'api-url': {
               requiresArg: true,
               demand: false,
+              default: 'pretend-default-value-of-apiKey',
+            },
+          },
+        });
+      }, UsageError,
+        'UsageError: Option: apiUrl was defined without a type.');
+    });
+
+    it('throws an error when the type of one of them is missing', () => {
+      assert.throws(() => {
+        makeArgv({
+          userCmd: ['sign'],
+          command: 'sign',
+          commandOpt: {
+            'api-url': {
+              requiresArg: true,
+              demand: false,
+              default: 'pretend-default-value-of-apiKey',
+            },
+            'api-key': {
+              requiresArg: true,
+              demand: false,
+              type: 'string',
               default: 'pretend-default-value-of-apiKey',
             },
           },
@@ -581,7 +636,8 @@ describe('config', () => {
         applyConf({...params,
           configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
-        'specified the type of "apiUrl" incorrectly');
+        'specified the type of "apiUrl" incorrectly as "number"' +
+        ' (expected type: "string")');
     });
 
   });
