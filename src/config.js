@@ -13,7 +13,6 @@ const log = createLogger(__filename);
 type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
-  mainCommandsList: Array<any>,
   options: Object,
   configFileName: string,
   commandExecuted?: string,
@@ -22,7 +21,6 @@ type ApplyConfigToArgvParams = {|
 export function applyConfigToArgv({
   argv,
   configObject,
-  mainCommandsList,
   options,
   configFileName,
   commandExecuted,
@@ -35,11 +33,11 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    if (option === commandExecuted || mainCommandsList.includes(option)) {
+    if (option === commandExecuted ||
+        options.mainCommandsList.includes(option)) {
       newArgv = applyConfigToArgv({
         argv,
         configObject: configObject[option],
-        mainCommandsList,
         options,
         configFileName});
       continue;
@@ -90,7 +88,7 @@ export function applyConfigToArgv({
     }
 
     if (options && !Object.keys(options).includes(decamelizedOptName) &&
-        !mainCommandsList.includes(decamelizedOptName)) {
+        !options.mainCommandsList.includes(decamelizedOptName)) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `an unknown option: "${option}"`);
     }

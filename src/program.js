@@ -38,7 +38,6 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
-  mainCommandsList: Array<string>;
   options: Object;
 
   constructor(
@@ -63,16 +62,19 @@ export class Program {
     this.yargs.strict();
 
     this.commands = {};
-    this.mainCommandsList = [];
     this.options = {};
+    this.options.mainCommandsList = [];
   }
 
   command(
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
+    const mainCommandsList = [];
+    mainCommandsList.push(name);
     this.options = Object.assign(this.options, commandOptions);
-    this.mainCommandsList.push(name);
+    this.options.mainCommandsList = mainCommandsList;
+
     this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {
         return;

@@ -42,7 +42,6 @@ function makeArgv({
   return {
     argv: program.yargs.exitProcess(false).argv,
     commandExecuted: command,
-    mainCommandsList: program.mainCommandsList,
     options: program.options,
   };
 }
@@ -666,7 +665,6 @@ describe('config', () => {
         argv: program.yargs.exitProcess(false).argv,
         commandExecuted: 'run',
         options: program.options,
-        mainCommandsList: program.mainCommandsList,
       };
 
       assert.throws(() => {
