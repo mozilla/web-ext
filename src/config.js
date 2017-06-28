@@ -13,7 +13,6 @@ const log = createLogger(__filename);
 type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
-  defaultValues: Object,
   mainCommandsList: Array<any>,
   options: Object,
   configFileName: string,
@@ -23,7 +22,6 @@ type ApplyConfigToArgvParams = {|
 export function applyConfigToArgv({
   argv,
   configObject,
-  defaultValues,
   mainCommandsList,
   options,
   configFileName,
@@ -41,7 +39,6 @@ export function applyConfigToArgv({
       newArgv = applyConfigToArgv({
         argv,
         configObject: configObject[option],
-        defaultValues: defaultValues[option],
         mainCommandsList,
         options,
         configFileName});
@@ -74,8 +71,18 @@ export function applyConfigToArgv({
     // we assume the value was set on the CLI if the default value is
     // not the same as that on the argv object as there is a very rare chance
     // of this happening
+
+    let defaultValue;
+    if (options[decamelizedOptName] && options[decamelizedOptName].type) {
+      if (options[decamelizedOptName].type === 'boolean') {
+        defaultValue = false;
+      } else if (options[decamelizedOptName].default !== undefined) {
+        defaultValue = options[decamelizedOptName].default;
+      }
+    }
+
     const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
-      (argv[option] !== defaultValues[option]);
+      (argv[option] !== defaultValue);
     if (wasValueSetOnCLI) {
       log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
         `configuration: ${option}=${configObject[option]}`);

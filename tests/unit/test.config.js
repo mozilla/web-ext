@@ -41,7 +41,6 @@ function makeArgv({
   }
   return {
     argv: program.yargs.exitProcess(false).argv,
-    defaultValues: program.defaultValues,
     commandExecuted: command,
     mainCommandsList: program.mainCommandsList,
     options: program.options,
@@ -665,7 +664,6 @@ describe('config', () => {
       };
       const params = {
         argv: program.yargs.exitProcess(false).argv,
-        defaultValues: program.defaultValues,
         commandExecuted: 'run',
         options: program.options,
         mainCommandsList: program.mainCommandsList,
