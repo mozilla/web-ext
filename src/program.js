@@ -41,6 +41,8 @@ export class Program {
   shouldExitProgram: boolean;
   defaultValues: Object;
   optionTypes: Object;
+  optionsList: Array<any>;
+  mainCommandsList: Array<any>;
 
   constructor(
     argv: ?Array<string>,
@@ -66,12 +68,16 @@ export class Program {
     this.commands = {};
     this.defaultValues = {};
     this.optionTypes = {};
+    this.optionsList = [];
+    this.mainCommandsList = [];
   }
 
   command(
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
+    this.optionsList = this.optionsList.concat(Object.keys(commandOptions));
+    this.mainCommandsList.push(name);
     this.defaultValues[name] = setDefaultValues(commandOptions);
     this.optionTypes = setOptionTypes(commandOptions);
     this.yargs.command(name, description, (yargsForCmd) => {
@@ -99,6 +105,7 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
+    this.optionsList = this.optionsList.concat(Object.keys(options));
     this.defaultValues = {...this.defaultValues, ...setDefaultValues(options)};
     this.optionTypes = {...this.optionTypes, ...setOptionTypes(options)};
     Object.keys(options).forEach((key) => {

@@ -15,6 +15,8 @@ type ApplyConfigToArgvParams = {|
   configObject: Object,
   defaultValues: Object,
   optionTypes: Object,
+  optionsList: Array<any>,
+  mainCommandsList: Array<any>,
   configFileName: string,
   commandExecuted?: string,
 |};
@@ -24,6 +26,8 @@ export function applyConfigToArgv({
   configObject,
   defaultValues,
   optionTypes,
+  optionsList,
+  mainCommandsList,
   configFileName,
   commandExecuted,
 }: ApplyConfigToArgvParams): Object {
@@ -35,15 +39,18 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    if (option === commandExecuted) {
+    if (option === commandExecuted || mainCommandsList.includes(option)) {
       newArgv = applyConfigToArgv({
         argv,
-        configObject: configObject[commandExecuted],
-        defaultValues: defaultValues[commandExecuted],
+        configObject: configObject[option],
+        defaultValues: defaultValues[option],
+        optionsList,
+        mainCommandsList,
         optionTypes,
         configFileName});
       continue;
     }
+
     const expectedType = optionTypes[option] ===
       'count' ? 'number' : optionTypes[option];
     const optionType = typeof(configObject[option]);
@@ -65,7 +72,8 @@ export function applyConfigToArgv({
       continue;
     }
 
-    if (!argv.hasOwnProperty(decamelize(option, '-'))) {
+    if (optionsList && !optionsList.includes(decamelize(option, '-')) &&
+        !mainCommandsList.includes(decamelize(option, '-'))) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `an unknown option: "${option}"`);
     }
