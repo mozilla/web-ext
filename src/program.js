@@ -179,11 +179,11 @@ declare var WEBEXT_BUILD_ENV: string;
 function setOptionTypes(options: Object): Object {
   const optionTypes = {};
   Object.keys(options).forEach((key) => {
-    if (options[key].type === 'undefined') {
-      throw new UsageError
-        (`Options ${options[key]} was defined without a type.`);
-    }
     const camelCasedKey = camelCase(key);
+    if (options[key].type === undefined) {
+      throw new UsageError
+        (`Option: ${camelCasedKey} was defined without a type.`);
+    }
     optionTypes[camelCasedKey] = options[key].type;
   });
   return optionTypes;

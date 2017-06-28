@@ -519,6 +519,23 @@ describe('config', () => {
         'specified the type of "apiUrl" incorrectly');
     });
 
+    it('throws an error when the type of options is missing', () => {
+      assert.throws(() => {
+        makeArgv({
+          userCmd: ['sign'],
+          command: 'sign',
+          commandOpt: {
+            'api-url': {
+              requiresArg: true,
+              demand: false,
+              default: 'pretend-default-value-of-apiKey',
+            },
+          },
+        });
+      }, UsageError,
+        'UsageError: Option: apiUrl was defined without a type.');
+    });
+
     it('throws an error when the type of an unrelated sub option is invalid',
     () => {
       const userCmd = ['run'];
@@ -566,6 +583,7 @@ describe('config', () => {
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly');
     });
+
   });
 
   describe('loadJSConfigFile', () => {
