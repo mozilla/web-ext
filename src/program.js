@@ -63,17 +63,14 @@ export class Program {
 
     this.commands = {};
     this.options = {};
-    this.options.mainCommandsList = [];
   }
 
   command(
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    const mainCommandsList = [];
-    mainCommandsList.push(name);
     this.options = Object.assign(this.options, commandOptions);
-    this.options.mainCommandsList = mainCommandsList;
+    this.options[name] = commandOptions;
 
     this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {

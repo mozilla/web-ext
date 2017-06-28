@@ -33,8 +33,7 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    if (option === commandExecuted ||
-        options.mainCommandsList.includes(option)) {
+    if (option === commandExecuted || Object.keys(options).includes(option)) {
       newArgv = applyConfigToArgv({
         argv,
         configObject: configObject[option],
@@ -87,8 +86,7 @@ export function applyConfigToArgv({
       continue;
     }
 
-    if (options && !Object.keys(options).includes(decamelizedOptName) &&
-        !options.mainCommandsList.includes(decamelizedOptName)) {
+    if (options && !Object.keys(options).includes(decamelizedOptName)) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `an unknown option: "${option}"`);
     }
