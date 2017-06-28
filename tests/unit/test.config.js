@@ -43,9 +43,8 @@ function makeArgv({
     argv: program.yargs.exitProcess(false).argv,
     defaultValues: program.defaultValues,
     commandExecuted: command,
-    optionTypes: program.optionTypes,
-    optionsList: program.optionsList,
     mainCommandsList: program.mainCommandsList,
+    options: program.options,
   };
 }
 
@@ -579,41 +578,57 @@ describe('config', () => {
     });
 
     it('throws an error when the type of the option is missing', () => {
-      assert.throws(() => {
-        makeArgv({
-          userCmd: ['sign'],
-          command: 'sign',
-          commandOpt: {
-            'api-url': {
-              requiresArg: true,
-              demand: false,
-              default: 'pretend-default-value-of-apiKey',
-            },
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-url': {
+            requiresArg: true,
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
           },
-        });
+        },
+      });
+      const configObject = {
+        sign: {
+          apiUrl: 2,
+          apiKey: 'fake-api-key',
+        },
+      };
+      assert.throws(() => {
+        applyConf({...params,
+          configObject});
       }, UsageError,
         'UsageError: Option: apiUrl was defined without a type.');
     });
 
     it('throws an error when the type of one of them is missing', () => {
-      assert.throws(() => {
-        makeArgv({
-          userCmd: ['sign'],
-          command: 'sign',
-          commandOpt: {
-            'api-url': {
-              requiresArg: true,
-              demand: false,
-              default: 'pretend-default-value-of-apiKey',
-            },
-            'api-key': {
-              requiresArg: true,
-              demand: false,
-              type: 'string',
-              default: 'pretend-default-value-of-apiKey',
-            },
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-url': {
+            requiresArg: true,
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
           },
-        });
+          'api-key': {
+            requiresArg: true,
+            demand: false,
+            type: 'string',
+            default: 'pretend-default-value-of-apiKey',
+          },
+        },
+      });
+      const configObject = {
+        sign: {
+          apiUrl: 2,
+          apiKey: 'fake-api-key',
+        },
+      };
+      assert.throws(() => {
+        applyConf({...params,
+          configObject});
       }, UsageError,
         'UsageError: Option: apiUrl was defined without a type.');
     });
@@ -652,8 +667,7 @@ describe('config', () => {
         argv: program.yargs.exitProcess(false).argv,
         defaultValues: program.defaultValues,
         commandExecuted: 'run',
-        optionTypes: program.optionTypes,
-        optionsList: program.optionsList,
+        options: program.options,
         mainCommandsList: program.mainCommandsList,
       };
 

@@ -14,9 +14,8 @@ type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
   defaultValues: Object,
-  optionTypes: Object,
-  optionsList: Array<any>,
   mainCommandsList: Array<any>,
+  options: Object,
   configFileName: string,
   commandExecuted?: string,
 |};
@@ -25,9 +24,8 @@ export function applyConfigToArgv({
   argv,
   configObject,
   defaultValues,
-  optionTypes,
-  optionsList,
   mainCommandsList,
+  options,
   configFileName,
   commandExecuted,
 }: ApplyConfigToArgvParams): Object {
@@ -44,22 +42,33 @@ export function applyConfigToArgv({
         argv,
         configObject: configObject[option],
         defaultValues: defaultValues[option],
-        optionsList,
         mainCommandsList,
-        optionTypes,
+        options,
         configFileName});
       continue;
     }
 
-    const expectedType = optionTypes[option] ===
-      'count' ? 'number' : optionTypes[option];
-    const optionType = typeof(configObject[option]);
-    if (optionType !== expectedType &&
-      expectedType !== undefined &&
-      !(expectedType === 'count' && optionType === 'number')) {
-      throw new UsageError(`The config file at ${configFileName} specified ` +
-        `the type of "${option}" incorrectly as "${optionType}"` +
-        ` (expected type: "${expectedType}")`);
+    const decamelizedOptName = decamelize(option, '-');
+    let expectedType;
+    if (options[decamelizedOptName]) {
+      if (options[decamelizedOptName].type === undefined) {
+        throw new UsageError
+          (`Option: ${option} was defined without a type.`);
+      } else {
+        expectedType = options[decamelizedOptName].type ===
+        ' count' ? 'number' : options[decamelizedOptName].type;
+      }
+    }
+
+    if (configObject[option]) {
+      const optionType = typeof(configObject[option]);
+      if (optionType !== expectedType &&
+        expectedType !== undefined &&
+        !(expectedType === 'count' && optionType === 'number')) {
+        throw new UsageError(`The config file at ${configFileName} specified ` +
+          `the type of "${option}" incorrectly as "${optionType}"` +
+          ` (expected type: "${expectedType}")`);
+      }
     }
 
     // we assume the value was set on the CLI if the default value is
@@ -73,8 +82,8 @@ export function applyConfigToArgv({
       continue;
     }
 
-    if (optionsList && !optionsList.includes(decamelize(option, '-')) &&
-        !mainCommandsList.includes(decamelize(option, '-'))) {
+    if (options && !Object.keys(options).includes(decamelizedOptName) &&
+        !mainCommandsList.includes(decamelizedOptName)) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `an unknown option: "${option}"`);
     }
