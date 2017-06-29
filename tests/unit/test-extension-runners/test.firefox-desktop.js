@@ -35,7 +35,6 @@ const tempInstallResultMissingAddonId = {
 
 type PrepareParams = {
   params?: Object,
-  deps?: Object,
   fakeFirefoxApp?: Object,
   fakeRemoteFirefox?: Object,
   debuggerPort?: number,
