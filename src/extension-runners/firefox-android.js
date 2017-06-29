@@ -15,7 +15,6 @@ import {
 import {
   isErrorWithCode,
   MultiExtensionsReloadError,
-  RemoteTempInstallNotSupported,
   UsageError,
   WebExtError,
 } from '../errors';
@@ -571,44 +570,31 @@ export class FirefoxAndroidExtensionRunner {
 
     // Install all the temporary addons.
     for (const extension of extensions) {
-      try {
-        const {sourceDir} = extension;
-        const adbExtensionPath = this.adbExtensionsPathBySourceDir.get(
-          sourceDir
+      const {sourceDir} = extension;
+      const adbExtensionPath = this.adbExtensionsPathBySourceDir.get(
+        sourceDir
+      );
+
+      if (!adbExtensionPath) {
+        throw new WebExtError(
+          `Unexpected missing android device extension path for: ${sourceDir}`
         );
-
-        if (!adbExtensionPath) {
-          throw new WebExtError(
-            `Unexpected missing android device extension path for: ${sourceDir}`
-          );
-        }
-
-        const addonId = await (
-          remoteFirefox.installTemporaryAddon(adbExtensionPath)
-            .then((installResult: FirefoxRDPResponseAddon) => {
-              return installResult.addon.id;
-            })
-        );
-
-        if (!addonId) {
-          throw new WebExtError(
-            'Unexpected missing addonId in the installAsTemporaryAddon result'
-          );
-        }
-
-        this.reloadableExtensions.set(extension.sourceDir, addonId);
-      } catch (error) {
-        if (error instanceof RemoteTempInstallNotSupported) {
-          log.debug(`Caught: ${error}`);
-          throw new WebExtError(
-            'Temporary add-on installation is not supported in this version' +
-            ' of Firefox (you need Firefox 49 or higher). For older Firefox' +
-            ' versions, use --pre-install'
-          );
-        } else {
-          throw error;
-        }
       }
+
+      const addonId = await (
+        remoteFirefox.installTemporaryAddon(adbExtensionPath)
+          .then((installResult: FirefoxRDPResponseAddon) => {
+            return installResult.addon.id;
+          })
+      );
+
+      if (!addonId) {
+        throw new WebExtError(
+          'Unexpected missing addonId in the installAsTemporaryAddon result'
+        );
+      }
+
+      this.reloadableExtensions.set(extension.sourceDir, addonId);
     }
   }
 }

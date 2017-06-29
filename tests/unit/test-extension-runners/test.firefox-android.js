@@ -3,7 +3,7 @@
 import EventEmitter from 'events';
 
 import {assert} from 'chai';
-import {describe, it, beforeEach} from 'mocha';
+import {describe, it} from 'mocha';
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 
@@ -15,6 +15,7 @@ import type {
 } from '../../../src/extension-runners/firefox-android';
 import {
   UsageError,
+  WebExtError,
 } from '../../../src/errors';
 import {
   basicManifest,
@@ -26,6 +27,15 @@ import {
 const tempInstallResult = {
   addon: {id: 'some-addon@test-suite'},
 };
+
+// Fake missing addon id result for client.installTemporaryAddon
+const tempInstallResultMissingAddonId = {
+  addon: {id: null},
+};
+
+const builtFileName = 'built-ext-filename';
+
+const fakeBuiltExtensionPath = `/fake/extensionPath/${builtFileName}.zip`;
 
 const fakeADBPackageList = (
   'package:org.mozilla.fennec\n' +
@@ -347,18 +357,9 @@ describe('util/extension-runners/firefox-android', () => {
   });
 
   describe('a valid device and Firefox apk has been selected', () => {
-    // These currentRunner properties are going to be set by the beforeEach.
-    type CurrentRunner = {
-      params: FirefoxAndroidExtensionRunnerParams,
-      instance: FirefoxAndroidExtensionRunner,
-    };
-
-    let currentRunner: CurrentRunner;
-
-    const builtFileName = 'built-ext-filename';
-    const fakeBuiltExtensionPath = `/fake/extensionPath/${builtFileName}.zip`;
-
-    beforeEach(async () => {
+    function prepareSelectedValidDeviceAndAPKParams(
+      overriddenProperties = {}
+    ) {
       const {params} = prepareExtensionRunnerParams({
         params: {
           adbDevice: 'emulator-1',
@@ -382,19 +383,20 @@ describe('util/extension-runners/firefox-android', () => {
           // Fake the adb shell call that discover the RDP socket.
           fakeUnixSocketFiles,
         ],
+        ...overriddenProperties,
       });
 
-      const instance = new FirefoxAndroidExtensionRunner(params);
-      await instance.run();
-
-      currentRunner = {params, instance};
-    });
+      return params;
+    }
 
     it('stops any running instances of the selected Firefox apk ' +
        'and then starts it on the temporary profile',
        async () => {
-         const {adb} = currentRunner.params;
-         const runnerInstance = currentRunner.instance;
+         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {adb} = params;
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
 
          sinon.assert.calledWithMatch(
            adb.fakeADBClient.shell,
@@ -424,8 +426,11 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('builds and pushes the extension xpi to the android device',
        async () => {
-         const {adb, buildSourceDir, extensions} = currentRunner.params;
-         const runnerInstance = currentRunner.instance;
+         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {adb, buildSourceDir, extensions} = params;
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
 
          sinon.assert.calledWithMatch(
            buildSourceDir,
@@ -444,8 +449,11 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('discovers the RDP unix socket and forward it on a local tcp port',
        async () => {
-         const {adb} = currentRunner.params;
-         const runnerInstance = currentRunner.instance;
+         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {adb} = params;
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
 
          sinon.assert.calledWithMatch(
            adb.fakeADBClient.shell,
@@ -467,8 +475,11 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('installs the build extension as a temporarily installed addon',
        async () => {
-         const {adb, firefoxClient} = currentRunner.params;
-         const runnerInstance = currentRunner.instance;
+         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {adb, firefoxClient} = params;
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
 
          // Test that the android extension runner connects to the
          // remote debugging server on the tcp port that has been
@@ -497,6 +508,36 @@ describe('util/extension-runners/firefox-android', () => {
            runnerInstance.remoteFirefox.installTemporaryAddon,
          );
        });
+
+    it('raises an error on addonId missing from installTemporaryAddon result',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams({
+           fakeRemoteFirefox: {
+             installTemporaryAddon: sinon.spy(
+               () => Promise.resolve(tempInstallResultMissingAddonId)
+             ),
+           },
+         });
+
+         const expectedErrorMessage = (
+           'Unexpected missing addonId in the installAsTemporaryAddon result'
+         );
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run()
+           .catch((error) => error)
+           .then((error) => {
+             assert.equal(
+               error instanceof WebExtError,
+               true
+             );
+             assert.equal(
+               error && error.message,
+               expectedErrorMessage
+             );
+           });
+       });
+
   });
 
 });
