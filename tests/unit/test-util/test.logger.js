@@ -128,8 +128,7 @@ describe('logger', () => {
       sinon.assert.notCalled(localProcess.stdout.write);
       // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
-      sinon.assert.calledWithMatch(
-        localProcess.stdout.write, 'message\n');
+      sinon.assert.calledWith(localProcess.stdout.write, 'message\n');
     });
 
     it('only flushes captured messages once', () => {

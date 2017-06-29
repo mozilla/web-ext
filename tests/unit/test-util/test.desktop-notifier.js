@@ -46,7 +46,10 @@ describe('util/desktop-notifier', () => {
       })
         .then(makeSureItFails())
         .catch(() => {
-          sinon.assert.calledWith(fakeLog.debug);
+          sinon.assert.calledWith(
+            fakeLog.debug,
+            `Desktop notifier error: ${expectedError.message}, ` +
+            'response: response');
         });
     });
 
