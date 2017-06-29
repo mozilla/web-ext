@@ -1,7 +1,6 @@
 /* @flow */
 
 import EventEmitter from 'events';
-import path from 'path';
 
 import {assert} from 'chai';
 import {describe, it, beforeEach} from 'mocha';
@@ -144,9 +143,9 @@ function prepareExtensionRunnerParams({
       ...fakeFirefoxApp,
     }, debuggerPort),
     adb: fakeADBKit,
-    firefoxClient: () => {
+    firefoxClient: sinon.spy(() => {
       return Promise.resolve(remoteFirefox);
-    },
+    }),
     desktopNotifications: sinon.spy(() => {}),
     ...(params || {}),
   };
@@ -356,7 +355,8 @@ describe('util/extension-runners/firefox-android', () => {
 
     let currentRunner: CurrentRunner;
 
-    const fakeBuiltExtensionPath = '/fake/extensionPath/builtext.zip';
+    const builtFileName = 'built-ext-filename';
+    const fakeBuiltExtensionPath = `/fake/extensionPath/${builtFileName}.zip`;
 
     beforeEach(async () => {
       const {params} = prepareExtensionRunnerParams({
@@ -432,8 +432,6 @@ describe('util/extension-runners/firefox-android', () => {
            extensions[0].sourceDir
          );
 
-         const builtFileName = path.basename(fakeBuiltExtensionPath, '.zip');
-
          sinon.assert.calledWithMatch(
            adb.fakeADBClient.push,
            'emulator-1',
@@ -444,7 +442,7 @@ describe('util/extension-runners/firefox-android', () => {
          sinon.assert.callOrder(buildSourceDir, adb.fakeADBClient.push);
        });
 
-    it('discovers the RDP unix socket and forward it on a local tcp port ',
+    it('discovers the RDP unix socket and forward it on a local tcp port',
        async () => {
          const {adb} = currentRunner.params;
          const runnerInstance = currentRunner.instance;
@@ -467,6 +465,38 @@ describe('util/extension-runners/firefox-android', () => {
          );
        });
 
+    it('installs the build extension as a temporarily installed addon',
+       async () => {
+         const {adb, firefoxClient} = currentRunner.params;
+         const runnerInstance = currentRunner.instance;
+
+         // Test that the android extension runner connects to the
+         // remote debugging server on the tcp port that has been
+         // chosen to forward the android device RDP unix socket file.
+
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.forward,
+           'emulator-1',
+           `tcp:${runnerInstance.selectedTCPPort}`,
+           `localfilesystem:${runnerInstance.selectedRDPSocketFile}`
+         );
+
+         sinon.assert.calledWithMatch(
+           firefoxClient,
+           {port: runnerInstance.selectedTCPPort}
+         );
+
+         sinon.assert.calledWithMatch(
+           runnerInstance.remoteFirefox.installTemporaryAddon,
+           `${runnerInstance.selectedArtifactsDir}/${builtFileName}.xpi`
+         );
+
+         sinon.assert.callOrder(
+           adb.fakeADBClient.forward,
+           firefoxClient,
+           runnerInstance.remoteFirefox.installTemporaryAddon,
+         );
+       });
   });
 
 });

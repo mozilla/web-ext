@@ -582,6 +582,7 @@ export class FirefoxAndroidExtensionRunner {
             `Unexpected missing android device extension path for: ${sourceDir}`
           );
         }
+
         const addonId = await (
           remoteFirefox.installTemporaryAddon(adbExtensionPath)
             .then((installResult: FirefoxRDPResponseAddon) => {
