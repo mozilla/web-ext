@@ -87,11 +87,6 @@ export function applyConfigToArgv({
       continue;
     }
 
-    if (typeof options[decamelizedOptName] !== 'object') {
-      throw new UsageError(`The config file at ${configFileName} specified ` +
-        `an unknown option: "${option}"`);
-    }
-
     newArgv[option] = configObject[option];
   }
   return newArgv;
