@@ -1,6 +1,7 @@
 /* @flow */
 
 import EventEmitter from 'events';
+import path from 'path';
 
 import {assert} from 'chai';
 import {describe, it, beforeEach} from 'mocha';
@@ -355,13 +356,15 @@ describe('util/extension-runners/firefox-android', () => {
 
     let currentRunner: CurrentRunner;
 
+    const fakeBuiltExtensionPath = '/fake/extensionPath/builtext.zip';
+
     beforeEach(async () => {
       const {params} = prepareExtensionRunnerParams({
         params: {
           adbDevice: 'emulator-1',
           firefoxApk: 'org.mozilla.firefox',
           buildSourceDir: sinon.spy(() => Promise.resolve({
-            extensionPath: '/fake/extensionPath/builtext.zip',
+            extensionPath: fakeBuiltExtensionPath,
           })),
         },
         fakeADBClient: {
@@ -417,6 +420,28 @@ describe('util/extension-runners/firefox-android', () => {
            adb.fakeADBClient.shell,
            adb.fakeADBClient.startActivity
          );
+       });
+
+    it('builds and pushes the extension xpi to the android device',
+       async () => {
+         const {adb, buildSourceDir, extensions} = currentRunner.params;
+         const runnerInstance = currentRunner.instance;
+
+         sinon.assert.calledWithMatch(
+           buildSourceDir,
+           extensions[0].sourceDir
+         );
+
+         const builtFileName = path.basename(fakeBuiltExtensionPath, '.zip');
+
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.push,
+           'emulator-1',
+           fakeBuiltExtensionPath,
+           `${runnerInstance.selectedArtifactsDir}/${builtFileName}.xpi`
+         );
+
+         sinon.assert.callOrder(buildSourceDir, adb.fakeADBClient.push);
        });
 
     it('discovers the RDP unix socket and forward it on a local tcp port ',
