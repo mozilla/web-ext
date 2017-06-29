@@ -3,7 +3,7 @@
 import EventEmitter from 'events';
 
 import {assert} from 'chai';
-import {describe, it} from 'mocha';
+import {describe, it, beforeEach} from 'mocha';
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 
@@ -346,61 +346,102 @@ describe('util/extension-runners/firefox-android', () => {
 
   });
 
-  it('stops any running instance of the selected Firefox apk ' +
-     'and then starts it on the temporary profile', async () => {
-    const {params} = prepareExtensionRunnerParams({
-      params: {
-        adbDevice: 'emulator-1',
-        firefoxApk: 'org.mozilla.firefox',
-        buildSourceDir: sinon.spy(() => Promise.resolve({
-          extensionPath: '/fake/extensionPath/builtext.zip',
-        })),
-      },
-      fakeADBClient: {
-        listDevices: sinon.spy(() => {
-          return Promise.resolve([
-               {id: 'emulator-1'}, {id: 'emulator-2'},
-          ]);
-        }),
-      },
-      fakeADBReadAllData: [
-        // Fake the output of running "pm list" on the device
-        fakeADBPackageList,
-        // Fake the output of running am force-stop SELECTED_APK
-        '',
-        // Fake the adb shell call that discover the RDP socket.
-        fakeUnixSocketFiles,
-      ],
+  describe('a valid device and Firefox apk has been selected', () => {
+    // These currentRunner properties are going to be set by the beforeEach.
+    type CurrentRunner = {
+      params: FirefoxAndroidExtensionRunnerParams,
+      instance: FirefoxAndroidExtensionRunner,
+    };
+
+    let currentRunner: CurrentRunner;
+
+    beforeEach(async () => {
+      const {params} = prepareExtensionRunnerParams({
+        params: {
+          adbDevice: 'emulator-1',
+          firefoxApk: 'org.mozilla.firefox',
+          buildSourceDir: sinon.spy(() => Promise.resolve({
+            extensionPath: '/fake/extensionPath/builtext.zip',
+          })),
+        },
+        fakeADBClient: {
+          listDevices: sinon.spy(() => {
+            return Promise.resolve([
+              {id: 'emulator-1'}, {id: 'emulator-2'},
+            ]);
+          }),
+        },
+        fakeADBReadAllData: [
+          // Fake the output of running "pm list" on the device
+          fakeADBPackageList,
+          // Fake the output of running am force-stop SELECTED_APK
+          '',
+          // Fake the adb shell call that discover the RDP socket.
+          fakeUnixSocketFiles,
+        ],
+      });
+
+      const instance = new FirefoxAndroidExtensionRunner(params);
+      await instance.run();
+
+      currentRunner = {params, instance};
     });
 
-    const runnerInstance = new FirefoxAndroidExtensionRunner(params);
-    await runnerInstance.run();
+    it('stops any running instances of the selected Firefox apk ' +
+       'and then starts it on the temporary profile',
+       async () => {
+         const {adb} = currentRunner.params;
+         const runnerInstance = currentRunner.instance;
 
-    const {adb} = params;
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.shell,
+           'emulator-1', ['am', 'force-stop', 'org.mozilla.firefox']
+         );
 
-    sinon.assert.calledWithMatch(
-      adb.fakeADBClient.shell,
-      'emulator-1', ['am', 'force-stop', 'org.mozilla.firefox']
-    );
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.startActivity,
+           'emulator-1', {
+             wait: true,
+             action: 'android.activity.MAIN',
+             component: 'org.mozilla.firefox/.App',
+             extras: [
+               {
+                 key: 'args',
+                 value: `-profile ${runnerInstance.getDeviceProfileDir()}`,
+               },
+             ],
+           },
+         );
 
-    sinon.assert.calledWithMatch(
-      adb.fakeADBClient.startActivity,
-      'emulator-1', {
-        wait: true,
-        action: 'android.activity.MAIN',
-        component: 'org.mozilla.firefox/.App',
-        extras: [
-          {
-            key: 'args',
-            value: `-profile ${runnerInstance.getDeviceProfileDir()}`,
-          },
-        ],
-      },
-    );
+         sinon.assert.callOrder(
+           adb.fakeADBClient.shell,
+           adb.fakeADBClient.startActivity
+         );
+       });
 
-    sinon.assert.callOrder(
-      adb.fakeADBClient.shell,
-      adb.fakeADBClient.startActivity
-    );
+    it('discovers the RDP unix socket and forward it on a local tcp port ',
+       async () => {
+         const {adb} = currentRunner.params;
+         const runnerInstance = currentRunner.instance;
+
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.shell,
+           'emulator-1', ['cat', '/proc/net/unix']
+         );
+
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.forward,
+           'emulator-1',
+           `tcp:${runnerInstance.selectedTCPPort}`,
+           `localfilesystem:${runnerInstance.selectedRDPSocketFile}`
+         );
+
+         sinon.assert.callOrder(
+           adb.fakeADBClient.shell,
+           adb.fakeADBClient.forward
+         );
+       });
+
   });
+
 });
