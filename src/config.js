@@ -15,7 +15,6 @@ type ApplyConfigToArgvParams = {|
   configObject: Object,
   options: Object,
   configFileName: string,
-  commandExecuted?: string,
 |};
 
 export function applyConfigToArgv({
@@ -23,7 +22,6 @@ export function applyConfigToArgv({
   configObject,
   options,
   configFileName,
-  commandExecuted,
 }: ApplyConfigToArgvParams): Object {
   let newArgv = {...argv};
   for (const option in configObject) {
@@ -33,7 +31,9 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    if (option === commandExecuted || Object.keys(options).includes(option)) {
+    if (typeof options[option] === 'object' &&
+      typeof configObject[option] === 'object') {
+      // Descend into the nested configuration for a sub-command.
       newArgv = applyConfigToArgv({
         argv,
         configObject: configObject[option],

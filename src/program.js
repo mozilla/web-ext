@@ -2,6 +2,7 @@
 import path from 'path';
 import {readFileSync} from 'fs';
 
+import camelCase from 'camelcase';
 import git from 'git-rev-sync';
 import yargs from 'yargs';
 
@@ -69,7 +70,7 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    this.options[name] = commandOptions;
+    this.options[camelCase(name)] = commandOptions;
 
     this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {

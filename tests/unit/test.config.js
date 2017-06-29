@@ -41,7 +41,6 @@ function makeArgv({
   }
   return {
     argv: program.yargs.exitProcess(false).argv,
-    commandExecuted: command,
     options: program.options,
   };
 }
@@ -493,6 +492,31 @@ describe('config', () => {
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
+    it('handles camel case sub-commands', () => {
+      const params = makeArgv({
+        userCmd: ['sign-extension'],
+        command: 'sign-extension',
+        commandOpt: {
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            default: 'pretend-default-value-of-apiKey',
+          },
+        },
+      });
+      const configObject = {
+        signExtension: {
+          apiUrl: 2,
+        },
+      };
+      assert.throws(
+        () => applyConf({...params, configObject}),
+        UsageError,
+        'UsageError: The config file at some/path/to/config.js ' +
+        'specified the type of "apiUrl" incorrectly'
+      );
+    });
+
     it('throws an error when the option is not camel cased', () => {
       const params = makeArgv({
         userCmd: ['sign'],
@@ -690,7 +714,6 @@ describe('config', () => {
       };
       const params = {
         argv: program.yargs.exitProcess(false).argv,
-        commandExecuted: 'run',
         options: program.options,
       };
 
