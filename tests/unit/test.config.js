@@ -12,7 +12,7 @@ import {
   loadJSConfigFile,
 } from '../../src/config';
 import {withTempDir} from '../../src/util/temp-dir';
-import {UsageError} from '../../src/errors';
+import {UsageError, WebExtError} from '../../src/errors';
 
 type MakeArgvParams = {|
   userCmd?: Array<string>,
@@ -308,8 +308,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
-        'specified an unknown option: "randomDir"');
+      }, UsageError, 'UsageError: The config file ' +
+      'at some/path/to/config.js specified an unknown option: "randomDir"');
     });
 
     it('throws an error when a global option type is invalid', () => {
@@ -327,9 +327,8 @@ describe('config', () => {
       assert.throws(
         () => applyConf({...params, configObject}),
         UsageError,
-        'UsageError: The config file at some/path/to/config.js ' +
-        'specified the type of "retries" incorrectly as ' +
-        '"string" (expected type: "number")'
+        'UsageError: The config file at some/path/to/config.js specified the ' +
+        'type of "retries" incorrectly as "string" (expected type: "number")'
       );
     });
 
@@ -536,8 +535,7 @@ describe('config', () => {
         },
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config option "api-url"' +
         ' must be specified in camel case: "apiUrl"');
     });
@@ -562,8 +560,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
-        'specified an unknown option: "randomOption"');
+      }, UsageError, 'UsageError: The config file at ' +
+      'some/path/to/config.js specified an unknown option: "randomOption"');
     });
 
     it('throws an error when the type of option value is invalid', () => {
@@ -622,7 +620,7 @@ describe('config', () => {
         'specified the type of "apiUrl" incorrectly');
     });
 
-    it('throws an error when the type in option config is missing', () => {
+    it('throws an error when the type of option in config is missing', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
@@ -642,8 +640,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError,
-        'UsageError: Option: apiUrl was defined without a type.');
+      }, WebExtError,
+        'WebExtError: Option: apiUrl was defined without a type.');
     });
 
     it('throws an error when the type of one of them is in config' +
@@ -673,8 +671,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError,
-        'UsageError: Option: apiUrl was defined without a type.');
+      }, WebExtError,
+        'WebExtError: Option: apiUrl was defined without a type.');
     });
 
     it('throws an error when type of unrelated sub option is invalid', () => {

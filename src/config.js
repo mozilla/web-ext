@@ -6,7 +6,7 @@ import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 
 import {createLogger} from './util/logger';
-import {UsageError} from './errors';
+import {UsageError, WebExtError} from './errors';
 
 const log = createLogger(__filename);
 
@@ -43,16 +43,18 @@ export function applyConfigToArgv({
     }
 
     const decamelizedOptName = decamelize(option, '-');
-    let expectedType;
-    if (options[decamelizedOptName]) {
-      if (options[decamelizedOptName].type === undefined) {
-        throw new UsageError(
-          `Option: ${option} was defined without a type.`);
-      } else {
-        expectedType = options[decamelizedOptName].type ===
-          'count' ? 'number' : options[decamelizedOptName].type;
-      }
+
+    if (typeof options[decamelizedOptName] !== 'object') {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `an unknown option: "${option}"`);
     }
+    if (options[decamelizedOptName].type === undefined) {
+      throw new WebExtError(
+        `Option: ${option} was defined without a type.`);
+    }
+
+    const expectedType = options[decamelizedOptName].type ===
+      'count' ? 'number' : options[decamelizedOptName].type;
 
     if (configObject[option]) {
       const optionType = typeof(configObject[option]);
