@@ -69,7 +69,6 @@ export class Program {
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    this.options = Object.assign(this.options, commandOptions);
     this.options[name] = commandOptions;
 
     this.yargs.command(name, description, (yargsForCmd) => {
