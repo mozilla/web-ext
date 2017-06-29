@@ -69,8 +69,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -88,8 +87,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.sourceDir, configObject.sourceDir);
     });
 
@@ -109,8 +107,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/source/dir',
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -132,8 +129,7 @@ describe('config', () => {
       const configObject = {
         artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.sourceDir, 'default/value/option/definition');
     });
 
@@ -157,8 +153,7 @@ describe('config', () => {
       const configObject = {
         artifactsDir: '/configured/artifacts/dir',
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -175,8 +170,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -192,8 +186,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: true,
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -209,8 +202,7 @@ describe('config', () => {
       const configObject = {
         overwriteFiles: false,
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
@@ -230,8 +222,7 @@ describe('config', () => {
       const configObject = {
         verbose: true,
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
@@ -248,8 +239,7 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.numberOfRetries, 1);
     });
 
@@ -266,8 +256,7 @@ describe('config', () => {
       const configObject = {
         numberOfRetries: 1,
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.numberOfRetries, 0);
     });
 
@@ -283,8 +272,7 @@ describe('config', () => {
       const configObject = {
         sourceDir: '/configured/directory',
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.sourceDir, '/configured/directory');
     });
 
@@ -301,8 +289,7 @@ describe('config', () => {
         'source-dir': 'fake/value/',
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config option "source-dir" must be ' +
         'specified in camel case: "sourceDir"');
     });
@@ -320,8 +307,7 @@ describe('config', () => {
         randomDir: 'fake/artifacts/dir',
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified an unknown option: "randomDir"');
     });
@@ -360,8 +346,7 @@ describe('config', () => {
         sourceDir: {randomKey: 'randomValue'},
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "sourceDir" incorrectly');
     });
@@ -377,8 +362,7 @@ describe('config', () => {
       const configObject = {
         verbose: 2,
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.verbose, 0);
     });
   });
@@ -402,8 +386,7 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiKey, configObject.sign.apiKey);
     });
 
@@ -426,8 +409,7 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
@@ -449,8 +431,7 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
@@ -478,8 +459,7 @@ describe('config', () => {
           apiKey: 'custom-configured-key',
         },
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiUrl, 'pretend-default-value-of-apiUrl');
     });
 
@@ -508,8 +488,7 @@ describe('config', () => {
           apiUrl: 'custom-configured-url',
         },
       };
-      const newArgv = applyConf({...params,
-        configObject});
+      const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
@@ -582,8 +561,7 @@ describe('config', () => {
         },
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified an unknown option: "randomOption"');
     });
@@ -607,8 +585,7 @@ describe('config', () => {
         },
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly');
     });
@@ -640,8 +617,7 @@ describe('config', () => {
         },
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly');
     });
@@ -665,8 +641,7 @@ describe('config', () => {
         },
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError,
         'UsageError: Option: apiUrl was defined without a type.');
     });
@@ -697,20 +672,15 @@ describe('config', () => {
         },
       };
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError,
         'UsageError: Option: apiUrl was defined without a type.');
     });
 
-    it('throws an error when the type of an unrelated sub option is invalid',
-    () => {
+    it('throws an error when type of unrelated sub option is invalid', () => {
       const program = new Program(['run']);
 
-      const commandDesc = 'this is a fake command';
-      const commandExecutor = sinon.stub();
-
-      program.command('run', commandDesc, commandExecutor,
+      program.command('run', 'this is a fake command', sinon.stub(),
         {
           'no-reload': {
             type: 'boolean',
@@ -718,8 +688,8 @@ describe('config', () => {
           },
         });
 
-      program.command('sign', commandDesc,
-        commandExecutor, {
+      program.command('sign', 'this is a fake command',
+        sinon.stub(), {
           'api-url': {
             requiresArg: true,
             type: 'string',
@@ -739,8 +709,7 @@ describe('config', () => {
       };
 
       assert.throws(() => {
-        applyConf({...params,
-          configObject});
+        applyConf({...params, configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly as "number"' +
         ' (expected type: "string")');

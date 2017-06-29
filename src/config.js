@@ -46,37 +46,36 @@ export function applyConfigToArgv({
     let expectedType;
     if (options[decamelizedOptName]) {
       if (options[decamelizedOptName].type === undefined) {
-        throw new UsageError
-          (`Option: ${option} was defined without a type.`);
+        throw new UsageError(
+          `Option: ${option} was defined without a type.`);
       } else {
         expectedType = options[decamelizedOptName].type ===
-        ' count' ? 'number' : options[decamelizedOptName].type;
+          'count' ? 'number' : options[decamelizedOptName].type;
       }
     }
 
     if (configObject[option]) {
       const optionType = typeof(configObject[option]);
       if (optionType !== expectedType &&
-        expectedType !== undefined &&
-        !(expectedType === 'count' && optionType === 'number')) {
+        expectedType !== undefined) {
         throw new UsageError(`The config file at ${configFileName} specified ` +
           `the type of "${option}" incorrectly as "${optionType}"` +
           ` (expected type: "${expectedType}")`);
       }
     }
 
+    let defaultValue;
+    if (options[decamelizedOptName]) {
+      if (options[decamelizedOptName].default !== undefined) {
+        defaultValue = options[decamelizedOptName].default;
+      } else if (expectedType === 'boolean') {
+        defaultValue = false;
+      }
+    }
+
     // we assume the value was set on the CLI if the default value is
     // not the same as that on the argv object as there is a very rare chance
     // of this happening
-
-    let defaultValue;
-    if (options[decamelizedOptName] && options[decamelizedOptName].type) {
-      if (options[decamelizedOptName].type === 'boolean') {
-        defaultValue = false;
-      } else if (options[decamelizedOptName].default !== undefined) {
-        defaultValue = options[decamelizedOptName].default;
-      }
-    }
 
     const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
       (argv[option] !== defaultValue);
@@ -86,7 +85,7 @@ export function applyConfigToArgv({
       continue;
     }
 
-    if (options && !Object.keys(options).includes(decamelizedOptName)) {
+    if (typeof options[decamelizedOptName] !== 'object') {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `an unknown option: "${option}"`);
     }

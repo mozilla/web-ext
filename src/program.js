@@ -97,7 +97,7 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
-    this.options = Object.assign(this.options, options);
+    this.options = {...this.options, ...options};
     Object.keys(options).forEach((key) => {
       options[key].global = true;
       if (options[key].demand === undefined) {
