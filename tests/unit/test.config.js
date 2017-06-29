@@ -326,6 +326,27 @@ describe('config', () => {
         'specified an unknown option: "randomDir"');
     });
 
+    it('throws an error when a global option type is invalid', () => {
+      const params = makeArgv({
+        globalOpt: {
+          retries: {
+            type: 'number',
+            default: 1,
+          },
+        },
+      });
+      const configObject = {
+        retries: 'invalid-value',
+      };
+      assert.throws(
+        () => applyConf({...params, configObject}),
+        UsageError,
+        'UsageError: The config file at some/path/to/config.js ' +
+        'specified the type of "retries" incorrectly as ' +
+        '"string" (expected type: "number")'
+      );
+    });
+
     it('throws an error when the type of option value is invalid', () => {
       const params = makeArgv({
         globalOpt: {
