@@ -368,33 +368,19 @@ export class FirefoxAndroidExtensionRunner {
       return pkgs.map((pkg) => ` - ${ pkg}`).join('\n');
     };
 
-    if (packages.length > 1 && !firefoxApk) {
+    if (!firefoxApk) {
       log.info(`\nPackages found:\n${pkgsListMsg(packages)}`);
       throw new UsageError('Select one of the packages using --firefox-apk');
     }
 
-    if (firefoxApk) {
-      const filteredPackages = packages.filter((line) => line === firefoxApk);
+    const filteredPackages = packages.filter((line) => line === firefoxApk);
 
-      if (filteredPackages.length === 0) {
-        const pkgsList = pkgsListMsg(filteredPackages);
-        throw new UsageError(`Package not found: ${firefoxApk} in ${pkgsList}`);
-      }
-
-      this.selectedFirefoxApk = filteredPackages[0];
-      log.info(`Selected Firefox for Android APK: ${this.selectedFirefoxApk}`);
-
-      return;
+    if (filteredPackages.length === 0) {
+      const pkgsList = pkgsListMsg(filteredPackages);
+      throw new UsageError(`Package not found: ${firefoxApk} in ${pkgsList}`);
     }
 
-    if (packages.length > 1) {
-      const pkgList = packages.map((pkg) => ` - ${ pkg}`).join('\n');
-      log.info(`\nPackages found:\n${pkgList}`);
-      throw new UsageError('Select one of the packages using --firefox-apk');
-    }
-
-    // Select the single installed Firefox package.
-    this.selectedFirefoxApk = packages[0];
+    this.selectedFirefoxApk = filteredPackages[0];
     log.info(`Selected Firefox for Android APK: ${this.selectedFirefoxApk}`);
   }
 
