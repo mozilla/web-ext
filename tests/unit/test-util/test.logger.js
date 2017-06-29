@@ -6,6 +6,7 @@ import sinon from 'sinon';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 
+
 import {createLogger, ConsoleStream} from '../../../src/util/logger';
 
 
@@ -16,7 +17,9 @@ describe('logger', () => {
     it('makes file names less redundant', () => {
       const createBunyanLog = sinon.spy(() => {});
       createLogger('src/some-file.js', {createBunyanLog});
-      assert.equal(createBunyanLog.firstCall.args[0].name, 'some-file.js');
+      sinon.assert.calledWithMatch(
+        createBunyanLog, {name: 'some-file.js'}
+      );
     });
 
   });
@@ -77,7 +80,7 @@ describe('logger', () => {
       const localProcess = fakeProcess();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.DEBUG}), {localProcess});
-      assert.equal(localProcess.stdout.write.called, false);
+      sinon.assert.notCalled(localProcess.stdout.write);
     });
 
     it('does not log trace packets unless verbose', () => {
@@ -85,7 +88,7 @@ describe('logger', () => {
       const localProcess = fakeProcess();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.TRACE}), {localProcess});
-      assert.equal(localProcess.stdout.write.called, false);
+      sinon.assert.notCalled(localProcess.stdout.write);
     });
 
     it('logs debug packets when verbose', () => {
@@ -93,7 +96,7 @@ describe('logger', () => {
       const localProcess = fakeProcess();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.DEBUG}), {localProcess});
-      assert.equal(localProcess.stdout.write.called, true);
+      sinon.assert.called(localProcess.stdout.write);
     });
 
     it('logs trace packets when verbose', () => {
@@ -101,7 +104,7 @@ describe('logger', () => {
       const localProcess = fakeProcess();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.TRACE}), {localProcess});
-      assert.equal(localProcess.stdout.write.called, true);
+      sinon.assert.called(localProcess.stdout.write);
     });
 
     it('logs info packets when verbose or not', () => {
@@ -112,7 +115,7 @@ describe('logger', () => {
       log.makeVerbose();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({level: bunyan.INFO}), {localProcess});
-      assert.equal(localProcess.stdout.write.callCount, 2);
+      sinon.assert.callCount(localProcess.stdout.write, 2);
     });
 
     it('lets you capture logging', () => {
@@ -122,12 +125,10 @@ describe('logger', () => {
       log.startCapturing();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet({msg: 'message'}), {localProcess});
-      assert.equal(localProcess.stdout.write.called, false);
+      sinon.assert.notCalled(localProcess.stdout.write);
       // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
-      assert.equal(localProcess.stdout.write.called, true);
-      assert.equal(localProcess.stdout.write.firstCall.args[0],
-                   'message\n');
+      sinon.assert.calledWith(localProcess.stdout.write, 'message\n');
     });
 
     it('only flushes captured messages once', () => {
@@ -144,7 +145,7 @@ describe('logger', () => {
       localProcess = fakeProcess();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
-      assert.equal(localProcess.stdout.write.callCount, 0);
+      sinon.assert.notCalled(localProcess.stdout.write);
     });
 
     it('lets you start and stop capturing', () => {
@@ -154,12 +155,12 @@ describe('logger', () => {
       log.startCapturing();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet(), {localProcess});
-      assert.equal(localProcess.stdout.write.callCount, 0);
+      sinon.assert.notCalled(localProcess.stdout.write);
 
       log.stopCapturing();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.write(packet(), {localProcess});
-      assert.equal(localProcess.stdout.write.callCount, 1);
+      sinon.assert.callCount(localProcess.stdout.write, 1);
 
       // Make sure that when we start capturing again,
       // the queue gets reset.
@@ -168,7 +169,7 @@ describe('logger', () => {
       localProcess = fakeProcess();
       // $FLOW_IGNORE: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
-      assert.equal(localProcess.stdout.write.callCount, 1);
+      sinon.assert.callCount(localProcess.stdout.write, 1);
     });
 
   });

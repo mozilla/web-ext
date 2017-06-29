@@ -1,6 +1,5 @@
 /* @flow */
 import {it, describe} from 'mocha';
-import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {checkForUpdates} from '../../../src/util/updates';
@@ -18,12 +17,13 @@ describe('util/updates', () => {
         version: '1.0.0',
         updateNotifier: updateNotifierStub,
       });
-      assert.equal(updateNotifierStub.called, true);
-      assert.equal(updateNotifierStub.firstCall.args[0].pkg.name, 'web-ext');
-      assert.equal(updateNotifierStub.firstCall.args[0].pkg.version, '1.0.0');
-      assert.isNumber(updateNotifierStub.firstCall.args[0].updateCheckInterval);
-      assert.equal(updateNotifierStub.firstCall.args[0].updateCheckInterval,
-                   1000 * 60 * 60 * 24 * 3);
+
+      sinon.assert.calledWithMatch(
+        updateNotifierStub, {
+          updateCheckInterval: 1000 * 60 * 60 * 24 * 3,
+          pkg: { name: 'web-ext', version: '1.0.0' },
+        }
+      );
     });
   });
 });
