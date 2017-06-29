@@ -518,7 +518,32 @@ describe('config', () => {
         ' must be specified in camel case: "apiUrl"');
     });
 
-    it('throws an error when the type is invalid', () => {
+    it('throws an error when the option is invalid', () => {
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-url': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            default: 'pretend-default-value-of-apiKey',
+          },
+        },
+      });
+      const configObject = {
+        sign: {
+          randomOption: 'random-value',
+        },
+      };
+      assert.throws(() => {
+        applyConf({...params,
+          configObject});
+      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+        'specified an unknown option: "randomOption"');
+    });
+
+    it('throws an error when the type of option value is invalid', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
@@ -543,7 +568,8 @@ describe('config', () => {
         'specified the type of "apiUrl" incorrectly');
     });
 
-    it('throws an error when the type of one of them is invalid', () => {
+    it('throws an error when the type of one of option values' +
+      ' is invalid', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
@@ -575,7 +601,7 @@ describe('config', () => {
         'specified the type of "apiUrl" incorrectly');
     });
 
-    it('throws an error when the type of the option is missing', () => {
+    it('throws an error when the type in option config is missing', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
@@ -600,7 +626,8 @@ describe('config', () => {
         'UsageError: Option: apiUrl was defined without a type.');
     });
 
-    it('throws an error when the type of one of them is missing', () => {
+    it('throws an error when the type of one of them is in config' +
+      ' missing', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
