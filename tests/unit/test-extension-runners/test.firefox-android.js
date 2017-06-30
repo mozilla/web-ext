@@ -200,9 +200,26 @@ describe('util/extension-runners/firefox-android', () => {
         sinon.assert.calledOnce(adb.createClient);
         sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
 
-        assert.ok(actualException instanceof UsageError);
+        assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
                      /No adb executable has been found/);
+      });
+
+      await testUsageError({
+        fakeADBClient: {
+          listDevices: sinon.spy(() => {
+            const fakeADBError = new Error('unexpected error');
+            return Promise.reject(fakeADBError);
+          }),
+        },
+      }, ({adb, actualException}) => {
+        sinon.assert.calledOnce(adb.createClient);
+        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
+
+        assert.instanceOf(actualException, Error);
+        assert.notInstanceOf(actualException, UsageError);
+        assert.match(actualException && actualException.message,
+                     /unexpected error/);
       });
     });
 
@@ -211,7 +228,7 @@ describe('util/extension-runners/firefox-android', () => {
         sinon.assert.calledOnce(adb.createClient);
         sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
 
-        assert.ok(actualException instanceof UsageError);
+        assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
                      /No Android device found/);
       });
@@ -230,7 +247,7 @@ describe('util/extension-runners/firefox-android', () => {
         sinon.assert.calledOnce(adb.createClient);
         sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
 
-        assert.ok(actualException instanceof UsageError);
+        assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
                      /Select an android device using --android-device/);
       });
@@ -252,7 +269,7 @@ describe('util/extension-runners/firefox-android', () => {
         sinon.assert.calledOnce(adb.createClient);
         sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
 
-        assert.ok(actualException instanceof UsageError);
+        assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
                      /Android Device not found: /);
       });
@@ -276,7 +293,7 @@ describe('util/extension-runners/firefox-android', () => {
         sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
         sinon.assert.calledOnce(adb.fakeADBClient.shell);
 
-        assert.ok(actualException instanceof UsageError);
+        assert.instanceOf(actualException, UsageError);
         assert.match(
           actualException && actualException.message,
             /No Firefox packages found of the selected Android device/
@@ -310,7 +327,7 @@ describe('util/extension-runners/firefox-android', () => {
         sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
         sinon.assert.calledOnce(adb.fakeADBClient.shell);
 
-        assert.ok(actualException instanceof UsageError);
+        assert.instanceOf(actualException, UsageError);
         assert.match(
           actualException && actualException.message,
             /Select one of the packages using --firefox-apk/
@@ -346,7 +363,7 @@ describe('util/extension-runners/firefox-android', () => {
            sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
            sinon.assert.calledOnce(adb.fakeADBClient.shell);
 
-           assert.ok(actualException instanceof UsageError);
+           assert.instanceOf(actualException, UsageError);
            assert.match(
              actualException && actualException.message,
                /Package not found: /
@@ -527,10 +544,7 @@ describe('util/extension-runners/firefox-android', () => {
          await runnerInstance.run()
            .catch((error) => error)
            .then((error) => {
-             assert.equal(
-               error instanceof WebExtError,
-               true
-             );
+             assert.instanceOf(error, WebExtError);
              assert.equal(
                error && error.message,
                expectedErrorMessage
@@ -574,10 +588,7 @@ describe('util/extension-runners/firefox-android', () => {
            '/non-existent/source-dir'
          ).then((results) => {
            const error = results[0].reloadError;
-           assert.equal(
-             error instanceof WebExtError,
-             true
-           );
+           assert.instanceOf(error, WebExtError);
            assert.equal(
              error && error.message,
              'Extension not reloadable: no addonId has been mapped to ' +
@@ -605,10 +616,8 @@ describe('util/extension-runners/firefox-android', () => {
          await runnerInstance.reloadAllExtensions()
            .then((results) => {
              const error = results[0].reloadError;
-             assert.equal(
-               error instanceof WebExtError,
-               true
-             );
+             assert.instanceOf(error, WebExtError);
+
              const {sourceDir} = params.extensions[0];
              assert.ok(error && error.message.includes(
                `Error on extension loaded from ${sourceDir}: `
