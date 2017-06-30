@@ -455,7 +455,6 @@ export class FirefoxAndroidExtensionRunner {
       selectedArtifactsDir,
       params: {
         buildSourceDir,
-        desktopNotifications,
       },
     } = this;
 
@@ -468,10 +467,6 @@ export class FirefoxAndroidExtensionRunner {
 
       if (!adbExtensionPath) {
         adbExtensionPath = `${selectedArtifactsDir}/${extFileName}.xpi`;
-      }
-
-      if (!adbExtensionPath) {
-        throw new WebExtError('Invalid extension path');
       }
 
       log.debug(`Uploading ${extFileName} on the android device`);
@@ -488,13 +483,6 @@ export class FirefoxAndroidExtensionRunner {
       log.debug(`Upload completed: ${adbExtensionPath}`);
 
       this.adbExtensionsPathBySourceDir.set(sourceDir, adbExtensionPath);
-    }).catch((error) => {
-      log.error(`Failed to build or adb push the addon: ${error}`);
-      log.debug(error.stack);
-      desktopNotifications({
-        title: 'web-ext run: error occurred',
-        message: error.message,
-      });
     });
   }
 

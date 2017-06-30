@@ -538,6 +538,31 @@ describe('util/extension-runners/firefox-android', () => {
            });
        });
 
+    it('reloads all reloadable extensions when reloadAllExtensions is called',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams();
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
+
+         await runnerInstance.reloadAllExtensions();
+
+         sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
+       });
+
+    it('reloads an extension by sourceDir', async () => {
+      const params = prepareSelectedValidDeviceAndAPKParams();
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+
+      await runnerInstance.reloadExtensionBySourceDir(
+        params.extensions[0].sourceDir,
+      );
+
+      sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
+    });
+
   });
 
 });
