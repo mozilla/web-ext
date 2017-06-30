@@ -563,6 +563,131 @@ describe('util/extension-runners/firefox-android', () => {
       sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
     });
 
+    it('resolves to an array of WebExtError if the extension is not reloadable',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams();
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
+
+         await runnerInstance.reloadExtensionBySourceDir(
+           '/non-existent/source-dir'
+         ).then((results) => {
+           const error = results[0].reloadError;
+           assert.equal(
+             error instanceof WebExtError,
+             true
+           );
+           assert.equal(
+             error && error.message,
+             'Extension not reloadable: no addonId has been mapped to ' +
+               '"/non-existent/source-dir"'
+           );
+         });
+
+         sinon.assert.notCalled(runnerInstance.remoteFirefox.reloadAddon);
+       });
+
+
+    it('resolves an AllExtensionsReloadError if any extension fails to reload',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams({
+           fakeRemoteFirefox: {
+             reloadAddon: sinon.spy(
+               () => Promise.reject(Error('Reload failure'))
+             ),
+           },
+         });
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
+
+         await runnerInstance.reloadAllExtensions()
+           .then((results) => {
+             const error = results[0].reloadError;
+             assert.equal(
+               error instanceof WebExtError,
+               true
+             );
+             const {sourceDir} = params.extensions[0];
+             assert.ok(error && error.message.includes(
+               `Error on extension loaded from ${sourceDir}: `
+             ));
+           });
+
+         sinon.assert.called(runnerInstance.remoteFirefox.reloadAddon);
+       });
+
+    it('cleans the android device state when the exit method is called',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {adb} = params;
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         const cleanupCallback = sinon.spy(() => {
+           throw new Error('cleanup callback error');
+         });
+         const anotherCallback = sinon.spy();
+
+         runnerInstance.registerCleanup(cleanupCallback);
+         runnerInstance.registerCleanup(anotherCallback);
+
+         await runnerInstance.run();
+         await runnerInstance.exit();
+
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.shell,
+           'emulator-1', ['am', 'force-stop', params.firefoxApk]
+         );
+
+         assert.isString(runnerInstance.selectedArtifactsDir);
+         assert.match(
+           runnerInstance.selectedArtifactsDir,
+           /^\/sdcard\/web-ext-artifacts-/
+         );
+
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.shell,
+           'emulator-1', ['rm', '-rf', runnerInstance.selectedArtifactsDir]
+         );
+       });
+
+    it('calls the callback registered on cleanup when firefox closes',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {adb} = params;
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         const cleanupCallback = sinon.spy(() => {
+           throw new Error('cleanup callback error');
+         });
+         const anotherCallback = sinon.spy();
+
+         let finalCallback = () => {};
+
+         const waitFinalCallback = new Promise((resolve) => {
+           finalCallback = () => resolve();
+         });
+
+         runnerInstance.registerCleanup(cleanupCallback);
+         runnerInstance.registerCleanup(anotherCallback);
+         runnerInstance.registerCleanup(finalCallback);
+
+         await runnerInstance.run();
+
+         runnerInstance.remoteFirefox.client.emit('disconnect');
+
+         await waitFinalCallback;
+
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.shell,
+           'emulator-1', ['am', 'force-stop', params.firefoxApk]
+         );
+
+         sinon.assert.calledOnce(cleanupCallback);
+         sinon.assert.calledOnce(anotherCallback);
+       });
+
   });
 
 });
