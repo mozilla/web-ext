@@ -7,6 +7,7 @@ import {describe, it} from 'mocha';
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 
+import {consoleStream} from '../../../src/util/logger';
 import {
   FirefoxAndroidExtensionRunner,
 } from '../../../src/extension-runners/firefox-android';
@@ -696,6 +697,61 @@ describe('util/extension-runners/firefox-android', () => {
          sinon.assert.calledOnce(cleanupCallback);
          sinon.assert.calledOnce(anotherCallback);
        });
+
+    it('logs warnings on the unsupported CLI options', async () => {
+      const params = prepareSelectedValidDeviceAndAPKParams();
+
+      consoleStream.startCapturing();
+
+      const optionsWarningTestCases = [
+        {
+          params: {profilePath: '/fake/dir'},
+          expectedMessage: (
+              /Android target does not support custom profile paths/
+          ),
+        },
+        {
+          params: {keepProfileChanges: true},
+          expectedMessage: (
+              /Android target does not support --keep-profile-changes/
+          ),
+        },
+        {
+          params: {browserConsole: true},
+          expectedMessage: (
+              /Android target does not support --browser-console/
+          ),
+        },
+        {
+          params: {preInstall: true},
+          expectedMessage: (
+              /Android target does not support --pre-install option/
+          ),
+        },
+        {
+          params: {startUrl: 'http://fake-start-url.org'},
+          expectedMessage: (
+              /Android target does not support --start-url option/
+          ),
+        },
+      ];
+
+      for (const testCase of optionsWarningTestCases) {
+        new FirefoxAndroidExtensionRunner({ // eslint-disable-line no-new
+          ...params,
+          ...(testCase.params),
+        });
+
+        assert.match(
+          consoleStream.capturedMessages[0],
+          testCase.expectedMessage
+        );
+
+        consoleStream.flushCapturedLogs();
+      }
+
+      consoleStream.stopCapturing();
+    });
 
   });
 

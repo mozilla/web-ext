@@ -88,6 +88,10 @@ export class FirefoxAndroidExtensionRunner {
     this.cleanupCallbacks = new Set();
     this.adbExtensionsPathBySourceDir = new Map();
     this.reloadableExtensions = new Map();
+
+    // Print warning for not currently supported options (e.g. preInstall,
+    // cloned profiles, browser console).
+    this.printIgnoredParamsWarnings();
   }
 
   async run(): Promise<void> {
@@ -97,9 +101,6 @@ export class FirefoxAndroidExtensionRunner {
       adbHost,
       adbPort,
     } = this.params;
-    // Print warning for not currently supported options (e.g. preInstall,
-    // cloned profiles, browser console).
-    this.printIgnoredParamsWarnings();
 
     this.adbClient = adb.createClient({
       bin: adbBinary,
@@ -279,13 +280,6 @@ export class FirefoxAndroidExtensionRunner {
     if (this.params.startUrl) {
       log.warn(
         'Firefox for Android target does not support --start-url option.'
-      );
-    }
-
-    if (this.params.adbHost && (this.params.adbHost || this.params.adbPort)) {
-      log.warn(
-        'Firefox for Android target ignored --adb-binary option because' +
-        ' --adb-host or --adb-port have been specifed.'
       );
     }
   }
