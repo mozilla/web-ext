@@ -24,6 +24,7 @@ export function applyConfigToArgv({
   configFileName,
 }: ApplyConfigToArgvParams): Object {
   let newArgv = {...argv};
+
   for (const option in configObject) {
 
     if (camelCase(option) !== option) {

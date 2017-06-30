@@ -174,7 +174,7 @@ describe('config', () => {
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
-    it('uses a configured boolean value over an explicit default', () => {
+    it('uses a configured boolean value over explicit falsey default', () => {
       const params = makeArgv({
         globalOpt: {
           'overwrite-files': {
@@ -188,6 +188,22 @@ describe('config', () => {
       };
       const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
+    });
+
+    it('uses configured boolean value over explicit truthy default', () => {
+      const params = makeArgv({
+        globalOpt: {
+          verbose: {
+            type: 'boolean',
+            default: true,
+          },
+        },
+      });
+      const configObject = {
+        verbose: false,
+      };
+      const newArgv = applyConf({...params, configObject});
+      assert.strictEqual(newArgv.verbose, false);
     });
 
     it('uses a CLI boolean value over a configured one', () => {
