@@ -56,14 +56,11 @@ export function applyConfigToArgv({
     const expectedType = options[decamelizedOptName].type ===
       'count' ? 'number' : options[decamelizedOptName].type;
 
-    if (configObject[option]) {
-      const optionType = typeof(configObject[option]);
-      if (optionType !== expectedType &&
-        expectedType !== undefined) {
-        throw new UsageError(`The config file at ${configFileName} specified ` +
-          `the type of "${option}" incorrectly as "${optionType}"` +
-          ` (expected type: "${expectedType}")`);
-      }
+    const optionType = typeof configObject[option];
+    if (optionType !== expectedType) {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `the type of "${option}" incorrectly as "${optionType}"` +
+        ` (expected type: "${expectedType}")`);
     }
 
     let defaultValue;

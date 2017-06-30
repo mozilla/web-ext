@@ -353,16 +353,17 @@ describe('config', () => {
     it('does not throw an error when the type of option value is count', () => {
       const params = makeArgv({
         globalOpt: {
-          verbose: {
+          'random-numeric-option': {
             type: 'count',
+            default: 0,
           },
         },
       });
       const configObject = {
-        verbose: 2,
+        randomNumericOption: 15,
       };
       const newArgv = applyConf({...params, configObject});
-      assert.strictEqual(newArgv.verbose, 0);
+      assert.strictEqual(newArgv.randomNumericOption, 15);
     });
   });
 
@@ -620,7 +621,7 @@ describe('config', () => {
         'specified the type of "apiUrl" incorrectly');
     });
 
-    it('throws an error when the type of option in config is missing', () => {
+    it('throws an error when the type of option is missing', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
@@ -701,13 +702,12 @@ describe('config', () => {
           apiUrl: 2,
         },
       };
-      const params = {
-        argv: program.yargs.exitProcess(false).argv,
-        options: program.options,
-      };
 
       assert.throws(() => {
-        applyConf({...params, configObject});
+        applyConf({
+          argv: program.yargs.exitProcess(false).argv,
+          options: program.options,
+          configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly as "number"' +
         ' (expected type: "string")');
