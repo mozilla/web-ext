@@ -185,4 +185,49 @@ describe('run', () => {
     assert.instanceOf(extensionRunner, FakeExtensionRunner);
   });
 
+  it('creates a Firefox Desktop runner if targets is an empty array',
+     async () => {
+       const cmd = prepareRun();
+       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+       await cmd.run({target: []}, {FirefoxDesktopExtensionRunner});
+       sinon.assert.calledOnce(FirefoxDesktopExtensionRunner);
+     });
+
+  it('creates a Firefox Desktop runner if "firefox-desktop" is in target',
+     async () => {
+       const cmd = prepareRun();
+       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+       await cmd.run({target: ['firefox-desktop']}, {
+         FirefoxDesktopExtensionRunner,
+       });
+       sinon.assert.calledOnce(FirefoxDesktopExtensionRunner);
+     });
+
+  it('creates a Firefox Android runner if "firefox-android" is in target',
+     async () => {
+       const cmd = prepareRun();
+       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+       const FirefoxAndroidExtensionRunner = sinon.spy(FakeExtensionRunner);
+       await cmd.run({target: ['firefox-android']}, {
+         FirefoxDesktopExtensionRunner,
+         FirefoxAndroidExtensionRunner,
+       });
+
+       sinon.assert.calledOnce(FirefoxAndroidExtensionRunner);
+       sinon.assert.notCalled(FirefoxDesktopExtensionRunner);
+     });
+
+  it('creates multiple extension runners', async () => {
+    const cmd = prepareRun();
+    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+    const FirefoxAndroidExtensionRunner = sinon.spy(FakeExtensionRunner);
+    await cmd.run({target: ['firefox-android', 'firefox-desktop']}, {
+      FirefoxDesktopExtensionRunner,
+      FirefoxAndroidExtensionRunner,
+    });
+
+    sinon.assert.calledOnce(FirefoxAndroidExtensionRunner);
+    sinon.assert.calledOnce(FirefoxDesktopExtensionRunner);
+  });
+
 });
