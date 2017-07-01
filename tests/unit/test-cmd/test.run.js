@@ -33,6 +33,7 @@ describe('run', () => {
       browserConsole: false,
     };
     const options = {
+      buildExtension: sinon.spy(() => {}),
       firefoxApp: getFakeFirefox(),
       firefoxClient: sinon.spy(() => {
         return Promise.resolve(getFakeRemoteFirefox({
@@ -230,4 +231,32 @@ describe('run', () => {
     sinon.assert.calledOnce(FirefoxDesktopExtensionRunner);
   });
 
+  it('provides a buildSourceDir method to the Firefox Android runner',
+     async () => {
+       const cmd = prepareRun();
+       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+       const FirefoxAndroidExtensionRunner = sinon.spy(FakeExtensionRunner);
+       await cmd.run({target: ['firefox-android']}, {
+         FirefoxDesktopExtensionRunner,
+         FirefoxAndroidExtensionRunner,
+       });
+
+       sinon.assert.calledWithMatch(
+         FirefoxAndroidExtensionRunner,
+         {
+           buildSourceDir: sinon.match.func,
+         }
+       );
+
+       const {buildSourceDir} = FirefoxAndroidExtensionRunner.firstCall.args[0];
+
+       buildSourceDir('/fake/source/dir');
+
+       sinon.assert.calledWithMatch(
+         cmd.options.buildExtension,
+         {
+           sourceDir: '/fake/source/dir',
+         },
+       );
+     });
 });

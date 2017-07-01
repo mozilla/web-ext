@@ -1,7 +1,7 @@
 /* @flow */
 import defaultADB from 'adbkit';
 
-import build from './build';
+import defaultBuildExtension from './build';
 import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
@@ -49,6 +49,7 @@ export type CmdRunParams = {|
 |};
 
 export type CmdRunOptions = {|
+  buildExtension: typeof defaultBuildExtension,
   desktopNotifications: typeof defaultDesktopNotifications,
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxClient,
@@ -83,6 +84,7 @@ export default async function run(
     firefoxApk,
   }: CmdRunParams,
   {
+    buildExtension = defaultBuildExtension,
     desktopNotifications = defaultDesktopNotifications,
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
@@ -159,12 +161,12 @@ export default async function run(
       adb: defaultADB,
       desktopNotifications: defaultDesktopNotifications,
       buildSourceDir: (extensionSourceDir: string) => {
-        return build({
+        return buildExtension({
           sourceDir: extensionSourceDir,
           artifactsDir,
           ignoreFiles,
           asNeeded: false,
-          // TODO: choose a different artifactsDir for safety?
+          // TODO: choose a different artifactsDir for additional safety?
           overwriteDest: true,
         });
       },
