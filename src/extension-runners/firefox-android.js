@@ -511,6 +511,12 @@ export class FirefoxAndroidExtensionRunner {
           return line.trim().endsWith('firefox-debugger-socket');
         });
 
+      // Exit the unix socket file discovery loop as soon as
+      // the firefox debugger socket has been found.
+      if (androidUnixSockets.length > 0) {
+        break;
+      }
+
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
 
