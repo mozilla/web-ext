@@ -107,6 +107,9 @@ type PrepareParams = {
   fakeADBReadAllData?: Array<string>
 }
 
+// Reduce the waiting time during tests.
+FirefoxAndroidExtensionRunner.unixSocketDiscoveryRetryTime = 0;
+
 function prepareExtensionRunnerParams({
   debuggerPort,
   fakeFirefoxApp,
@@ -169,7 +172,7 @@ function prepareExtensionRunnerParams({
 
 describe('util/extension-runners/firefox-android', () => {
 
-  describe('raises an UsageError when', () => {
+  describe('raises an UsageError when:', () => {
 
     async function testUsageError(prepareTestParams, testExceptionCallback) {
       const {params} = prepareExtensionRunnerParams(prepareTestParams);
@@ -374,7 +377,7 @@ describe('util/extension-runners/firefox-android', () => {
 
   });
 
-  describe('a valid device and Firefox apk has been selected', () => {
+  describe('a valid device and Firefox apk has been selected:', () => {
     function prepareSelectedValidDeviceAndAPKParams(
       overriddenProperties = {}
     ) {

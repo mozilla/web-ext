@@ -6,6 +6,8 @@
  */
 
 import path from 'path';
+import readline from 'readline';
+import tty from 'tty';
 
 import defaultADB from 'adbkit';
 
@@ -61,6 +63,7 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   adb: typeof defaultADB,
   buildSourceDir: (string) => Promise<ExtensionBuildResult>,
   desktopNotifications: typeof defaultDesktopNotifications,
+  stdin?: stream$Readable,
 |};
 
 const log = createLogger(__filename);
@@ -71,6 +74,11 @@ const log = createLogger(__filename);
  */
 
 export class FirefoxAndroidExtensionRunner {
+  // Wait 3s before the next unix socket discovery loop.
+  static unixSocketDiscoveryRetryTime = 3 * 1000;
+  // Wait for at most 3 minutes before giving up.
+  static unixSocketDiscoveryMaxTime = 3 * 10 * 1000;
+
   params: FirefoxAndroidExtensionRunnerParams;
   adbClient: any; // TODO: better flow typing here.
   selectedAdbDevice: {id: string};
@@ -88,6 +96,10 @@ export class FirefoxAndroidExtensionRunner {
     this.cleanupCallbacks = new Set();
     this.adbExtensionsPathBySourceDir = new Map();
     this.reloadableExtensions = new Map();
+
+    // Choose a artifacts dir name for the assets pushed to the
+    // Android device.
+    this.selectedArtifactsDir = `/sdcard/web-ext-artifacts-${Date.now()}`;
 
     // Print warning for not currently supported options (e.g. preInstall,
     // cloned profiles, browser console).
@@ -245,10 +257,6 @@ export class FirefoxAndroidExtensionRunner {
   // Private helper methods.
 
   getDeviceProfileDir(): string {
-    if (!this.selectedArtifactsDir) {
-      throw new WebExtError('Unexpected undefined artifact dir');
-    }
-
     return `${this.selectedArtifactsDir}/profile`;
   }
 
@@ -405,8 +413,6 @@ export class FirefoxAndroidExtensionRunner {
     log.info(`Preparing a temporary profile for ${selectedFirefoxApk}...`);
     const profile = await firefoxApp.createProfile({app: 'fennec'});
 
-    this.selectedArtifactsDir = `/sdcard/web-ext-artifacts-${Date.now()}`;
-
     const deviceProfileDir = this.getDeviceProfileDir();
 
     await adbClient.shell(selectedAdbDevice.id, [
@@ -495,11 +501,44 @@ export class FirefoxAndroidExtensionRunner {
         adb,
       },
     } = this;
+
+    const stdin = this.params.stdin || process.stdin;
+
+    const {
+      unixSocketDiscoveryMaxTime,
+      unixSocketDiscoveryRetryTime,
+    } = FirefoxAndroidExtensionRunner;
+
     // Firefox for Android debugger socket discovery.
     let androidUnixSockets = [];
 
-    // TODO: implement exit on Ctrl-C
+    const startedDiscoveryTime = Date.now();
+
+    const handleCtrlC = (str, key) => {
+      if (key.ctrl && key.name === 'c') {
+        throw new UsageError(
+          'Exit the Android Firefox Debugger Socket discovery'
+        );
+      }
+    };
     while (androidUnixSockets.length === 0) {
+      if (Date.now() - startedDiscoveryTime > unixSocketDiscoveryMaxTime) {
+        throw new WebExtError(
+          'Unable to find the Android Firefox Debugger Socket'
+        );
+      }
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, unixSocketDiscoveryRetryTime);
+      });
+
+      if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+        readline.emitKeypressEvents(stdin);
+        stdin.setRawMode(true);
+
+        stdin.on('keypress', handleCtrlC);
+      }
+
       log.info(`Waiting ${selectedFirefoxApk} to be ready... ` +
                '(it can take a while on an ARM emulator)');
       androidUnixSockets = await adbClient.shell(selectedAdbDevice.id, [
@@ -510,14 +549,6 @@ export class FirefoxAndroidExtensionRunner {
         .split('\n').filter((line) => {
           return line.trim().endsWith('firefox-debugger-socket');
         });
-
-      // Exit the unix socket file discovery loop as soon as
-      // the firefox debugger socket has been found.
-      if (androidUnixSockets.length > 0) {
-        break;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 3000));
     }
 
     // Got a debugger socket file to connect
