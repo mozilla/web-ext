@@ -5,6 +5,7 @@
  * in a Firefox for Android instance.
  */
 
+import net from 'net';
 import path from 'path';
 import readline from 'readline';
 import tty from 'tty';
@@ -577,15 +578,27 @@ export class FirefoxAndroidExtensionRunner {
                                                       .slice(-2, -1)[0];
     log.debug(`RDP Socket File selected: ${this.selectedRDPSocketFile}`);
 
-    // TODO: find a free port
-    const tcpPort = await this.chooseLocalTcpPort(6010);
+    const tcpPort = await this.chooseLocalTcpPort();
+
+    // Log the choosen tcp port at info level (useful to the user to be able
+    // to connect the Firefox DevTools to the Firefox for Android instance).
+    log.info(`Android Remote Debugging TCP Port selected: ${tcpPort}`);
+
     await adbClient.forward(selectedAdbDevice.id, `tcp:${tcpPort}`,
                             `localfilesystem:${this.selectedRDPSocketFile}`);
     this.selectedTCPPort = tcpPort;
   }
 
-  async chooseLocalTcpPort(basePort: number): Promise<number> {
-    return basePort;
+  chooseLocalTcpPort(): Promise<number> {
+    return new Promise((resolve) => {
+      const srv = net.createServer();
+      // $FLOW_FIXME: flow has his own opinions on this method signature.
+      srv.listen(0, () => {
+        const freeTcpPort = srv.address().port;
+        srv.close();
+        resolve(freeTcpPort);
+      });
+    });
   }
 
   async rdpInstallExtensions() {
