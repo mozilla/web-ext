@@ -161,6 +161,7 @@ function prepareExtensionRunnerParams({
       return Promise.resolve(remoteFirefox);
     }),
     desktopNotifications: sinon.spy(() => {}),
+    stdin: new EventEmitter(),
     ...(params || {}),
   };
 
