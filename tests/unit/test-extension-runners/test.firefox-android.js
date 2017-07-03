@@ -740,6 +740,34 @@ describe('util/extension-runners/firefox-android', () => {
          );
        });
 
+    it('rejects if an extension has never been uploaded on the device',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams();
+
+         const fakeFirefoxClient = params.firefoxClient;
+
+         let actualError;
+         let runnerInstance;
+
+         params.firefoxClient = sinon.spy((firefoxClientParams) => {
+           // Clear the map of uploaded extensions to fake a missing one.
+           runnerInstance.adbExtensionsPathBySourceDir.clear();
+           return fakeFirefoxClient(firefoxClientParams);
+         });
+
+         try {
+           runnerInstance = new FirefoxAndroidExtensionRunner(params);
+           await runnerInstance.run();
+         } catch (error) {
+           actualError = error;
+         }
+
+         assert.instanceOf(actualError, WebExtError);
+         assert.match(
+           actualError && actualError.message,
+           /Unexpected missing android device extension path for:/
+         );
+       });
 
     it('calls the callback registered on cleanup when firefox closes',
        async () => {
