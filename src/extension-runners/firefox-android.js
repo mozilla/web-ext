@@ -510,18 +510,24 @@ export class FirefoxAndroidExtensionRunner {
     } = FirefoxAndroidExtensionRunner;
 
     // Firefox for Android debugger socket discovery.
-    let androidUnixSockets = [];
-
     const startedDiscoveryTime = Date.now();
+    let androidUnixSockets = [];
+    let userExit = false;
 
     const handleCtrlC = (str, key) => {
       if (key.ctrl && key.name === 'c') {
-        throw new UsageError(
-          'Exit the Android Firefox Debugger Socket discovery'
-        );
+        userExit = true;
       }
     };
-    while (androidUnixSockets.length === 0) {
+
+    if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+      readline.emitKeypressEvents(stdin);
+      stdin.setRawMode(true);
+
+      stdin.on('keypress', handleCtrlC);
+    }
+
+    while (!userExit && androidUnixSockets.length === 0) {
       if (Date.now() - startedDiscoveryTime > unixSocketDiscoveryMaxTime) {
         throw new WebExtError(
           'Unable to find the Android Firefox Debugger Socket'
@@ -531,13 +537,6 @@ export class FirefoxAndroidExtensionRunner {
       await new Promise((resolve) => {
         setTimeout(resolve, unixSocketDiscoveryRetryTime);
       });
-
-      if (stdin.isTTY && stdin instanceof tty.ReadStream) {
-        readline.emitKeypressEvents(stdin);
-        stdin.setRawMode(true);
-
-        stdin.on('keypress', handleCtrlC);
-      }
 
       log.info(`Waiting ${selectedFirefoxApk} to be ready... ` +
                '(it can take a while on an ARM emulator)');
@@ -549,6 +548,16 @@ export class FirefoxAndroidExtensionRunner {
         .split('\n').filter((line) => {
           return line.trim().endsWith('firefox-debugger-socket');
         });
+    }
+
+    if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+      stdin.removeListener('keypress', handleCtrlC);
+    }
+
+    if (userExit) {
+      throw new UsageError(
+        'User requested exit during Android Firefox Debugger Socket discovery'
+      );
     }
 
     // Got a debugger socket file to connect

@@ -1,6 +1,7 @@
 /* @flow */
 
 import EventEmitter from 'events';
+import tty from 'tty';
 
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
@@ -663,6 +664,48 @@ describe('util/extension-runners/firefox-android', () => {
          sinon.assert.calledWithMatch(
            adb.fakeADBClient.shell,
            'emulator-1', ['rm', '-rf', runnerInstance.selectedArtifactsDir]
+         );
+       });
+
+    it('allows user to exit while waiting for the Android Firefox Debugger',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams({
+           fakeADBReadAllData: [
+             // Fake the output of running "pm list" on the device
+             fakeADBPackageList,
+             // Fake the output of running am force-stop SELECTED_APK
+             '',
+             // Do not fake the unix socket file discovery.
+           ],
+         });
+
+         params.adb.util.readAll.onCall(2).callsFake(() => {
+           return new Promise((resolve) => {
+             fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+             resolve('');
+           });
+         });
+
+         const fakeStdin = new tty.ReadStream();
+         sinon.spy(fakeStdin, 'setRawMode');
+
+         params.stdin = fakeStdin;
+
+         let actualError;
+
+         try {
+           const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+           await runnerInstance.run();
+         } catch (error) {
+           actualError = error;
+         } finally {
+           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+         }
+
+         assert.instanceOf(actualError, UsageError);
+         assert.match(
+           actualError && actualError.message,
+           /User requested exit during Android Firefox Debugger/
          );
        });
 
