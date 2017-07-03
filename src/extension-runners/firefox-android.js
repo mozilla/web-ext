@@ -56,6 +56,7 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   adbPort?: string,
   adbDevice?: string,
   firefoxApk?: string,
+  firefoxAndroidTimeout?: number,
 
   // Injected Dependencies.
   firefoxApp: typeof defaultFirefoxApp,
@@ -499,15 +500,23 @@ export class FirefoxAndroidExtensionRunner {
       selectedFirefoxApk,
       params: {
         adb,
+        firefoxAndroidTimeout,
       },
     } = this;
 
     const stdin = this.params.stdin || process.stdin;
 
     const {
-      unixSocketDiscoveryMaxTime,
       unixSocketDiscoveryRetryTime,
     } = FirefoxAndroidExtensionRunner;
+
+    let {
+      unixSocketDiscoveryMaxTime,
+    } = FirefoxAndroidExtensionRunner;
+
+    if (typeof firefoxAndroidTimeout === 'number') {
+      unixSocketDiscoveryMaxTime = firefoxAndroidTimeout;
+    }
 
     // Firefox for Android debugger socket discovery.
     const startedDiscoveryTime = Date.now();
@@ -530,7 +539,7 @@ export class FirefoxAndroidExtensionRunner {
     while (!userExit && androidUnixSockets.length === 0) {
       if (Date.now() - startedDiscoveryTime > unixSocketDiscoveryMaxTime) {
         throw new WebExtError(
-          'Unable to find the Android Firefox Debugger Socket'
+          'Timeout while waiting for the Android Firefox Debugger Socket'
         );
       }
 

@@ -709,6 +709,38 @@ describe('util/extension-runners/firefox-android', () => {
          );
        });
 
+    it('rejects on Android Firefox Debugger discovery timeouts',
+       async () => {
+         const params = prepareSelectedValidDeviceAndAPKParams({
+           fakeADBReadAllData: [
+             // Fake the output of running "pm list" on the device.
+             fakeADBPackageList,
+             // Fake the output of running am force-stop SELECTED_APK.
+             '',
+             // Fake an empty result during unix socket discovery.
+             '',
+           ],
+         });
+
+         params.firefoxAndroidTimeout = 0;
+
+         let actualError;
+
+         try {
+           const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+           await runnerInstance.run();
+         } catch (error) {
+           actualError = error;
+         }
+
+         assert.instanceOf(actualError, WebExtError);
+         assert.match(
+           actualError && actualError.message,
+           /Timeout while waiting for the Android Firefox/
+         );
+       });
+
+
     it('calls the callback registered on cleanup when firefox closes',
        async () => {
          const params = prepareSelectedValidDeviceAndAPKParams();
