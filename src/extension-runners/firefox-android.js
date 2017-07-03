@@ -130,16 +130,21 @@ export class FirefoxAndroidExtensionRunner {
     // push the profile preferences to the remote profile dir.
     await this.adbPrepareProfileDir();
 
-    // Start Firefox for Android instance on the created profile.
-    await this.adbStartSelectedPackage();
+    // NOTE: running Firefox for Android on the Android Emulator can be
+    // pretty slow, we can run the following 3 steps in parallel to speed up
+    // it a bit.
+    await Promise.all([
+      // Start Firefox for Android instance on the created profile.
+      this.adbStartSelectedPackage(),
 
-    // Build and push to devices all the extension xpis
-    // and keep track of the xpi built and uploaded by extension sourceDir.
-    await this.buildAndPushExtensions();
+      // Build and push to devices all the extension xpis
+      // and keep track of the xpi built and uploaded by extension sourceDir.
+      this.buildAndPushExtensions(),
 
-    // Wait for RDP unix socket file created and
-    // Create an ADB forward connection on a free tcp port
-    await this.adbDiscoveryAndForwardRDPUnixSocket();
+      // Wait for RDP unix socket file created and
+      // Create an ADB forward connection on a free tcp port
+      this.adbDiscoveryAndForwardRDPUnixSocket(),
+    ]);
 
     // Connect to RDP socket on the local tcp server, install all the pushed extension
     // and keep track of the built and installed extension by extension sourceDir.
@@ -449,7 +454,7 @@ export class FirefoxAndroidExtensionRunner {
     });
   }
 
-  buildAndPushExtension(sourceDir: string) {
+  async buildAndPushExtension(sourceDir: string) {
     const {
       adbClient,
       selectedAdbDevice,
@@ -459,32 +464,30 @@ export class FirefoxAndroidExtensionRunner {
       },
     } = this;
 
-    return Promise.resolve().then(async () => {
-      const {extensionPath} = await buildSourceDir(sourceDir);
+    const {extensionPath} = await buildSourceDir(sourceDir);
 
-      const extFileName = path.basename(extensionPath, '.zip');
+    const extFileName = path.basename(extensionPath, '.zip');
 
-      let adbExtensionPath = this.adbExtensionsPathBySourceDir.get(sourceDir);
+    let adbExtensionPath = this.adbExtensionsPathBySourceDir.get(sourceDir);
 
-      if (!adbExtensionPath) {
-        adbExtensionPath = `${selectedArtifactsDir}/${extFileName}.xpi`;
-      }
+    if (!adbExtensionPath) {
+      adbExtensionPath = `${selectedArtifactsDir}/${extFileName}.xpi`;
+    }
 
-      log.debug(`Uploading ${extFileName} on the android device`);
+    log.debug(`Uploading ${extFileName} on the android device`);
 
-      await adbClient.push(
-        selectedAdbDevice.id, extensionPath, adbExtensionPath
-      ).then(function(transfer) {
-        return new Promise((resolve) => {
-          // TODO: show progress in the console
-          transfer.on('end', resolve);
-        });
+    await adbClient.push(
+      selectedAdbDevice.id, extensionPath, adbExtensionPath
+    ).then(function(transfer) {
+      return new Promise((resolve) => {
+        // TODO: show progress in the console
+        transfer.on('end', resolve);
       });
-
-      log.debug(`Upload completed: ${adbExtensionPath}`);
-
-      this.adbExtensionsPathBySourceDir.set(sourceDir, adbExtensionPath);
     });
+
+    log.debug(`Upload completed: ${adbExtensionPath}`);
+
+    this.adbExtensionsPathBySourceDir.set(sourceDir, adbExtensionPath);
   }
 
   async buildAndPushExtensions() {
