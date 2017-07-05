@@ -64,9 +64,9 @@ describe('run', () => {
     const cmd = prepareRun();
     const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
     await cmd.run({firefox}, {FirefoxDesktopExtensionRunner});
-    assert.equal(FirefoxDesktopExtensionRunner.called, true);
-    assert.equal(FirefoxDesktopExtensionRunner.firstCall.args[0].firefoxBinary,
-                 firefox);
+    sinon.assert.calledWith(
+     FirefoxDesktopExtensionRunner, sinon.match({firefoxBinary: firefox})
+    );
   });
 
   it('passes startUrl parameter to Firefox when specified', async () => {
@@ -76,10 +76,9 @@ describe('run', () => {
 
     await cmd.run({startUrl: expectedStartUrls},
                   {FirefoxDesktopExtensionRunner});
-
-    assert.ok(FirefoxDesktopExtensionRunner.called);
-    assert.deepEqual(FirefoxDesktopExtensionRunner.firstCall.args[0].startUrl,
-                     expectedStartUrls);
+    sinon.assert.calledWith(
+     FirefoxDesktopExtensionRunner, sinon.match({startUrl: expectedStartUrls})
+    );
   });
 
   it('passes the expected parameters to the extension runner', async () => {

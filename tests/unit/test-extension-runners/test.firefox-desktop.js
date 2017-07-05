@@ -103,10 +103,10 @@ describe('util/extension-runners/firefox-desktop', () => {
     await runnerInstance.run();
 
     assert.ok(runnerInstance.getName(), 'Firefox Desktop');
-    assert.ok(remoteFirefox.installTemporaryAddon.calledOnce);
-    assert.equal(remoteFirefox.installTemporaryAddon.firstCall.args[0],
-                 params.extensions[0].sourceDir);
-
+    sinon.assert.calledOnce(remoteFirefox.installTemporaryAddon);
+    sinon.assert.calledWith(remoteFirefox.installTemporaryAddon,
+                            sinon.match(params.extensions[0].sourceDir)
+    );
     sinon.assert.calledOnce(params.firefoxApp.createProfile);
     sinon.assert.calledWith(params.firefoxApp.createProfile,
                             sinon.match({customPrefs}));
