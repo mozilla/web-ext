@@ -66,9 +66,9 @@ describe('build', () => {
     };
     return build(params, {packageCreator, createFileFilter}).then(() => {
       // ensure sourceDir, artifactsDir, ignoreFiles is used
-      sinon.assert.calledWith(createFileFilter, sinon.match(params));
+      sinon.assert.calledWithMatch(createFileFilter, params);
       // ensure packageCreator received correct fileFilter
-      sinon.assert.calledWith(packageCreator, sinon.match({fileFilter}));
+      sinon.assert.calledWithMatch(packageCreator, {fileFilter});
     });
   });
 

@@ -64,8 +64,8 @@ describe('run', () => {
     const cmd = prepareRun();
     const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
     await cmd.run({firefox}, {FirefoxDesktopExtensionRunner});
-    sinon.assert.calledWith(
-     FirefoxDesktopExtensionRunner, sinon.match({firefoxBinary: firefox})
+    sinon.assert.calledWithMatch(
+      FirefoxDesktopExtensionRunner, {firefoxBinary: firefox}
     );
   });
 
@@ -76,8 +76,8 @@ describe('run', () => {
 
     await cmd.run({startUrl: expectedStartUrls},
                   {FirefoxDesktopExtensionRunner});
-    sinon.assert.calledWith(
-     FirefoxDesktopExtensionRunner, sinon.match({startUrl: expectedStartUrls})
+    sinon.assert.calledWithMatch(
+      FirefoxDesktopExtensionRunner, {startUrl: expectedStartUrls}
     );
   });
 
