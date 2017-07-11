@@ -73,8 +73,8 @@ describe('program.Program', () => {
       shouldExitProgram: true,
     })
       .then(() => {
-        assert.equal(fakeProcess.exit.called, true);
-        assert.equal(fakeProcess.exit.firstCall.args[0], 1);
+        sinon.assert.calledOnce(fakeProcess.exit);
+        sinon.assert.calledWith(fakeProcess.exit, 1);
       });
   });
 

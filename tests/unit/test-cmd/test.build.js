@@ -66,11 +66,9 @@ describe('build', () => {
     };
     return build(params, {packageCreator, createFileFilter}).then(() => {
       // ensure sourceDir, artifactsDir, ignoreFiles is used
-      assert.ok(createFileFilter.called);
-      assert.deepEqual(createFileFilter.firstCall.args[0], params);
+      sinon.assert.calledWithMatch(createFileFilter, params);
       // ensure packageCreator received correct fileFilter
-      assert.ok(packageCreator.called);
-      assert.equal(packageCreator.firstCall.args[0].fileFilter, fileFilter);
+      sinon.assert.calledWithMatch(packageCreator, {fileFilter});
     });
   });
 

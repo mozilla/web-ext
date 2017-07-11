@@ -10,8 +10,7 @@ describe('docs', () => {
   it('passes the correct url to docs', () => {
     const openUrl = sinon.spy((urlToOpen, callback) => callback(null));
     return defaultDocsCommand({}, {openUrl}).then(() => {
-      assert.ok(openUrl.called);
-      assert.equal(openUrl.firstCall.args[0], url);
+      sinon.assert.calledWith(openUrl, url);
     });
   });
 
