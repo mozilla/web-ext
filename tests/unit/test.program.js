@@ -74,7 +74,7 @@ describe('program.Program', () => {
     })
       .then(() => {
         sinon.assert.calledOnce(fakeProcess.exit);
-        sinon.assert.calledWithMatch(fakeProcess.exit, 1);
+        sinon.assert.calledWith(fakeProcess.exit, 1);
       });
   });
 
