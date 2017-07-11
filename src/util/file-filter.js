@@ -27,6 +27,7 @@ export type FileFilterOptions = {|
   ignoreFiles?: Array<string>,
   sourceDir: string,
   artifactsDir?: string,
+  noDefaultIgnoreFiles?: boolean
 |};
 
 /*
@@ -48,13 +49,16 @@ export class FileFilter {
     ignoreFiles = [],
     sourceDir,
     artifactsDir,
+    noDefaultIgnoreFiles = false,
   }: FileFilterOptions = {}) {
     sourceDir = path.resolve(sourceDir);
 
     this.filesToIgnore = [];
     this.sourceDir = sourceDir;
 
-    this.addToIgnoreList(baseIgnoredPatterns);
+    if (!noDefaultIgnoreFiles) {
+      this.addToIgnoreList(baseIgnoredPatterns);
+    }
     if (ignoreFiles) {
       this.addToIgnoreList(ignoreFiles);
     }

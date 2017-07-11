@@ -63,6 +63,7 @@ describe('build', () => {
       sourceDir: '/src',
       artifactsDir: 'artifacts',
       ignoreFiles: ['**/*.log'],
+      noDefaultIgnoreFiles: false,
     };
     return build(params, {packageCreator, createFileFilter}).then(() => {
       // ensure sourceDir, artifactsDir, ignoreFiles is used
@@ -240,6 +241,28 @@ describe('build', () => {
           .then(() => zipFile.extractFilenames())
           .then((fileNames) => {
             assert.notInclude(fileNames, 'background-script.js');
+            return zipFile.close();
+          })
+    );
+  });
+
+  it('allow overrites default ignores', () => {
+    const zipFile = new ZipFile();
+    const fileFilter = new FileFilter({
+      sourceDir: '.',
+      noDefaultIgnoreFiles: true,
+    });
+
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+        }, {fileFilter})
+          .then((buildResult) => zipFile.open(buildResult.extensionPath))
+          .then(() => zipFile.extractFilenames())
+          .then((fileNames) => {
+            assert.include(fileNames, 'zip-file.zip');
             return zipFile.close();
           })
     );
