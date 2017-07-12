@@ -150,15 +150,16 @@ export class Program {
       await runCommand(argv, {shouldExitProgram});
 
     } catch (error) {
-      const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
-        log.error(`\n${prefix}${error.stack}\n`);
+        log.error(`\n${error.stack}\n`);
       } else {
-        log.error(`\n${prefix}${error}\n`);
+        log.error(`\n${error}\n`);
       }
       if (error.code) {
-        log.error(`${prefix}Error code: ${error.code}\n`);
+        log.error(`Error code: ${error.code}\n`);
       }
+
+      log.debug(`Command executed: ${cmd}`);
 
       if (this.shouldExitProgram) {
         systemProcess.exit(1);
