@@ -96,7 +96,7 @@ describe('util/file-filter', () => {
 
     it('clean default ignore', () => {
       const filter = newFileFilter({
-        noDefaultIgnoreFiles: true,
+        overrideDefaultIgnoreFiles: true,
       });
       assert.equal(filter.wantFile('some.xpi'), true);
     });

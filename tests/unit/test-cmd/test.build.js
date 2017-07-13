@@ -61,12 +61,13 @@ describe('build', () => {
       sourceDir: '/src',
       artifactsDir: 'artifacts',
       ignoreFiles: ['**/*.log'],
-      noDefaultIgnoreFiles: false,
     };
     return build(params, {packageCreator, createFileFilter}).then(() => {
       // ensure sourceDir, artifactsDir, ignoreFiles is used
       assert.ok(createFileFilter.called);
-      assert.deepEqual(createFileFilter.firstCall.args[0], params);
+      assert.deepEqual(createFileFilter.firstCall.args[0][0], params[0]);
+      assert.deepEqual(createFileFilter.firstCall.args[0][1], params[1]);
+      assert.deepEqual(createFileFilter.firstCall.args[0][2], params[2]);
       // ensure packageCreator received correct fileFilter
       assert.ok(packageCreator.called);
       assert.equal(packageCreator.firstCall.args[0].fileFilter, fileFilter);
@@ -250,7 +251,7 @@ describe('build', () => {
     const zipFile = new ZipFile();
     const fileFilter = new FileFilter({
       sourceDir: '.',
-      noDefaultIgnoreFiles: true,
+      overrideDefaultIgnoreFiles: true,
     });
 
     return withTempDir(

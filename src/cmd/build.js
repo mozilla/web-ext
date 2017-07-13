@@ -206,7 +206,7 @@ export default async function build(
       sourceDir,
       artifactsDir,
       ignoreFiles,
-      noDefaultIgnoreFiles,
+      overrideDefaultIgnoreFiles: noDefaultIgnoreFiles,
     }),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
