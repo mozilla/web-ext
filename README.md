@@ -19,28 +19,36 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Installation from npm
 
-### Global
+### Global command
 
-You can install this command onto your machine globally.
+You can install this command onto your machine globally with:
 
     npm install --global web-ext
 
-### Dependency
+### For your project
 
-Alternatively you can install this command as one of the `devDependencies` of your project.  This method can help you control the version of this project as used by your team.
+Alternatively you can install this command as one of the
+[`devDependencies`](https://docs.npmjs.com/files/package.json#devdependencies)
+of your project.  This method can help you control the version of `web-ext`
+as used by your team.
 
-    npm install -D web-ext
+    npm install --save-dev web-ext
 
-Next you can use the `web-ext` command from your scripts.  Where the `-s` argument specifies where to find the source code for your extension.
+Next you can use the `web-ext` command in your project as an
+[npm script](https://docs.npmjs.com/misc/scripts).
+Here is an example where the `--source-dir` argument specifies where to find
+the source code for your extension.
 
 `package.json`
 ```json
 "scripts": {
-  "start:firefox": "web-ext run -s src/firefox/",
+  "start:firefox": "web-ext run --source-dir ./extension-dist/",
 }
 ```
 
-And you can always pass in additional commands to your npm scripts using the `--` suffix.  For example, the previous script could specify the firefox version on the command line with this:
+You can always pass in additional commands to your npm scripts using
+the `--` suffix. For example, the previous script could specify the Firefox
+version on the command line with this:
 
     npm run start:firefox -- --firefox=nightly
 
