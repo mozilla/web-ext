@@ -22,6 +22,8 @@ import {
 import {
   FirefoxAndroidExtensionRunner as defaultFirefoxAndroidExtensionRunner,
 } from '../extension-runners/firefox-android';
+import {linter as defaultLinter} from '../util/linter';
+
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 

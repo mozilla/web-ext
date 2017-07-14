@@ -13,6 +13,7 @@ import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
 import {createLogger} from '../util/logger';
+import {linter as defaultLinter} from '../util/linter';
 import type {FileFilterCreatorFn} from '../util/file-filter';
 import {
   createFileFilter as defaultFileFilterCreator,
@@ -204,6 +205,8 @@ export type WatcherCreatorParams = {|
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
+  lint: boolean,
+  linter?: typeof defaultLinter,
 |};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
@@ -212,7 +215,8 @@ export function defaultWatcherCreator(
   {
     reloadExtension, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
-    createFileFilter = defaultFileFilterCreator,
+    createFileFilter = defaultFileFilterCreator, lint = false,
+    linter = defaultLinter,
   }: WatcherCreatorParams
 ): Watchpack {
   const fileFilter = createFileFilter(
@@ -221,7 +225,12 @@ export function defaultWatcherCreator(
   return onSourceChange({
     sourceDir,
     artifactsDir,
-    onChange: () => reloadExtension(sourceDir),
+    onChange: async (filePath) => {
+      if (lint) {
+        await linter({artifactsDir, sourceDir, filePath});
+      }
+      reloadExtension(sourceDir);
+    },
     shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
 }
@@ -235,6 +244,7 @@ export type ReloadStrategyParams = {|
   artifactsDir: string,
   ignoreFiles?: Array<string>,
   noInput?: boolean,
+  lint: boolean,
 |};
 
 export type ReloadStrategyOptions = {|
@@ -250,6 +260,7 @@ export function defaultReloadStrategy(
     ignoreFiles,
     noInput = false,
     sourceDir,
+    lint,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
@@ -269,6 +280,7 @@ export function defaultReloadStrategy(
     sourceDir,
     artifactsDir,
     ignoreFiles,
+    lint,
   });
 
   extensionRunner.registerCleanup(() => {

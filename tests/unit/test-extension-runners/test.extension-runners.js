@@ -300,6 +300,8 @@ describe('util/extension-runners', () => {
         onSourceChange: sinon.spy(() => {}),
         ignoreFiles: ['path/to/file', 'path/to/file2'],
         reloadExtension: sinon.spy(() => Promise.resolve()),
+        lint: false,
+        linter: sinon.spy(() => Promise.resolve()),
       };
       return {
         config,
@@ -372,6 +374,24 @@ describe('util/extension-runners', () => {
       );
     });
 
+    it('lints changed files', () => {
+      const {config, createWatcher} = prepare();
+      const {artifactsDir, sourceDir, linter} = config;
+      const filePath = 'path/to/file';
+      const expectedLinterParams = {artifactsDir, sourceDir, filePath};
+      config.lint = true;
+      createWatcher();
+
+      const callArgs = config.onSourceChange.firstCall.args[0];
+      assert.typeOf(callArgs.onChange, 'function');
+      // Simulate executing the handler when a source file changes.
+      return callArgs.onChange(filePath)
+        .then(() => {
+          assert.ok(linter.called);
+          assert.deepEqual(linter.firstCall.args[0], expectedLinterParams);
+        });
+    });
+
   });
 
   describe('defaultReloadStrategy', () => {
@@ -388,6 +408,7 @@ describe('util/extension-runners', () => {
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
         ignoreFiles: ['first/file', 'second/file'],
+        lint: false,
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
@@ -421,6 +442,7 @@ describe('util/extension-runners', () => {
           sourceDir: sentArgs.sourceDir,
           artifactsDir: sentArgs.artifactsDir,
           ignoreFiles: sentArgs.ignoreFiles,
+          lint: sentArgs.lint,
         })
       );
     });

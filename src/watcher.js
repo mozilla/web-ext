@@ -12,7 +12,7 @@ const log = createLogger(__filename);
 
 export type ShouldWatchFn = (filePath: string) => boolean;
 
-export type OnChangeFn = () => any;
+export type OnChangeFn = (filePath: string) => any;
 
 export type OnSourceChangeParams = {|
   sourceDir: string,
