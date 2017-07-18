@@ -211,7 +211,7 @@ export async function isDefaultProfile(
   profilePathOrName: string,
   ProfileFinder?: typeof FirefoxProfile.Finder = FirefoxProfile.Finder
 ): Promise<boolean> {
-  if (DEFAULT_PROFILES_NAMES.indexOf(profilePathOrName) >= 0) {
+  if (DEFAULT_PROFILES_NAMES.includes(profilePathOrName)) {
     return true;
   }
 
@@ -243,7 +243,7 @@ export async function isDefaultProfile(
   for (const profile of finder.profiles) {
     // Check if the profile dir path or name is one of the default profiles
     // defined in the profiles.ini file.
-    if (DEFAULT_PROFILES_NAMES.indexOf(profile.Name) >= 0 ||
+    if (DEFAULT_PROFILES_NAMES.includes(profile.Name) ||
         profile.Default === '1') {
       let profileFullPath;
 
