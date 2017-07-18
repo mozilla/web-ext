@@ -380,12 +380,6 @@ describe('firefox', () => {
              FakeProfileFinder
            );
            assert.equal(isManuallyDefault, true);
-
-           const isNotDefault = await firefox.isDefaultProfile(
-             path.join(profilesDirPath, 'unkown-profile-dir'),
-             FakeProfileFinder
-           );
-           assert.equal(isNotDefault, false);
          });
        });
 
