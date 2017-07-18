@@ -199,6 +199,7 @@ const DEFAULT_PROFILES_NAMES = [
 export type IsDefaultProfileFn = (
   profilePathOrName: string,
   ProfileFinder?: typeof FirefoxProfile.Finder,
+  fsStat?: typeof fs.stat,
 ) => Promise<boolean>;
 
 /*
@@ -209,7 +210,8 @@ export type IsDefaultProfileFn = (
  */
 export async function isDefaultProfile(
   profilePathOrName: string,
-  ProfileFinder?: typeof FirefoxProfile.Finder = FirefoxProfile.Finder
+  ProfileFinder?: typeof FirefoxProfile.Finder = FirefoxProfile.Finder,
+  fsStat?: typeof fs.stat = fs.stat,
 ): Promise<boolean> {
   if (DEFAULT_PROFILES_NAMES.includes(profilePathOrName)) {
     return true;
@@ -218,9 +220,11 @@ export async function isDefaultProfile(
   const baseProfileDir = ProfileFinder.locateUserDirectory();
   const profilesIniPath = path.join(baseProfileDir, 'profiles.ini');
   try {
-    await fs.stat(profilesIniPath);
+    await fsStat(profilesIniPath);
   } catch (error) {
     if (isErrorWithCode('ENOENT', error)) {
+      log.debug(`profiles.ini not found: ${error}`);
+
       // No profiles exist yet, default to false (the default profile name contains a
       // random generated component).
       return false;

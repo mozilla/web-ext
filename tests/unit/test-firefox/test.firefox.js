@@ -422,6 +422,31 @@ describe('firefox', () => {
          });
        });
 
+    it('rejects on any unexpected error while looking for profiles.ini',
+       async () => {
+         return withTempDir(async (tmpDir) => {
+           const profilesDirPath = tmpDir.path();
+           const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
+           const fakeFsStat = sinon.spy(() => {
+             return Promise.reject(new Error('Fake fs stat error'));
+           });
+
+           let exception;
+           try {
+             await firefox.isDefaultProfile(
+               '/tmp/my-custom-profile-dir',
+               FakeProfileFinder,
+               fakeFsStat
+             );
+           } catch (error) {
+             exception = error;
+           }
+
+           assert.match(exception && exception.message, /Fake fs stat error/);
+         });
+       }
+      );
+
   });
 
   describe('createProfile', () => {
