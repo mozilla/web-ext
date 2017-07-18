@@ -326,12 +326,18 @@ describe('firefox', () => {
           const isDefault = await firefox.isDefaultProfile(
             'manually-set-default', FakeProfileFinder
           );
+          assert.equal(
+            isDefault, true,
+            'Manually configured default profile'
+          );
+
           const isNotDefault = await firefox.isDefaultProfile(
             'unkown-profile-name', FakeProfileFinder
           );
-
-          assert.equal(isDefault, true);
-          assert.equal(isNotDefault, false);
+          assert.equal(
+            isNotDefault, false,
+            'Unknown profile name'
+          );
         });
       });
 
@@ -367,19 +373,37 @@ describe('firefox', () => {
              path.join(profilesDirPath, 'fake-default-profile'),
              FakeProfileFinder
            );
-           assert.equal(isFirefoxDefaultPath, true);
+           assert.equal(
+             isFirefoxDefaultPath, true,
+             'Firefox default profile'
+           );
 
            const isDevEditionDefaultPath = await firefox.isDefaultProfile(
              path.join(profilesDirPath, 'fake-devedition-default-profile'),
              FakeProfileFinder
            );
-           assert.equal(isDevEditionDefaultPath, true);
+           assert.equal(
+             isDevEditionDefaultPath, true,
+             'Firefox DevEdition default profile'
+           );
 
            const isManuallyDefault = await firefox.isDefaultProfile(
              absProfilePath,
              FakeProfileFinder
            );
-           assert.equal(isManuallyDefault, true);
+           assert.equal(
+             isManuallyDefault, true,
+             'Manually configured default profile'
+           );
+
+           const isNotDefault = await firefox.isDefaultProfile(
+             path.join(profilesDirPath, 'unkown-profile-dir'),
+             FakeProfileFinder
+           );
+           assert.equal(
+             isNotDefault, false,
+             'Unknown profile path'
+           );
          });
        });
 
