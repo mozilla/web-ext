@@ -308,7 +308,7 @@ describe('firefox', () => {
          assert.equal(isDevEditionDefault, true);
        });
 
-    it('allows profile name if is not listed as default in profiles.ini',
+    it('allows profile name if it is not listed as default in profiles.ini',
       async () => {
         return withTempDir(async (tmpDir) => {
           const profilesDirPath = tmpDir.path();
@@ -335,7 +335,7 @@ describe('firefox', () => {
         });
       });
 
-    it('allows profile path if is not listed as default in profiles.ini',
+    it('allows profile path if it is not listed as default in profiles.ini',
        async () => {
          return withTempDir(async (tmpDir) => {
            const profilesDirPath = tmpDir.path();
