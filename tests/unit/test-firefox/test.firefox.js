@@ -340,6 +340,10 @@ describe('firefox', () => {
          return withTempDir(async (tmpDir) => {
            const profilesDirPath = tmpDir.path();
            const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
+           const absProfilePath = path.join(
+             profilesDirPath,
+             'fake-manually-default-profile'
+           );
 
            await createFakeProfilesIni(profilesDirPath, [
              {
@@ -354,7 +358,7 @@ describe('firefox', () => {
              },
              {
                Name: 'manually-set-default',
-               Path: '/tmp/fake-manually-default-profile',
+               Path: absProfilePath,
                Default: 1,
              },
            ]);
@@ -372,7 +376,7 @@ describe('firefox', () => {
            assert.equal(isDevEditionDefaultPath, true);
 
            const isManuallyDefault = await firefox.isDefaultProfile(
-             '/tmp/fake-manually-default-profile',
+             absProfilePath,
              FakeProfileFinder
            );
            assert.equal(isManuallyDefault, true);
