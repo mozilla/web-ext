@@ -51,13 +51,14 @@ function createFakeProfileFinder(profilesDirPath) {
   return FakeProfileFinder;
 }
 
-async function createFakeProfilesIni(dirPath, profilesDefs) { // eslint-disable-line
+async function createFakeProfilesIni(
+  dirPath: string, profilesDefs: Array<Object>
+): Promise<void> {
   let content = '';
 
   for (const [idx, profile] of profilesDefs.entries()) {
     content += `[Profile${idx}]\n`;
     for (const k of Object.keys(profile)) {
-      // $FLOW_FIXME: test123
       content += `${k}=${profile[k]}\n`;
     }
     content += '\n';
