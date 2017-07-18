@@ -486,7 +486,7 @@ describe('firefox', () => {
 
         assert.match(
           exception && exception.message,
-            /Using --keep-profile-changes .* forbidden/
+            /Cannot use --keep-profile-changes on a default profile/
         );
       });
 

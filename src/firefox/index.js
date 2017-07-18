@@ -336,9 +336,10 @@ export async function useProfile(
   const isForbiddenProfile = await isFirefoxDefaultProfile(profilePath);
   if (isForbiddenProfile) {
     throw new UsageError(
-      'Using --keep-profile-changes' +
-      ` on the Firefox default profile "${profilePath}" is forbidden.` +
-      '\n(See https://github.com/mozilla/web-ext/issues/1005)'
+      'Cannot use --keep-profile-changes on a default profile' +
+      ` ("${profilePath}")` +
+      ' because web-ext will make it insecure and unsuitable for daily use.' +
+      '\nSee https://github.com/mozilla/web-ext/issues/1005'
     );
   }
   const profile = new FirefoxProfile({destinationDirectory: profilePath});
