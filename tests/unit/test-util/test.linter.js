@@ -7,7 +7,6 @@ import sinon from 'sinon';
 
 import {linter} from '../../../src/util/linter';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {makeSureItFails} from '../helpers';
 
 describe('util.linter', () => {
 
@@ -67,7 +66,7 @@ describe('util.linter', () => {
   }
 
   it('runs linter for a directory with correct config', () => withTempDir(
-      (tmpDir) => {
+      async (tmpDir) => {
         const sourceDir = tmpDir.path();
         const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
         const {options, fakeLinterInstance, lint} = prepare();
@@ -85,27 +84,23 @@ describe('util.linter', () => {
           shouldScanFile: null,
         };
 
-        return fs.mkdir(artifactsDir)
-          .then(() => {
-            return lint({
-              sourceDir,
-              artifactsDir,
-            });
-          })
-          .then(() => {
-            const config = createLinter.firstCall.args[0].config;
-            config.shouldScanFile = null;
-            assert.ok(createLinter.called);
-            assert.equal(createLinter.firstCall.args[0].runAsBinary,
-                         false);
-            assert.deepEqual(config, expectedConfig);
-            assert.ok(fakeLinterInstance.run.called);
-          });
+        await fs.mkdir(artifactsDir);
+        await lint({
+          sourceDir,
+          artifactsDir,
+        });
+        const config = createLinter.firstCall.args[0].config;
+        config.shouldScanFile = null;
+        assert.ok(createLinter.called);
+        assert.equal(createLinter.firstCall.args[0].runAsBinary,
+          false);
+        assert.deepEqual(config, expectedConfig);
+        assert.ok(fakeLinterInstance.run.called);
       }
     ));
 
   it('runs linter for a specified files with correct config', () => withTempDir(
-      (tmpDir) => {
+      async (tmpDir) => {
         const sourceDir = tmpDir.path();
         const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
         const filePath = path.join(tmpDir.path(), 'foo.txt');
@@ -125,67 +120,69 @@ describe('util.linter', () => {
         };
 
 
-        return lint({
+        await lint({
           sourceDir,
           artifactsDir,
           filePath,
-        })
-          .then(() => {
-            const config = createLinter.firstCall.args[0].config;
-            assert.ok(createLinter.called);
-            assert.equal(createLinter.firstCall.args[0].runAsBinary,
-                         false);
-            assert.deepEqual(config.scanFile, expectedConfig.scanFile);
-            assert.deepEqual(config, expectedConfig);
-            assert.ok(fakeLinterInstance.run.called);
-          });
+        });
+
+        const config = createLinter.firstCall.args[0].config;
+        assert.ok(createLinter.called);
+        assert.equal(createLinter.firstCall.args[0].runAsBinary,
+          false);
+        assert.deepEqual(config.scanFile, expectedConfig.scanFile);
+        assert.deepEqual(config, expectedConfig);
+        assert.ok(fakeLinterInstance.run.called);
       }
     ));
 
-  it('fails when the linter fails', () => {
+  it('fails when the linter fails', async () => {
     const fakeLinterInstance = {
       run: sinon.spy(() => Promise.reject(new Error('linter error'))),
     };
     const createLinter = () => fakeLinterInstance;
     const {lint} = prepare();
-    return lint({}, {}, {createLinter})
-      .then(makeSureItFails(), (error) => {
-        assert.ok(fakeLinterInstance.run.called);
-        assert.match(error.message, /linter error/);
-      });
+    let exception;
+    try {
+      await lint({}, {}, {createLinter});
+    } catch (linterError) {
+      exception = linterError;
+    }
+
+    assert.ok(fakeLinterInstance.run.called);
+    assert.match(exception && exception.message, /linter error/);
   });
 
-  it('runs as a binary', () => {
+  it('runs as a binary', async () => {
     const {lint, options} = prepare();
     const {createLinter} = options;
-    return lint({}, {runAsBinary: true})
-      .then(() => {
-        const args = createLinter.firstCall.args[0];
-        assert.equal(args.runAsBinary, true);
-      });
+    await lint({}, {runAsBinary: true});
+    const args = createLinter.firstCall.args[0];
+    assert.equal(args.runAsBinary, true);
   });
 
-  it('configures the linter when verbose', () => {
+  it('configures the linter when verbose', async () => {
     const {lint, options} = prepare();
     const {createLinter} = options;
-    return lint({verbose: true}).then(() => {
-      const config = createLinter.firstCall.args[0].config;
-      assert.equal(config.logLevel, 'debug');
-      assert.equal(config.stack, true);
+    await lint({
+      verbose: true,
     });
+    const config = createLinter.firstCall.args[0].config;
+    assert.equal(config.logLevel, 'debug');
+    assert.equal(config.stack, true);
+
   });
 
-  it('configures the linter when not verbose', () => {
+  it('configures the linter when not verbose', async () => {
     const {lint, options} = prepare();
     const {createLinter} = options;
-    return lint({}).then(() => {
-      const config = createLinter.firstCall.args[0].config;
-      assert.equal(config.logLevel, 'fatal');
-      assert.equal(config.stack, false);
-    });
+    await lint({});
+    const config = createLinter.firstCall.args[0].config;
+    assert.equal(config.logLevel, 'fatal');
+    assert.equal(config.stack, false);
   });
 
-  it('configures a lint command with the expected fileFilter', () => {
+  it('configures a lint command with the expected fileFilter', async () => {
     const {lint, options, fakeFileFilter} = prepare();
     const {fileFilterCreator, createLinter} = options;
     const params = {
@@ -193,17 +190,15 @@ describe('util.linter', () => {
       artifactsDir: 'artifacts',
       ignoreFiles: ['file1', '**/file2'],
     };
-    return lint(params)
-      .then(() => {
-        assert.ok(fileFilterCreator.called);
-        assert.deepEqual(fileFilterCreator.firstCall.args[0], params);
+    await lint(params);
+    assert.ok(fileFilterCreator.called);
+    assert.deepEqual(fileFilterCreator.firstCall.args[0], params);
 
-        assert.ok(createLinter.called);
-        const {shouldScanFile} = createLinter.firstCall.args[0].config;
-        shouldScanFile('path/to/file');
-        assert.ok(fakeFileFilter.wantFile.called);
-        assert.equal(fakeFileFilter.wantFile.firstCall.args[0], 'path/to/file');
-      });
+    assert.ok(createLinter.called);
+    const {shouldScanFile} = createLinter.firstCall.args[0].config;
+    shouldScanFile('path/to/file');
+    assert.ok(fakeFileFilter.wantFile.called);
+    assert.equal(fakeFileFilter.wantFile.firstCall.args[0], 'path/to/file');
   });
 
 });

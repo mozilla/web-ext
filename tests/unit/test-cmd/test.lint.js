@@ -4,37 +4,38 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import lintCommand from '../../../src/cmd/lint';
-import {makeSureItFails} from '../helpers';
 
 describe('lint', () => {
 
-  it('creates and runs a linter', () => {
+  it('creates and runs a linter', async () => {
     const fakeLinter = sinon.spy(() => lintResult);
     const lintResult = {
       run: sinon.spy(() => Promise.resolve()),
     };
-    return lintCommand({
+    const actualLintResult = await lintCommand({
       sourceDir: '/fake/source/dir',
     }, {
       linter: fakeLinter,
-    })
-      .then((actualLintResult) => {
-        assert.equal(actualLintResult, lintResult);
-        assert.equal(fakeLinter.called, true);
-      });
+    });
+    assert.equal(actualLintResult, lintResult);
+    assert.equal(fakeLinter.called, true);
   });
 
-  it('fails when the linter fails', () => {
+  it('fails when the linter fails', async () => {
     const fakeLinter =
       sinon.spy(() => Promise.reject(new Error('linter error')));
-    return lintCommand({
-      sourceDir: '/fake/source/dir',
-    }, {
-      linter: fakeLinter,
-    })
-      .then(makeSureItFails(), (error) => {
-        assert.match(error.message, /linter error/);
+    let exception;
+    try {
+      await lintCommand({
+        sourceDir: '/fake/source/dir',
+      }, {
+        linter: fakeLinter,
       });
+    } catch (linterError) {
+      exception = linterError;
+    }
+
+    assert.match(exception && exception.message, /linter error/);
   });
 
 });
