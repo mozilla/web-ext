@@ -17,7 +17,6 @@ import {withTempDir} from '../../../src/util/temp-dir';
 import {
   basicManifest,
   fixturePath,
-  makeSureItFails,
   ZipFile,
 } from '../helpers';
 import {manifestWithoutApps} from '../test-util/test.manifest';
@@ -28,32 +27,25 @@ const log = createLogger(__filename);
 
 describe('build', () => {
 
-  it('zips a package', () => {
-    const zipFile = new ZipFile();
+  it('zips a package', () => withTempDir(
+    async (tmpDir) => {
+      const zipFile = new ZipFile();
+      const buildResult = await build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir: tmpDir.path(),
+      });
+      assert.match(buildResult.extensionPath,
+                   /minimal_extension-1\.0\.zip$/);
+      const extensionPath = await buildResult.extensionPath;
+      await zipFile.open(extensionPath);
+      const fileNames = await zipFile.extractFilenames();
+      fileNames.sort();
+      assert.deepEqual(fileNames, ['background-script.js', 'manifest.json']);
+      await zipFile.close();
+    }
+  ));
 
-    return withTempDir(
-      (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        })
-          .then((buildResult) => {
-            assert.match(buildResult.extensionPath,
-                         /minimal_extension-1\.0\.zip$/);
-            return buildResult.extensionPath;
-          })
-          .then((extensionPath) => zipFile.open(extensionPath))
-          .then(() => zipFile.extractFilenames())
-          .then((fileNames) => {
-            fileNames.sort();
-            assert.deepEqual(fileNames,
-                             ['background-script.js', 'manifest.json']);
-            return zipFile.close();
-          })
-    );
-  });
-
-  it('configures a build command with the expected fileFilter', () => {
+  it('configures a build command with the expected fileFilter', async () => {
     const packageCreator = sinon.spy(
       () => ({extensionPath: 'extension/path'})
     );
@@ -64,313 +56,276 @@ describe('build', () => {
       artifactsDir: 'artifacts',
       ignoreFiles: ['**/*.log'],
     };
-    return build(params, {packageCreator, createFileFilter}).then(() => {
-      // ensure sourceDir, artifactsDir, ignoreFiles is used
-      sinon.assert.calledWithMatch(createFileFilter, params);
-      // ensure packageCreator received correct fileFilter
-      sinon.assert.calledWithMatch(packageCreator, {fileFilter});
-    });
+    await build(params, {packageCreator, createFileFilter});
+    // ensure sourceDir, artifactsDir, ignoreFiles is used
+    sinon.assert.calledWithMatch(createFileFilter, params);
+    // ensure packageCreator received correct fileFilter
+    sinon.assert.calledWithMatch(packageCreator, {fileFilter});
   });
 
-  it('gives the correct name to a localized extension', () => {
-    return withTempDir(
-      (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-localizable-web-ext'),
-          artifactsDir: tmpDir.path(),
-        })
-          .then((buildResult) => {
-            assert.match(buildResult.extensionPath,
-                         /name_of_the_extension-1\.0\.zip$/);
-            return buildResult.extensionPath;
-          })
-    );
-  });
+  it('gives the correct name to a localized extension', () => withTempDir(
+    async (tmpDir) => {
+      const buildResult = await build({
+        sourceDir: fixturePath('minimal-localizable-web-ext'),
+        artifactsDir: tmpDir.path(),
+      });
+      assert.match(buildResult.extensionPath,
+                   /name_of_the_extension-1\.0\.zip$/);
+      await buildResult.extensionPath;
+    }
+  ));
 
-  it('handles repeating localization keys', () => {
-    return withTempDir(
-      (tmpDir) => {
-        const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        fs.writeFileSync(
-          messageFileName,
-          `{"extensionName": {
-              "message": "example extension",
-              "description": "example description"
-            }
-          }`
-        );
+  it('handles repeating localization keys', () => withTempDir(
+    async (tmpDir) => {
+      const messageFileName = path.join(tmpDir.path(), 'messages.json');
+      fs.writeFileSync(messageFileName,
+                       `{"extensionName": {
+                           "message": "example extension",
+                           "description": "example description"
+                         }
+                       }`);
 
-        const manifestWithRepeatingPattern = {
-          name: '__MSG_extensionName__ __MSG_extensionName__',
-          version: '0.0.1',
-        };
+      const manifestWithRepeatingPattern = {
+        name: '__MSG_extensionName__ __MSG_extensionName__',
+        version: '0.0.1',
+      };
 
-        return getDefaultLocalizedName({
-          messageFile: messageFileName,
-          manifestData: manifestWithRepeatingPattern,
-        })
-          .then((result) => {
-            assert.match(result, /example extension example extension/);
-          });
-      }
-    );
-  });
+      const result = await getDefaultLocalizedName({
+        messageFile: messageFileName,
+        manifestData: manifestWithRepeatingPattern,
+      });
+      assert.match(result, /example extension example extension/);
+    }
+  ));
 
-  it('checks locale file for malformed json', () => {
-    return withTempDir(
-      (tmpDir) => {
-        const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        fs.writeFileSync(
-          messageFileName,
-          '{"simulated:" "json syntax error"'
-        );
-
-        return getDefaultLocalizedName({
+  it('checks locale file for malformed json', () => withTempDir(
+    async (tmpDir) => {
+      const messageFileName = path.join(tmpDir.path(), 'messages.json');
+      fs.writeFileSync(messageFileName, '{"simulated:" "json syntax error"');
+      let expectedError;
+      try {
+        await getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: manifestWithoutApps,
-        })
-          .then(makeSureItFails())
-          .catch((error) => {
-            assert.instanceOf(error, UsageError);
-            assert.match(
-              error.message, /Unexpected string in JSON at position 14/);
-            assert.match(error.message, /^Error parsing messages\.json/);
-            assert.include(error.message, messageFileName);
-          });
+        });
+      } catch (error) {
+        expectedError = error;
       }
-    );
-  });
+      assert.instanceOf(expectedError, UsageError);
+      assert.match(expectedError && expectedError.message,
+                   /Unexpected string in JSON at position 14/);
+      assert.match(expectedError && expectedError.message,
+                   /^Error parsing messages.json/);
+      assert.include(expectedError && expectedError.message, messageFileName);
+    }
+  ));
 
-  it('checks locale file for incorrect format', () => {
-    return withTempDir(
-      (tmpDir) => {
-        const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        //This is missing the 'message' key
-        fs.writeFileSync(
-          messageFileName,
-          `{"extensionName": {
-              "description": "example extension"
-              }
-          }`
-        );
-
-        const basicLocalizedManifest = {
-          name: '__MSG_extensionName__',
-          version: '0.0.1',
-        };
-        return getDefaultLocalizedName({
+  it('checks locale file for incorrect format', () => withTempDir(
+    async (tmpDir) => {
+      const messageFileName = path.join(tmpDir.path(), 'messages.json');
+      //This is missing the 'message' key
+      fs.writeFileSync(
+        messageFileName,
+        `{"extensionName": {
+            "description": "example extension"
+            }
+        }`
+      );
+      const basicLocalizedManifest = {
+        name: '__MSG_extensionName__',
+        version: '0.0.1',
+      };
+      let expectedError;
+      try {
+        await getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: basicLocalizedManifest,
-        })
-          .then(makeSureItFails())
-          .catch((error) => {
-            assert.instanceOf(error, UsageError);
-            assert.match(
-              error.message,
-              /The locale file .*messages\.json is missing key: extensionName/);
-          });
+        });
+      } catch (error) {
+        expectedError = error;
       }
-    );
-  });
+      assert.instanceOf(expectedError, UsageError);
+      assert.match(
+        expectedError && expectedError.message,
+        /The locale file .*messages\.json is missing key: extensionName/);
+    }
+  ));
 
-  it('throws an error if the locale file does not exist', () => {
-    return getDefaultLocalizedName({
-      messageFile: '/path/to/non-existent-dir/messages.json',
-      manifestData: manifestWithoutApps,
-    })
-      .then(makeSureItFails())
-      .catch((error) => {
-        log.info(error);
-        assert.instanceOf(error, UsageError);
-        assert.match(
-          error.message,
-          /Error: ENOENT: no such file or directory, open .*messages.json/);
-        assert.match(error.message, /^Error reading messages.json/);
-        assert.include(error.message,
-                       '/path/to/non-existent-dir/messages.json');
+  it('throws an error if the locale file does not exist', async () => {
+    let expectedError;
+    try {
+      await getDefaultLocalizedName({
+        messageFile: '/path/to/non-existent-dir/messages.json',
+        manifestData: manifestWithoutApps,
       });
+    } catch (error) {
+      expectedError = error;
+      log.info(error);
+    }
+    assert.instanceOf(expectedError, UsageError);
+    assert.match(
+      expectedError && expectedError.message,
+      /Error: ENOENT: no such file or directory, open .*messages.json/);
+    assert.match(expectedError && expectedError.message,
+                 /^Error reading messages.json/);
+    assert.include(expectedError && expectedError.message,
+                   '/path/to/non-existent-dir/messages.json');
   });
 
-  it('can build an extension without an ID', () => {
-    return withTempDir(
-      (tmpDir) => {
-        // Make sure a manifest without an ID doesn't throw an error.
-        return build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        }, {manifestData: manifestWithoutApps});
-      }
-    );
-  });
+  it('can build an extension without an ID', () => withTempDir(
+    async (tmpDir) => {
+      await build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir: tmpDir.path(),
+      }, {manifestData: manifestWithoutApps});
+    }
+  ));
 
   it('prepares the artifacts dir', () => withTempDir(
-    (tmpDir) => {
+    async (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'artifacts');
-      return build({
+      await build({
         sourceDir: fixturePath('minimal-web-ext'),
         artifactsDir,
-      })
-        .then(() => fs.stat(artifactsDir))
-        .then((stats) => {
-          assert.equal(stats.isDirectory(), true);
-        });
+      });
+      const stats = await fs.stat(artifactsDir);
+      assert.equal(stats.isDirectory(), true);
     }
   ));
 
   it('lets you specify a manifest', () => withTempDir(
-    (tmpDir) =>
-      build({
+    async (tmpDir) => {
+      const buildResult = await build({
         sourceDir: fixturePath('minimal-web-ext'),
         artifactsDir: tmpDir.path(),
       }, {
         manifestData: basicManifest,
-      })
-        .then((buildResult) => {
-          assert.match(buildResult.extensionPath,
-                       /the_extension-0\.0\.1\.zip$/);
-          return buildResult.extensionPath;
-        })
+      });
+      assert.match(buildResult.extensionPath,
+                   /the_extension-0\.0\.1\.zip$/);
+      await buildResult.extensionPath;
+    }
   ));
 
-  it('asks FileFilter what files to include in the ZIP', () => {
-    const zipFile = new ZipFile();
-    const fileFilter = new FileFilter({
-      sourceDir: '.',
-      baseIgnoredPatterns: ['**/background-script.js'],
-    });
-
-    return withTempDir(
-      (tmpDir) =>
-        build({
-          sourceDir: fixturePath('minimal-web-ext'),
-          artifactsDir: tmpDir.path(),
-        }, {fileFilter})
-          .then((buildResult) => zipFile.open(buildResult.extensionPath))
-          .then(() => zipFile.extractFilenames())
-          .then((fileNames) => {
-            assert.notInclude(fileNames, 'background-script.js');
-            return zipFile.close();
-          })
-    );
-  });
+  it('asks FileFilter what files to include in the ZIP', () => withTempDir(
+    async (tmpDir) => {
+      const zipFile = new ZipFile();
+      const fileFilter = new FileFilter({
+        sourceDir: '.',
+        baseIgnoredPatterns: ['**/background-script.js'],
+      });
+      const buildResult = await build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir: tmpDir.path(),
+      }, {fileFilter});
+      await zipFile.open(buildResult.extensionPath);
+      const fileNames = await zipFile.extractFilenames();
+      assert.notInclude(fileNames, 'background-script.js');
+      await zipFile.close();
+    }
+  ));
 
   it('lets you rebuild when files change', () => withTempDir(
-    (tmpDir) => {
+    async (tmpDir) => {
       const sourceDir = fixturePath('minimal-web-ext');
       const artifactsDir = tmpDir.path();
       const fileFilter = new FileFilter({sourceDir, artifactsDir});
       sinon.spy(fileFilter, 'wantFile');
       const onSourceChange = sinon.spy(() => {});
-      return build({
+      const buildResult = await build({
         sourceDir, artifactsDir, asNeeded: true,
       }, {
         manifestData: basicManifest, onSourceChange, fileFilter,
-      })
-        .then((buildResult) => {
-          // Make sure we still have a build result.
-          assert.match(buildResult.extensionPath, /\.zip$/);
-          return buildResult;
-        })
-        .then((buildResult) => {
-          const args = onSourceChange.firstCall.args[0];
+      });
+      // Make sure we still have a build result.
+      assert.match(buildResult.extensionPath, /\.zip$/);
+      assert.equal(onSourceChange.called, true);
+      const args = onSourceChange.firstCall.args[0];
+      assert.equal(args.sourceDir, sourceDir);
+      assert.equal(args.artifactsDir, artifactsDir);
+      assert.typeOf(args.onChange, 'function');
 
-          sinon.assert.called(onSourceChange);
-          sinon.assert.calledWithMatch(onSourceChange, {
-            artifactsDir,
-            sourceDir,
-          });
+      // Make sure it uses the file filter.
+      assert.typeOf(args.shouldWatchFile, 'function');
+      args.shouldWatchFile('/some/path');
+      assert.equal(fileFilter.wantFile.called, true);
 
-          assert.typeOf(args.onChange, 'function');
-
-          // Make sure it uses the file filter.
-          assert.typeOf(args.shouldWatchFile, 'function');
-          args.shouldWatchFile('/some/path');
-          sinon.assert.called(fileFilter.wantFile);
-
-          // Remove the built extension.
-          return fs.unlink(buildResult.extensionPath)
-            // Execute the onChange handler to make sure it gets built
-            // again. This simulates what happens when the file watcher
-            // executes the callback.
-            .then(() => args.onChange());
-        })
-        .then((buildResult) => {
-          assert.match(buildResult.extensionPath, /\.zip$/);
-          return fs.stat(buildResult.extensionPath);
-        })
-        .then((stat) => {
-          assert.equal(stat.isFile(), true);
-        });
+      // Remove the built extension.
+      await fs.unlink(buildResult.extensionPath);
+      // Execute the onChange handler to make sure it gets built
+      // again. This simulates what happens when the file watcher
+      // executes the callback.
+      await args.onChange();
+      assert.match(buildResult.extensionPath, /\.zip$/);
+      const stat = await fs.stat(buildResult.extensionPath);
+      assert.equal(stat.isFile(), true);
     }
   ));
 
   it('throws errors when rebuilding in source watcher', () => withTempDir(
-    (tmpDir) => {
+    async (tmpDir) => {
       var packageResult = Promise.resolve({});
       const packageCreator = sinon.spy(() => packageResult);
       const onSourceChange = sinon.spy(() => {});
-      return build({
+      await build({
         sourceDir: fixturePath('minimal-web-ext'),
         artifactsDir: tmpDir.path(),
         asNeeded: true,
       }, {
         manifestData: basicManifest, onSourceChange, packageCreator,
-      })
-        .then(() => {
-          sinon.assert.called(onSourceChange);
-          sinon.assert.calledOnce(packageCreator);
-          const {onChange} = onSourceChange.firstCall.args[0];
-          packageResult = Promise.reject(new Error(
-            'Simulate an error on the second call to packageCreator()'));
-          // Invoke the stub packageCreator() again which should throw an error
-          return onChange();
-        })
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.include(
-            error.message,
-            'Simulate an error on the second call to packageCreator()');
-        });
+      });
+      assert.equal(onSourceChange.called, true);
+      assert.equal(packageCreator.callCount, 1);
+
+      const {onChange} = onSourceChange.firstCall.args[0];
+      packageResult = Promise.reject(new Error(
+        'Simulate an error on the second call to packageCreator()'));
+      // Invoke the stub packageCreator() again which should throw an error
+      let expectedError;
+      try {
+        await onChange();
+      } catch (error) {
+        expectedError = error;
+      }
+      assert.include(
+        expectedError && expectedError.message,
+        'Simulate an error on the second call to packageCreator()');
     }
   ));
 
-  it('raises an UsageError if zip file exists', () => {
-    return withTempDir(
-      (tmpDir) => {
-        const testFileName = path.join(tmpDir.path(),
-                                       'minimal_extension-1.0.zip');
-        return fs.writeFile(testFileName, 'test')
-          .then(() => build(
-            {
-              sourceDir: fixturePath('minimal-web-ext'),
-              artifactsDir: tmpDir.path(),
-            }))
-          .catch ((error) => {
-            assert.instanceOf(error, UsageError);
-            assert.match(error.message,
-                         /Extension exists at the destination path/);
-          });
-      });
-  });
+  it('raises an UsageError if zip file exists', () => withTempDir(
+    async (tmpDir) => {
+      const testFileName = path.join(tmpDir.path(),
+                                     'minimal_extension-1.0.zip');
+      await fs.writeFile(testFileName, 'test');
+      let expectedError;
+      try {
+        await build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+        });
+      } catch (error) {
+        expectedError = error;
+      }
+      assert.instanceOf(expectedError, UsageError);
+      assert.match(expectedError && expectedError.message,
+                   /Extension exists at the destination path/);
+    }
+  ));
 
-  it('overwrites zip file if it exists', () => {
-    return withTempDir(
-      (tmpDir) => {
-        const testFileName = path.join(tmpDir.path(),
-                                       'minimal_extension-1.0.zip');
-        return fs.writeFile(testFileName, 'test')
-          .then(() => build(
-            {
-              sourceDir: fixturePath('minimal-web-ext'),
-              artifactsDir: tmpDir.path(),
-              overwriteDest: true,
-            }))
-          .then((buildResult) => {
-            assert.match(buildResult.extensionPath,
-                         /minimal_extension-1\.0\.zip$/);
-          });
+  it('overwrites zip file if it exists', () => withTempDir(
+    async (tmpDir) => {
+      const testFileName = path.join(tmpDir.path(),
+                                     'minimal_extension-1.0.zip');
+      await fs.writeFile(testFileName, 'test');
+      const buildResult = await build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir: tmpDir.path(),
+        overwriteDest: true,
       });
-  });
+      assert.match(buildResult.extensionPath, /minimal_extension-1\.0\.zip$/);
+    }
+  ));
 
   describe('safeFileName', () => {
 
@@ -382,40 +337,42 @@ describe('build', () => {
   });
 
   describe('defaultPackageCreator', () => {
-    it('should reject on Unexpected errors', () => {
-      return withTempDir(
-        (tmpDir) => {
-          const fakeEventToPromise = sinon.spy(async (stream) => {
-            await defaultEventToPromise(stream, 'close');
-            // Remove contents of tmpDir before removal of directory.
-            const files = await fs.readdir(tmpDir.path());
-            for (const file of files) {
-              await fs.unlink(path.join(tmpDir.path(), file));
-            }
-            return Promise.reject(new Error('Unexpected error'));
-          });
-          const sourceDir = fixturePath('minimal-web-ext');
-          const artifactsDir = tmpDir.path();
-          const fileFilter = new FileFilter({sourceDir, artifactsDir});
-          const params = {
-            manifestData: basicManifest,
-            sourceDir,
-            fileFilter,
-            artifactsDir,
-            overwriteDest: false,
-            showReadyMessage: false,
-          };
-          const options = {
-            eventToPromise: fakeEventToPromise,
-          };
-
-          return defaultPackageCreator(params, options)
-            .then(makeSureItFails())
-            .catch ((error) => {
-              assert.match(error.message, /Unexpected error/);
-            });
+    it('should reject on Unexpected errors', () => withTempDir(
+      async (tmpDir) => {
+        const fakeEventToPromise = sinon.spy(async (stream) => {
+          await defaultEventToPromise(stream, 'close');
+          // Remove contents of tmpDir before removal of directory.
+          const files = await fs.readdir(tmpDir.path());
+          for (const file of files) {
+            await fs.unlink(path.join(tmpDir.path(), file));
+          }
+          return Promise.reject(new Error('Unexpected error'));
         });
-    });
+        const sourceDir = fixturePath('minimal-web-ext');
+        const artifactsDir = tmpDir.path();
+        const fileFilter = new FileFilter({sourceDir, artifactsDir});
+        const params = {
+          manifestData: basicManifest,
+          sourceDir,
+          fileFilter,
+          artifactsDir,
+          overwriteDest: false,
+          showReadyMessage: false,
+        };
+        const options = {
+          eventToPromise: fakeEventToPromise,
+        };
+
+        let expectedError;
+        try {
+          await defaultPackageCreator(params, options);
+        } catch (error) {
+          expectedError = error;
+        }
+        assert.match(expectedError && expectedError.message,
+                     /Unexpected error/);
+      }
+    ));
 
   });
 
