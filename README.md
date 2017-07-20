@@ -130,7 +130,6 @@ actively maintained by Mozilla right now.
 We decided not to patch jpm for web extension support (See
 [jpm issue 445](https://github.com/mozilla-jetpack/jpm/issues/445),
 [discussion](https://mail.mozilla.org/pipermail/dev-addons/2015-December/000230.html)).
-Here's why.
 
 Mozilla built [cfx](https://developer.mozilla.org/en-US/Add-ons/SDK/Tools/cfx)
 then deprecated it for jpm and now we're proposing a new tool.
