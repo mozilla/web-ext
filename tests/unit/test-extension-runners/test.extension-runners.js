@@ -43,6 +43,7 @@ function prepareExtensionRunnerParams(params) {
       return Promise.resolve(getFakeRemoteFirefox());
     },
     desktopNotifications: sinon.spy(() => {}),
+    lint: false,
     ...params,
   };
 }
@@ -243,6 +244,40 @@ describe('util/extension-runners', () => {
              ),
            })
          );
+       });
+
+       it('allows lint on run',
+       async () => {
+         const params = prepareExtensionRunnerParams();
+         const [
+           fakeExtensionRunner, anotherFakeExtensionRunner,
+         ] = params.runners;
+         const linter = sinon.spy(() => Promise.resolve());
+         const expectedLinterParams = {
+           sourceDir: '/path/to/extension/source/',
+           artifactsDir: '/path/to/web-ext-artifacts',
+           ignoreFiles: undefined,
+         };
+
+         const paramsLint = {
+           runners: params.runners,
+           desktopNotifications: params.desktopNotifications,
+           lint: true,
+           linter,
+           ...expectedLinterParams,
+         };
+
+         const runnerInstance = new MultiExtensionRunner(paramsLint);
+
+         sinon.spy(fakeExtensionRunner, 'run');
+         sinon.spy(anotherFakeExtensionRunner, 'run');
+
+         await runnerInstance.run();
+
+         sinon.assert.calledOnce(fakeExtensionRunner.run);
+         sinon.assert.calledOnce(anotherFakeExtensionRunner.run);
+         sinon.assert.calledOnce(linter);
+         sinon.assert.calledWith(linter, expectedLinterParams);
        });
 
     describe('registerCleanup', () => {

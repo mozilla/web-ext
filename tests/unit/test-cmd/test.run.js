@@ -50,7 +50,6 @@ describe('run', () => {
       FirefoxDesktopExtensionRunner: sinon.spy(FakeExtensionRunner),
       MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
       desktopNotifications: sinon.spy(() => {}),
-      linter: sinon.spy(() => Promise.resolve()),
     };
 
     return {

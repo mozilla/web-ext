@@ -1,13 +1,9 @@
 /* @flow */
 import {createLogger} from '../util/logger';
 import {linter as defaultLinter} from '../util/linter';
+import type {LinterOutputType} from '../util/linter';
 
 const log = createLogger(__filename);
-
-
-// Define the needed 'addons-linter' module flow types.
-
-export type LinterOutputType = 'text' | 'json';
 
 // Lint command types and implementation.
 

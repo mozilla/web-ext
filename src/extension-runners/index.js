@@ -21,13 +21,17 @@ import {
 import defaultSourceWatcher from '../watcher';
 import type {OnSourceChangeFn} from '../watcher';
 
-
 const log = createLogger(__filename);
 
 
 export type MultiExtensionRunnerParams = {|
   runners: Array<IExtensionRunner>,
   desktopNotifications: typeof defaultDesktopNotifications,
+  sourceDir: string,
+  artifactsDir: string,
+  ignoreFiles?: Array<string> | void,
+  lint: boolean,
+  linter?: typeof defaultLinter,
 |};
 
 
@@ -39,10 +43,20 @@ export type MultiExtensionRunnerParams = {|
 export class MultiExtensionRunner {
   extensionRunners: Array<IExtensionRunner>;
   desktopNotifications: typeof defaultDesktopNotifications;
+  lint: boolean;
+  linter: typeof defaultLinter = defaultLinter;
+  sourceDir: string;
+  artifactsDir: string;
+  ignoreFiles: Array<string> | void;
 
   constructor(params: MultiExtensionRunnerParams) {
     this.extensionRunners = params.runners;
     this.desktopNotifications = params.desktopNotifications;
+    this.lint = params.lint;
+    this.linter = params.linter ? params.linter : this.linter;
+    this.sourceDir = params.sourceDir;
+    this.artifactsDir = params.artifactsDir;
+    this.ignoreFiles = params.ignoreFiles;
   }
 
   // Method exported from the IExtensionRunner interface.
@@ -60,8 +74,17 @@ export class MultiExtensionRunner {
    */
   async run(): Promise<void> {
     const promises = [];
+    const {sourceDir, artifactsDir, ignoreFiles} = this;
     for (const runner of this.extensionRunners) {
       promises.push(runner.run());
+    }
+
+    if (this.lint) {
+      await this.linter({
+        sourceDir,
+        artifactsDir,
+        ignoreFiles,
+      });
     }
 
     await Promise.all(promises);
