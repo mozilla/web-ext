@@ -17,6 +17,7 @@ import {withTempDir} from '../../../src/util/temp-dir';
 import {
   basicManifest,
   fixturePath,
+  makeSureItFails,
   ZipFile,
 } from '../helpers';
 import {manifestWithoutApps} from '../test-util/test.manifest';
@@ -36,8 +37,7 @@ describe('build', () => {
       });
       assert.match(buildResult.extensionPath,
                    /minimal_extension-1\.0\.zip$/);
-      const extensionPath = await buildResult.extensionPath;
-      await zipFile.open(extensionPath);
+      await zipFile.open(buildResult.extensionPath);
       const fileNames = await zipFile.extractFilenames();
       fileNames.sort();
       assert.deepEqual(fileNames, ['background-script.js', 'manifest.json']);
@@ -71,19 +71,19 @@ describe('build', () => {
       });
       assert.match(buildResult.extensionPath,
                    /name_of_the_extension-1\.0\.zip$/);
-      await buildResult.extensionPath;
+      buildResult.extensionPath;
     }
   ));
 
   it('handles repeating localization keys', () => withTempDir(
     async (tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(messageFileName,
-                       `{"extensionName": {
-                           "message": "example extension",
-                           "description": "example description"
-                         }
-                       }`);
+      await fs.writeFile(messageFileName,
+        `{"extensionName": {
+            "message": "example extension",
+            "description": "example description"
+          }
+        }`);
 
       const manifestWithRepeatingPattern = {
         name: '__MSG_extensionName__ __MSG_extensionName__',
@@ -101,22 +101,19 @@ describe('build', () => {
   it('checks locale file for malformed json', () => withTempDir(
     async (tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(messageFileName, '{"simulated:" "json syntax error"');
-      let expectedError;
+      await fs.writeFile(messageFileName, '{"simulated:" "json syntax error"');
       try {
         await getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: manifestWithoutApps,
         });
+        makeSureItFails();
       } catch (error) {
-        expectedError = error;
+        assert.instanceOf(error, UsageError);
+        assert.match(error.message, /Unexpected token '"' at 1:15/);
+        assert.match(error.message, /^Error parsing messages.json/);
+        assert.include(error.message, messageFileName);
       }
-      assert.instanceOf(expectedError, UsageError);
-      assert.match(expectedError && expectedError.message,
-                   /Unexpected string in JSON at position 14/);
-      assert.match(expectedError && expectedError.message,
-                   /^Error parsing messages.json/);
-      assert.include(expectedError && expectedError.message, messageFileName);
     }
   ));
 
@@ -124,8 +121,7 @@ describe('build', () => {
     async (tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
       //This is missing the 'message' key
-      fs.writeFileSync(
-        messageFileName,
+      await fs.writeFile(messageFileName,
         `{"extensionName": {
             "description": "example extension"
             }
@@ -135,41 +131,35 @@ describe('build', () => {
         name: '__MSG_extensionName__',
         version: '0.0.1',
       };
-      let expectedError;
       try {
         await getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: basicLocalizedManifest,
         });
+        makeSureItFails();
       } catch (error) {
-        expectedError = error;
+        assert.instanceOf(error, UsageError);
+        assert.match(error.message,
+          /The locale file .*messages\.json is missing key: extensionName/);
       }
-      assert.instanceOf(expectedError, UsageError);
-      assert.match(
-        expectedError && expectedError.message,
-        /The locale file .*messages\.json is missing key: extensionName/);
     }
   ));
 
   it('throws an error if the locale file does not exist', async () => {
-    let expectedError;
     try {
       await getDefaultLocalizedName({
         messageFile: '/path/to/non-existent-dir/messages.json',
         manifestData: manifestWithoutApps,
       });
+      makeSureItFails();
     } catch (error) {
-      expectedError = error;
       log.info(error);
+      assert.instanceOf(error, UsageError);
+      assert.match(error.message,
+        /Error: ENOENT: no such file or directory, open .*messages.json/);
+      assert.match(error.message, /^Error reading messages.json/);
+      assert.include(error.message, '/path/to/non-existent-dir/messages.json');
     }
-    assert.instanceOf(expectedError, UsageError);
-    assert.match(
-      expectedError && expectedError.message,
-      /Error: ENOENT: no such file or directory, open .*messages.json/);
-    assert.match(expectedError && expectedError.message,
-                 /^Error reading messages.json/);
-    assert.include(expectedError && expectedError.message,
-                   '/path/to/non-existent-dir/messages.json');
   });
 
   it('can build an extension without an ID', () => withTempDir(
@@ -202,8 +192,8 @@ describe('build', () => {
         manifestData: basicManifest,
       });
       assert.match(buildResult.extensionPath,
-                   /the_extension-0\.0\.1\.zip$/);
-      await buildResult.extensionPath;
+        /the_extension-0\.0\.1\.zip$/);
+      buildResult.extensionPath;
     }
   ));
 
@@ -281,15 +271,13 @@ describe('build', () => {
       packageResult = Promise.reject(new Error(
         'Simulate an error on the second call to packageCreator()'));
       // Invoke the stub packageCreator() again which should throw an error
-      let expectedError;
       try {
-        await onChange();
+        onChange();
+        makeSureItFails();
       } catch (error) {
-        expectedError = error;
+        assert.include(error && error.message,
+          'Simulate an error on the second call to packageCreator()');
       }
-      assert.include(
-        expectedError && expectedError.message,
-        'Simulate an error on the second call to packageCreator()');
     }
   ));
 
@@ -298,18 +286,16 @@ describe('build', () => {
       const testFileName = path.join(tmpDir.path(),
                                      'minimal_extension-1.0.zip');
       await fs.writeFile(testFileName, 'test');
-      let expectedError;
       try {
         await build({
           sourceDir: fixturePath('minimal-web-ext'),
           artifactsDir: tmpDir.path(),
         });
+        makeSureItFails();
       } catch (error) {
-        expectedError = error;
+        assert.instanceOf(error, UsageError);
+        assert.match(error.message, /Extension exists at the destination path/);
       }
-      assert.instanceOf(expectedError, UsageError);
-      assert.match(expectedError && expectedError.message,
-                   /Extension exists at the destination path/);
     }
   ));
 
@@ -363,14 +349,12 @@ describe('build', () => {
           eventToPromise: fakeEventToPromise,
         };
 
-        let expectedError;
         try {
           await defaultPackageCreator(params, options);
+          makeSureItFails();
         } catch (error) {
-          expectedError = error;
+          assert.match(error.message, /Unexpected error/);
         }
-        assert.match(expectedError && expectedError.message,
-                     /Unexpected error/);
       }
     ));
 
