@@ -239,7 +239,37 @@ export type UseProfileParams = {
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
   customPrefs?: FirefoxPreferences,
+  createProfileFinder?: typeof defaultCreateProfileFinder,
 };
+
+export interface IProfileFinder {
+  getPath(string): Promise<string>;
+}
+
+export function defaultCreateProfileFinder(userDirectoryPath?: string) {
+  const finder = new FirefoxProfile.Finder(userDirectoryPath);
+  const readProfiles = promisify(finder.readProfiles, finder);
+  const getPath = promisify(finder.getPath, finder);
+  return async (profileName: string) => {
+    const profilesIniPath = path.join(
+      userDirectoryPath || FirefoxProfile.Finder.locateUserDirectory(),
+      'profiles.ini');
+    try {
+      await fs.stat(profilesIniPath);
+    } catch (error) {
+      if (isErrorWithCode('ENOENT', error)) {
+        log.warn('No firefox profiles exist');
+      }
+    }
+    await readProfiles();
+    const hasProfileName = finder.profiles.filter(
+      (profileDef) => profileDef.Name === profileName).length !== 0;
+    if (hasProfileName) {
+      return await getPath(profileName);
+    }
+  };
+}
+
 
 // Use the target path as a Firefox profile without cloning it
 
@@ -249,9 +279,38 @@ export async function useProfile(
     app,
     configureThisProfile = configureProfile,
     customPrefs = {},
+    createProfileFinder = defaultCreateProfileFinder,
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
-  const profile = new FirefoxProfile({destinationDirectory: profilePath});
+  let destinationDirectory;
+  const getProfilePath = createProfileFinder();
+  const dirExists = await isDirectory(profilePath);
+  if (dirExists) {
+    log.debug(`Using profile directory from "${profilePath}"`);
+    if (profilePath === getProfilePath('default') ||
+      profilePath === getProfilePath('dev-edition-default')) {
+      throw new WebExtError(
+        `Cannot use profile at "${profilePath}"`
+      );
+    }
+    destinationDirectory = profilePath;
+  } else {
+    log.debug(`Assuming ${profilePath} is a named profile`);
+    if (profilePath === 'default' ||
+          profilePath === 'dev-edition-default') {
+      throw new WebExtError(
+        `Cannot use the blacklisted named profile "${profilePath}"`
+      );
+    }
+    destinationDirectory = getProfilePath(profilePath);
+    if (!destinationDirectory) {
+      throw new UsageError(
+        `The request "${profilePath}" profile name
+          cannot be resolved to a profile path`
+      );
+    }
+  }
+  const profile = new FirefoxProfile({destinationDirectory});
   return await configureThisProfile(profile, {app, customPrefs});
 }
 
