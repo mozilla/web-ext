@@ -35,6 +35,38 @@ function withBaseProfile(callback) {
   );
 }
 
+function createFakeProfileFinder(profilesDirPath) {
+  const FakeProfileFinder = sinon.spy((...args) => {
+    const finder = new FirefoxProfile.Finder(...args);
+
+    sinon.spy(finder, 'readProfiles');
+
+    return finder;
+  });
+
+  FakeProfileFinder.locateUserDirectory = sinon.spy(() => {
+    return profilesDirPath;
+  });
+
+  return FakeProfileFinder;
+}
+
+async function createFakeProfilesIni(
+  dirPath: string, profilesDefs: Array<Object>
+): Promise<void> {
+  let content = '';
+
+  for (const [idx, profile] of profilesDefs.entries()) {
+    content += `[Profile${idx}]\n`;
+    for (const k of Object.keys(profile)) {
+      content += `${k}=${profile[k]}\n`;
+    }
+    content += '\n';
+  }
+
+  await fs.writeFile(path.join(dirPath, 'profiles.ini'), content);
+}
+
 describe('firefox', () => {
 
   describe('run', () => {
@@ -263,6 +295,160 @@ describe('firefox', () => {
 
   });
 
+  describe('isDefaultProfile', () => {
+
+    it('detects common Firefox default profiles specified by name',
+       async () => {
+         const isDefault = await firefox.isDefaultProfile('default');
+         assert.equal(isDefault, true);
+
+         const isDevEditionDefault = await firefox.isDefaultProfile(
+           'dev-edition-default'
+         );
+         assert.equal(isDevEditionDefault, true);
+       });
+
+    it('allows profile name if it is not listed as default in profiles.ini',
+      async () => {
+        return withTempDir(async (tmpDir) => {
+          const profilesDirPath = tmpDir.path();
+          const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
+
+          await createFakeProfilesIni(profilesDirPath, [
+            {
+              Name: 'manually-set-default',
+              Path: 'fake-default-profile',
+              IsRelative: 1,
+              Default: 1,
+            },
+          ]);
+
+          const isDefault = await firefox.isDefaultProfile(
+            'manually-set-default', FakeProfileFinder
+          );
+          assert.equal(
+            isDefault, true,
+            'Manually configured default profile'
+          );
+
+          const isNotDefault = await firefox.isDefaultProfile(
+            'unkown-profile-name', FakeProfileFinder
+          );
+          assert.equal(
+            isNotDefault, false,
+            'Unknown profile name'
+          );
+        });
+      });
+
+    it('allows profile path if it is not listed as default in profiles.ini',
+       async () => {
+         return withTempDir(async (tmpDir) => {
+           const profilesDirPath = tmpDir.path();
+           const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
+           const absProfilePath = path.join(
+             profilesDirPath,
+             'fake-manually-default-profile'
+           );
+
+           await createFakeProfilesIni(profilesDirPath, [
+             {
+               Name: 'default',
+               Path: 'fake-default-profile',
+               IsRelative: 1,
+             },
+             {
+               Name: 'dev-edition-default',
+               Path: 'fake-devedition-default-profile',
+               IsRelative: 1,
+             },
+             {
+               Name: 'manually-set-default',
+               Path: absProfilePath,
+               Default: 1,
+             },
+           ]);
+
+           const isFirefoxDefaultPath = await firefox.isDefaultProfile(
+             path.join(profilesDirPath, 'fake-default-profile'),
+             FakeProfileFinder
+           );
+           assert.equal(
+             isFirefoxDefaultPath, true,
+             'Firefox default profile'
+           );
+
+           const isDevEditionDefaultPath = await firefox.isDefaultProfile(
+             path.join(profilesDirPath, 'fake-devedition-default-profile'),
+             FakeProfileFinder
+           );
+           assert.equal(
+             isDevEditionDefaultPath, true,
+             'Firefox DevEdition default profile'
+           );
+
+           const isManuallyDefault = await firefox.isDefaultProfile(
+             absProfilePath,
+             FakeProfileFinder
+           );
+           assert.equal(
+             isManuallyDefault, true,
+             'Manually configured default profile'
+           );
+
+           const isNotDefault = await firefox.isDefaultProfile(
+             path.join(profilesDirPath, 'unkown-profile-dir'),
+             FakeProfileFinder
+           );
+           assert.equal(
+             isNotDefault, false,
+             'Unknown profile path'
+           );
+         });
+       });
+
+    it('allows profile path if there is no profiles.ini file',
+       async () => {
+         return withTempDir(async (tmpDir) => {
+           const profilesDirPath = tmpDir.path();
+           const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
+
+           const isNotDefault = await firefox.isDefaultProfile(
+             '/tmp/my-custom-profile-dir',
+             FakeProfileFinder
+           );
+
+           assert.equal(isNotDefault, false);
+         });
+       });
+
+    it('rejects on any unexpected error while looking for profiles.ini',
+       async () => {
+         return withTempDir(async (tmpDir) => {
+           const profilesDirPath = tmpDir.path();
+           const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
+           const fakeFsStat = sinon.spy(() => {
+             return Promise.reject(new Error('Fake fs stat error'));
+           });
+
+           let exception;
+           try {
+             await firefox.isDefaultProfile(
+               '/tmp/my-custom-profile-dir',
+               FakeProfileFinder,
+               fakeFsStat
+             );
+           } catch (error) {
+             exception = error;
+           }
+
+           assert.match(exception && exception.message, /Fake fs stat error/);
+         });
+       }
+      );
+
+  });
+
   describe('createProfile', () => {
 
     it('resolves with a profile object', () => {
@@ -304,6 +490,30 @@ describe('firefox', () => {
   });
 
   describe('useProfile', () => {
+    it('rejects to a UsageError when used on a default Firefox profile',
+      async () => {
+        const configureThisProfile = sinon.spy(
+          (profile) => Promise.resolve(profile)
+        );
+        const isFirefoxDefaultProfile = sinon.spy(
+          () => Promise.resolve(true)
+        );
+        let exception;
+
+        try {
+          await firefox.useProfile('default', {
+            configureThisProfile,
+            isFirefoxDefaultProfile,
+          });
+        } catch (error) {
+          exception = error;
+        }
+
+        assert.match(
+          exception && exception.message,
+            /Cannot use --keep-profile-changes on a default profile/
+        );
+      });
 
     it('resolves to a FirefoxProfile instance', () => withBaseProfile(
       (baseProfile) => {
