@@ -67,7 +67,17 @@ export default async function run(
     noReload = true;
   }
 
-  const manifestData = await getValidatedManifest(sourceDir);
+  let manifestData;
+
+  try {
+    manifestData = await getValidatedManifest(sourceDir);
+  } catch (e) {
+    // in case it is not a webExtension
+    manifestData = {
+      name: '',
+      version: '',
+    };
+  }
 
   const firefoxDesktopRunnerParams = {
     // Common options.
