@@ -38,4 +38,19 @@ describe('lint', () => {
     assert.match(exception && exception.message, /linter error/);
   });
 
+  it('sets runAsBinary according shouldExitProgram option', async () => {
+    const fakeLinter = sinon.spy(() => lintResult);
+    const lintResult = {
+      run: sinon.spy(() => Promise.resolve()),
+    };
+    await lintCommand({
+      sourceDir: '/fake/source/dir',
+    }, {
+      linter: fakeLinter,
+      shouldExitProgram: false,
+    });
+    const args = fakeLinter.firstCall.args[0];
+    assert.notOk(args.runAsBinary);
+  });
+
 });

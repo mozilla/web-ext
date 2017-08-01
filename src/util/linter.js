@@ -84,6 +84,8 @@ export async function linter(
     warningsAsErrors,
     metadata,
     selfHosted,
+    output,
+    boring,
     scanFile: filePath ? [path.relative(sourceDir, filePath)] : null,
     shouldScanFile,
   };

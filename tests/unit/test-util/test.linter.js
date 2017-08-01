@@ -79,6 +79,8 @@ describe('util.linter', () => {
           pretty: true,
           warningsAsErrors: false,
           metadata: false,
+          output: 'text',
+          boring: false,
           selfHosted: false,
           scanFile: null,
           shouldScanFile: null,
@@ -92,14 +94,13 @@ describe('util.linter', () => {
         const config = createLinter.firstCall.args[0].config;
         config.shouldScanFile = null;
         assert.ok(createLinter.called);
-        assert.equal(createLinter.firstCall.args[0].runAsBinary,
-          false);
+        assert.notOk(createLinter.firstCall.args[0].runAsBinary);
         assert.deepEqual(config, expectedConfig);
         assert.ok(fakeLinterInstance.run.called);
       }
     ));
 
-  it('runs linter for a specified files with correct config', () => withTempDir(
+  it('runs linter for a specified files with default config', () => withTempDir(
       async (tmpDir) => {
         const sourceDir = tmpDir.path();
         const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
@@ -114,6 +115,8 @@ describe('util.linter', () => {
           pretty: true,
           warningsAsErrors: false,
           metadata: false,
+          output: 'text',
+          boring: false,
           selfHosted: false,
           scanFile: ['foo.txt'],
           shouldScanFile: null,
@@ -158,7 +161,33 @@ describe('util.linter', () => {
     const {createLinter} = options;
     await lint({}, {runAsBinary: true});
     const args = createLinter.firstCall.args[0];
-    assert.equal(args.runAsBinary, true);
+    assert.ok(args.runAsBinary);
+  });
+
+  it('passes warningsAsErrors to the linter', async () => {
+    const {lint, options} = prepare();
+    const {createLinter} = options;
+    await lint({}, {warningsAsErrors: true});
+    const config = createLinter.firstCall.args[0].config;
+    assert.ok(config.warningsAsErrors);
+  });
+
+  it('passes through linter configuration', async () => {
+    const {lint, options} = prepare();
+    const {createLinter} = options;
+    await lint({}, {
+      pretty: true,
+      metadata: true,
+      output: 'json',
+      boring: true,
+      selfHosted: true,
+    });
+    const config = createLinter.firstCall.args[0].config;
+    assert.ok(config.pretty);
+    assert.ok(config.metadata);
+    assert.strictEqual(config.output, 'json');
+    assert.ok(config.boring);
+    assert.ok(config.selfHosted);
   });
 
   it('configures the linter when verbose', async () => {
@@ -169,7 +198,7 @@ describe('util.linter', () => {
     });
     const config = createLinter.firstCall.args[0].config;
     assert.equal(config.logLevel, 'debug');
-    assert.equal(config.stack, true);
+    assert.ok(config.stack);
 
   });
 
@@ -179,7 +208,7 @@ describe('util.linter', () => {
     await lint({});
     const config = createLinter.firstCall.args[0].config;
     assert.equal(config.logLevel, 'fatal');
-    assert.equal(config.stack, false);
+    assert.notOk(config.stack);
   });
 
   it('configures a lint command with the expected fileFilter', async () => {
