@@ -136,6 +136,38 @@ describe('run', () => {
     }, {firefoxApp, firefoxClient});
   });
 
+  it('passes the expected parameters to multi extension runner', async () => {
+    const cmd = prepareRun();
+    const {
+      MultiExtensionRunner,
+      desktopNotifications,
+    } = cmd.options;
+    const {
+      sourceDir,
+      artifactsDir,
+    } = cmd.argv;
+
+    const expectedMultiExtensionRunnerParams = {
+      desktopNotifications,
+      sourceDir,
+      artifactsDir,
+      ignoreFiles: undefined,
+      lint: true,
+    };
+
+    await cmd.run({lint: true}, {MultiExtensionRunner});
+
+    assert.ok(MultiExtensionRunner.called);
+    const runnerParams = MultiExtensionRunner.firstCall.args[0];
+    assert.deepEqual({
+      sourceDir: runnerParams.sourceDir,
+      artifactsDir: runnerParams.artifactsDir,
+      desktopNotifications: runnerParams.desktopNotifications,
+      ignoreFiles: runnerParams.ignoreFiles,
+      lint: runnerParams.lint,
+    }, expectedMultiExtensionRunnerParams);
+  });
+
   it('can watch and reload the extension', async () => {
     const cmd = prepareRun();
     const {sourceDir, artifactsDir} = cmd.argv;
