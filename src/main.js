@@ -1,4 +1,5 @@
 /* @flow */
 import {main} from './program';
+import cmd from './cmd';
 
-export {main};
+export {main, cmd};
