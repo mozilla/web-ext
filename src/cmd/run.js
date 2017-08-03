@@ -8,7 +8,7 @@ import {
   connectWithMaxRetries as defaultFirefoxClient,
 } from '../firefox/remote';
 import {createLogger} from '../util/logger';
-import getValidatedManifest from '../util/manifest';
+import defaultGetValidatedManifest from '../util/manifest';
 import {
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
@@ -43,6 +43,7 @@ export type CmdRunOptions = {|
   shouldExitProgram?: boolean,
   FirefoxDesktopExtensionRunner?: typeof DefaultFirefoxDesktopExtensionRunner,
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
+  getValidatedManifest?: typeof defaultGetValidatedManifest,
 |};
 
 export default async function run(
@@ -58,6 +59,7 @@ export default async function run(
     reloadStrategy = defaultReloadStrategy,
     FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
+    getValidatedManifest = defaultGetValidatedManifest,
   }: CmdRunOptions = {}): Promise<Object> {
 
   log.info(`Running web extension from ${sourceDir}`);

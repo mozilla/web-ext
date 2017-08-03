@@ -153,4 +153,12 @@ describe('run', () => {
     assert.equal(reloadStrategy.called, false);
   });
 
+  it('allows to replace manifest parser', async () => {
+    const cmd = prepareRun();
+    const getFakeManifest = sinon.spy();
+
+    await cmd.run({}, { getValidatedManifest: getFakeManifest });
+    assert.equal(getFakeManifest.called, true);
+  });
+
 });
