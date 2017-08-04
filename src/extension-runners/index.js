@@ -236,6 +236,7 @@ export type ReloadStrategyParams = {|
   sourceDir: string,
   artifactsDir: string,
   ignoreFiles?: Array<string>,
+  noInput?: boolean,
 |};
 
 export type ReloadStrategyOptions = {|
@@ -246,8 +247,11 @@ export type ReloadStrategyOptions = {|
 
 export function defaultReloadStrategy(
   {
+    artifactsDir,
     extensionRunner,
-    sourceDir, artifactsDir, ignoreFiles,
+    ignoreFiles,
+    noInput = false,
+    sourceDir,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
@@ -255,6 +259,11 @@ export function defaultReloadStrategy(
     kill = process.kill,
   }: ReloadStrategyOptions = {}
 ): void {
+  const allowInput = !noInput;
+  if (!allowInput) {
+    log.debug('Input has been disabled because of noInput==true');
+  }
+
   const watcher: Watchpack = createWatcher({
     reloadExtension: (watchedSourceDir) => {
       extensionRunner.reloadExtensionBySourceDir(watchedSourceDir);
@@ -266,10 +275,12 @@ export function defaultReloadStrategy(
 
   extensionRunner.registerCleanup(() => {
     watcher.close();
-    stdin.pause();
+    if (allowInput) {
+      stdin.pause();
+    }
   });
 
-  if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+  if (allowInput && stdin.isTTY && stdin instanceof tty.ReadStream) {
     readline.emitKeypressEvents(stdin);
     stdin.setRawMode(true);
 

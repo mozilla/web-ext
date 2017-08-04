@@ -22,17 +22,18 @@ const log = createLogger(__filename);
 // Run command types and implementation.
 
 export type CmdRunParams = {|
-  sourceDir: string,
   artifactsDir: string,
-  firefox: string,
-  firefoxProfile?: string,
-  keepProfileChanges: boolean,
-  preInstall: boolean,
-  noReload: boolean,
   browserConsole: boolean,
   customPrefs?: FirefoxPreferences,
-  startUrl?: string | Array<string>,
+  firefox: string,
+  firefoxProfile?: string,
   ignoreFiles?: Array<string>,
+  keepProfileChanges: boolean,
+  noInput?: boolean,
+  noReload: boolean,
+  preInstall: boolean,
+  sourceDir: string,
+  startUrl?: string | Array<string>,
 |};
 
 export type CmdRunOptions = {|
@@ -48,9 +49,18 @@ export type CmdRunOptions = {|
 
 export default async function run(
   {
-    sourceDir, artifactsDir, firefox, firefoxProfile,
-    keepProfileChanges = false, preInstall = false, noReload = false,
-    browserConsole = false, customPrefs, startUrl, ignoreFiles,
+    artifactsDir,
+    browserConsole = false,
+    customPrefs,
+    firefox,
+    firefoxProfile,
+    keepProfileChanges = false,
+    ignoreFiles,
+    noInput = false,
+    noReload = false,
+    preInstall = false,
+    sourceDir,
+    startUrl,
   }: CmdRunParams,
   {
     desktopNotifications = defaultDesktopNotifications,
@@ -111,6 +121,7 @@ export default async function run(
       sourceDir,
       artifactsDir,
       ignoreFiles,
+      noInput,
     });
   }
 

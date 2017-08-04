@@ -175,6 +175,7 @@ export type BuildCmdParams = {|
   sourceDir: string,
   artifactsDir: string,
   asNeeded?: boolean,
+  noInput?: boolean,
   overwriteDest?: boolean,
   ignoreFiles?: Array<string>,
 |};
@@ -196,6 +197,7 @@ export default async function build(
     asNeeded = false,
     overwriteDest = false,
     ignoreFiles = [],
+    noInput = false,
   }: BuildCmdParams,
   {
     manifestData,

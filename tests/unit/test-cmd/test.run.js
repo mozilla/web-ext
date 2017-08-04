@@ -136,6 +136,14 @@ describe('run', () => {
     assert.equal(args.artifactsDir, artifactsDir);
   });
 
+  it('can disable input in the reload strategy', async () => {
+    const cmd = prepareRun();
+    const {reloadStrategy} = cmd.options;
+
+    await cmd.run({noInput: true, noReload: false});
+    sinon.assert.calledWithMatch(reloadStrategy, {noInput: true});
+  });
+
   it('will not reload when using --pre-install', async () => {
     const cmd = prepareRun();
     const {reloadStrategy} = cmd.options;
