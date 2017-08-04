@@ -20,16 +20,17 @@ export const extensionIdFile = '.web-extension-id';
 // Sign command types and implementation.
 
 export type SignParams = {|
-  id?: string,
-  verbose?: boolean,
-  sourceDir: string,
-  artifactsDir: string,
-  ignoreFiles?: Array<string>,
   apiKey: string,
+  apiProxy: string,
   apiSecret: string,
   apiUrlPrefix: string,
-  apiProxy: string,
+  artifactsDir: string,
+  id?: string,
+  ignoreFiles?: Array<string>,
+  noInput?: boolean,
+  sourceDir: string,
   timeout: number,
+  verbose?: boolean,
 |};
 
 export type SignOptions = {
@@ -47,12 +48,22 @@ export type SignResult = {|
 
 export default function sign(
   {
-    verbose, sourceDir, artifactsDir, ignoreFiles = [],
-    apiKey, apiSecret, apiUrlPrefix, apiProxy, id, timeout,
+    apiKey,
+    apiProxy,
+    apiSecret,
+    apiUrlPrefix,
+    artifactsDir,
+    id,
+    ignoreFiles = [],
+    noInput = false,
+    sourceDir,
+    timeout,
+    verbose,
   }: SignParams,
   {
-    build = defaultBuilder, signAddon = defaultAddonSigner,
+    build = defaultBuilder,
     preValidatedManifest,
+    signAddon = defaultAddonSigner,
   }: SignOptions = {}
 ): Promise<SignResult> {
   return withTempDir(

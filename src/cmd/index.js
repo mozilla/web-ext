@@ -6,4 +6,3 @@ import sign from './sign';
 import docs from './docs';
 
 export default {build, lint, run, sign, docs};
-

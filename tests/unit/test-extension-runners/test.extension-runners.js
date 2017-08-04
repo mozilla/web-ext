@@ -500,6 +500,27 @@ describe('util/extension-runners', () => {
       }
     });
 
+    it('allows you to disable input', async () => {
+      const {extensionRunner, reloadStrategy} = prepare();
+      sinon.spy(extensionRunner, 'registerCleanup');
+
+      const fakeStdin = new tty.ReadStream();
+      sinon.spy(fakeStdin, 'pause');
+      sinon.spy(fakeStdin, 'setRawMode');
+
+      try {
+        await reloadStrategy({noInput: true}, {stdin: fakeStdin});
+        // This is meant to test that all input is ignored.
+        sinon.assert.notCalled(fakeStdin.setRawMode);
+      } finally {
+        exitKeypressLoop(fakeStdin);
+      }
+
+      const cleanupCb = extensionRunner.registerCleanup.firstCall.args[0];
+      cleanupCb();
+      sinon.assert.notCalled(fakeStdin.pause);
+    });
+
     it('can still reload when user presses R after a reload error',
       async () => {
         const {extensionRunner, reloadStrategy} = prepare({
