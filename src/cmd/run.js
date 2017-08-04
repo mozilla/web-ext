@@ -70,7 +70,7 @@ export default async function run(
     FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
-  }: CmdRunOptions = {}): Promise<Object> {
+  }: CmdRunOptions = {}): Promise<DefaultMultiExtensionRunner> {
 
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
@@ -125,5 +125,5 @@ export default async function run(
     });
   }
 
-  return firefoxApp;
+  return extensionRunner;
 }

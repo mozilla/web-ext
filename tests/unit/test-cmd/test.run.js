@@ -46,6 +46,7 @@ describe('run', () => {
         log.debug('fake: reloadStrategy()');
       }),
       FirefoxDesktopExtensionRunner: sinon.spy(FakeExtensionRunner),
+      MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
       desktopNotifications: sinon.spy(() => {}),
     };
 
@@ -167,6 +168,12 @@ describe('run', () => {
 
     await cmd.run({}, { getValidatedManifest: getFakeManifest });
     assert.equal(getFakeManifest.called, true);
+  });
+
+  it('returns ExtensonRunner', async () => {
+    const cmd = prepareRun();
+    const extensionRunner = await cmd.run();
+    assert.instanceOf(extensionRunner, FakeExtensionRunner);
   });
 
 });
