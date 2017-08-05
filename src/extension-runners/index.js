@@ -86,8 +86,8 @@ export class MultiExtensionRunner {
         ignoreFiles,
       });
       if (linterResult && linterResult.summary.errors > 0) {
-        const message = linterResult.errors.length.toString()
-          + ' linting error(s)';
+        const message =
+          `${linterResult.errors.length} linting error(s)`;
         this.desktopNotifications({
           title: 'web-ext run: linter error',
           message,
@@ -265,8 +265,8 @@ export function defaultWatcherCreator(
           filePath,
         });
         if (linterResult && linterResult.summary.errors > 0) {
-          const message = linterResult.errors.length.toString()
-            + ' linting error(s)';
+          const message =
+            `${linterResult.errors.length} linting error(s)`;
           desktopNotifications({
             title: 'web-ext run: linter error',
             message,
