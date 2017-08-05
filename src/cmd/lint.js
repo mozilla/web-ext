@@ -1,7 +1,7 @@
 /* @flow */
 import {createLogger} from '../util/logger';
 import {linter as defaultLinter} from '../util/linter';
-import type {LinterOutputType} from '../util/linter';
+import type {LinterOutputType, LinterResult} from '../util/linter';
 
 const log = createLogger(__filename);
 
@@ -41,7 +41,7 @@ export default async function lint(
   {
     linter = defaultLinter, shouldExitProgram = true,
   }: LintCmdOptions = {}
-): Promise<void> {
+): Promise<LinterResult | void> {
 
   log.debug(`Running addons-linter on ${sourceDir}`);
 

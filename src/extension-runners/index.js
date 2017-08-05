@@ -80,11 +80,19 @@ export class MultiExtensionRunner {
     }
 
     if (this.lint) {
-      await this.linter({
+      const linterResult = await this.linter({
         sourceDir,
         artifactsDir,
         ignoreFiles,
       });
+      if (linterResult && linterResult.summary.errors > 0) {
+        const message = linterResult.errors.length.toString()
+          + ' linting error(s)';
+        this.desktopNotifications({
+          title: 'web-ext run: linter error',
+          message,
+        });
+      }
     }
 
     await Promise.all(promises);
@@ -228,6 +236,7 @@ export type WatcherCreatorParams = {|
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
+  desktopNotifications?: typeof defaultDesktopNotifications,
   lint: boolean,
   linter?: typeof defaultLinter,
 |};
@@ -239,7 +248,7 @@ export function defaultWatcherCreator(
     reloadExtension, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator, lint = false,
-    linter = defaultLinter,
+    linter = defaultLinter, desktopNotifications = defaultDesktopNotifications,
   }: WatcherCreatorParams
 ): Watchpack {
   const fileFilter = createFileFilter(
@@ -250,7 +259,19 @@ export function defaultWatcherCreator(
     artifactsDir,
     onChange: async (filePath) => {
       if (lint) {
-        await linter({artifactsDir, sourceDir, filePath});
+        const linterResult = await linter({
+          artifactsDir,
+          sourceDir,
+          filePath,
+        });
+        if (linterResult && linterResult.summary.errors > 0) {
+          const message = linterResult.errors.length.toString()
+            + ' linting error(s)';
+          desktopNotifications({
+            title: 'web-ext run: linter error',
+            message,
+          });
+        }
       }
       reloadExtension(sourceDir);
     },

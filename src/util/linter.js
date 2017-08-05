@@ -7,6 +7,17 @@ import {createFileFilter as defaultFileFilterCreator} from './file-filter';
 import type {FileFilterCreatorFn} from '../util/file-filter';
 
 
+export type LinterResult = {
+  count: number,
+  summary: {
+    errors: number,
+    notices: number,
+    warnings: number,
+  },
+  metadata: Object,
+  errors: Array<Object>;
+};
+
 export type LinterOutputType = 'text' | 'json';
 
 export type Linter = {|
@@ -74,7 +85,7 @@ export async function linter(
     createLinter = defaultLinterCreator,
     fileFilterCreator = defaultFileFilterCreator,
   }: linterOptions = {},
-): Promise<void> {
+): Promise<LinterResult | void> {
 
   const config = {
     _: [sourceDir],
@@ -101,5 +112,9 @@ export async function linter(
     config,
     runAsBinary,
   });
-  return linterInstance.run();
+  try {
+    return await linterInstance.run();
+  } catch (linterError) {
+    throw linterError;
+  }
 }
