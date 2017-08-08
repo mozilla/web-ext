@@ -19,6 +19,11 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Installation from npm
 
+First, make sure you are running the current
+[LTS](https://github.com/nodejs/LTS)
+(long term support) version of
+[NodeJS](https://nodejs.org/en/).
+
 ### Global command
 
 You can install this command onto your machine globally with:
