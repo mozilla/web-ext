@@ -43,11 +43,13 @@ export class ConsoleStream {
   verbose: boolean;
   isCapturing: boolean;
   capturedMessages: Array<string>;
+  listeners: Set<(string) => void>;
 
   constructor({verbose = false}: ConsoleStreamParams = {}) {
     this.verbose = verbose;
     this.isCapturing = false;
     this.capturedMessages = [];
+    this.listeners = new Set();
   }
 
   format({name, msg, level}: BunyanLogEntry): string {
@@ -68,6 +70,7 @@ export class ConsoleStream {
       const msg = this.format(packet);
       if (this.isCapturing) {
         this.capturedMessages.push(msg);
+        this.notifyListeners();
       } else {
         localProcess.stdout.write(msg);
       }
@@ -88,6 +91,30 @@ export class ConsoleStream {
       localProcess.stdout.write(msg);
     }
     this.capturedMessages = [];
+  }
+
+  notifyListeners() {
+    for (const msg of this.capturedMessages) {
+      for (const listener of this.listeners) {
+        try {
+          listener(msg);
+        } catch (e) {
+          // do nothing
+        }
+      }
+    }
+  }
+
+  clear() {
+    this.capturedMessages = [];
+  }
+
+  addListener(listener: string => void) {
+    this.listeners.add(listener);
+  }
+
+  removeListener(listener: string => void) {
+    this.listeners.delete(listener);
   }
 }
 
