@@ -89,7 +89,7 @@ describe('run', () => {
       keepProfileChanges: true,
       browserConsole: true,
       firefox: '/path/to/custom/bin/firefox',
-      customPrefs: {'my.custom.pref': 'value'},
+      pref: {'my.custom.pref': 'value'},
       firefoxProfile: '/path/to/custom/profile',
     };
 
@@ -99,14 +99,23 @@ describe('run', () => {
 
     assert.ok(FirefoxDesktopExtensionRunner.called);
     const runnerParams = FirefoxDesktopExtensionRunner.firstCall.args[0];
+
+    // The runner should receive the same parameters as the options sent
+    // to run() with just a few minor adjustments.
+    const expectedRunnerParams = { ...runOptions };
+    expectedRunnerParams.firefoxBinary = runOptions.firefox;
+    delete expectedRunnerParams.firefox;
+    expectedRunnerParams.customPrefs = runOptions.pref;
+    delete expectedRunnerParams.pref;
+
     assert.deepEqual({
       preInstall: runnerParams.preInstall,
       keepProfileChanges: runnerParams.keepProfileChanges,
       browserConsole: runnerParams.browserConsole,
-      firefox: runnerParams.firefoxBinary,
+      firefoxBinary: runnerParams.firefoxBinary,
       customPrefs: runnerParams.customPrefs,
       firefoxProfile: runnerParams.profilePath,
-    }, runOptions);
+    }, expectedRunnerParams);
     assert.equal(runnerParams.extensions.length, 1);
     assert.equal(runnerParams.extensions[0].sourceDir, cmd.argv.sourceDir);
   });

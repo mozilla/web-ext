@@ -24,7 +24,7 @@ const log = createLogger(__filename);
 export type CmdRunParams = {|
   artifactsDir: string,
   browserConsole: boolean,
-  customPrefs?: FirefoxPreferences,
+  pref?: FirefoxPreferences,
   firefox: string,
   firefoxProfile?: string,
   ignoreFiles?: Array<string>,
@@ -51,7 +51,7 @@ export default async function run(
   {
     artifactsDir,
     browserConsole = false,
-    customPrefs,
+    pref,
     firefox,
     firefoxProfile,
     keepProfileChanges = false,
@@ -79,6 +79,9 @@ export default async function run(
     noReload = true;
   }
 
+  // Create an alias for --pref since it has been transformed into an
+  // object containing one or more preferences.
+  const customPrefs = pref;
   const manifestData = await getValidatedManifest(sourceDir);
 
   const firefoxDesktopRunnerParams = {
