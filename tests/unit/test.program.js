@@ -411,10 +411,10 @@ describe('program.main', () => {
       ['run', '--pref', 'prop=true', '--pref', 'prop2=value2'],
       {commands: fakeCommands})
       .then(() => {
-        const {customPrefs} = fakeCommands.run.firstCall.args[0];
-        assert.isObject(customPrefs);
-        assert.equal(customPrefs.prop, true);
-        assert.equal(customPrefs.prop2, 'value2');
+        const {pref} = fakeCommands.run.firstCall.args[0];
+        assert.isObject(pref);
+        assert.equal(pref.prop, true);
+        assert.equal(pref.prop2, 'value2');
       });
   });
 
