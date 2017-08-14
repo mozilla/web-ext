@@ -109,6 +109,7 @@ describe('program.Program', () => {
     const program = new Program(['cmd'])
       .command('cmd', 'some command', handler, {
         'some-option': {
+          type: 'string',
           default: 'default value',
         },
       });
@@ -132,6 +133,7 @@ describe('program.Program', () => {
       })
       .command('cmd', 'some command', handler, {
         'some-option': {
+          type: 'string',
           default: 'default value',
         },
       });
@@ -154,6 +156,7 @@ describe('program.Program', () => {
         valueReceived = someOpt;
       }, {
         'some-opt': {
+          type: 'string',
           describe: 'example option',
         },
       });

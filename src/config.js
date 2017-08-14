@@ -6,26 +6,25 @@ import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 
 import {createLogger} from './util/logger';
-import {UsageError} from './errors';
+import {UsageError, WebExtError} from './errors';
 
 const log = createLogger(__filename);
 
 type ApplyConfigToArgvParams = {|
   argv: Object,
   configObject: Object,
-  defaultValues: Object,
+  options: Object,
   configFileName: string,
-  commandExecuted?: string,
 |};
 
 export function applyConfigToArgv({
   argv,
   configObject,
-  defaultValues,
+  options,
   configFileName,
-  commandExecuted,
 }: ApplyConfigToArgvParams): Object {
   let newArgv = {...argv};
+
   for (const option in configObject) {
 
     if (camelCase(option) !== option) {
@@ -33,29 +32,57 @@ export function applyConfigToArgv({
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    if (option === commandExecuted) {
+    if (typeof options[option] === 'object' &&
+      typeof configObject[option] === 'object') {
+      // Descend into the nested configuration for a sub-command.
       newArgv = applyConfigToArgv({
         argv,
-        configObject: configObject[commandExecuted],
-        defaultValues: defaultValues[commandExecuted],
+        configObject: configObject[option],
+        options: options[option],
         configFileName});
       continue;
+    }
+
+    const decamelizedOptName = decamelize(option, '-');
+
+    if (typeof options[decamelizedOptName] !== 'object') {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `an unknown option: "${option}"`);
+    }
+    if (options[decamelizedOptName].type === undefined) {
+      throw new WebExtError(
+        `Option: ${option} was defined without a type.`);
+    }
+
+    const expectedType = options[decamelizedOptName].type ===
+      'count' ? 'number' : options[decamelizedOptName].type;
+
+    const optionType = typeof configObject[option];
+    if (optionType !== expectedType) {
+      throw new UsageError(`The config file at ${configFileName} specified ` +
+        `the type of "${option}" incorrectly as "${optionType}"` +
+        ` (expected type: "${expectedType}")`);
+    }
+
+    let defaultValue;
+    if (options[decamelizedOptName]) {
+      if (options[decamelizedOptName].default !== undefined) {
+        defaultValue = options[decamelizedOptName].default;
+      } else if (expectedType === 'boolean') {
+        defaultValue = false;
+      }
     }
 
     // we assume the value was set on the CLI if the default value is
     // not the same as that on the argv object as there is a very rare chance
     // of this happening
+
     const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
-      (argv[option] !== defaultValues[option]);
+      (argv[option] !== defaultValue);
     if (wasValueSetOnCLI) {
       log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
         `configuration: ${option}=${configObject[option]}`);
       continue;
-    }
-
-    if (!argv.hasOwnProperty(decamelize(option, '-'))) {
-      throw new UsageError(`The config file at ${configFileName} specified ` +
-        `an unknown option: "${option}"`);
     }
 
     newArgv[option] = configObject[option];
