@@ -260,6 +260,10 @@ Example: $0 --help run.
       requiresArg: true,
       type: 'array',
     },
+    'no-input': {
+      describe: 'Disable all features that require standard input',
+      type: 'boolean',
+    },
   });
 
   program
