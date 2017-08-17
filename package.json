@@ -120,7 +120,7 @@
     "object.values": "1.0.4",
     "prettyjson": "1.2.1",
     "sinon": "3.2.1",
-    "webpack": "3.5.3",
+    "webpack": "3.5.5",
     "webpack-dev-server": "2.5.0",
     "yauzl": "2.8.0"
   },
