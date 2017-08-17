@@ -65,7 +65,7 @@
     "node-firefox-connect": "1.2.0",
     "open": "0.0.5",
     "node-notifier": "5.1.2",
-    "parse-json": "2.2.0",
+    "parse-json": "3.0.0",
     "regenerator-runtime": "0.10.5",
     "require-uncached": "1.0.3",
     "sign-addon": "0.2.1",
