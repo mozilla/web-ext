@@ -1,16 +1,16 @@
 # Web-ext
 
 This is a command line tool to help build, run, and test
-[web extensions](https://wiki.mozilla.org/WebExtensions).
+[WebExtensions](https://wiki.mozilla.org/WebExtensions).
 
 [![Build Status](https://travis-ci.org/mozilla/web-ext.svg?branch=master)](https://travis-ci.org/mozilla/web-ext)
 [![Coverage Status](https://coveralls.io/repos/github/mozilla/web-ext/badge.svg?branch=master)](https://coveralls.io/github/mozilla/web-ext?branch=master)
 [![Dependency Status](https://david-dm.org/mozilla/web-ext.svg)](https://david-dm.org/mozilla/web-ext)
 [![devDependency Status](https://david-dm.org/mozilla/web-ext/dev-status.svg)](https://david-dm.org/mozilla/web-ext#info=devDependencies)
 
-Ultimately, it aims to support web extensions in a standard, portable,
+Ultimately, it aims to support WebExtensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
-[Firefox web extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
+[Firefox Extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
 ## Documentation
 
@@ -98,7 +98,7 @@ need to relink it.
 
 ## Should I Use It?
 
-Yes! The web-ext tool enables you to build and ship web extensions for Firefox.
+Yes! The web-ext tool enables you to build and ship WebExtensions for Firefox.
 This platform stabilized in
 [Firefox 48](https://blog.mozilla.org/addons/2016/04/29/webextensions-in-firefox-48/)
 which was released in April of 2016.
@@ -115,7 +115,7 @@ Read the [contributing section](CONTRIBUTING.md) for how to develop new features
 ### Why do we need a command line tool?
 
 This is a great question and one that we will ask ourselves for each new web-ext
-feature. Most web extension functionality is baked into the browsers
+feature. Most WebExtensions functionality is baked into the browsers
 themselves but a complimentary command line tool will still be helpful.
 Here is a partial list of examples:
 
@@ -128,28 +128,28 @@ Here is a partial list of examples:
     [signing](http://olympia.readthedocs.org/en/latest/topics/api/signing.html)
     extensions.
 
-### Why not patch jpm for web extension support?
+### Why not patch jpm for WebExtensions support?
 
 First, note that [jpm](https://github.com/mozilla-jetpack/jpm/) is still
 actively maintained by Mozilla right now.
-We decided not to patch jpm for web extension support (See
+We decided not to patch jpm for WebExtensions support (See
 [jpm issue 445](https://github.com/mozilla-jetpack/jpm/issues/445),
 [discussion](https://mail.mozilla.org/pipermail/dev-addons/2015-December/000230.html)).
 
 Mozilla built [cfx](https://developer.mozilla.org/en-US/Add-ons/SDK/Tools/cfx)
 then deprecated it for jpm and now we're proposing a new tool.
-I know this is frustrating for developers but web extensions mark a major
+I know this is frustrating for developers but WebExtensions mark a major
 turning point. It would be an arduous task to wedge its feature set and
 simplified development process into jpm.
 
 Pros of creating a new tool:
 
-* By creating a new tool that focuses on the [emerging] web extension standard,
+* By creating a new tool that focuses on the [emerging] WebExtensions standard,
   we have a better chance of interoperating with other platforms, such as
   [Google Chrome](https://developer.chrome.com/extensions) or
   [Opera](https://dev.opera.com/extensions/).
   It would be hard to do that while preserving compatibility in jpm.
-* Creating SDK-based add-ons was overly complicated. With web extensions you no
+* Creating SDK-based add-ons was overly complicated. With WebExtensions you no
   longer need to convert your source into legacy artifacts and you won't need
   boostrapping scripts.
 * There are superior features in Firefox now for developing extensions such
@@ -169,6 +169,6 @@ Pros of creating a new tool:
 Cons of creating a new tool:
 
 * Firefox extension developers will have to interrupt and re-arrange their work flows.
-* Developers of existing add-ons will need to port to web extensions sooner rather than later.
+* Developers of existing add-ons will need to port to WebExtensions sooner rather than later.
 * The web-ext tool will require some ramp-up time for scaffolding.
 * The community of jpm contributors will need to shift focus to web-ext.
