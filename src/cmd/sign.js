@@ -134,7 +134,7 @@ export default function sign(
       } else {
         log.info('FAIL');
         throw new WebExtError(
-          'The WebExtension could not be signed');
+          'The extension could not be signed');
       }
 
       return signingResult;

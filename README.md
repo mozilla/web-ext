@@ -8,7 +8,7 @@ This is a command line tool to help build, run, and test
 [![Dependency Status](https://david-dm.org/mozilla/web-ext.svg)](https://david-dm.org/mozilla/web-ext)
 [![devDependency Status](https://david-dm.org/mozilla/web-ext/dev-status.svg)](https://david-dm.org/mozilla/web-ext#info=devDependencies)
 
-Ultimately, it aims to support WebExtensions in a standard, portable,
+Ultimately, it aims to support browser extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
 [Firefox Extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
@@ -98,7 +98,7 @@ need to relink it.
 
 ## Should I Use It?
 
-Yes! The web-ext tool enables you to build and ship WebExtensions for Firefox.
+Yes! The web-ext tool enables you to build and ship extensions for Firefox.
 This platform stabilized in
 [Firefox 48](https://blog.mozilla.org/addons/2016/04/29/webextensions-in-firefox-48/)
 which was released in April of 2016.
@@ -115,7 +115,7 @@ Read the [contributing section](CONTRIBUTING.md) for how to develop new features
 ### Why do we need a command line tool?
 
 This is a great question and one that we will ask ourselves for each new web-ext
-feature. Most WebExtensions functionality is baked into the browsers
+feature. Most WebExtension functionality is baked into the browsers
 themselves but a complimentary command line tool will still be helpful.
 Here is a partial list of examples:
 
