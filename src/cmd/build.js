@@ -3,7 +3,6 @@ import path from 'path';
 import {createWriteStream} from 'fs';
 
 import {fs} from 'mz';
-import parseJSON from 'parse-json';
 import defaultEventToPromise from 'event-to-promise';
 
 import defaultSourceWatcher from '../watcher';
@@ -11,6 +10,7 @@ import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
+import {parseJSON} from '../util/json';
 import {UsageError, isErrorWithCode} from '../errors';
 import {
   createFileFilter as defaultFileFilterCreator,

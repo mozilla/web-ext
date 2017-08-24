@@ -41,6 +41,16 @@ export class RemoteTempInstallNotSupported extends WebExtError {
   }
 }
 
+
+/*
+ * The JSON for the extension is invalid .
+ */
+export class InvalidJSON extends UsageError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 /*
  * The errors collected when reloading all extensions at once
  * (initialized from a map of errors by extensionSourceDir string).
