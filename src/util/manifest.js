@@ -46,6 +46,7 @@ export default async function getValidatedManifest(
   let manifestData;
 
   try {
+    manifestContents = stripBOM(manifestContents);
     manifestData = parseJSON(manifestContents, manifestFile);
   } catch (error) {
     throw new InvalidManifest(
@@ -82,4 +83,12 @@ export default async function getValidatedManifest(
 export function getManifestId(manifestData: ExtensionManifest): string | void {
   return manifestData.applications ?
     manifestData.applications.gecko.id : undefined;
+}
+
+function stripBOM(content) {
+  content = content.toString();
+  if (content.charCodeAt(0) === 0xFEFF) {
+    content = content.slice(1);
+  }
+  return content;
 }
