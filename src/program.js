@@ -270,7 +270,7 @@ Example: $0 --help run.
   program
     .command(
       'build',
-      'Create a web extension package from source',
+      'Create an extension package from source',
       commands.build, {
         'as-needed': {
           describe: 'Watch for file changes and re-build as needed',
@@ -284,7 +284,7 @@ Example: $0 --help run.
       })
     .command(
       'sign',
-      'Sign the web extension so it can be installed in Firefox',
+      'Sign the extension so it can be installed in Firefox',
       commands.sign, {
         'api-key': {
           describe: 'API key (JWT issuer) from addons.mozilla.org',
@@ -321,7 +321,7 @@ Example: $0 --help run.
           type: 'number',
         },
       })
-    .command('run', 'Run the web extension', commands.run, {
+    .command('run', 'Run the extension', commands.run, {
       'firefox': {
         alias: ['f', 'firefox-binary'],
         describe: 'Path or alias to a Firefox executable such as firefox-bin ' +
@@ -383,7 +383,7 @@ Example: $0 --help run.
         type: 'boolean',
       },
     })
-    .command('lint', 'Validate the web extension source', commands.lint, {
+    .command('lint', 'Validate the extension source', commands.lint, {
       'output': {
         alias: 'o',
         describe: 'The type of output to generate',
