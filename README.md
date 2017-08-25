@@ -109,6 +109,33 @@ need to relink it.
     git pull
     npm run build
 
+## Programmatic use
+You can use the web-ext programmatically as well 
+````javascript
+const main = require("web-ext/dist/web-ext").main;
+main('/path/to/your/extensions', { 
+    // Accepts an array of strings specifying a command and options
+    // Commands:
+    //    build  Create a web extension package from source
+    //      sign   Sign the web extension so it can be installed in Firefox
+    //      run    Run the web extension
+    //      lint   Validate the web extension source
+    //      docs   Open the web-ext documentation in a browser
+    // Options:
+    //      --version            Show version number
+    //      --source-dir, -s     Web extension source directory
+    //      --artifacts-dir, -a  Directory where artifacts will be saved
+    //      --verbose, -v        Show verbose output
+    //      --ignore-files, -i   A list of glob patterns to define which files should be ignored
+    //      --help. -h           Show help
+    argv: ['build', '--verbose']
+}).then((result) => {
+  console.log(result);
+}).catch((error) {
+    console.error(error);
+});
+````
+
 ## Should I Use It?
 
 Yes! The web-ext tool enables you to build and ship web extensions for Firefox.
