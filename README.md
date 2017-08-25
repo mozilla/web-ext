@@ -17,6 +17,19 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 * [Getting started with web-ext](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
 * [Command reference](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference)
 
+Here are the commands you can run. Click on each one for detailed documentation or use `--help` on the command line, such as `web-ext --help build`.
+
+* [`build`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_build)
+  * Create an extension package from source
+* [`sign`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_sign)
+  * Sign the extension so it can be installed in Firefox
+* [`run`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_run)
+  * Run the extension
+* [`lint`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_lint)
+  * Validate the extension source
+* [`docs`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_docs)
+  * Open the `web-ext` documentation in a browser
+
 ## Installation from npm
 
 First, make sure you are running the current
