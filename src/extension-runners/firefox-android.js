@@ -425,8 +425,10 @@ export class FirefoxAndroidExtensionRunner {
     await adbClient.shell(selectedAdbDevice.id, [
       'mkdir', '-p', deviceProfileDir,
     ]);
-    await adbClient.push(selectedAdbDevice.id, `${profile.profileDir}/user.js`,
+    await adbClient.push(selectedAdbDevice.id,
+                         path.join(profile.profileDir, 'user.js'),
                          `${deviceProfileDir}/user.js`);
+
     log.debug(`Created temporary profile at ${deviceProfileDir}.`);
   }
 
