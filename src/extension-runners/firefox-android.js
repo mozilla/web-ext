@@ -580,7 +580,7 @@ export class FirefoxAndroidExtensionRunner {
     log.debug(`RDP Socket File discovery: ${androidUnixSockets[0]}`);
 
     // Got a debugger socket file to connect.
-    this.selectedRDPSocketFile = androidUnixSockets[0].split(/\s/).pop();
+    this.selectedRDPSocketFile = androidUnixSockets[0].trim().split(/\s/).pop();
     log.debug(`RDP Socket File selected: ${this.selectedRDPSocketFile}`);
 
     const tcpPort = await this.chooseLocalTcpPort();
