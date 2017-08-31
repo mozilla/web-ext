@@ -105,7 +105,7 @@ type PrepareParams = {
   fakeADBUtil?: Object,
   // An array for the fake data that the test get
   // from an adb shell call.
-  fakeADBReadAllData?: Array<string>
+  fakeADBReadAllData?: Array<string | Promise<*>>
 }
 
 // Reduce the waiting time during tests.
@@ -138,9 +138,13 @@ function prepareExtensionRunnerParams({
   for (const [idx, value] of fakeADBReadAllData.entries()) {
     // Fake the data read from adb.util.readAll after adbClient.shell has been used
     // to run a command on the device.
-    adbUtilReadAllStub.onCall(idx).returns(Promise.resolve(
-      new Buffer(value)
-    ));
+    if (value instanceof Promise) {
+      adbUtilReadAllStub.onCall(idx).returns(value);
+    } else {
+      adbUtilReadAllStub.onCall(idx).returns(Promise.resolve(
+        new Buffer(value)
+      ));
+    }
   }
 
   // $FLOW_IGNORE: allow overriden params for testing purpose.
@@ -398,10 +402,17 @@ describe('util/extension-runners/firefox-android', () => {
             ]);
           }),
         },
+        fakeFirefoxApp: {
+          createProfile: sinon.spy(() => {
+            return Promise.resolve({profileDir: '/path/to/fake/profile'});
+          }),
+        },
         fakeADBReadAllData: [
           // Fake the output of running "pm list" on the device
           fakeADBPackageList,
-          // Fake the output of running am force-stop SELECTED_APK
+          // Fake the output of running "getprop ro.build.version.sdk",
+          '20',
+          // Fake the output of running "am force-stop SELECTED_APK"
           '',
           // Fake the adb shell call that discover the RDP socket.
           fakeUnixSocketFiles,
@@ -673,13 +684,15 @@ describe('util/extension-runners/firefox-android', () => {
            fakeADBReadAllData: [
              // Fake the output of running "pm list" on the device
              fakeADBPackageList,
-             // Fake the output of running am force-stop SELECTED_APK
+             // Fake the output of "getprop ro.build.version.sdk"
+             '20',
+             // Fake the output of running "am force-stop SELECTED_APK"
              '',
              // Do not fake the unix socket file discovery.
            ],
          });
 
-         params.adb.util.readAll.onCall(2).callsFake(() => {
+         params.adb.util.readAll.onCall(3).callsFake(() => {
            return new Promise((resolve) => {
              fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
              resolve('');
@@ -715,6 +728,8 @@ describe('util/extension-runners/firefox-android', () => {
            fakeADBReadAllData: [
              // Fake the output of running "pm list" on the device.
              fakeADBPackageList,
+             // Fake the output of "getprop ro.build.version.sdk"
+             '20',
              // Fake the output of running am force-stop SELECTED_APK.
              '',
              // Fake an empty result during unix socket discovery.
@@ -792,7 +807,7 @@ describe('util/extension-runners/firefox-android', () => {
 
          await runnerInstance.run();
 
-         runnerInstance.remoteFirefox.client.emit('disconnect');
+         runnerInstance.remoteFirefox.client.emit('end');
 
          await waitFinalCallback;
 

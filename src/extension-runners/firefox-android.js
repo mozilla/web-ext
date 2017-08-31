@@ -83,6 +83,7 @@ export class FirefoxAndroidExtensionRunner {
 
   params: FirefoxAndroidExtensionRunnerParams;
   adbClient: any; // TODO: better flow typing here.
+  exiting: boolean;
   selectedAdbDevice: {id: string};
   selectedFirefoxApk: string;
   selectedArtifactsDir: string;
@@ -421,18 +422,26 @@ export class FirefoxAndroidExtensionRunner {
     } = this;
 
     log.info(`Discovery android version for ${selectedAdbDevice.id}...`);
-    const androidVersion = (
+    const androidVersion = parseInt((
       await adbClient.shell(selectedAdbDevice.id, [
         'getprop', 'ro.build.version.sdk',
       ]).then(adb.util.readAll)
-    ).toString().trim();
+    ).toString().trim());
 
     // No need to check the granted runtime permissions on Android versions < Lollypop.
-    if (parseInt(androidVersion) < 21) {
+    if (isNaN(androidVersion)) {
+      throw new WebExtError(
+        `Unable to discovery android version on ${selectedAdbDevice.id}`
+      );
+    }
+
+    if (androidVersion < 21) {
       return;
     }
 
-    log.info(`Discovery granted runtime permissions for ${selectedFirefoxApk}...`);
+    log.info(
+      `Discovery granted runtime permissions for ${selectedFirefoxApk}...`
+    );
     const runtimePermissions = (
       await adbClient.shell(selectedAdbDevice.id, [
         'pm', 'dump', selectedFirefoxApk,
@@ -441,8 +450,8 @@ export class FirefoxAndroidExtensionRunner {
 
     // Runtime permission needed to be able to run Firefox on a temporarily created profile.
     const requiredRuntimePermissions = {
-      "android.permission.READ_EXTERNAL_STORAGE": false,
-      "android.permission.WRITE_EXTERNAL_STORAGE": false,
+      'android.permission.READ_EXTERNAL_STORAGE': false,
+      'android.permission.WRITE_EXTERNAL_STORAGE': false,
     };
 
     for (const line of runtimePermissions) {
@@ -456,7 +465,10 @@ export class FirefoxAndroidExtensionRunner {
     for (const permission of Object.keys(requiredRuntimePermissions)) {
       if (!requiredRuntimePermissions[permission]) {
         throw new UsageError(
-          `Required ${permission} permission has not be granted for ${selectedFirefoxApk}`
+          `Required ${permission} not be granted for ${selectedFirefoxApk}` +
+          'Please grant them using the Android Settings ' +
+          'or using the following command from the command line:\n' +
+          `\t adb shell pm grant ${selectedFirefoxApk} ${permission}\n`
         );
       }
     }
