@@ -618,7 +618,7 @@ export class FirefoxAndroidExtensionRunner {
 
     // Exit and clenaup the extension runner if the connection to the
     // remote Firefox for Android instance has been closed.
-    remoteFirefox.client.on('disconnect', () => {
+    remoteFirefox.client.on('end', () => {
       log.debug('Exit on remote Firefox for Android connection disconnected');
       this.exit();
     });
