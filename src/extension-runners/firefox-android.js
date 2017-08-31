@@ -124,6 +124,7 @@ export class FirefoxAndroidExtensionRunner {
 
     await this.adbDevicesDiscoveryAndSelect();
     await this.apkPackagesDiscoveryAndSelect();
+    await this.adbCheckRuntimePermissions();
     await this.adbForceStopSelectedPackage();
 
     // Create profile prefs (with enabled remote RDP server), prepare the
@@ -407,6 +408,58 @@ export class FirefoxAndroidExtensionRunner {
     await adbClient.shell(selectedAdbDevice.id, [
       'am', 'force-stop', selectedFirefoxApk,
     ]).then(adb.util.readAll);
+  }
+
+  async adbCheckRuntimePermissions() {
+    const {
+      adbClient,
+      selectedAdbDevice,
+      selectedFirefoxApk,
+      params: {
+        adb,
+      },
+    } = this;
+
+    log.info(`Discovery android version for ${selectedAdbDevice.id}...`);
+    const androidVersion = (
+      await adbClient.shell(selectedAdbDevice.id, [
+        'getprop', 'ro.build.version.sdk',
+      ]).then(adb.util.readAll)
+    ).toString().trim();
+
+    // No need to check the granted runtime permissions on Android versions < Lollypop.
+    if (parseInt(androidVersion) < 21) {
+      return;
+    }
+
+    log.info(`Discovery granted runtime permissions for ${selectedFirefoxApk}...`);
+    const runtimePermissions = (
+      await adbClient.shell(selectedAdbDevice.id, [
+        'pm', 'dump', selectedFirefoxApk,
+      ]).then(adb.util.readAll)
+    ).toString().split('\n');
+
+    // Runtime permission needed to be able to run Firefox on a temporarily created profile.
+    const requiredRuntimePermissions = {
+      "android.permission.READ_EXTERNAL_STORAGE": false,
+      "android.permission.WRITE_EXTERNAL_STORAGE": false,
+    };
+
+    for (const line of runtimePermissions) {
+      for (const permission of Object.keys(requiredRuntimePermissions)) {
+        if (line.includes(`${permission}: granted=true`)) {
+          requiredRuntimePermissions[permission] = true;
+        }
+      }
+    }
+
+    for (const permission of Object.keys(requiredRuntimePermissions)) {
+      if (!requiredRuntimePermissions[permission]) {
+        throw new UsageError(
+          `Required ${permission} permission has not be granted for ${selectedFirefoxApk}`
+        );
+      }
+    }
   }
 
   async adbPrepareProfileDir() {
