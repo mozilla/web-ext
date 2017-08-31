@@ -240,6 +240,8 @@ export class FirefoxAndroidExtensionRunner {
       selectedArtifactsDir,
     } = this;
 
+    this.exiting = true;
+
     // If a Firefox for Android instance has been started,
     // we should ensure that it has been stopped when we exit.
     await this.adbForceStopSelectedPackage();
@@ -620,8 +622,10 @@ export class FirefoxAndroidExtensionRunner {
     // Exit and clenaup the extension runner if the connection to the
     // remote Firefox for Android instance has been closed.
     remoteFirefox.client.on('end', () => {
-      log.debug('Exit on remote Firefox for Android connection disconnected');
-      this.exit();
+      if (!this.exiting) {
+        log.info('Exit on remote Firefox for Android connection disconnected');
+        this.exit();
+      }
     });
 
     // Install all the temporary addons.
