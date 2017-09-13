@@ -61,7 +61,7 @@
     "git-rev-sync": "1.9.1",
     "minimatch": "3.0.4",
     "mkdirp": "0.5.1",
-    "mz": "2.6.0",
+    "mz": "2.7.0",
     "node-firefox-connect": "1.2.0",
     "open": "0.0.5",
     "node-notifier": "5.1.2",
