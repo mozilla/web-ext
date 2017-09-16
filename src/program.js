@@ -11,6 +11,7 @@ import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
+import {loadJSConfigFile, applyConfigToArgv} from './config';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -132,6 +133,20 @@ export class Program {
       log.info('Version:', getVersion(absolutePackageDir));
     }
 
+    if (argv.config) {
+      const configObject = loadJSConfigFile(argv.config);
+      try {
+        applyConfigToArgv({
+          argv,
+          configObject,
+          options: this.options,
+          configFileName: argv.config,
+        });
+      } catch (error) {
+        log.error(error.message);
+      }
+
+    }
     try {
       if (cmd === undefined) {
         throw new UsageError('No sub-command was specified in the args');
@@ -264,6 +279,13 @@ Example: $0 --help run.
     'no-input': {
       describe: 'Disable all features that require standard input',
       type: 'boolean',
+    },
+    'config': {
+      alias: 'c',
+      describe: 'Location of the config file',
+      default: undefined,
+      requiresArg: true,
+      type: 'string',
     },
   });
 
