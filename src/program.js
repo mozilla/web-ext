@@ -133,20 +133,6 @@ export class Program {
       log.info('Version:', getVersion(absolutePackageDir));
     }
 
-    if (argv.config) {
-      const configObject = loadJSConfigFile(argv.config);
-      try {
-        applyConfigToArgv({
-          argv,
-          configObject,
-          options: this.options,
-          configFileName: argv.config,
-        });
-      } catch (error) {
-        log.error(error.message);
-      }
-
-    }
     try {
       if (cmd === undefined) {
         throw new UsageError('No sub-command was specified in the args');
@@ -157,6 +143,16 @@ export class Program {
       if (globalEnv === 'production') {
         checkForUpdates ({
           version: getVersion(absolutePackageDir),
+        });
+      }
+
+      if (argv.config) {
+        const configObject = loadJSConfigFile(argv.config);
+        applyConfigToArgv({
+          argv,
+          configObject,
+          options: this.options,
+          configFileName: argv.config,
         });
       }
 
