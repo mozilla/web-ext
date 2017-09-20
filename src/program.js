@@ -11,7 +11,10 @@ import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
-import {loadJSConfigFile, applyConfigToArgv} from './config';
+import {
+  loadJSConfigFile as defaultLoadJSConfigFile,
+  applyConfigToArgv as defaultApplyConfigToArgv,
+} from './config';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -28,6 +31,8 @@ type ExecuteOptions = {
   systemProcess?: typeof process,
   logStream?: typeof defaultLogStream,
   getVersion?: Function,
+  applyConfigToArgv?: Function,
+  loadJSConfigFile?: Function,
   shouldExitProgram?: boolean,
   globalEnv?: string,
 }
@@ -116,6 +121,8 @@ export class Program {
     {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
       logStream = defaultLogStream, getVersion = defaultVersionGetter,
+      applyConfigToArgv = defaultApplyConfigToArgv,
+      loadJSConfigFile = defaultLoadJSConfigFile,
       shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
     }: ExecuteOptions = {}
   ): Promise<void> {
@@ -147,12 +154,13 @@ export class Program {
       }
 
       if (argv.config) {
-        const configObject = loadJSConfigFile(argv.config);
+        const configLocation = path.resolve(argv.config);
+        const configObject = loadJSConfigFile(configLocation);
         applyConfigToArgv({
           argv,
           configObject,
           options: this.options,
-          configFileName: argv.config,
+          configFileName: configLocation,
         });
       }
 

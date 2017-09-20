@@ -26,7 +26,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
-        getVersion: () => spy(),
+        getVersion: () => 'not-a-real-version',
         checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
@@ -429,6 +429,38 @@ describe('program.main', () => {
       const options = fakeCommands.lint.firstCall.args[1];
       assert.strictEqual(options.shouldExitProgram, false);
     });
+  });
+
+  it('applies config from config file when specified', () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const fakePath = 'path/to/web-ext-config.js';
+    const resolvedFakePath = path.resolve(fakePath);
+    const fakeLoadJSConfigFile = sinon.spy(() => {});
+    const fakeApplyConfigToArgv = sinon.spy(() => {});
+
+    return execProgram(
+      ['lint', '--config', fakePath],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          applyConfigToArgv: fakeApplyConfigToArgv,
+          loadJSConfigFile: fakeLoadJSConfigFile,
+        },
+      })
+      .then(() => {
+        const options = fakeCommands.lint.firstCall.args[0];
+        assert.strictEqual(options.config, fakePath);
+        assert.ok(fakeLoadJSConfigFile.called);
+        assert.ok(fakeApplyConfigToArgv.called);
+        assert.equal(fakeLoadJSConfigFile.firstCall.args[0], resolvedFakePath);
+        assert.equal(
+          fakeApplyConfigToArgv.firstCall.args[0].configFileName,
+          resolvedFakePath,
+        );
+
+      });
   });
 });
 
