@@ -53,6 +53,8 @@ export type CmdRunParams = {|
   adbPort?: string,
   adbDevice?: string,
   firefoxApk?: string,
+  failOnLint: boolean,
+
 |};
 
 export type CmdRunOptions = {|
@@ -85,6 +87,7 @@ export default async function run(
     startUrl,
     target,
     lint = false,
+    failOnLint = false,
     // Android CLI options.
     adbBin,
     adbHost,
@@ -215,6 +218,8 @@ export default async function run(
       artifactsDir,
       ignoreFiles,
       noInput,
+      lint,
+      failOnLint,
     });
   }
 

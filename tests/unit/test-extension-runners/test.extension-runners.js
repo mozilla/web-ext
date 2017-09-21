@@ -45,6 +45,7 @@ function prepareExtensionRunnerParams(params) {
     },
     desktopNotifications: sinon.spy(() => {}),
     lint: false,
+    failOnLint: false,
     ...params,
   };
 }
@@ -220,13 +221,7 @@ describe('util/extension-runners', () => {
 
          params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
 
-         const paramsForLint = {
-           runners: params.runners,
-           desktopNotifications: params.desktopNotifications,
-           lint: true,
-           linter,
-           ...expectedLinterParams,
-         };
+
          const runnerInstance = new MultiExtensionRunner(params);
          const sourceDir = '/fake/sourceDir';
          const res = await runnerInstance.reloadExtensionBySourceDir(sourceDir);
@@ -290,9 +285,6 @@ describe('util/extension-runners', () => {
 
     it('fails when addons linter fails', async () => {
       const params = prepareExtensionRunnerParams();
-      const [
-        fakeExtensionRunner, anotherFakeExtensionRunner,
-      ] = params.runners;
       const linter = sinon.spy(() => Promise.reject(Error('Linter failure')));
       const linterParams = {
         sourceDir: '/path/to/extension/source/',
@@ -304,14 +296,12 @@ describe('util/extension-runners', () => {
         runners: params.runners,
         desktopNotifications: params.desktopNotifications,
         lint: true,
+        failOnLint: false,
         linter,
         ...linterParams,
       };
 
       const runnerInstance = new MultiExtensionRunner(paramsForLint);
-
-      sinon.spy(fakeExtensionRunner, 'run');
-      sinon.spy(anotherFakeExtensionRunner, 'run');
 
       try {
         await runnerInstance.run();
@@ -324,9 +314,6 @@ describe('util/extension-runners', () => {
 
     it('shows a desktop notification on linting errors', async () => {
       const params = prepareExtensionRunnerParams();
-      const [
-        fakeExtensionRunner, anotherFakeExtensionRunner,
-      ] = params.runners;
       const lintResults = {
         count: 2,
         summary: {
@@ -351,14 +338,12 @@ describe('util/extension-runners', () => {
         runners: params.runners,
         desktopNotifications: params.desktopNotifications,
         lint: true,
+        failOnLint: false,
         linter,
         ...linterParams,
       };
 
       const runnerInstance = new MultiExtensionRunner(paramsForLint);
-
-      sinon.spy(fakeExtensionRunner, 'run');
-      sinon.spy(anotherFakeExtensionRunner, 'run');
 
       await runnerInstance.run();
 
@@ -367,6 +352,47 @@ describe('util/extension-runners', () => {
         params.desktopNotifications,
         expectedDesktopNotification
       );
+    });
+
+    it('fails on linting errors when specified', async () => {
+      const params = prepareExtensionRunnerParams();
+      const [
+        fakeExtensionRunner, anotherFakeExtensionRunner,
+      ] = params.runners;
+      const lintResults = {
+        count: 2,
+        summary: {
+          errors: 2,
+          notices: 0,
+          arnings: 0,
+        },
+        errors: [{}, {}],
+      };
+      const linter = sinon.spy(() => Promise.resolve(lintResults));
+      const linterParams = {
+        sourceDir: '/path/to/extension/source/',
+        artifactsDir: '/path/to/web-ext-artifacts',
+        ignoreFiles: undefined,
+      };
+
+      const paramsForLint = {
+        runners: params.runners,
+        desktopNotifications: params.desktopNotifications,
+        lint: true,
+        failOnLint: true,
+        linter,
+        ...linterParams,
+      };
+
+      const runnerInstance = new MultiExtensionRunner(paramsForLint);
+
+      sinon.spy(fakeExtensionRunner, 'exit');
+      sinon.spy(anotherFakeExtensionRunner, 'exit');
+
+      await runnerInstance.run();
+
+      sinon.assert.calledOnce(fakeExtensionRunner.exit);
+      sinon.assert.calledOnce(anotherFakeExtensionRunner.exit);
     });
 
     describe('registerCleanup', () => {
@@ -424,7 +450,9 @@ describe('util/extension-runners', () => {
         onSourceChange: sinon.spy(() => {}),
         ignoreFiles: ['path/to/file', 'path/to/file2'],
         reloadExtension: sinon.spy(() => Promise.resolve()),
+        exitExtension: sinon.spy(() => Promise.resolve()),
         lint: false,
+        failOnLint: false,
         linter: sinon.spy(() => Promise.resolve()),
         desktopNotifications: sinon.spy(() => {}),
       };
@@ -535,7 +563,8 @@ describe('util/extension-runners', () => {
       const filePath = 'path/to/file';
       createWatcher({
         linter,
-        lint: true});
+        lint: true,
+      });
 
       const callArgs = config.onSourceChange.firstCall.args[0];
       assert.typeOf(callArgs.onChange, 'function');
@@ -547,6 +576,35 @@ describe('util/extension-runners', () => {
           sinon.assert.calledWith(
             config.desktopNotifications,
             expectedDesktopNotification);
+        });
+    });
+
+    it('fails on linting errors when specified', () => {
+      const {config, createWatcher} = prepare();
+      const lintResults = {
+        count: 2,
+        summary: {
+          errors: 2,
+          notices: 0,
+          arnings: 0,
+        },
+        errors: [{}, {}],
+      };
+      const linter = sinon.spy(() => Promise.resolve(lintResults));
+      const filePath = 'path/to/file';
+      createWatcher({
+        linter,
+        lint: true,
+        failOnLint: true,
+      });
+
+      const callArgs = config.onSourceChange.firstCall.args[0];
+      assert.typeOf(callArgs.onChange, 'function');
+      // Simulate executing the handler when a source file changes.
+      return callArgs.onChange(filePath)
+        .then(() => {
+          sinon.assert.calledOnce(linter);
+          sinon.assert.calledOnce(config.exitExtension);
         });
     });
 
@@ -567,6 +625,7 @@ describe('util/extension-runners', () => {
         artifactsDir: '/path/to/web-ext-artifacts/',
         ignoreFiles: ['first/file', 'second/file'],
         lint: false,
+        failOnLint: false,
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),
@@ -591,7 +650,10 @@ describe('util/extension-runners', () => {
         ...sentArgs
       } = prepare();
 
-      reloadStrategy();
+      reloadStrategy({
+        lint: true,
+        failOnLint: true,
+      });
       sinon.assert.called(createWatcher);
       sinon.assert.calledWith(
         createWatcher,
@@ -600,7 +662,8 @@ describe('util/extension-runners', () => {
           sourceDir: sentArgs.sourceDir,
           artifactsDir: sentArgs.artifactsDir,
           ignoreFiles: sentArgs.ignoreFiles,
-          lint: sentArgs.lint,
+          lint: true,
+          failOnLint: true,
         })
       );
     });

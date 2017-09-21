@@ -523,6 +523,11 @@ Example: $0 --help run.
         demand: false,
         type: 'boolean',
       },
+      'fail-on-lint': {
+        describe: 'Lint before running, then lint changed files when saved.',
+        demand: false,
+        type: 'boolean',
+      },
     })
     .command('lint', 'Validate the extension source', commands.lint, {
       'output': {

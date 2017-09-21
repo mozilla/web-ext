@@ -29,6 +29,8 @@ describe('run', () => {
       artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
       sourceDir,
       noReload: true,
+      lint: false,
+      failOnLint: false,
       keepProfileChanges: false,
       browserConsole: false,
       lint: false,
@@ -153,9 +155,13 @@ describe('run', () => {
       artifactsDir,
       ignoreFiles: undefined,
       lint: true,
+      failOnLint: true,
     };
 
-    await cmd.run({lint: true}, {MultiExtensionRunner});
+    await cmd.run({
+      lint: true,
+      failOnLint: true,
+    }, {MultiExtensionRunner});
 
     assert.ok(MultiExtensionRunner.called);
     const runnerParams = MultiExtensionRunner.firstCall.args[0];
@@ -165,6 +171,7 @@ describe('run', () => {
       desktopNotifications: runnerParams.desktopNotifications,
       ignoreFiles: runnerParams.ignoreFiles,
       lint: runnerParams.lint,
+      failOnLint: runnerParams.failOnLint,
     }, expectedMultiExtensionRunnerParams);
   });
 
@@ -176,12 +183,14 @@ describe('run', () => {
     await cmd.run({
       noReload: false,
       lint: true,
+      failOnLint: true,
     });
     assert.equal(reloadStrategy.called, true);
     const args = reloadStrategy.firstCall.args[0];
     assert.equal(args.sourceDir, sourceDir);
     assert.equal(args.artifactsDir, artifactsDir);
     assert.ok(args.lint);
+    assert.ok(args.failOnLint);
   });
 
   it('can disable input in the reload strategy', async () => {
