@@ -15,6 +15,7 @@ import {
   loadJSConfigFile as defaultLoadJSConfigFile,
   applyConfigToArgv as defaultApplyConfigToArgv,
 } from './config';
+import type {Logger} from './util/logger';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -30,9 +31,10 @@ type ExecuteOptions = {
   checkForUpdates?: Function,
   systemProcess?: typeof process,
   logStream?: typeof defaultLogStream,
+  logger?: Logger,
   getVersion?: Function,
-  applyConfigToArgv?: Function,
-  loadJSConfigFile?: Function,
+  applyConfigToArgv?: typeof defaultApplyConfigToArgv,
+  loadJSConfigFile?: typeof defaultLoadJSConfigFile,
   shouldExitProgram?: boolean,
   globalEnv?: string,
 }
@@ -120,7 +122,8 @@ export class Program {
     absolutePackageDir: string,
     {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
-      logStream = defaultLogStream, getVersion = defaultVersionGetter,
+      logStream = defaultLogStream, logger = log,
+      getVersion = defaultVersionGetter,
       applyConfigToArgv = defaultApplyConfigToArgv,
       loadJSConfigFile = defaultLoadJSConfigFile,
       shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
@@ -137,7 +140,7 @@ export class Program {
 
     if (argv.verbose) {
       logStream.makeVerbose();
-      log.info('Version:', getVersion(absolutePackageDir));
+      logger.info('Version:', getVersion(absolutePackageDir));
     }
 
     try {
@@ -154,13 +157,13 @@ export class Program {
       }
 
       if (argv.config) {
-        const configLocation = path.resolve(argv.config);
-        const configObject = loadJSConfigFile(configLocation);
+        const configFileName = path.resolve(argv.config);
+        const configObject = loadJSConfigFile(configFileName);
         applyConfigToArgv({
           argv,
+          configFileName,
           configObject,
           options: this.options,
-          configFileName: configLocation,
         });
       }
 
@@ -168,15 +171,15 @@ export class Program {
 
     } catch (error) {
       if (!(error instanceof UsageError) || argv.verbose) {
-        log.error(`\n${error.stack}\n`);
+        logger.error(`\n${error.stack}\n`);
       } else {
-        log.error(`\n${error}\n`);
+        logger.error(`\n${error}\n`);
       }
       if (error.code) {
-        log.error(`Error code: ${error.code}\n`);
+        logger.error(`Error code: ${error.code}\n`);
       }
 
-      log.debug(`Command executed: ${cmd}`);
+      logger.debug(`Command executed: ${cmd}`);
 
       if (this.shouldExitProgram) {
         systemProcess.exit(1);
