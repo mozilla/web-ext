@@ -17,6 +17,8 @@
     "flow-check": "grunt flowbin:check",
     "lint": "grunt lint",
     "test": "grunt test",
+    "test:functional": "grunt test:functional:run",
+    "copy-dist-files-to-artifacts-dir": "grunt copy-dist-files-to-artifacts-dir",
     "publish-coverage": "grunt coveralls",
     "nsp-check": "nsp check -o summary",
     "changelog": "conventional-changelog -p angular -u",

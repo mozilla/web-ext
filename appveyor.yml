@@ -21,3 +21,13 @@ test_script:
   - set COVERAGE=y
   - set NODE_ENV=production
   - npm run test
+  ## install the eslint version needed by eslint and run functional test suite
+  ## (See #1082 for rationale).
+  ## run functional test suite in a npm production environment
+  ## (See #1082 for rationale).
+  - npm run copy-dist-files-to-artifacts-dir
+  - cd artifacts\production
+  - npm install --production
+  - cd ..\..
+  - set TEST_WEB_EXT_BIN=artifacts\production\bin\web-ext
+  - npm run test:functional
