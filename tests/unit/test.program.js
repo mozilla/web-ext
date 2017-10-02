@@ -40,7 +40,7 @@ describe('program.Program', () => {
       .command('thing', 'does a thing', thing);
     return execProgram(program)
       .then(() => {
-        assert.equal(thing.called, true);
+        sinon.assert.called(thing);
       });
   });
 
@@ -115,10 +115,9 @@ describe('program.Program', () => {
       });
     return execProgram(program)
       .then(() => {
-        assert.equal(handler.called, true);
         // This ensures that the default configuration for the option has
         // been applied.
-        assert.equal(handler.firstCall.args[0].someOption, 'default value');
+        sinon.assert.calledWithMatch(handler, {someOption: 'default value'});
       });
   });
 
@@ -139,11 +138,14 @@ describe('program.Program', () => {
       });
     return execProgram(program)
       .then(() => {
-        assert.equal(handler.called, true);
         // By checking the global default, it ensures that default configuration
         // will be applied to sub commands.
-        assert.equal(handler.firstCall.args[0].globalOption, 'the default');
-        assert.equal(handler.firstCall.args[0].someOption, 'default value');
+        sinon.assert.calledWithMatch(
+          handler,
+          {
+            someOption: 'default value',
+            globalOption: 'the default',
+          });
       });
   });
 
@@ -183,7 +185,7 @@ describe('program.Program', () => {
       logStream,
     })
       .then(() => {
-        assert.equal(logStream.makeVerbose.called, true);
+        sinon.assert.called(logStream.makeVerbose);
       });
   });
 
@@ -213,7 +215,7 @@ describe('program.Program', () => {
     });
     return execProgram(program, {logStream})
       .then(() => {
-        assert.equal(logStream.makeVerbose.called, false);
+        sinon.assert.notCalled(logStream.makeVerbose);
       });
   });
 
@@ -259,8 +261,8 @@ describe('program.Program', () => {
       globalEnv: 'production',
     })
       .then(() => {
-        assert.equal(checkForUpdates.firstCall.args[0].version,
-                    'some-package-version');
+        sinon.assert.calledWith(
+          checkForUpdates, {version: 'some-package-version'});
       });
   });
 
@@ -276,7 +278,7 @@ describe('program.Program', () => {
       globalEnv: 'development',
     })
       .then(() => {
-        assert.equal(checkForUpdates.called, false);
+        sinon.assert.notCalled(checkForUpdates);
       });
   });
 });
@@ -303,7 +305,7 @@ describe('program.main', () => {
         // This is a smoke test mainly to make sure main() configures
         // options with handlers. It does not extensively test the
         // configuration of all handlers.
-        assert.equal(fakeCommands.build.called, true);
+        sinon.assert.called(fakeCommands.build);
       });
   });
 
@@ -331,8 +333,7 @@ describe('program.main', () => {
         getVersion: fakeVersionGetter,
       })
       .then(() => {
-        assert.equal(fakeVersionGetter.called, true);
-        assert.equal(fakeVersionGetter.firstCall.args[0], projectRoot);
+        sinon.assert.calledWith(fakeVersionGetter, projectRoot);
       });
   });
 
@@ -343,9 +344,10 @@ describe('program.main', () => {
     return execProgram(
       ['build', '--source-dir', '..'], {commands: fakeCommands})
       .then(() => {
-        assert.equal(fakeCommands.build.called, true);
-        assert.equal(fakeCommands.build.firstCall.args[0].sourceDir,
-                     path.resolve(path.join(process.cwd(), '..')));
+        sinon.assert.calledWithMatch(
+          fakeCommands.build,
+          {sourceDir: path.resolve(path.join(process.cwd(), '..'))}
+        );
       });
   });
 
@@ -358,9 +360,10 @@ describe('program.main', () => {
       ['build', '--artifacts-dir', process.cwd() + path.sep + path.sep],
       {commands: fakeCommands})
       .then(() => {
-        assert.equal(fakeCommands.build.called, true);
-        assert.equal(fakeCommands.build.firstCall.args[0].artifactsDir,
-                     process.cwd() + path.sep);
+        sinon.assert.calledWithMatch(
+          fakeCommands.build,
+          {artifactsDir: process.cwd() + path.sep}
+        );
       });
   });
 
@@ -372,9 +375,10 @@ describe('program.main', () => {
       ['run', '--firefox-binary', '/path/to/firefox-binary'],
       {commands: fakeCommands})
       .then(() => {
-        assert.equal(fakeCommands.run.called, true);
-        assert.equal(fakeCommands.run.firstCall.args[0].firefox,
-                     '/path/to/firefox-binary');
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          {firefox: '/path/to/firefox-binary'}
+        );
       });
   });
 
@@ -386,9 +390,10 @@ describe('program.main', () => {
       ['run', '--start-url', 'www.example.com'],
       {commands: fakeCommands})
       .then(() => {
-        assert.equal(fakeCommands.run.called, true);
-        assert.equal(fakeCommands.run.firstCall.args[0].startUrl,
-                     'www.example.com');
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          {startUrl: 'www.example.com'}
+        );
       });
   });
 
@@ -400,9 +405,10 @@ describe('program.main', () => {
       ['run', '--browser-console'],
       {commands: fakeCommands})
       .then(() => {
-        assert.equal(fakeCommands.run.called, true);
-        assert.equal(fakeCommands.run.firstCall.args[0].browserConsole,
-                     true);
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          {browserConsole: true}
+        );
       });
   });
 

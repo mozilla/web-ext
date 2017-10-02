@@ -42,8 +42,8 @@ describe('lint', () => {
     const {lint, createLinter, runLinter, lintResult} = setUp();
     return lint().then((actualLintResult) => {
       assert.equal(actualLintResult, lintResult);
-      assert.equal(createLinter.called, true);
-      assert.equal(runLinter.called, true);
+      sinon.assert.called(createLinter);
+      sinon.assert.called(runLinter);
     });
   });
 
@@ -145,14 +145,12 @@ describe('lint', () => {
       ignoreFiles: ['file1', '**/file2'],
     };
     return lint(params).then(() => {
-      assert.ok(createFileFilter.called);
-      assert.deepEqual(createFileFilter.firstCall.args[0], params);
+      sinon.assert.calledWith(createFileFilter, params);
 
       assert.ok(createLinter.called);
       const {shouldScanFile} = createLinter.firstCall.args[0].config;
       shouldScanFile('path/to/file');
-      assert.ok(fileFilter.wantFile.called);
-      assert.equal(fileFilter.wantFile.firstCall.args[0], 'path/to/file');
+      sinon.assert.calledWith(fileFilter.wantFile, 'path/to/file');
     });
   });
 
