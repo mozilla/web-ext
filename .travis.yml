@@ -22,11 +22,12 @@ script:
 
 ## lint the github PR title.
 - npm run travis-pr-title-lint
-## In case Travis is building a release tag, make sure we have a production build
-## before publishing to npm
-- NODE_ENV=production npm run build
 
 after_script: npm run publish-coverage
+
+before_deploy:
+## Make sure we have a production build.
+- NODE_ENV=production npm run build
 
 notifications:
   irc:
