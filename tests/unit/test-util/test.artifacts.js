@@ -141,7 +141,7 @@ describe('prepareArtifactsDir', () => {
       const tmpPath = path.join(tmpDir.path(), 'build', 'subdir');
       return prepareArtifactsDir(tmpPath, {asyncMkdirp: fakeAsyncMkdirp})
         .then(makeSureItFails(), (error) => {
-          assert.ok(fakeAsyncMkdirp.called);
+          sinon.assert.called(fakeAsyncMkdirp);
           assert.equal(error.message, 'an error');
         });
     }

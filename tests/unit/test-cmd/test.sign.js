@@ -110,10 +110,11 @@ describe('sign', () => {
           },
         })
         .then(() => {
-          assert.equal(stubs.signAddon.called, true);
-          assert.strictEqual(
-            stubs.signAddon.firstCall.args[0].id,
-            getManifestId(manifestWithoutApps));
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(
+            stubs.signAddon,
+            {id: getManifestId(manifestWithoutApps)}
+          );
         });
     }
   ));
@@ -132,9 +133,8 @@ describe('sign', () => {
           },
         })
         .then(() => {
-          assert.equal(stubs.signAddon.called, true);
-          assert.equal(stubs.signAddon.firstCall.args[0].id,
-                       customId);
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(stubs.signAddon, {id: customId});
         });
     }
   ));
@@ -158,9 +158,8 @@ describe('sign', () => {
           },
         }))
         .then(() => {
-          assert.equal(stubs.signAddon.called, true);
-          assert.equal(stubs.signAddon.firstCall.args[0].id,
-                       customId);
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(stubs.signAddon, {id: customId});
         });
     }
   ));
@@ -217,7 +216,7 @@ describe('sign', () => {
       // Run an initial sign command which will yield a server generated ID.
       return _sign()
         .then(({signAddon, signingResult}) => {
-          assert.equal(signAddon.called, true);
+          sinon.assert.called(signAddon);
           assert.strictEqual(signAddon.firstCall.args[0].id,
                              undefined);
           assert.equal(signingResult.id, 'auto-generated-id');
@@ -226,12 +225,11 @@ describe('sign', () => {
           return _sign();
         })
         .then(({signAddon}) => {
-          assert.equal(signAddon.called, true);
+          sinon.assert.called(signAddon);
           // This should call signAddon() with the server generated
           // ID that was saved to the source directory from the previous
           // signing result.
-          assert.equal(signAddon.firstCall.args[0].id,
-                       'auto-generated-id');
+          sinon.assert.calledWithMatch(signAddon, {id: 'auto-generated-id'});
         });
     }
   ));
@@ -270,28 +268,27 @@ describe('sign', () => {
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
       return sign(tmpDir, stubs, {extraArgs: {artifactsDir}})
         .then(() => {
-          assert.equal(stubs.signAddon.called, true);
-          const signedAddonCall = stubs.signAddon.firstCall.args[0];
-          assert.equal(signedAddonCall.apiKey,
-                       stubs.signingConfig.apiKey);
-          assert.equal(signedAddonCall.apiSecret,
-                       stubs.signingConfig.apiSecret);
-          assert.equal(signedAddonCall.apiUrlPrefix,
-                       stubs.signingConfig.apiUrlPrefix);
-          assert.equal(signedAddonCall.apiProxy,
-                       stubs.signingConfig.apiProxy);
-          assert.equal(signedAddonCall.timeout,
-                       stubs.signingConfig.timeout);
-          assert.equal(signedAddonCall.xpiPath,
-                       stubs.buildResult.extensionPath);
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(stubs.signAddon,
+            {
+              apiKey: stubs.signingConfig.apiKey,
+              apiSecret: stubs.signingConfig.apiSecret,
+              apiProxy: stubs.signingConfig.apiProxy,
+              timeout: stubs.signingConfig.timeout,
+              xpiPath: stubs.buildResult.extensionPath,
+            }
+          );
 
           const applications: ExtensionManifestApplications =
             stubs.preValidatedManifest.applications || {gecko: {}};
-          assert.equal(signedAddonCall.id, applications.gecko.id);
 
-          assert.equal(signedAddonCall.version,
-                       stubs.preValidatedManifest.version);
-          assert.equal(signedAddonCall.downloadDir, artifactsDir);
+          sinon.assert.calledWithMatch(stubs.signAddon,
+            {
+              id: applications.gecko.id,
+              version: stubs.preValidatedManifest.version,
+              downloadDir: artifactsDir,
+            }
+          );
         });
     }
   ));
@@ -301,8 +298,8 @@ describe('sign', () => {
       const stubs = getStubs();
       return sign(tmpDir, stubs, {extraArgs: {verbose: true}})
         .then(() => {
-          assert.equal(stubs.signAddon.called, true);
-          assert.equal(stubs.signAddon.firstCall.args[0].verbose, true);
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(stubs.signAddon, {verbose: true});
         });
     }
   ));
@@ -313,8 +310,8 @@ describe('sign', () => {
       const ignoreFiles = ['*'];
       return sign(tmpDir, stubs, {extraArgs: {ignoreFiles}})
         .then(() => {
-          assert.equal(stubs.signAddon.called, true);
-          assert.equal(stubs.build.firstCall.args[0].ignoreFiles, ignoreFiles);
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(stubs.build, {ignoreFiles});
         });
     }
   ));

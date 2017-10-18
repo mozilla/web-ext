@@ -200,8 +200,7 @@ describe('program.Program', () => {
     program.command('thing', 'does a thing', () => {});
     return execProgram(program, {getVersion: version})
       .then(() => {
-        assert.equal(version.firstCall.args[0],
-                     path.join(__dirname, '..', '..'));
+        sinon.assert.calledWith(version, path.join(__dirname, '..', '..'));
       });
   });
 
