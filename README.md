@@ -30,6 +30,7 @@ Here are the commands you can run. Click on each one for detailed documentation 
 * [`docs`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_docs)
   * Open the `web-ext` documentation in a browser
 
+
 ## Installation from npm
 
 First, make sure you are running the current
@@ -108,6 +109,18 @@ need to relink it.
     cd /path/to/web-ext
     git pull
     npm run build
+    
+##using web-ext programatically, e.g. `webExt.cmd.run()`
+This only supports minimal programmatic use. You can execute raw functions without any argument validation, like:
+
+import webExt from 'web-ext';
+
+webExt.cmd.run({shouldExitProgram: false, firefox: '...', sourceDir: '...'})
+  .then((extensionRunner) => {
+    console.log(extensionRunner);
+    // extensionRunner.reloadAllExtensions();
+    // extensionRunner.exit();
+  });
 
 ## Should I Use It?
 
