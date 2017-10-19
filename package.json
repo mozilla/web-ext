@@ -101,7 +101,7 @@
     "eslint": "3.19.0",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "2.35.0",
-    "eslint-plugin-import": "2.3.0",
+    "eslint-plugin-import": "2.8.0",
     "firefox-client": "0.3.0",
     "flow-bin": "0.53.1",
     "grunt": "1.0.1",
