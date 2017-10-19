@@ -110,7 +110,8 @@ need to relink it.
     git pull
     npm run build
     
-##using web-ext programatically, e.g. `webExt.cmd.run()`
+    
+## using web-ext programatically, e.g. `webExt.cmd.run()`
 This only supports minimal programmatic use. You can execute raw functions without any argument validation, like:
 
 import webExt from 'web-ext';
