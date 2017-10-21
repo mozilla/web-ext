@@ -32,7 +32,7 @@ type ExecuteOptions = {
   systemProcess?: typeof process,
   logStream?: typeof defaultLogStream,
   logger?: Logger,
-  getVersion?: Function,
+  getVersion?: VersionGetterFn,
   applyConfigToArgv?: typeof defaultApplyConfigToArgv,
   loadJSConfigFile?: typeof defaultLoadJSConfigFile,
   shouldExitProgram?: boolean,
@@ -198,6 +198,8 @@ type VersionGetterOptions = {
   globalEnv?: string,
 };
 
+export type VersionGetterFn = (absolutePackageDir: string) => string;
+
 export function defaultVersionGetter(
   absolutePackageDir: string,
   {globalEnv = WEBEXT_BUILD_ENV}: VersionGetterOptions = {}
@@ -216,7 +218,7 @@ export function defaultVersionGetter(
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 type MainParams = {
-  getVersion?: Function,
+  getVersion?: VersionGetterFn,
   commands?: Object,
   argv: Array<any>,
   runOptions?: Object,
