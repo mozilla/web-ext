@@ -465,9 +465,8 @@ describe('program.main', () => {
       });
   });
 
-  it('throws an UsageError when the config file can\'t be loaded', () => {
+  it('throws a UsageError when the config file can\'t be loaded', () => {
     const fakeProcess = createFakeProcess();
-    const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
@@ -476,6 +475,11 @@ describe('program.main', () => {
       throw new UsageError('bad path');
     });
     const fakeApplyConfigToArgv = sinon.spy(() => {});
+    const capturingConsoleStream = new ConsoleStream();
+    capturingConsoleStream.startCapturing();
+    const logger = createLogger(__filename, {
+      logStream: capturingConsoleStream,
+    });
 
     return execProgram(
       ['lint', '--config', fakePath],
@@ -484,23 +488,22 @@ describe('program.main', () => {
         runOptions: {
           shouldExitProgram: false,
           systemProcess: fakeProcess,
-          logger,
           applyConfigToArgv: fakeApplyConfigToArgv,
           loadJSConfigFile: fakeLoadJSConfigFile,
+          logger,
         },
       })
       .then(makeSureItFails())
       .catch(onlyInstancesOf(UsageError, (error) => {
         assert.match(error.message, /bad path/);
+        assert.match(capturingConsoleStream.capturedMessages[0], /bad path/);
         sinon.assert.notCalled(fakeApplyConfigToArgv);
         sinon.assert.notCalled(fakeProcess.exit);
-        sinon.assert.calledOnce(logger.error);
       }));
   });
 
   it('throws when config file loading raises an unexpected error', () => {
     const fakeProcess = createFakeProcess();
-    const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
@@ -509,6 +512,11 @@ describe('program.main', () => {
       throw new Error('some error');
     });
     const fakeApplyConfigToArgv = sinon.spy(() => {});
+    const capturingConsoleStream = new ConsoleStream();
+    capturingConsoleStream.startCapturing();
+    const logger = createLogger(__filename, {
+      logStream: capturingConsoleStream,
+    });
 
     return execProgram(
       ['lint', '--config', fakePath],
@@ -517,25 +525,25 @@ describe('program.main', () => {
         runOptions: {
           shouldExitProgram: false,
           systemProcess: fakeProcess,
-          logger,
           applyConfigToArgv: fakeApplyConfigToArgv,
           loadJSConfigFile: fakeLoadJSConfigFile,
+          logger,
         },
       })
       .then(makeSureItFails())
       .catch((error) => {
         if (!(error instanceof UsageError)) {
           assert.match(error.message, /some error/);
+          assert.match(capturingConsoleStream.capturedMessages[0],
+                       /some error/);
           sinon.assert.notCalled(fakeApplyConfigToArgv);
           sinon.assert.notCalled(fakeProcess.exit);
-          sinon.assert.calledOnce(logger.error);
         }
       });
   });
 
   it('throws a UsageError when the loaded config can\'t be applied', () => {
     const fakeProcess = createFakeProcess();
-    const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
@@ -544,6 +552,11 @@ describe('program.main', () => {
     const fakeApplyConfigToArgv = sinon.spy(() => {
       throw new UsageError('bad config option');
     });
+    const capturingConsoleStream = new ConsoleStream();
+    capturingConsoleStream.startCapturing();
+    const logger = createLogger(__filename, {
+      logStream: capturingConsoleStream,
+    });
 
     return execProgram(
       ['lint', '--config', fakePath],
@@ -552,22 +565,22 @@ describe('program.main', () => {
         runOptions: {
           shouldExitProgram: false,
           systemProcess: fakeProcess,
-          logger,
           applyConfigToArgv: fakeApplyConfigToArgv,
           loadJSConfigFile: fakeLoadJSConfigFile,
+          logger,
         },
       })
       .then(makeSureItFails())
       .catch(onlyInstancesOf(UsageError, (error) => {
         assert.match(error.message, /bad config option/);
+        assert.match(capturingConsoleStream.capturedMessages[0],
+                     /bad config option/);
         sinon.assert.notCalled(fakeProcess.exit);
-        sinon.assert.calledOnce(logger.error);
       }));
   });
 
   it('logs and throws when fakeApplyConfigToArgv throws WebExtError', () => {
     const fakeProcess = createFakeProcess();
-    const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
@@ -576,6 +589,11 @@ describe('program.main', () => {
     const fakeApplyConfigToArgv = sinon.spy(() => {
       throw new WebExtError('bad config option');
     });
+    const capturingConsoleStream = new ConsoleStream();
+    capturingConsoleStream.startCapturing();
+    const logger = createLogger(__filename, {
+      logStream: capturingConsoleStream,
+    });
 
     return execProgram(
       ['lint', '--config', fakePath],
@@ -584,22 +602,22 @@ describe('program.main', () => {
         runOptions: {
           shouldExitProgram: false,
           systemProcess: fakeProcess,
-          logger,
           applyConfigToArgv: fakeApplyConfigToArgv,
           loadJSConfigFile: fakeLoadJSConfigFile,
+          logger,
         },
       })
       .then(makeSureItFails())
       .catch(onlyInstancesOf(WebExtError, (error) => {
         assert.match(error.message, /bad config option/);
+        assert.match(capturingConsoleStream.capturedMessages[0],
+                     /bad config option/);
         sinon.assert.notCalled(fakeProcess.exit);
-        sinon.assert.calledOnce(logger.error);
       }));
   });
 
   it('throws when fakeApplyConfigToArgv throws an unexpected error', () => {
     const fakeProcess = createFakeProcess();
-    const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
@@ -608,6 +626,11 @@ describe('program.main', () => {
     const fakeApplyConfigToArgv = sinon.spy(() => {
       throw new Error('some error');
     });
+    const capturingConsoleStream = new ConsoleStream();
+    capturingConsoleStream.startCapturing();
+    const logger = createLogger(__filename, {
+      logStream: capturingConsoleStream,
+    });
 
     return execProgram(
       ['lint', '--config', fakePath],
@@ -616,17 +639,18 @@ describe('program.main', () => {
         runOptions: {
           shouldExitProgram: false,
           systemProcess: fakeProcess,
-          logger,
           applyConfigToArgv: fakeApplyConfigToArgv,
           loadJSConfigFile: fakeLoadJSConfigFile,
+          logger,
         },
       })
       .then(makeSureItFails())
       .catch((error) => {
         if (!(error instanceof UsageError) && !(error instanceof WebExtError)) {
           assert.match(error.message, /some error/);
+          assert.match(capturingConsoleStream.capturedMessages[0],
+                       /some error/);
           sinon.assert.notCalled(fakeProcess.exit);
-          sinon.assert.calledOnce(logger.error);
         }
       });
   });

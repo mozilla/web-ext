@@ -110,12 +110,16 @@ export type CreateBunyanLogParams = {|
 export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
 
 export type CreateLoggerOptions = {|
-  createBunyanLog: CreateBunyanLogFn,
+  createBunyanLog?: CreateBunyanLogFn,
+  logStream?: ConsoleStream,
 |};
 
 export function createLogger(
   filename: string,
-  {createBunyanLog = defaultLogCreator}: CreateLoggerOptions = {}
+  {
+    createBunyanLog = defaultLogCreator,
+    logStream = consoleStream,
+  }: CreateLoggerOptions = {}
 ): Logger {
   return createBunyanLog({
     // Strip the leading src/ from file names (which is in all file names) to
@@ -125,7 +129,7 @@ export function createLogger(
     level: bunyan.TRACE,
     streams: [{
       type: 'raw',
-      stream: consoleStream,
+      stream: logStream,
     }],
   });
 }
