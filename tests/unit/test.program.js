@@ -434,7 +434,7 @@ describe('program.main', () => {
     });
   });
 
-  it('applies config from config file when specified', () => {
+  it('applies options from the specified config file', () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
@@ -456,16 +456,16 @@ describe('program.main', () => {
         const options = fakeCommands.lint.firstCall.args[0];
         assert.strictEqual(options.config, fakePath);
         sinon.assert.calledOnce(fakeLoadJSConfigFile);
-        sinon.assert.calledOnce(fakeApplyConfigToArgv);
         sinon.assert.calledWith(fakeLoadJSConfigFile,
-          sinon.match(resolvedFakePath));
+                                sinon.match(resolvedFakePath));
+        sinon.assert.calledOnce(fakeApplyConfigToArgv);
         sinon.assert.calledWith(fakeApplyConfigToArgv, sinon.match({
           configFileName: resolvedFakePath,
         }));
       });
   });
 
-  it('logs and throws when config file was not loaded', () => {
+  it('throws an UsageError when the config file can\'t be loaded', () => {
     const fakeProcess = createFakeProcess();
     const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
@@ -498,7 +498,7 @@ describe('program.main', () => {
       }));
   });
 
-  it('throws when config file loading fails', () => {
+  it('throws when config file loading raises an unexpected error', () => {
     const fakeProcess = createFakeProcess();
     const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
@@ -533,7 +533,7 @@ describe('program.main', () => {
       });
   });
 
-  it('logs and throws when fakeApplyConfigToArgv throws UsageError', () => {
+  it('throws a UsageError when the loaded config can\'t be applied', () => {
     const fakeProcess = createFakeProcess();
     const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
@@ -597,7 +597,7 @@ describe('program.main', () => {
       }));
   });
 
-  it('logs and throws when fakeApplyConfigToArgv throws WebExtError', () => {
+  it('throws when fakeApplyConfigToArgv throws an unexpected error', () => {
     const fakeProcess = createFakeProcess();
     const logger = fake(createLogger(__filename));
     const fakeCommands = fake(commands, {
@@ -606,7 +606,7 @@ describe('program.main', () => {
     const fakePath = 'path/to/web-ext-config.js';
     const fakeLoadJSConfigFile = sinon.spy(() => {});
     const fakeApplyConfigToArgv = sinon.spy(() => {
-      throw new WebExtError('some error');
+      throw new Error('some error');
     });
 
     return execProgram(
