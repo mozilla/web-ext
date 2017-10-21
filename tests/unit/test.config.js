@@ -12,7 +12,7 @@ import {
   loadJSConfigFile,
 } from '../../src/config';
 import {withTempDir} from '../../src/util/temp-dir';
-import {UsageError, WebExtError} from '../../src/errors';
+import {UsageError} from '../../src/errors';
 
 type MakeArgvParams = {|
   userCmd?: Array<string>,
@@ -657,8 +657,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, WebExtError,
-        'WebExtError: Option: apiUrl was defined without a type.');
+      }, UsageError,
+        'UsageError: Option: apiUrl was defined without a type.');
     });
 
     it('throws an error when the type of one of them is in config' +
@@ -688,8 +688,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, WebExtError,
-        'WebExtError: Option: apiUrl was defined without a type.');
+      }, UsageError,
+        'UsageError: Option: apiUrl was defined without a type.');
     });
 
     it('throws an error when type of unrelated sub option is invalid', () => {

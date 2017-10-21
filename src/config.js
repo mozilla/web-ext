@@ -6,7 +6,7 @@ import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 
 import {createLogger} from './util/logger';
-import {UsageError, WebExtError} from './errors';
+import {UsageError} from './errors';
 
 const log = createLogger(__filename);
 
@@ -50,7 +50,7 @@ export function applyConfigToArgv({
         `an unknown option: "${option}"`);
     }
     if (options[decamelizedOptName].type === undefined) {
-      throw new WebExtError(
+      throw new UsageError(
         `Option: ${option} was defined without a type.`);
     }
 

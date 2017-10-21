@@ -12,7 +12,6 @@ import commands from '../../src/cmd';
 import {
   onlyInstancesOf,
   UsageError,
-  WebExtError,
 } from '../../src/errors';
 import {
   createFakeProcess,
@@ -579,43 +578,6 @@ describe('program.main', () => {
       }));
   });
 
-  it('logs and throws when fakeApplyConfigToArgv throws WebExtError', () => {
-    const fakeProcess = createFakeProcess();
-    const fakeCommands = fake(commands, {
-      lint: () => Promise.resolve(),
-    });
-    const fakePath = 'path/to/web-ext-config.js';
-    const fakeLoadJSConfigFile = sinon.spy(() => {});
-    const fakeApplyConfigToArgv = sinon.spy(() => {
-      throw new WebExtError('bad config option');
-    });
-    const capturingConsoleStream = new ConsoleStream();
-    capturingConsoleStream.startCapturing();
-    const logger = createLogger(__filename, {
-      logStream: capturingConsoleStream,
-    });
-
-    return execProgram(
-      ['lint', '--config', fakePath],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          shouldExitProgram: false,
-          systemProcess: fakeProcess,
-          applyConfigToArgv: fakeApplyConfigToArgv,
-          loadJSConfigFile: fakeLoadJSConfigFile,
-          logger,
-        },
-      })
-      .then(makeSureItFails())
-      .catch(onlyInstancesOf(WebExtError, (error) => {
-        assert.match(error.message, /bad config option/);
-        assert.match(capturingConsoleStream.capturedMessages[0],
-                     /bad config option/);
-        sinon.assert.notCalled(fakeProcess.exit);
-      }));
-  });
-
   it('throws when fakeApplyConfigToArgv throws an unexpected error', () => {
     const fakeProcess = createFakeProcess();
     const fakeCommands = fake(commands, {
@@ -646,7 +608,7 @@ describe('program.main', () => {
       })
       .then(makeSureItFails())
       .catch((error) => {
-        if (!(error instanceof UsageError) && !(error instanceof WebExtError)) {
+        if (!(error instanceof UsageError)) {
           assert.match(error.message, /some error/);
           assert.match(capturingConsoleStream.capturedMessages[0],
                        /some error/);
