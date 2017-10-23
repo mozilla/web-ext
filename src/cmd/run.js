@@ -82,11 +82,14 @@ export default async function run(
   // Create an alias for --pref since it has been transformed into an
   // object containing one or more preferences.
   const customPrefs = pref;
-  const manifestData = await getValidatedManifest(sourceDir);
+  const extensions = await Promise.all(sourceDir.split(',').map(async (sourceDir) => {
+    let manifestData = await getValidatedManifest(sourceDir);
+    return { sourceDir, manifestData };
+  }));
 
   const firefoxDesktopRunnerParams = {
     // Common options.
-    extensions: [{sourceDir, manifestData}],
+    extensions: extensions,
     keepProfileChanges,
     startUrl,
     desktopNotifications,
