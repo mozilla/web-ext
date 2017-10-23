@@ -14,7 +14,7 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Documentation
 
-* [Getting started with web-ext](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
+* [Getting started with web-ext][web-ext-user-docs]
 * [Command reference](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference)
 
 Here are the commands you can run. Click on each one for detailed documentation or use `--help` on the command line, such as `web-ext build --help`.
@@ -109,6 +109,63 @@ need to relink it.
     git pull
     npm run build
 
+## Using web-ext is NodeJS code
+
+Aside from [using web-ext on the command line][web-ext-user-docs], you may wish to execute `web-ext` in NodeJS code. There is limited support for this. Here are some examples.
+
+You are able to execute command functions without any argument validation. If you want to execute `web-ext run` you would do so like this:
+
+```js
+// const webExt = require('web-ext').default;
+// or...
+import webExt from 'web-ext';
+
+webExt.cmd.run({
+  // These are command options derived from their CLI conterpart.
+  // In this example, --source-dir is specified as sourceDir.
+  firefox: '/path/to/Firefox-executable',
+  sourceDir: '/path/to/your/extension/source/',
+}, {
+  // These are non CLI related options for each function.
+  // You need to specify this one so that your NodeJS application
+  // can continue running after web-ext is finished.
+  shouldExitProgram: false,
+})
+  .then((extensionRunner) => {
+    // The command has finished. Each command resolves its
+    // promise with a different value.
+    console.log(extensionRunner);
+    // You can do a few things like:
+    // extensionRunner.reloadAllExtensions();
+    // extensionRunner.exit();
+  });
+```
+
+If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
+
+```js
+webExt.util.logger.consoleStream.makeVerbose();
+webExt.cmd.run({...}, {shouldExitProgram: false});
+```
+
+You can also disable the use of standard input:
+
+```js
+webExt.cmd.run({noInput: true}, {shouldExitProgram: false});
+```
+
+`web-ext` is designed for WebExtensions but you can try disabling manifest validation to work with legacy extensions. This is not officially supported.
+
+```js
+webExt.cmd.run({...}, {shouldExitProgram: false}, {
+  getValidatedManifest: () => ({
+    name: 'some-fake-name',
+    version: '1.0.0',
+  }),
+});
+```
+
+
 ## Should I Use It?
 
 Yes! The web-ext tool enables you to build and ship web extensions for Firefox.
@@ -185,3 +242,5 @@ Cons of creating a new tool:
 * Developers of existing add-ons will need to port to web extensions sooner rather than later.
 * The web-ext tool will require some ramp-up time for scaffolding.
 * The community of jpm contributors will need to shift focus to web-ext.
+
+[web-ext-user-docs]: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext
