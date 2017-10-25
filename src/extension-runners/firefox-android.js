@@ -10,13 +10,11 @@ import path from 'path';
 import readline from 'readline';
 import tty from 'tty';
 
-import defaultADB from 'adbkit';
-
+import DefaultADBUtils from '../util/adb';
 import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
 import {
-  isErrorWithCode,
   MultiExtensionsReloadError,
   UsageError,
   WebExtError,
@@ -41,6 +39,13 @@ import type {
   ExtensionBuildResult,
 } from '../cmd/build';
 
+const log = createLogger(__filename);
+
+/**
+ * This module provide an ExtensionRunner subclass that manage an extension executed
+ * in a Firefox for Desktop instance.
+ */
+
 export type FirefoxAndroidExtensionRunnerParams = {|
   ...ExtensionRunnerParams,
 
@@ -62,29 +67,22 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   // Injected Dependencies.
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxConnector,
-  adb: typeof defaultADB,
+  ADBUtils: typeof DefaultADBUtils,
   buildSourceDir: (string) => Promise<ExtensionBuildResult>,
   desktopNotifications: typeof defaultDesktopNotifications,
   stdin?: stream$Readable,
 |};
 
-const log = createLogger(__filename);
-
-/**
- * This module provide an ExtensionRunner subclass that manage an extension executed
- * in a Firefox for Desktop instance.
- */
-
 export class FirefoxAndroidExtensionRunner {
   // Wait 3s before the next unix socket discovery loop.
-  static unixSocketDiscoveryRetryTime = 3 * 1000;
+  static unixSocketDiscoveryRetryInterval = 3 * 1000;
   // Wait for at most 3 minutes before giving up.
-  static unixSocketDiscoveryMaxTime = 3 * 10 * 1000;
+  static unixSocketDiscoveryMaxTime = 3 * 60 * 1000;
 
   params: FirefoxAndroidExtensionRunnerParams;
-  adbClient: any; // TODO: better flow typing here.
+  adbUtils: DefaultADBUtils;
   exiting: boolean;
-  selectedAdbDevice: {id: string};
+  selectedAdbDevice: string;
   selectedFirefoxApk: string;
   selectedArtifactsDir: string;
   selectedRDPSocketFile: string;
@@ -100,10 +98,6 @@ export class FirefoxAndroidExtensionRunner {
     this.adbExtensionsPathBySourceDir = new Map();
     this.reloadableExtensions = new Map();
 
-    // Choose a artifacts dir name for the assets pushed to the
-    // Android device.
-    this.selectedArtifactsDir = `/sdcard/web-ext-artifacts-${Date.now()}`;
-
     // Print warning for not currently supported options (e.g. preInstall,
     // cloned profiles, browser console).
     this.printIgnoredParamsWarnings();
@@ -111,16 +105,13 @@ export class FirefoxAndroidExtensionRunner {
 
   async run(): Promise<void> {
     const {
-      adb,
       adbBinary,
       adbHost,
       adbPort,
     } = this.params;
 
-    this.adbClient = adb.createClient({
-      bin: adbBinary,
-      host: adbHost,
-      port: adbPort,
+    this.adbUtils = new this.params.ADBUtils({
+      adbBinary, adbHost, adbPort,
     });
 
     await this.adbDevicesDiscoveryAndSelect();
@@ -237,7 +228,7 @@ export class FirefoxAndroidExtensionRunner {
    */
   async exit(): Promise<void> {
     const {
-      adbClient,
+      adbUtils,
       selectedAdbDevice,
       selectedArtifactsDir,
     } = this;
@@ -249,10 +240,8 @@ export class FirefoxAndroidExtensionRunner {
     await this.adbForceStopSelectedPackage();
 
     if (selectedArtifactsDir) {
-      log.info('Cleanup temporary dir created on the Android device...');
-      await adbClient.shell(selectedAdbDevice.id, [
-        'rm', '-rf', selectedArtifactsDir,
-      ]);
+      log.info('Cleanup artifacts dir created on the Android device...');
+      await adbUtils.clearArtifactsDir(selectedAdbDevice);
     }
 
     // Call all the registered clenaup callbacks.
@@ -304,38 +293,26 @@ export class FirefoxAndroidExtensionRunner {
   }
 
   async adbDevicesDiscoveryAndSelect() {
-    const {adbClient} = this;
+    const {adbUtils} = this;
     const {adbDevice} = this.params;
     let devices = [];
 
-    try {
-      log.debug('Listing android devices');
-      devices = await adbClient.listDevices();
-    } catch (error) {
-      if (isErrorWithCode('ENOENT', error) &&
-          error.message.includes('spawn adb')) {
-        throw new UsageError(
-          'No adb executable has been found. ' +
-          'You can Use --adb-bin, --adb-host/--adb-port ' +
-          'to configure it manually if needed.');
-      }
-
-      throw error;
-    }
+    log.debug('Listing android devices');
+    devices = await adbUtils.discoverDevices();
 
     if (devices.length === 0) {
       throw new UsageError('No Android device found through ADB.');
     }
 
     if (!adbDevice) {
-      const devicesMsg = devices.map((dev) => ` - ${dev.id}`).join('\n');
+      const devicesMsg = devices.map((dev) => ` - ${dev}`).join('\n');
       log.info(`\nAndroid devices found:\n${devicesMsg}`);
       throw new UsageError(
         'Select an android device using --android-device');
     }
 
     const foundDevices = devices.filter((device) => {
-      return device.id === adbDevice;
+      return device === adbDevice;
     });
 
     if (foundDevices.length === 0) {
@@ -345,31 +322,21 @@ export class FirefoxAndroidExtensionRunner {
     }
 
     this.selectedAdbDevice = foundDevices[0];
-    log.info(`Selected adb device: ${this.selectedAdbDevice.id}`);
+    log.info(`Selected adb device: ${this.selectedAdbDevice}`);
   }
 
   async apkPackagesDiscoveryAndSelect() {
     const {
-      adbClient,
+      adbUtils,
       selectedAdbDevice,
       params: {
-        adb,
         firefoxApk,
       },
     } = this;
     // Discovery and select a Firefox for Android version.
-    const pmList = await adbClient.shell(selectedAdbDevice.id, [
-      'pm', 'list', 'packages',
-    ]).then(adb.util.readAll);
-
-    const packages = pmList.toString().split('\n')
-                           .map((line) => line.replace('package:', '').trim())
-                           .filter((line) => {
-                             return (
-                               line.startsWith('org.mozilla.fennec') ||
-                               line.startsWith('org.mozilla.firefox')
-                             );
-                           });
+    const packages = await adbUtils.discoverInstalledFirefoxAPKs(
+      selectedAdbDevice
+    );
 
     if (packages.length === 0) {
       throw new UsageError(
@@ -398,42 +365,27 @@ export class FirefoxAndroidExtensionRunner {
 
   async adbForceStopSelectedPackage() {
     const {
-      adbClient,
+      adbUtils,
       selectedAdbDevice,
       selectedFirefoxApk,
-      params: {
-        adb,
-      },
     } = this;
+
     log.info(`Stop any existent instance of ${selectedFirefoxApk}...`);
-    await adbClient.shell(selectedAdbDevice.id, [
-      'am', 'force-stop', selectedFirefoxApk,
-    ]).then(adb.util.readAll);
+    await adbUtils.amForceStopAPK(selectedAdbDevice, selectedFirefoxApk);
   }
 
   async adbCheckRuntimePermissions() {
     const {
-      adbClient,
+      adbUtils,
       selectedAdbDevice,
       selectedFirefoxApk,
-      params: {
-        adb,
-      },
     } = this;
 
-    log.info(`Discovery android version for ${selectedAdbDevice.id}...`);
-    const androidVersion = parseInt((
-      await adbClient.shell(selectedAdbDevice.id, [
-        'getprop', 'ro.build.version.sdk',
-      ]).then(adb.util.readAll)
-    ).toString().trim());
+    log.info(`Discovery android version for ${selectedAdbDevice}...`);
 
-    // No need to check the granted runtime permissions on Android versions < Lollypop.
-    if (isNaN(androidVersion)) {
-      throw new WebExtError(
-        `Unable to discovery android version on ${selectedAdbDevice.id}`
-      );
-    }
+    const androidVersion = await adbUtils.getAndroidVersionNumber(
+      selectedAdbDevice
+    );
 
     if (androidVersion < 21) {
       return;
@@ -442,41 +394,20 @@ export class FirefoxAndroidExtensionRunner {
     log.info(
       `Discovery granted runtime permissions for ${selectedFirefoxApk}...`
     );
-    const runtimePermissions = (
-      await adbClient.shell(selectedAdbDevice.id, [
-        'pm', 'dump', selectedFirefoxApk,
-      ]).then(adb.util.readAll)
-    ).toString().split('\n');
 
-    // Runtime permission needed to be able to run Firefox on a temporarily created profile.
-    const requiredRuntimePermissions = {
-      'android.permission.READ_EXTERNAL_STORAGE': false,
-      'android.permission.WRITE_EXTERNAL_STORAGE': false,
-    };
-
-    for (const line of runtimePermissions) {
-      for (const permission of Object.keys(requiredRuntimePermissions)) {
-        if (line.includes(`${permission}: granted=true`)) {
-          requiredRuntimePermissions[permission] = true;
-        }
-      }
-    }
-
-    for (const permission of Object.keys(requiredRuntimePermissions)) {
-      if (!requiredRuntimePermissions[permission]) {
-        throw new UsageError(
-          `Required ${permission} not be granted for ${selectedFirefoxApk}` +
-          'Please grant them using the Android Settings ' +
-          'or using the following command from the command line:\n' +
-          `\t adb shell pm grant ${selectedFirefoxApk} ${permission}\n`
-        );
-      }
-    }
+    // Runtime permission needed to be able to run Firefox on a temporarily created profile
+    // on android versions >= 21.
+    await adbUtils.ensureRequiredAPKRuntimePermissions(
+      selectedAdbDevice, selectedFirefoxApk, [
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+      ]
+    );
   }
 
   async adbPrepareProfileDir() {
     const {
-      adbClient,
+      adbUtils,
       selectedAdbDevice,
       selectedFirefoxApk,
       params: {
@@ -485,23 +416,30 @@ export class FirefoxAndroidExtensionRunner {
     } = this;
     // Create the preferences file and the Fennec temporary profile.
     log.info(`Preparing a temporary profile for ${selectedFirefoxApk}...`);
+
     const profile = await firefoxApp.createProfile({app: 'fennec'});
+
+    // Choose a artifacts dir name for the assets pushed to the
+    // Android device.
+    this.selectedArtifactsDir = await adbUtils.getOrCreateArtifactsDir(
+      selectedAdbDevice
+    );
 
     const deviceProfileDir = this.getDeviceProfileDir();
 
-    await adbClient.shell(selectedAdbDevice.id, [
+    await adbUtils.runShellCommand(selectedAdbDevice, [
       'mkdir', '-p', deviceProfileDir,
     ]);
-    await adbClient.push(selectedAdbDevice.id,
-                         path.join(profile.profileDir, 'user.js'),
-                         `${deviceProfileDir}/user.js`);
+    await adbUtils.pushFile(selectedAdbDevice,
+                            path.join(profile.profileDir, 'user.js'),
+                            `${deviceProfileDir}/user.js`);
 
     log.debug(`Created temporary profile at ${deviceProfileDir}.`);
   }
 
   async adbStartSelectedPackage() {
     const {
-      adbClient,
+      adbUtils,
       selectedFirefoxApk,
       selectedAdbDevice,
     } = this;
@@ -511,22 +449,15 @@ export class FirefoxAndroidExtensionRunner {
     log.info(
       `Starting ${selectedFirefoxApk} on the profile ${deviceProfileDir}...`
     );
-    await adbClient.startActivity(selectedAdbDevice.id, {
-      wait: true,
-      action: 'android.activity.MAIN',
-      component: `${selectedFirefoxApk}/.App`,
-      extras: [
-        {
-          key: 'args',
-          value: `-profile ${deviceProfileDir}`,
-        },
-      ],
-    });
+
+    await adbUtils.startFirefoxAPK(
+      selectedAdbDevice, selectedFirefoxApk, deviceProfileDir
+    );
   }
 
   async buildAndPushExtension(sourceDir: string) {
     const {
-      adbClient,
+      adbUtils,
       selectedAdbDevice,
       selectedArtifactsDir,
       params: {
@@ -546,14 +477,9 @@ export class FirefoxAndroidExtensionRunner {
 
     log.debug(`Uploading ${extFileName} on the android device`);
 
-    await adbClient.push(
-      selectedAdbDevice.id, extensionPath, adbExtensionPath
-    ).then(function(transfer) {
-      return new Promise((resolve) => {
-        // TODO: show progress in the console
-        transfer.on('end', resolve);
-      });
-    });
+    await adbUtils.pushFile(
+      selectedAdbDevice, extensionPath, adbExtensionPath
+    );
 
     log.debug(`Upload completed: ${adbExtensionPath}`);
 
@@ -568,11 +494,10 @@ export class FirefoxAndroidExtensionRunner {
 
   async adbDiscoveryAndForwardRDPUnixSocket() {
     const {
-      adbClient,
+      adbUtils,
       selectedAdbDevice,
       selectedFirefoxApk,
       params: {
-        adb,
         firefoxAndroidTimeout,
       },
     } = this;
@@ -580,7 +505,7 @@ export class FirefoxAndroidExtensionRunner {
     const stdin = this.params.stdin || process.stdin;
 
     const {
-      unixSocketDiscoveryRetryTime,
+      unixSocketDiscoveryRetryInterval,
     } = FirefoxAndroidExtensionRunner;
 
     let {
@@ -591,17 +516,14 @@ export class FirefoxAndroidExtensionRunner {
       unixSocketDiscoveryMaxTime = firefoxAndroidTimeout;
     }
 
-    // Firefox for Android debugger socket discovery.
-    const startedDiscoveryTime = Date.now();
-    let androidUnixSockets = [];
-    let userExit = false;
-
     const handleCtrlC = (str, key) => {
       if (key.ctrl && key.name === 'c') {
-        userExit = true;
+        adbUtils.setUserAbortDiscovery(true);
       }
     };
 
+    // TODO: use noInput property to decide if we should
+    // disable direct keypress handling.
     if (stdin.isTTY && stdin instanceof tty.ReadStream) {
       readline.emitKeypressEvents(stdin);
       stdin.setRawMode(true);
@@ -609,43 +531,22 @@ export class FirefoxAndroidExtensionRunner {
       stdin.on('keypress', handleCtrlC);
     }
 
-    while (!userExit && androidUnixSockets.length === 0) {
-      if (Date.now() - startedDiscoveryTime > unixSocketDiscoveryMaxTime) {
-        throw new WebExtError(
-          'Timeout while waiting for the Android Firefox Debugger Socket'
-        );
-      }
-
-      await new Promise((resolve) => {
-        setTimeout(resolve, unixSocketDiscoveryRetryTime);
-      });
-
-      log.info(`Waiting ${selectedFirefoxApk} to be ready... ` +
-               '(it can take a while on an ARM emulator)');
-      androidUnixSockets = await adbClient.shell(selectedAdbDevice.id, [
-        'cat', '/proc/net/unix',
-      ]).then(adb.util.readAll);
-
-      androidUnixSockets = androidUnixSockets.toString()
-        .split('\n').filter((line) => {
-          return line.trim().endsWith('firefox-debugger-socket');
-        });
-    }
-
-    if (stdin.isTTY && stdin instanceof tty.ReadStream) {
-      stdin.removeListener('keypress', handleCtrlC);
-    }
-
-    if (userExit) {
-      throw new UsageError(
-        'User requested exit during Android Firefox Debugger Socket discovery'
+    try {
+      // Got a debugger socket file to connect.
+      this.selectedRDPSocketFile = (
+        await adbUtils.discoverRDPUnixSocket(
+          selectedAdbDevice, selectedFirefoxApk, {
+            maxDiscoveryTime: unixSocketDiscoveryMaxTime,
+            retryInterval: unixSocketDiscoveryRetryInterval,
+          }
+        )
       );
+    } finally {
+      if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+        stdin.removeListener('keypress', handleCtrlC);
+      }
     }
 
-    log.debug(`RDP Socket File discovery: ${androidUnixSockets[0]}`);
-
-    // Got a debugger socket file to connect.
-    this.selectedRDPSocketFile = androidUnixSockets[0].trim().split(/\s/).pop();
     log.debug(`RDP Socket File selected: ${this.selectedRDPSocketFile}`);
 
     const tcpPort = await this.chooseLocalTcpPort();
@@ -654,8 +555,12 @@ export class FirefoxAndroidExtensionRunner {
     // to connect the Firefox DevTools to the Firefox for Android instance).
     log.info(`Android Remote Debugging TCP Port selected: ${tcpPort}`);
 
-    await adbClient.forward(selectedAdbDevice.id, `tcp:${tcpPort}`,
-                            `localfilesystem:${this.selectedRDPSocketFile}`);
+    await adbUtils.setupForward(
+      selectedAdbDevice,
+      `localfilesystem:${this.selectedRDPSocketFile}`,
+      `tcp:${tcpPort}`
+    );
+
     this.selectedTCPPort = tcpPort;
   }
 

@@ -39,85 +39,26 @@ const builtFileName = 'built-ext-filename';
 
 const fakeBuiltExtensionPath = `/fake/extensionPath/${builtFileName}.zip`;
 
-const fakeADBPackageList = (
-  'package:org.mozilla.fennec\n' +
-  'package:org.mozilla.firefox'
-);
-
-const fakeSocketFilePrefix = (
-  '00000000: 00000003 00000000 00000000 0001 03  1857'
-);
-
 const fakeRDPUnixSocketFile = (
   '/data/data/org.mozilla.firefox/firefox-debugger-socket'
 );
-
-const fakeUnixSocketFiles = (
-  `${fakeSocketFilePrefix} /dev/socket/mdns\n` +
-  `${fakeSocketFilePrefix}  ${fakeRDPUnixSocketFile}\n`
-);
-
-function getFakeADBKit({adbClient = {}, adbUtil = {}}) {
-  const fakeTransfer = new EventEmitter();
-  const adbUtilReadAllStub = sinon.stub();
-
-  adbUtilReadAllStub.onCall(0).returns(Promise.resolve(new Buffer('')));
-
-
-  const fakeADBClient = {
-    listDevices: sinon.spy(() => {
-      return [];
-    }),
-    shell: sinon.spy(() => Promise.resolve('')),
-    startActivity: sinon.spy(() => {}),
-    forward: sinon.spy(() => {}),
-    push: sinon.spy(() => {
-      const originalOn = fakeTransfer.on.bind(fakeTransfer);
-      // $FLOW_IGNORE: ignore flow errors on this testing hack
-      fakeTransfer.on = (event, cb) => {
-        originalOn(event, cb);
-        fakeTransfer.emit('end');
-      };
-      return Promise.resolve(fakeTransfer);
-    }),
-    ...adbClient,
-  };
-
-  return {
-    fakeADBClient,
-    fakeTransfer,
-    createClient: sinon.spy(() => {
-      return fakeADBClient;
-    }),
-    util: {
-      readAll: adbUtilReadAllStub,
-      ...adbUtil,
-    },
-  };
-}
 
 type PrepareParams = {
   params?: Object,
   debuggerPort?: number,
   fakeFirefoxApp?: Object,
   fakeRemoteFirefox?: Object,
-  fakeADBClient?: Object,
-  fakeADBUtil?: Object,
-  // An array for the fake data that the test get
-  // from an adb shell call.
-  fakeADBReadAllData?: Array<string | Promise<*>>
+  fakeADBUtils?: Object,
 }
 
 // Reduce the waiting time during tests.
-FirefoxAndroidExtensionRunner.unixSocketDiscoveryRetryTime = 0;
+FirefoxAndroidExtensionRunner.unixSocketDiscoveryRetryInterval = 0;
 
 function prepareExtensionRunnerParams({
   debuggerPort,
   fakeFirefoxApp,
   fakeRemoteFirefox,
-  fakeADBClient,
-  fakeADBUtil,
-  fakeADBReadAllData = [],
+  fakeADBUtils,
   params,
 }: PrepareParams = {}) {
   const fakeRemoteFirefoxClient = new EventEmitter();
@@ -128,24 +69,6 @@ function prepareExtensionRunnerParams({
     ...fakeRemoteFirefox,
   });
   remoteFirefox.client = fakeRemoteFirefoxClient;
-
-  const fakeADBKit = getFakeADBKit({
-    adbClient: fakeADBClient, adbUtil: fakeADBUtil,
-  });
-
-  const adbUtilReadAllStub = fakeADBKit.util.readAll;
-
-  for (const [idx, value] of fakeADBReadAllData.entries()) {
-    // Fake the data read from adb.util.readAll after adbClient.shell has been used
-    // to run a command on the device.
-    if (value instanceof Promise) {
-      adbUtilReadAllStub.onCall(idx).returns(value);
-    } else {
-      adbUtilReadAllStub.onCall(idx).returns(Promise.resolve(
-        new Buffer(value)
-      ));
-    }
-  }
 
   // $FLOW_IGNORE: allow overriden params for testing purpose.
   const runnerParams: FirefoxAndroidExtensionRunnerParams = {
@@ -161,7 +84,9 @@ function prepareExtensionRunnerParams({
     firefoxApp: getFakeFirefox({
       ...fakeFirefoxApp,
     }, debuggerPort),
-    adb: fakeADBKit,
+    ADBUtils: sinon.spy(function() {
+      return fakeADBUtils;
+    }),
     firefoxClient: sinon.spy(() => {
       return Promise.resolve(remoteFirefox);
     }),
@@ -174,6 +99,51 @@ function prepareExtensionRunnerParams({
     remoteFirefox,
     params: runnerParams,
   };
+}
+
+function prepareSelectedDeviceAndAPKParams(overriddenProperties = {}) {
+  const fakeADBUtils = {
+    discoverDevices: sinon.spy(() => Promise.resolve([
+      'emulator-1', 'emulator-2',
+    ])),
+    discoverInstalledFirefoxAPKs: sinon.spy(() => Promise.resolve([
+      'org.mozilla.fennec', 'org.mozilla.firefox',
+    ])),
+    getAndroidVersionNumber: sinon.spy(() => Promise.resolve(20)),
+    amForceStopAPK: sinon.spy(() => Promise.resolve()),
+    discoverRDPUnixSocket: sinon.spy(
+      () => Promise.resolve(fakeRDPUnixSocketFile)
+    ),
+    getOrCreateArtifactsDir: sinon.spy(
+      () => Promise.resolve('/fake/artifacts-dir/')
+    ),
+    runShellCommand: sinon.spy(() => Promise.resolve('')),
+    pushFile: sinon.spy(() => Promise.resolve()),
+    startFirefoxAPK: sinon.spy(() => Promise.resolve()),
+    setupForward: sinon.spy(() => Promise.resolve()),
+    clearArtifactsDir: sinon.spy(() => Promise.resolve()),
+    setUserAbortDiscovery: sinon.spy(() => {}),
+    ensureRequiredAPKRuntimePermissions: sinon.spy(() => Promise.resolve()),
+  };
+
+  const {params} = prepareExtensionRunnerParams({
+    params: {
+      adbDevice: 'emulator-1',
+      firefoxApk: 'org.mozilla.firefox',
+      buildSourceDir: sinon.spy(() => Promise.resolve({
+        extensionPath: fakeBuiltExtensionPath,
+      })),
+    },
+    fakeADBUtils,
+    fakeFirefoxApp: {
+      createProfile: sinon.spy(() => {
+        return Promise.resolve({profileDir: '/path/to/fake/profile'});
+      }),
+    },
+    ...overriddenProperties,
+  });
+
+  return {params, fakeADBUtils};
 }
 
 describe('util/extension-runners/firefox-android', () => {
@@ -192,51 +162,15 @@ describe('util/extension-runners/firefox-android', () => {
         actualException = error;
       }
 
-      const {adb} = params;
-      return testExceptionCallback({adb, actualException});
+      return testExceptionCallback({actualException});
     }
 
-    it('does not find an adb binary', async () => {
-      await testUsageError({
-        fakeADBClient: {
-          listDevices: sinon.spy(() => {
-            const fakeADBError = new Error('spawn adb');
-            // $FLOW_FIXME: reuse ErrorWithCode from other tests
-            fakeADBError.code = 'ENOENT';
-            return Promise.reject(fakeADBError);
-          }),
-        },
-      }, ({adb, actualException}) => {
-        sinon.assert.calledOnce(adb.createClient);
-        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
-
-        assert.instanceOf(actualException, UsageError);
-        assert.match(actualException && actualException.message,
-                     /No adb executable has been found/);
-      });
-
-      await testUsageError({
-        fakeADBClient: {
-          listDevices: sinon.spy(() => {
-            const fakeADBError = new Error('unexpected error');
-            return Promise.reject(fakeADBError);
-          }),
-        },
-      }, ({adb, actualException}) => {
-        sinon.assert.calledOnce(adb.createClient);
-        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
-
-        assert.instanceOf(actualException, Error);
-        assert.notInstanceOf(actualException, UsageError);
-        assert.match(actualException && actualException.message,
-                     /unexpected error/);
-      });
-    });
-
     it('does not find any android device', async () => {
-      await testUsageError({}, ({adb, actualException}) => {
-        sinon.assert.calledOnce(adb.createClient);
-        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
+      const fakeADBUtils = {
+        discoverDevices: sinon.spy(() => Promise.resolve([])),
+      };
+      await testUsageError({fakeADBUtils}, ({actualException}) => {
+        sinon.assert.calledOnce(fakeADBUtils.discoverDevices);
 
         assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
@@ -245,17 +179,13 @@ describe('util/extension-runners/firefox-android', () => {
     });
 
     it('does not know which is the selected android device', async () => {
-      await testUsageError({
-        fakeADBClient: {
-          listDevices: sinon.spy(() => {
-            return Promise.resolve([
-              {id: 'emulator-1'}, {id: 'emulator-2'},
-            ]);
-          }),
-        },
-      }, ({adb, actualException}) => {
-        sinon.assert.calledOnce(adb.createClient);
-        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
+      const fakeADBUtils = {
+        discoverDevices: sinon.spy(() => Promise.resolve([
+          'emulator-1', 'emulator-2',
+        ])),
+      };
+      await testUsageError({fakeADBUtils}, ({actualException}) => {
+        sinon.assert.calledOnce(fakeADBUtils.discoverDevices);
 
         assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
@@ -264,20 +194,19 @@ describe('util/extension-runners/firefox-android', () => {
     });
 
     it('does not find the selected android device', async () => {
+      const fakeADBUtils = {
+        discoverDevices: sinon.spy(() => Promise.resolve([
+          'emulator-1', 'emulator-2',
+        ])),
+      };
+
       await testUsageError({
         params: {
-          adbDevice: 'emultator-3',
+          adbDevice: 'emulator-3',
         },
-        fakeADBClient: {
-          listDevices: sinon.spy(() => {
-            return Promise.resolve([
-              {id: 'emulator-1'}, {id: 'emulator-2'},
-            ]);
-          }),
-        },
-      }, ({adb, actualException}) => {
-        sinon.assert.calledOnce(adb.createClient);
-        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
+        fakeADBUtils,
+      }, ({actualException}) => {
+        sinon.assert.calledOnce(fakeADBUtils.discoverDevices);
 
         assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
@@ -286,22 +215,21 @@ describe('util/extension-runners/firefox-android', () => {
     });
 
     it('does not find a valid Firefox apk', async () => {
+      const fakeADBUtils = {
+        discoverDevices: sinon.spy(() => Promise.resolve([
+          'emulator-1', 'emulator-2',
+        ])),
+        discoverInstalledFirefoxAPKs: sinon.spy(() => Promise.resolve([])),
+      };
+
       await testUsageError({
         params: {
           adbDevice: 'emulator-1',
         },
-        fakeADBClient: {
-          listDevices: sinon.spy(() => {
-            return Promise.resolve([
-              {id: 'emulator-1'}, {id: 'emulator-2'},
-            ]);
-          }),
-          shell: sinon.spy(() => Promise.resolve('')),
-        },
-      }, ({adb, actualException}) => {
-        sinon.assert.calledOnce(adb.createClient);
-        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
-        sinon.assert.calledOnce(adb.fakeADBClient.shell);
+        fakeADBUtils,
+      }, ({actualException}) => {
+        sinon.assert.calledOnce(fakeADBUtils.discoverDevices);
+        sinon.assert.calledOnce(fakeADBUtils.discoverInstalledFirefoxAPKs);
 
         assert.instanceOf(actualException, UsageError);
         assert.match(
@@ -312,30 +240,23 @@ describe('util/extension-runners/firefox-android', () => {
     });
 
     it('does not know which Firefox apk to use', async () => {
+      const fakeADBUtils = {
+        discoverDevices: sinon.spy(() => Promise.resolve([
+          'emulator-1', 'emulator-2',
+        ])),
+        discoverInstalledFirefoxAPKs: sinon.spy(() => Promise.resolve([
+          'org.mozilla.fennec', 'org.mozilla.firefox',
+        ])),
+      };
+
       await testUsageError({
         params: {
           adbDevice: 'emulator-1',
         },
-        fakeADBClient: {
-          listDevices: sinon.spy(() => {
-            return Promise.resolve([
-              {id: 'emulator-1'}, {id: 'emulator-2'},
-            ]);
-          }),
-          shell: sinon.spy(() => Promise.resolve('')),
-        },
-        fakeADBUtil: {
-          readAll: sinon.spy(() => {
-            return Promise.resolve(
-              new Buffer('package:org.mozilla.fennec\n' +
-                         'package:org.mozilla.firefox')
-            );
-          }),
-        },
-      }, ({adb, actualException}) => {
-        sinon.assert.calledOnce(adb.createClient);
-        sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
-        sinon.assert.calledOnce(adb.fakeADBClient.shell);
+        fakeADBUtils,
+      }, ({actualException}) => {
+        sinon.assert.calledOnce(fakeADBUtils.discoverDevices);
+        sinon.assert.calledOnce(fakeADBUtils.discoverInstalledFirefoxAPKs);
 
         assert.instanceOf(actualException, UsageError);
         assert.match(
@@ -347,31 +268,24 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('cannot find the Firefox apk selected using --firefox-apk value',
        async () => {
+         const fakeADBUtils = {
+           discoverDevices: sinon.spy(() => Promise.resolve([
+             'emulator-1', 'emulator-2',
+           ])),
+           discoverInstalledFirefoxAPKs: sinon.spy(() => Promise.resolve([
+             'org.mozilla.fennec', 'org.mozilla.firefox',
+           ])),
+         };
+
          await testUsageError({
            params: {
              adbDevice: 'emulator-1',
              firefoxApk: 'org.mozilla.f',
            },
-           fakeADBClient: {
-             listDevices: sinon.spy(() => {
-               return Promise.resolve([
-                 {id: 'emulator-1'}, {id: 'emulator-2'},
-               ]);
-             }),
-             shell: sinon.spy(() => Promise.resolve('')),
-           },
-           fakeADBUtil: {
-             readAll: sinon.spy(() => {
-               return Promise.resolve(
-                 new Buffer('package:org.mozilla.fennec\n' +
-                            'package:org.mozilla.firefox')
-               );
-             }),
-           },
-         }, ({adb, actualException}) => {
-           sinon.assert.calledOnce(adb.createClient);
-           sinon.assert.calledOnce(adb.fakeADBClient.listDevices);
-           sinon.assert.calledOnce(adb.fakeADBClient.shell);
+           fakeADBUtils,
+         }, ({actualException}) => {
+           sinon.assert.calledOnce(fakeADBUtils.discoverDevices);
+           sinon.assert.calledOnce(fakeADBUtils.discoverInstalledFirefoxAPKs);
 
            assert.instanceOf(actualException, UsageError);
            assert.match(
@@ -384,84 +298,40 @@ describe('util/extension-runners/firefox-android', () => {
   });
 
   describe('a valid device and Firefox apk has been selected:', () => {
-    function prepareSelectedValidDeviceAndAPKParams(
-      overriddenProperties = {}
-    ) {
-      const {params} = prepareExtensionRunnerParams({
-        params: {
-          adbDevice: 'emulator-1',
-          firefoxApk: 'org.mozilla.firefox',
-          buildSourceDir: sinon.spy(() => Promise.resolve({
-            extensionPath: fakeBuiltExtensionPath,
-          })),
-        },
-        fakeADBClient: {
-          listDevices: sinon.spy(() => {
-            return Promise.resolve([
-              {id: 'emulator-1'}, {id: 'emulator-2'},
-            ]);
-          }),
-        },
-        fakeFirefoxApp: {
-          createProfile: sinon.spy(() => {
-            return Promise.resolve({profileDir: '/path/to/fake/profile'});
-          }),
-        },
-        fakeADBReadAllData: [
-          // Fake the output of running "pm list" on the device
-          fakeADBPackageList,
-          // Fake the output of running "getprop ro.build.version.sdk",
-          '20',
-          // Fake the output of running "am force-stop SELECTED_APK"
-          '',
-          // Fake the adb shell call that discover the RDP socket.
-          fakeUnixSocketFiles,
-        ],
-        ...overriddenProperties,
-      });
-
-      return params;
-    }
 
     it('stops any running instances of the selected Firefox apk ' +
        'and then starts it on the temporary profile',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
-         const {adb} = params;
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.shell,
-           'emulator-1', ['am', 'force-stop', 'org.mozilla.firefox']
+           fakeADBUtils.amForceStopAPK,
+           'emulator-1', 'org.mozilla.firefox'
          );
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.startActivity,
-           'emulator-1', {
-             wait: true,
-             action: 'android.activity.MAIN',
-             component: 'org.mozilla.firefox/.App',
-             extras: [
-               {
-                 key: 'args',
-                 value: `-profile ${runnerInstance.getDeviceProfileDir()}`,
-               },
-             ],
-           },
+           fakeADBUtils.startFirefoxAPK,
+           'emulator-1', 'org.mozilla.firefox',
+           runnerInstance.getDeviceProfileDir()
          );
 
          sinon.assert.callOrder(
-           adb.fakeADBClient.shell,
-           adb.fakeADBClient.startActivity
+           fakeADBUtils.amForceStopAPK,
+           fakeADBUtils.startFirefoxAPK
          );
        });
 
     it('builds and pushes the extension xpi to the android device',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
-         const {adb, buildSourceDir, extensions} = params;
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
+         const {buildSourceDir, extensions} = params;
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
@@ -472,45 +342,48 @@ describe('util/extension-runners/firefox-android', () => {
          );
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.push,
+           fakeADBUtils.pushFile,
            'emulator-1',
            fakeBuiltExtensionPath,
            `${runnerInstance.selectedArtifactsDir}/${builtFileName}.xpi`
          );
 
-         sinon.assert.callOrder(buildSourceDir, adb.fakeADBClient.push);
+         sinon.assert.callOrder(buildSourceDir, fakeADBUtils.pushFile);
        });
 
     it('discovers the RDP unix socket and forward it on a local tcp port',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
-         const {adb} = params;
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.shell,
-           'emulator-1', ['cat', '/proc/net/unix']
+           fakeADBUtils.discoverRDPUnixSocket,
+           'emulator-1', 'org.mozilla.firefox'
          );
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.forward,
+           fakeADBUtils.setupForward,
            'emulator-1',
+           `localfilesystem:${runnerInstance.selectedRDPSocketFile}`,
            `tcp:${runnerInstance.selectedTCPPort}`,
-           `localfilesystem:${runnerInstance.selectedRDPSocketFile}`
          );
 
          sinon.assert.callOrder(
-           adb.fakeADBClient.shell,
-           adb.fakeADBClient.forward
+           fakeADBUtils.discoverRDPUnixSocket,
+           fakeADBUtils.setupForward
          );
        });
 
     it('installs the build extension as a temporarily installed addon',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
-         const {adb, firefoxClient} = params;
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
+         const {firefoxClient} = params;
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
@@ -520,10 +393,10 @@ describe('util/extension-runners/firefox-android', () => {
          // chosen to forward the android device RDP unix socket file.
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.forward,
+           fakeADBUtils.setupForward,
            'emulator-1',
+           `localfilesystem:${runnerInstance.selectedRDPSocketFile}`,
            `tcp:${runnerInstance.selectedTCPPort}`,
-           `localfilesystem:${runnerInstance.selectedRDPSocketFile}`
          );
 
          sinon.assert.calledWithMatch(
@@ -537,7 +410,7 @@ describe('util/extension-runners/firefox-android', () => {
          );
 
          sinon.assert.callOrder(
-           adb.fakeADBClient.forward,
+           fakeADBUtils.setupForward,
            firefoxClient,
            runnerInstance.remoteFirefox.installTemporaryAddon,
          );
@@ -545,7 +418,7 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('raises an error on addonId missing from installTemporaryAddon result',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams({
+         const {params} = prepareSelectedDeviceAndAPKParams({
            fakeRemoteFirefox: {
              installTemporaryAddon: sinon.spy(
                () => Promise.resolve(tempInstallResultMissingAddonId)
@@ -571,7 +444,7 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('reloads all reloadable extensions when reloadAllExtensions is called',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {params} = prepareSelectedDeviceAndAPKParams();
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
@@ -582,7 +455,7 @@ describe('util/extension-runners/firefox-android', () => {
        });
 
     it('reloads an extension by sourceDir', async () => {
-      const params = prepareSelectedValidDeviceAndAPKParams();
+      const {params} = prepareSelectedDeviceAndAPKParams();
 
       const runnerInstance = new FirefoxAndroidExtensionRunner(params);
       await runnerInstance.run();
@@ -596,7 +469,7 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('resolves to an array of WebExtError if the extension is not reloadable',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {params} = prepareSelectedDeviceAndAPKParams();
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
@@ -619,7 +492,7 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('resolves an AllExtensionsReloadError if any extension fails to reload',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams({
+         const {params} = prepareSelectedDeviceAndAPKParams({
            fakeRemoteFirefox: {
              reloadAddon: sinon.spy(
                () => Promise.reject(Error('Reload failure'))
@@ -646,8 +519,9 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('cleans the android device state when the exit method is called',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
-         const {adb} = params;
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          const cleanupCallback = sinon.spy(() => {
@@ -662,45 +536,41 @@ describe('util/extension-runners/firefox-android', () => {
          await runnerInstance.exit();
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.shell,
-           'emulator-1', ['am', 'force-stop', params.firefoxApk]
+           fakeADBUtils.amForceStopAPK,
+           'emulator-1', params.firefoxApk
          );
 
          assert.isString(runnerInstance.selectedArtifactsDir);
-         assert.match(
+         assert.equal(
            runnerInstance.selectedArtifactsDir,
-           /^\/sdcard\/web-ext-artifacts-/
+           '/fake/artifacts-dir/'
          );
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.shell,
-           'emulator-1', ['rm', '-rf', runnerInstance.selectedArtifactsDir]
+           fakeADBUtils.clearArtifactsDir,
+           'emulator-1'
          );
        });
 
     it('allows user to exit while waiting for the Android Firefox Debugger',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams({
-           fakeADBReadAllData: [
-             // Fake the output of running "pm list" on the device
-             fakeADBPackageList,
-             // Fake the output of "getprop ro.build.version.sdk"
-             '20',
-             // Fake the output of running "am force-stop SELECTED_APK"
-             '',
-             // Do not fake the unix socket file discovery.
-           ],
-         });
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
 
-         params.adb.util.readAll.onCall(3).callsFake(() => {
-           return new Promise((resolve) => {
-             fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
-             resolve('');
-           });
+         fakeADBUtils.discoverRDPUnixSocket = sinon.spy(async () => {
+           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+
+           sinon.assert.calledOnce(fakeADBUtils.setUserAbortDiscovery);
+           sinon.assert.calledWith(
+             fakeADBUtils.setUserAbortDiscovery
+           );
+
+           // Reject the expected error, if all the assertion passes.
+           throw new UsageError('fake user exit');
          });
 
          const fakeStdin = new tty.ReadStream();
-         sinon.spy(fakeStdin, 'setRawMode');
 
          params.stdin = fakeStdin;
 
@@ -718,23 +588,18 @@ describe('util/extension-runners/firefox-android', () => {
          assert.instanceOf(actualError, UsageError);
          assert.match(
            actualError && actualError.message,
-           /User requested exit during Android Firefox Debugger/
+           /fake user exit/
          );
        });
 
     it('rejects on Android Firefox Debugger discovery timeouts',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams({
-           fakeADBReadAllData: [
-             // Fake the output of running "pm list" on the device.
-             fakeADBPackageList,
-             // Fake the output of "getprop ro.build.version.sdk"
-             '20',
-             // Fake the output of running am force-stop SELECTED_APK.
-             '',
-             // Fake an empty result during unix socket discovery.
-             '',
-           ],
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
+
+         fakeADBUtils.discoverRDPUnixSocket = sinon.spy(() => {
+           return Promise.reject(new WebExtError('fake timeout'));
          });
 
          params.firefoxAndroidTimeout = 0;
@@ -751,13 +616,13 @@ describe('util/extension-runners/firefox-android', () => {
          assert.instanceOf(actualError, WebExtError);
          assert.match(
            actualError && actualError.message,
-           /Timeout while waiting for the Android Firefox/
+           /fake timeout/
          );
        });
 
     it('rejects if an extension has never been uploaded on the device',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
+         const {params} = prepareSelectedDeviceAndAPKParams();
 
          const fakeFirefoxClient = params.firefoxClient;
 
@@ -786,8 +651,9 @@ describe('util/extension-runners/firefox-android', () => {
 
     it('calls the callback registered on cleanup when firefox closes',
        async () => {
-         const params = prepareSelectedValidDeviceAndAPKParams();
-         const {adb} = params;
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          const cleanupCallback = sinon.spy(() => {
@@ -812,16 +678,49 @@ describe('util/extension-runners/firefox-android', () => {
          await waitFinalCallback;
 
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.shell,
-           'emulator-1', ['am', 'force-stop', params.firefoxApk]
+           fakeADBUtils.amForceStopAPK,
+           'emulator-1', params.firefoxApk
          );
 
          sinon.assert.calledOnce(cleanupCallback);
          sinon.assert.calledOnce(anotherCallback);
        });
 
+    it('checks the granted android permissions on Android >= 21',
+       async () => {
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
+
+         fakeADBUtils.getAndroidVersionNumber = sinon.spy(() => {
+           Promise.resolve(21);
+         });
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+
+         await runnerInstance.run();
+
+         sinon.assert.calledWithMatch(
+           fakeADBUtils.getAndroidVersionNumber,
+           'emulator-1'
+         );
+
+         sinon.assert.calledWithMatch(
+           fakeADBUtils.ensureRequiredAPKRuntimePermissions,
+           'emulator-1', 'org.mozilla.firefox', [
+             'android.permission.READ_EXTERNAL_STORAGE',
+             'android.permission.WRITE_EXTERNAL_STORAGE',
+           ]
+         );
+
+         sinon.assert.callOrder(
+           fakeADBUtils.getAndroidVersionNumber,
+           fakeADBUtils.ensureRequiredAPKRuntimePermissions
+         );
+       });
+
     it('logs warnings on the unsupported CLI options', async () => {
-      const params = prepareSelectedValidDeviceAndAPKParams();
+      const params = prepareSelectedDeviceAndAPKParams();
 
       consoleStream.startCapturing();
 
@@ -859,6 +758,7 @@ describe('util/extension-runners/firefox-android', () => {
       ];
 
       for (const testCase of optionsWarningTestCases) {
+        // $FLOW_IGNORE: allow overriden params for testing purpose.
         new FirefoxAndroidExtensionRunner({ // eslint-disable-line no-new
           ...params,
           ...(testCase.params),

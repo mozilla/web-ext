@@ -1,7 +1,6 @@
 /* @flow */
-import defaultADB from 'adbkit';
-
 import defaultBuildExtension from './build';
+import DefaultADBUtils from '../util/adb';
 import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
@@ -158,7 +157,7 @@ export default async function run(
       // Injected dependencies.
       firefoxApp,
       firefoxClient,
-      adb: defaultADB,
+      ADBUtils: DefaultADBUtils,
       desktopNotifications: defaultDesktopNotifications,
       buildSourceDir: (extensionSourceDir: string) => {
         return buildExtension({
