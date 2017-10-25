@@ -50,6 +50,8 @@ const prefsCommon: FirefoxPreferences = {
   'extensions.installDistroAddons': false,
   // Allow installing extensions dropped into the profile folder.
   'extensions.autoDisableScopes': 10,
+  // Allow legacy add-ons since version 57 (DevEdition)
+  'extensions.legacy.enabled': true,
 
   // Disable app update.
   'app.update.enabled': false,
