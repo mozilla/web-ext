@@ -24,6 +24,8 @@ type ProgramOptions = {|
   absolutePackageDir?: string,
 |}
 
+export type VersionGetterFn = (absolutePackageDir: string) => string;
+
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 type ExecuteOptions = {
@@ -194,8 +196,6 @@ declare var WEBEXT_BUILD_ENV: string;
 type VersionGetterOptions = {
   globalEnv?: string,
 };
-
-export type VersionGetterFn = (absolutePackageDir: string) => string;
 
 export function defaultVersionGetter(
   absolutePackageDir: string,
