@@ -34,6 +34,7 @@ type FirefoxDesktopSpecificRunnerParams = {|
   customPrefs?: FirefoxPreferences,
   browserConsole: boolean,
   firefoxBinary: string,
+  firefoxPort: number,
   preInstall: boolean,
 
   // Firefox desktop injected dependencies.
@@ -81,9 +82,16 @@ export class FirefoxDesktopExtensionRunner {
    * Setup the Firefox Profile and run a Firefox Desktop instance.
    */
   async run(): Promise<void> {
-    // Get a firefox profile with the custom Prefs set (a new or a cloned one).
-    // Pre-install extensions as proxy if needed (and disable auto-reload if you do)
-    await this.setupProfileDir();
+    const {
+      firefoxPort,
+    } = this.params;
+
+    if (!firefoxPort) {
+        // (unless connecting to an existing instance)
+        // Get a firefox profile with the custom Prefs set (a new or a cloned one).
+        // Pre-install extensions as proxy if needed (and disable auto-reload if you do)
+        await this.setupProfileDir();
+    }
 
     // (if reload is enabled):
     // - Connect to the firefox instance on RDP
@@ -180,6 +188,7 @@ export class FirefoxDesktopExtensionRunner {
       preInstall,
       profilePath,
       firefoxApp,
+      firefoxPort,
     } = this.params;
 
     if (profilePath) {
@@ -208,42 +217,63 @@ export class FirefoxDesktopExtensionRunner {
     }
   }
 
+  runCleanup() {
+    for (const cleanupCb of this.cleanupCallbacks) {
+      try {
+        cleanupCb();
+      } catch (error) {
+        log.error(`Exception on executing cleanup callback: ${error}`);
+      }
+    }
+  }
+
   async startFirefoxInstance() {
     const {
       browserConsole,
       extensions,
       firefoxBinary,
+      firefoxPort,
       preInstall,
       startUrl,
       firefoxApp,
       firefoxClient,
     } = this.params;
 
-    const binaryArgs = [];
 
-    if (browserConsole) {
-      binaryArgs.push('-jsconsole');
-    }
-    if (startUrl) {
-      const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
-      for (const url of urls) {
-        binaryArgs.push('--url', url);
-      }
-    }
+    if (firefoxPort) {
+        // Connect to an already running Firefox
+        let cleanupCallbacks = this.cleanupCallbacks;
+        let runCleanup = this.runCleanup.bind(this);
 
-    this.runningInfo = await firefoxApp.run(this.profile, {
-      firefoxBinary, binaryArgs,
-    });
+        // TODO mock running info. Turn into something real or allow
+        // FirefoxProcess to be null
+        this.runningInfo = {
+          debuggerPort: firefoxPort,
+          firefox: {
+            kill: runCleanup
+          }
+        };
+    } else {
+        const binaryArgs = [];
 
-    this.runningInfo.firefox.on('close', () => {
-      for (const cleanupCb of this.cleanupCallbacks) {
-        try {
-          cleanupCb();
-        } catch (error) {
-          log.error(`Exception on executing cleanup callback: ${error}`);
+        if (browserConsole) {
+          binaryArgs.push('-jsconsole');
         }
-      }
-    });
+        if (startUrl) {
+          const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
+          for (const url of urls) {
+            binaryArgs.push('--url', url);
+          }
+        }
+
+        this.runningInfo = await firefoxApp.run(this.profile, {
+          firefoxBinary, binaryArgs,
+        });
+
+        this.runningInfo.firefox.on('close', () => {
+          this.runCleanup()
+        });
+    }
 
     if (!preInstall) {
       const remoteFirefox = this.remoteFirefox = await firefoxClient({

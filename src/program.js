@@ -341,6 +341,15 @@ Example: $0 --help run.
         demand: false,
         type: 'string',
       },
+      'firefox-port': {
+        alias: 'P',
+        describe: 'Attach to a running Firefox on this developer tools ' +
+                  'port. To do so, open the developer toolbar and enter ' +
+                  'e.g. `listen 6060`. This flag usually does not need to ' +
+                  'be set and is only for advanced use.',
+        demand: false,
+        type: 'number'
+      },
       'keep-profile-changes': {
         describe: 'Run Firefox directly in custom profile. Any changes to ' +
                   'the profile will be saved.',
