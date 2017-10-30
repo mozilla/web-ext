@@ -217,8 +217,7 @@ describe('sign', () => {
       return _sign()
         .then(({signAddon, signingResult}) => {
           sinon.assert.called(signAddon);
-          assert.strictEqual(signAddon.firstCall.args[0].id,
-                             undefined);
+          sinon.assert.calledWithMatch(signAddon, {id: undefined});
           assert.equal(signingResult.id, 'auto-generated-id');
 
           // Re-run the sign command again.
@@ -266,27 +265,23 @@ describe('sign', () => {
     (tmpDir) => {
       const stubs = getStubs();
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
+      const applications: ExtensionManifestApplications =
+        stubs.preValidatedManifest.applications || {gecko: {}};
+        
       return sign(tmpDir, stubs, {extraArgs: {artifactsDir}})
         .then(() => {
           sinon.assert.called(stubs.signAddon);
           sinon.assert.calledWithMatch(stubs.signAddon,
             {
               apiKey: stubs.signingConfig.apiKey,
-              apiSecret: stubs.signingConfig.apiSecret,
               apiProxy: stubs.signingConfig.apiProxy,
-              timeout: stubs.signingConfig.timeout,
-              xpiPath: stubs.buildResult.extensionPath,
-            }
-          );
-
-          const applications: ExtensionManifestApplications =
-            stubs.preValidatedManifest.applications || {gecko: {}};
-
-          sinon.assert.calledWithMatch(stubs.signAddon,
-            {
-              id: applications.gecko.id,
-              version: stubs.preValidatedManifest.version,
+              apiSecret: stubs.signingConfig.apiSecret,
+              apiUrlPrefix: stubs.signingConfig.apiUrlPrefix,
               downloadDir: artifactsDir,
+              id: applications.gecko.id,
+              timeout: stubs.signingConfig.timeout,
+              version: stubs.preValidatedManifest.version,
+              xpiPath: stubs.buildResult.extensionPath,
             }
           );
         });
