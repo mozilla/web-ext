@@ -267,7 +267,6 @@ describe('sign', () => {
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
       const applications: ExtensionManifestApplications =
         stubs.preValidatedManifest.applications || {gecko: {}};
-        
       return sign(tmpDir, stubs, {extraArgs: {artifactsDir}})
         .then(() => {
           sinon.assert.called(stubs.signAddon);
