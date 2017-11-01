@@ -70,7 +70,7 @@
     "parse-json": "2.2.0",
     "regenerator-runtime": "0.10.5",
     "require-uncached": "1.0.3",
-    "sign-addon": "0.2.1",
+    "sign-addon": "0.2.2",
     "source-map-support": "0.5.0",
     "stream-to-promise": "2.2.0",
     "tmp": "0.0.30",
