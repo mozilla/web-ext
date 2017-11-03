@@ -222,8 +222,9 @@ describe('firefox', () => {
         baseProfile.setPreference('webext.customSetting', true);
         baseProfile.updatePreferences();
 
-        return firefox.copyProfile(baseProfile.path(),
-          {configureThisProfile: (profile) => Promise.resolve(profile)})
+        return firefox.copyProfile(baseProfile.path(), {
+          configureThisProfile: (profile) => Promise.resolve(profile),
+        })
           .then((profile) => fs.readFile(profile.userPrefs))
           .then((userPrefs) => {
             assert.include(userPrefs.toString(), 'webext.customSetting');
@@ -238,7 +239,8 @@ describe('firefox', () => {
       const copyFromUserProfile = sinon.spy(
         (config, cb) => cb(new Error('simulated: could not find profile')));
 
-      return firefox.copyProfile('/dev/null/non_existent_path',
+      return firefox.copyProfile(
+        '/dev/null/non_existent_path',
         {
           copyFromUserProfile,
           configureThisProfile: (profile) => Promise.resolve(profile),
@@ -263,7 +265,8 @@ describe('firefox', () => {
       const copyFromUserProfile = sinon.spy(
         (config, callback) => callback(null, profileToCopy));
 
-      return firefox.copyProfile(name,
+      return firefox.copyProfile(
+        name,
         {
           copyFromUserProfile,
           configureThisProfile: (profile) => Promise.resolve(profile),
@@ -282,8 +285,9 @@ describe('firefox', () => {
         const configureThisProfile =
           sinon.spy((profile) => Promise.resolve(profile));
 
-        return firefox.copyProfile(baseProfile.path(),
-          {app, configureThisProfile})
+        return firefox.copyProfile(baseProfile.path(), {
+          app, configureThisProfile,
+        })
           .then((profile) => {
             sinon.assert.called(configureThisProfile);
             sinon.assert.calledWith(configureThisProfile, profile);
@@ -308,37 +312,37 @@ describe('firefox', () => {
        });
 
     it('allows profile name if it is not listed as default in profiles.ini',
-      async () => {
-        return withTempDir(async (tmpDir) => {
-          const profilesDirPath = tmpDir.path();
-          const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
+       async () => {
+         return withTempDir(async (tmpDir) => {
+           const profilesDirPath = tmpDir.path();
+           const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
 
-          await createFakeProfilesIni(profilesDirPath, [
-            {
-              Name: 'manually-set-default',
-              Path: 'fake-default-profile',
-              IsRelative: 1,
-              Default: 1,
-            },
-          ]);
+           await createFakeProfilesIni(profilesDirPath, [
+             {
+               Name: 'manually-set-default',
+               Path: 'fake-default-profile',
+               IsRelative: 1,
+               Default: 1,
+             },
+           ]);
 
-          const isDefault = await firefox.isDefaultProfile(
-            'manually-set-default', FakeProfileFinder
-          );
-          assert.equal(
-            isDefault, true,
-            'Manually configured default profile'
-          );
+           const isDefault = await firefox.isDefaultProfile(
+             'manually-set-default', FakeProfileFinder
+           );
+           assert.equal(
+             isDefault, true,
+             'Manually configured default profile'
+           );
 
-          const isNotDefault = await firefox.isDefaultProfile(
-            'unkown-profile-name', FakeProfileFinder
-          );
-          assert.equal(
-            isNotDefault, false,
-            'Unknown profile name'
-          );
-        });
-      });
+           const isNotDefault = await firefox.isDefaultProfile(
+             'unkown-profile-name', FakeProfileFinder
+           );
+           assert.equal(
+             isNotDefault, false,
+             'Unknown profile name'
+           );
+         });
+       });
 
     it('allows profile path if it is not listed as default in profiles.ini',
        async () => {
@@ -444,7 +448,7 @@ describe('firefox', () => {
            assert.match(exception && exception.message, /Fake fs stat error/);
          });
        }
-      );
+    );
 
   });
 
@@ -490,29 +494,29 @@ describe('firefox', () => {
 
   describe('useProfile', () => {
     it('rejects to a UsageError when used on a default Firefox profile',
-      async () => {
-        const configureThisProfile = sinon.spy(
-          (profile) => Promise.resolve(profile)
-        );
-        const isFirefoxDefaultProfile = sinon.spy(
-          () => Promise.resolve(true)
-        );
-        let exception;
+       async () => {
+         const configureThisProfile = sinon.spy(
+           (profile) => Promise.resolve(profile)
+         );
+         const isFirefoxDefaultProfile = sinon.spy(
+           () => Promise.resolve(true)
+         );
+         let exception;
 
-        try {
-          await firefox.useProfile('default', {
-            configureThisProfile,
-            isFirefoxDefaultProfile,
-          });
-        } catch (error) {
-          exception = error;
-        }
+         try {
+           await firefox.useProfile('default', {
+             configureThisProfile,
+             isFirefoxDefaultProfile,
+           });
+         } catch (error) {
+           exception = error;
+         }
 
-        assert.match(
-          exception && exception.message,
-            /Cannot use --keep-profile-changes on a default profile/
-        );
-      });
+         assert.match(
+           exception && exception.message,
+           /Cannot use --keep-profile-changes on a default profile/
+         );
+       });
 
     it('resolves to a FirefoxProfile instance', () => withBaseProfile(
       (baseProfile) => {

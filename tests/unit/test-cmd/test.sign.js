@@ -103,7 +103,8 @@ describe('sign', () => {
   it('allows an empty application ID when signing', () => withTempDir(
     (tmpDir) => {
       const stubs = getStubs();
-      return sign(tmpDir, stubs,
+      return sign(
+        tmpDir, stubs,
         {
           extraOptions: {
             preValidatedManifest: manifestWithoutApps,
@@ -123,7 +124,8 @@ describe('sign', () => {
     (tmpDir) => {
       const customId = 'some-custom-id';
       const stubs = getStubs();
-      return sign(tmpDir, stubs,
+      return sign(
+        tmpDir, stubs,
         {
           extraArgs: {
             id: customId,
@@ -168,7 +170,8 @@ describe('sign', () => {
     (tmpDir) => {
       const customId = 'some-custom-id';
       const stubs = getStubs();
-      return sign(tmpDir, stubs,
+      return sign(
+        tmpDir, stubs,
         {
           extraArgs: {
             id: customId,
@@ -197,7 +200,8 @@ describe('sign', () => {
           id: 'auto-generated-id',
         }));
 
-        return sign(tmpDir,
+        return sign(
+          tmpDir,
           {
             ...stubs,
             signAddon,
@@ -256,7 +260,7 @@ describe('sign', () => {
         .catch((error) => {
           assert.instanceOf(error, WebExtError);
           assert.match(error.message,
-            /The WebExtension could not be signed/);
+                       /The WebExtension could not be signed/);
         });
     }
   ));
@@ -270,19 +274,17 @@ describe('sign', () => {
       return sign(tmpDir, stubs, {extraArgs: {artifactsDir}})
         .then(() => {
           sinon.assert.called(stubs.signAddon);
-          sinon.assert.calledWithMatch(stubs.signAddon,
-            {
-              apiKey: stubs.signingConfig.apiKey,
-              apiProxy: stubs.signingConfig.apiProxy,
-              apiSecret: stubs.signingConfig.apiSecret,
-              apiUrlPrefix: stubs.signingConfig.apiUrlPrefix,
-              downloadDir: artifactsDir,
-              id: applications.gecko.id,
-              timeout: stubs.signingConfig.timeout,
-              version: stubs.preValidatedManifest.version,
-              xpiPath: stubs.buildResult.extensionPath,
-            }
-          );
+          sinon.assert.calledWithMatch(stubs.signAddon, {
+            apiKey: stubs.signingConfig.apiKey,
+            apiProxy: stubs.signingConfig.apiProxy,
+            apiSecret: stubs.signingConfig.apiSecret,
+            apiUrlPrefix: stubs.signingConfig.apiUrlPrefix,
+            downloadDir: artifactsDir,
+            id: applications.gecko.id,
+            timeout: stubs.signingConfig.timeout,
+            version: stubs.preValidatedManifest.version,
+            xpiPath: stubs.buildResult.extensionPath,
+          });
         });
     }
   ));

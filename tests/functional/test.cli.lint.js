@@ -22,5 +22,5 @@ describe('web-ext lint', () => {
          }
        });
      })
-    );
+  );
 });

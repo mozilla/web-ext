@@ -450,7 +450,7 @@ Example: $0 --help run.
       },
     })
     .command('docs', 'Open the web-ext documentation in a browser',
-      commands.docs, {});
+             commands.docs, {});
 
   return program.execute(absolutePackageDir, runOptions);
 }
