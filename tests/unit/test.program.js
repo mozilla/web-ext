@@ -536,18 +536,19 @@ describe('program.main', () => {
       })
       .then(makeSureItFails())
       .catch((error) => {
-        if (!(error instanceof UsageError)) {
-          const {capturedMessages} = consoleStream;
-          consoleStream.stopCapturing();
+        const {capturedMessages} = consoleStream;
+        consoleStream.stopCapturing();
 
-          assert.match(error.message, /some error/);
-          assert.ok(
-            capturedMessages.some(
-              (message) => message.match(/some error/)
-          ));
-          sinon.assert.notCalled(fakeApplyConfigToArgv);
-          sinon.assert.notCalled(fakeProcess.exit);
+        if (error instanceof UsageError) {
+          throw error;
         }
+
+        assert.match(error.message, /some error/);
+        assert.ok(capturedMessages.some(
+          (message) => message.match(/some error/)
+        ));
+        sinon.assert.notCalled(fakeApplyConfigToArgv);
+        sinon.assert.notCalled(fakeProcess.exit);
       });
   });
 
@@ -619,17 +620,18 @@ describe('program.main', () => {
       })
       .then(makeSureItFails())
       .catch((error) => {
-        if (!(error instanceof UsageError)) {
-          const {capturedMessages} = consoleStream;
-          consoleStream.stopCapturing();
+        const {capturedMessages} = consoleStream;
+        consoleStream.stopCapturing();
 
-          assert.match(error.message, /some error/);
-          assert.ok(
-            capturedMessages.some(
-              (message) => message.match(/some error/)
-          ));
-          sinon.assert.notCalled(fakeProcess.exit);
+        if (error instanceof UsageError) {
+          throw error;
         }
+
+        assert.match(error.message, /some error/);
+        assert.ok(capturedMessages.some(
+          (message) => message.match(/some error/)
+        ));
+        sinon.assert.notCalled(fakeProcess.exit);
       });
   });
 });
