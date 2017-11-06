@@ -118,7 +118,7 @@
     "load-grunt-tasks": "3.5.2",
     "mocha": "3.5.3",
     "mocha-multi": "0.11.0",
-    "nsp": "2.8.1",
+    "nsp": "3.1.0",
     "object.entries": "1.0.4",
     "object.values": "1.0.4",
     "prettyjson": "1.2.1",
