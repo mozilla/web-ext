@@ -390,32 +390,39 @@ Example: $0 --help run.
         type: 'boolean',
       },
       // Firefox for Android CLI options.
-      'adb-binary': {
-        alias: ['adb-bin'],
-        describe: 'Select a specific adb binary.',
+      'adb-bin': {
+        describe: 'Specify a custom path to the adb binary',
         demand: false,
         type: 'string',
+        requiresArg: true,
       },
       'adb-host': {
         describe: 'Connect to adb on the specified host',
         demand: false,
         type: 'string',
+        requiresArg: true,
       },
       'adb-port': {
         describe: 'Connect to adb on the specified port',
         demand: false,
         type: 'string',
+        requiresArg: true,
       },
       'adb-device': {
         alias: ['android-device'],
         describe: 'Connect to the specified adb device name',
         demand: false,
         type: 'string',
+        requiresArg: true,
       },
       'firefox-apk': {
-        describe: 'Use a specific Firefox for Android apk id',
+        describe: (
+          'Run a specific Firefox for Android APK. ' +
+          'Example: org.mozilla.fennec_aurora'
+        ),
         demand: false,
         type: 'string',
+        requiresArg: true,
       },
     })
     .command('lint', 'Validate the extension source', commands.lint, {

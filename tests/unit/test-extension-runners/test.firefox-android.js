@@ -210,7 +210,7 @@ describe('util/extension-runners/firefox-android', () => {
 
         assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
-                     /Android Device not found: /);
+                     /Android Device emulator-3 was not found in list:/);
       });
     });
 
@@ -290,7 +290,7 @@ describe('util/extension-runners/firefox-android', () => {
            assert.instanceOf(actualException, UsageError);
            assert.match(
              actualException && actualException.message,
-               /Package not found: /
+               /Package org.mozilla.f was not found in list:/
            );
          });
        });

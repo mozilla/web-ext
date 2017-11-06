@@ -40,7 +40,7 @@ export type CmdRunParams = {|
   target?: string | Array<string>,
 
   // Android CLI options.
-  adbBinary?: string,
+  adbBin?: string,
   adbHost?: string,
   adbPort?: string,
   adbDevice?: string,
@@ -76,7 +76,7 @@ export default async function run(
     startUrl,
     target,
     // Android CLI options.
-    adbBinary,
+    adbBin,
     adbHost,
     adbPort,
     adbDevice,
@@ -152,7 +152,7 @@ export default async function run(
       adbDevice,
       adbHost,
       adbPort,
-      adbBinary,
+      adbBin,
 
       // Injected dependencies.
       firefoxApp,

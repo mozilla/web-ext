@@ -57,7 +57,7 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   browserConsole?: boolean,
 
   // Firefox android injected dependencies.
-  adbBinary?: string,
+  adbBin?: string,
   adbHost?: string,
   adbPort?: string,
   adbDevice?: string,
@@ -105,13 +105,13 @@ export class FirefoxAndroidExtensionRunner {
 
   async run(): Promise<void> {
     const {
-      adbBinary,
+      adbBin,
       adbHost,
       adbPort,
     } = this.params;
 
     this.adbUtils = new this.params.ADBUtils({
-      adbBinary, adbHost, adbPort,
+      adbBin, adbHost, adbPort,
     });
 
     await this.adbDevicesDiscoveryAndSelect();
@@ -318,7 +318,7 @@ export class FirefoxAndroidExtensionRunner {
     if (foundDevices.length === 0) {
       const devicesMsg = JSON.stringify(devices);
       throw new UsageError(
-        `Android Device not found: ${adbDevice} in ${devicesMsg}`);
+        `Android Device ${adbDevice} was not found in list: ${devicesMsg}`);
     }
 
     this.selectedAdbDevice = foundDevices[0];
@@ -356,11 +356,13 @@ export class FirefoxAndroidExtensionRunner {
 
     if (filteredPackages.length === 0) {
       const pkgsList = pkgsListMsg(filteredPackages);
-      throw new UsageError(`Package not found: ${firefoxApk} in ${pkgsList}`);
+      throw new UsageError(
+        `Package ${firefoxApk} was not found in list: ${pkgsList}`
+      );
     }
 
     this.selectedFirefoxApk = filteredPackages[0];
-    log.info(`Selected Firefox for Android APK: ${this.selectedFirefoxApk}`);
+    log.debug(`Selected Firefox for Android APK: ${this.selectedFirefoxApk}`);
   }
 
   async adbForceStopSelectedPackage() {
@@ -415,7 +417,7 @@ export class FirefoxAndroidExtensionRunner {
       },
     } = this;
     // Create the preferences file and the Fennec temporary profile.
-    log.info(`Preparing a temporary profile for ${selectedFirefoxApk}...`);
+    log.debug(`Preparing a temporary profile for ${selectedFirefoxApk}...`);
 
     const profile = await firefoxApp.createProfile({app: 'fennec'});
 
@@ -446,9 +448,9 @@ export class FirefoxAndroidExtensionRunner {
 
     const deviceProfileDir = this.getDeviceProfileDir();
 
-    log.info(
-      `Starting ${selectedFirefoxApk} on the profile ${deviceProfileDir}...`
-    );
+    log.info(`Starting ${selectedFirefoxApk}...`);
+
+    log.debug(`Using profile ${deviceProfileDir}`);
 
     await adbUtils.startFirefoxAPK(
       selectedAdbDevice, selectedFirefoxApk, deviceProfileDir

@@ -13,7 +13,7 @@ const log = createLogger(__filename);
 export type ADBUtilsParams = {|
   adb?: typeof defaultADB,
   // ADB configs.
-  adbBinary?: string,
+  adbBin?: string,
   adbHost?: string,
   adbPort?: string,
   adbDevice?: string,
@@ -57,7 +57,7 @@ export default class ADBUtils {
 
     const {
       adb,
-      adbBinary,
+      adbBin,
       adbHost,
       adbPort,
     } = params;
@@ -65,7 +65,7 @@ export default class ADBUtils {
     this.adb = adb || defaultADB;
 
     this.adbClient = this.adb.createClient({
-      bin: adbBinary,
+      bin: adbBin,
       host: adbHost,
       port: adbPort,
     });
