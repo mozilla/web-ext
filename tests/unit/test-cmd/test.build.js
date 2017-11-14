@@ -263,16 +263,19 @@ describe('build', () => {
           return buildResult;
         })
         .then((buildResult) => {
-          assert.equal(onSourceChange.called, true);
           const args = onSourceChange.firstCall.args[0];
-          assert.equal(args.sourceDir, sourceDir);
-          assert.equal(args.artifactsDir, artifactsDir);
+
+          sinon.assert.called(onSourceChange);
+          sinon.assert.calledWithMatch(onSourceChange,
+            {artifactsDir, sourceDir}
+          );
+
           assert.typeOf(args.onChange, 'function');
 
           // Make sure it uses the file filter.
           assert.typeOf(args.shouldWatchFile, 'function');
           args.shouldWatchFile('/some/path');
-          assert.equal(fileFilter.wantFile.called, true);
+          sinon.assert.called(fileFilter.wantFile);
 
           // Remove the built extension.
           return fs.unlink(buildResult.extensionPath)
@@ -304,9 +307,8 @@ describe('build', () => {
         manifestData: basicManifest, onSourceChange, packageCreator,
       })
         .then(() => {
-          assert.equal(onSourceChange.called, true);
-          assert.equal(packageCreator.callCount, 1);
-
+          sinon.assert.called(onSourceChange);
+          sinon.assert.calledOnce(packageCreator);
           const {onChange} = onSourceChange.firstCall.args[0];
           packageResult = Promise.reject(new Error(
             'Simulate an error on the second call to packageCreator()'));
