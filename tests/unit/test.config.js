@@ -12,7 +12,7 @@ import {
   loadJSConfigFile,
 } from '../../src/config';
 import {withTempDir} from '../../src/util/temp-dir';
-import {UsageError} from '../../src/errors';
+import {UsageError, WebExtError} from '../../src/errors';
 
 type MakeArgvParams = {|
   userCmd?: Array<string>,
@@ -657,39 +657,8 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError,
-        'UsageError: Option: apiUrl was defined without a type.');
-    });
-
-    it('throws an error when the type of one of them is in config' +
-      ' missing', () => {
-      const params = makeArgv({
-        userCmd: ['sign'],
-        command: 'sign',
-        commandOpt: {
-          'api-url': {
-            requiresArg: true,
-            demand: false,
-            default: 'pretend-default-value-of-apiKey',
-          },
-          'api-key': {
-            requiresArg: true,
-            demand: false,
-            type: 'string',
-            default: 'pretend-default-value-of-apiKey',
-          },
-        },
-      });
-      const configObject = {
-        sign: {
-          apiUrl: 2,
-          apiKey: 'fake-api-key',
-        },
-      };
-      assert.throws(() => {
-        applyConf({...params, configObject});
-      }, UsageError,
-        'UsageError: Option: apiUrl was defined without a type.');
+      }, WebExtError,
+        'WebExtError: Option: apiUrl was defined without a type.');
     });
 
     it('throws an error when type of unrelated sub option is invalid', () => {

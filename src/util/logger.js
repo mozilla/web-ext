@@ -110,7 +110,7 @@ export type CreateBunyanLogParams = {|
 export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
 
 export type CreateLoggerOptions = {|
-  createBunyanLog?: CreateBunyanLogFn,
+  createBunyanLog: CreateBunyanLogFn,
 |};
 
 export function createLogger(

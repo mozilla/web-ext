@@ -288,7 +288,7 @@ Example: $0 --help run.
     },
     'config': {
       alias: 'c',
-      describe: 'Location of the config file',
+      describe: 'Path to the config file',
       default: undefined,
       requiresArg: true,
       type: 'string',

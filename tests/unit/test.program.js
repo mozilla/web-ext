@@ -20,7 +20,7 @@ import {
   ErrorWithCode,
 } from './helpers';
 import {
-  consoleStream,
+  consoleStream, // instance is imported to inspect logged messages
   ConsoleStream,
 } from '../../src/util/logger';
 
@@ -220,6 +220,33 @@ describe('program.Program', () => {
       .then(() => {
         assert.equal(logStream.makeVerbose.called, false);
       });
+  });
+
+  it('logs UsageErrors into console', () => {
+    // Clear console stream from previous messages and start recording
+    consoleStream.stopCapturing();
+    consoleStream.flushCapturedLogs();
+    consoleStream.startCapturing();
+
+    const program = new Program(['thing']).command('thing', '', () => {
+      throw new UsageError('some error');
+    });
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+      },
+    });
+    return execProgram(program)
+      .then(makeSureItFails())
+      .catch(onlyInstancesOf(UsageError, (error) => {
+        const {capturedMessages} = consoleStream;
+        // Stop recording
+        consoleStream.stopCapturing();
+        assert.match(error.message, /some error/);
+        assert.ok(
+          capturedMessages.some((message) => message.match(/some error/)
+        ));
+      }));
   });
 
   it('throws an error about unknown commands', () => {
@@ -441,8 +468,13 @@ describe('program.main', () => {
       lint: () => Promise.resolve(),
     });
     const fakePath = 'path/to/web-ext-config.js';
+    const configObject = {
+      prop: 'prop',
+    };
     const resolvedFakePath = path.resolve(fakePath);
-    const fakeLoadJSConfigFile = sinon.spy(() => {});
+    const fakeLoadJSConfigFile = sinon.spy(() => {
+      return configObject;
+    });
     const fakeApplyConfigToArgv = sinon.spy(() => {});
 
     return execProgram(
@@ -463,175 +495,12 @@ describe('program.main', () => {
         sinon.assert.calledOnce(fakeApplyConfigToArgv);
         sinon.assert.calledWith(fakeApplyConfigToArgv, sinon.match({
           configFileName: resolvedFakePath,
+          configObject,
+          argv: {
+            _: ['lint'],
+            config: fakePath,
+          },
         }));
-      });
-  });
-
-  it('throws a UsageError when the config file can\'t be loaded', () => {
-    const fakeProcess = createFakeProcess();
-    const fakeCommands = fake(commands, {
-      lint: () => Promise.resolve(),
-    });
-    const fakePath = 'path/to/web-ext-config.js';
-    const fakeLoadJSConfigFile = sinon.spy(() => {
-      throw new UsageError('bad path');
-    });
-    const fakeApplyConfigToArgv = sinon.spy(() => {});
-
-    consoleStream.stopCapturing();
-    consoleStream.flushCapturedLogs();
-    consoleStream.startCapturing();
-
-    return execProgram(
-      ['lint', '--config', fakePath],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          shouldExitProgram: false,
-          systemProcess: fakeProcess,
-          applyConfigToArgv: fakeApplyConfigToArgv,
-          loadJSConfigFile: fakeLoadJSConfigFile,
-        },
-      })
-      .then(makeSureItFails())
-      .catch(onlyInstancesOf(UsageError, (error) => {
-        const {capturedMessages} = consoleStream;
-        consoleStream.stopCapturing();
-
-        assert.match(error.message, /bad path/);
-        assert.ok(
-          capturedMessages.some(
-            (message) => message.match(/bad path/)
-        ));
-        sinon.assert.notCalled(fakeApplyConfigToArgv);
-        sinon.assert.notCalled(fakeProcess.exit);
-      }));
-  });
-
-  it('throws when config file loading raises an unexpected error', () => {
-    const fakeProcess = createFakeProcess();
-    const fakeCommands = fake(commands, {
-      lint: () => Promise.resolve(),
-    });
-    const fakePath = 'path/to/web-ext-config.js';
-    const fakeLoadJSConfigFile = sinon.spy(() => {
-      throw new Error('some error');
-    });
-    const fakeApplyConfigToArgv = sinon.spy(() => {});
-
-    consoleStream.stopCapturing();
-    consoleStream.flushCapturedLogs();
-    consoleStream.startCapturing();
-
-    return execProgram(
-      ['lint', '--config', fakePath],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          shouldExitProgram: false,
-          systemProcess: fakeProcess,
-          applyConfigToArgv: fakeApplyConfigToArgv,
-          loadJSConfigFile: fakeLoadJSConfigFile,
-        },
-      })
-      .then(makeSureItFails())
-      .catch((error) => {
-        const {capturedMessages} = consoleStream;
-        consoleStream.stopCapturing();
-
-        if (error instanceof UsageError) {
-          throw error;
-        }
-
-        assert.match(error.message, /some error/);
-        assert.ok(capturedMessages.some(
-          (message) => message.match(/some error/)
-        ));
-        sinon.assert.notCalled(fakeApplyConfigToArgv);
-        sinon.assert.notCalled(fakeProcess.exit);
-      });
-  });
-
-  it('throws a UsageError when the loaded config can\'t be applied', () => {
-    const fakeProcess = createFakeProcess();
-    const fakeCommands = fake(commands, {
-      lint: () => Promise.resolve(),
-    });
-    const fakePath = 'path/to/web-ext-config.js';
-    const fakeLoadJSConfigFile = sinon.spy(() => {});
-    const fakeApplyConfigToArgv = sinon.spy(() => {
-      throw new UsageError('bad config option');
-    });
-
-    consoleStream.stopCapturing();
-    consoleStream.flushCapturedLogs();
-    consoleStream.startCapturing();
-
-    return execProgram(
-      ['lint', '--config', fakePath],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          shouldExitProgram: false,
-          systemProcess: fakeProcess,
-          applyConfigToArgv: fakeApplyConfigToArgv,
-          loadJSConfigFile: fakeLoadJSConfigFile,
-        },
-      })
-      .then(makeSureItFails())
-      .catch(onlyInstancesOf(UsageError, (error) => {
-        const {capturedMessages} = consoleStream;
-        consoleStream.stopCapturing();
-
-        assert.match(error.message, /bad config option/);
-        assert.ok(
-          capturedMessages.some(
-            (message) => message.match(/bad config option/)
-        ));
-        sinon.assert.notCalled(fakeProcess.exit);
-      }));
-  });
-
-  it('throws when fakeApplyConfigToArgv throws an unexpected error', () => {
-    const fakeProcess = createFakeProcess();
-    const fakeCommands = fake(commands, {
-      lint: () => Promise.resolve(),
-    });
-    const fakePath = 'path/to/web-ext-config.js';
-    const fakeLoadJSConfigFile = sinon.spy(() => {});
-    const fakeApplyConfigToArgv = sinon.spy(() => {
-      throw new Error('some error');
-    });
-
-    consoleStream.stopCapturing();
-    consoleStream.flushCapturedLogs();
-    consoleStream.startCapturing();
-
-    return execProgram(
-      ['lint', '--config', fakePath],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          shouldExitProgram: false,
-          systemProcess: fakeProcess,
-          applyConfigToArgv: fakeApplyConfigToArgv,
-          loadJSConfigFile: fakeLoadJSConfigFile,
-        },
-      })
-      .then(makeSureItFails())
-      .catch((error) => {
-        const {capturedMessages} = consoleStream;
-        consoleStream.stopCapturing();
-
-        if (error instanceof UsageError) {
-          throw error;
-        }
-
-        assert.match(error.message, /some error/);
-        assert.ok(capturedMessages.some(
-          (message) => message.match(/some error/)
-        ));
-        sinon.assert.notCalled(fakeProcess.exit);
       });
   });
 });
