@@ -1,5 +1,8 @@
+## Force 64bit platform and nodejs, the addons-linter has dependencies which
+## do not provide a pre-compiled 32bit version of their nodejs binary module.
+platform: x64
 install:
-  - ps: Install-Product node $env:nodejs_version
+  - ps: Install-Product node $env:nodejs_version x64
   - set CI=true
   - set PATH=%APPDATA%\npm;%PATH%
   - npm install
