@@ -180,7 +180,7 @@ describe('firefox.remote', () => {
         conn.addonRequest = sinon.spy(() => Promise.resolve(stubResponse));
 
         const returnedAddon = await conn.checkForAddonReloading(addon);
-        assert.equal(conn.addonRequest.called, true);
+        sinon.assert.called(conn.addonRequest);
         const args = conn.addonRequest.firstCall.args;
 
         assert.equal(args[0].id, addon.id);

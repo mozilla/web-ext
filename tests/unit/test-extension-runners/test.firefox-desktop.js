@@ -150,7 +150,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     return runnerInstance.run()
       .then(makeSureItFails())
       .catch(onlyInstancesOf(WebExtError, (error) => {
-        assert.equal(remoteFirefox.installTemporaryAddon.called, true);
+        sinon.assert.called(remoteFirefox.installTemporaryAddon);
         assert.match(error.message, /use --pre-install/);
       }));
   });
