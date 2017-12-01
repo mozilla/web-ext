@@ -118,7 +118,7 @@ describe('firefox', () => {
       const profile = fakeProfile;
       return runFirefox({fxRunner: runner, profile})
         .then(() => {
-          assert.equal(runner.called, true);
+          sinon.assert.called(runner);
           assert.equal(runner.firstCall.args[0].profile,
                        profile.path());
         });
@@ -130,7 +130,7 @@ describe('firefox', () => {
       const findRemotePort = sinon.spy(() => Promise.resolve(port));
       return runFirefox({fxRunner: runner, findRemotePort})
         .then(() => {
-          assert.equal(runner.called, true);
+          sinon.assert.called(runner);
           assert.equal(runner.firstCall.args[0].listen, port);
         });
     });
@@ -140,7 +140,7 @@ describe('firefox', () => {
       const binaryArgs = '--safe-mode';
       return runFirefox({fxRunner, binaryArgs})
         .then(() => {
-          assert.equal(fxRunner.called, true);
+          sinon.assert.called(fxRunner);
           assert.equal(fxRunner.firstCall.args[0]['binary-args'],
                        binaryArgs);
         });
@@ -183,9 +183,8 @@ describe('firefox', () => {
       const firefoxBinary = '/pretend/path/to/firefox-bin';
       return runFirefox({fxRunner: runner, firefoxBinary})
         .then(() => {
-          assert.equal(runner.called, true);
-          assert.equal(runner.firstCall.args[0].binary,
-                       firefoxBinary);
+          sinon.assert.called(runner);
+          sinon.assert.calledWithMatch(runner, {binary: firefoxBinary});
         });
     });
 
@@ -270,8 +269,8 @@ describe('firefox', () => {
           configureThisProfile: (profile) => Promise.resolve(profile),
         })
         .then((profile) => {
-          assert.equal(copyFromUserProfile.called, true);
-          assert.equal(copyFromUserProfile.firstCall.args[0].name, name);
+          sinon.assert.called(copyFromUserProfile);
+          sinon.assert.calledWithMatch(copyFromUserProfile, {name});
           assert.equal(profile.defaultPreferences.thing,
                        profileToCopy.defaultPreferences.thing);
         });
@@ -286,8 +285,8 @@ describe('firefox', () => {
         return firefox.copyProfile(baseProfile.path(),
           {app, configureThisProfile})
           .then((profile) => {
-            assert.equal(configureThisProfile.called, true);
-            assert.equal(configureThisProfile.firstCall.args[0], profile);
+            sinon.assert.called(configureThisProfile);
+            sinon.assert.calledWith(configureThisProfile, profile);
             assert.equal(configureThisProfile.firstCall.args[1].app, app);
           });
       }
@@ -481,8 +480,8 @@ describe('firefox', () => {
       const app = 'fennec';
       return firefox.createProfile({app, configureThisProfile})
         .then((profile) => {
-          assert.equal(configureThisProfile.called, true);
-          assert.equal(configureThisProfile.firstCall.args[0], profile);
+          sinon.assert.called(configureThisProfile);
+          sinon.assert.calledWith(configureThisProfile, profile);
           assert.equal(configureThisProfile.firstCall.args[1].app, app);
         });
     });
@@ -533,8 +532,8 @@ describe('firefox', () => {
         const profilePath = baseProfile.path();
         return firefox.useProfile(profilePath, {app, configureThisProfile})
           .then((profile) => {
-            assert.equal(configureThisProfile.called, true);
-            assert.equal(configureThisProfile.firstCall.args[0], profile);
+            sinon.assert.called(configureThisProfile);
+            sinon.assert.calledWith(configureThisProfile, profile);
             assert.equal(configureThisProfile.firstCall.args[1].app, app);
           });
       }
@@ -568,7 +567,7 @@ describe('firefox', () => {
         const fakePrefGetter = sinon.stub().returns({});
         return firefox.configureProfile(profile, {getPrefs: fakePrefGetter})
           .then(() => {
-            assert.equal(fakePrefGetter.firstCall.args[0], 'firefox');
+            sinon.assert.calledWith(fakePrefGetter, 'firefox');
           });
       }
     ));
@@ -582,7 +581,7 @@ describe('firefox', () => {
             app: 'fennec',
           })
           .then(() => {
-            assert.equal(fakePrefGetter.firstCall.args[0], 'fennec');
+            sinon.assert.calledWith(fakePrefGetter, 'fennec');
           });
       }
     ));
@@ -764,7 +763,7 @@ describe('firefox', () => {
         }));
       return findRemotePort({connectToFirefox, retriesLeft: 2})
         .then((port) => {
-          assert.equal(connectToFirefox.callCount, 1);
+          sinon.assert.calledOnce(connectToFirefox);
           assert.isNumber(port);
         });
     });
@@ -776,7 +775,7 @@ describe('firefox', () => {
       return findRemotePort({connectToFirefox, retriesLeft: 2})
         .catch((err) => {
           assert.equal(err, 'WebExtError: Too many retries on port search');
-          assert.equal(connectToFirefox.callCount, 3);
+          sinon.assert.calledThrice(connectToFirefox);
         });
     });
 
@@ -796,7 +795,7 @@ describe('firefox', () => {
       return findRemotePort({connectToFirefox, retriesLeft: 2})
         .then((port) => {
           assert.isNumber(port);
-          assert.equal(connectToFirefox.callCount, 2);
+          sinon.assert.calledTwice(connectToFirefox);
         });
     });
 
