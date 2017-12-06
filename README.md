@@ -45,7 +45,7 @@ You can install this command onto your machine globally with:
 
 ### For your project
 
-Alternatively you can install this command as one of the
+Alternatively, you can install this command as one of the
 [`devDependencies`](https://docs.npmjs.com/files/package.json#devdependencies)
 of your project.  This method can help you control the version of `web-ext`
 as used by your team.
@@ -109,7 +109,7 @@ need to relink it.
     git pull
     npm run build
 
-## Using web-ext is NodeJS code
+## Using web-ext in NodeJS code
 
 Aside from [using web-ext on the command line][web-ext-user-docs], you may wish to execute `web-ext` in NodeJS code. There is limited support for this. Here are some examples.
 
@@ -208,7 +208,7 @@ We decided not to patch jpm for web extension support (See
 
 Mozilla built [cfx](https://developer.mozilla.org/en-US/Add-ons/SDK/Tools/cfx)
 then deprecated it for jpm and now we're proposing a new tool.
-I know this is frustrating for developers but web extensions mark a major
+I know this is frustrating for developers, but web extensions mark a major
 turning point. It would be an arduous task to wedge its feature set and
 simplified development process into jpm.
 
