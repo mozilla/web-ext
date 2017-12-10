@@ -472,10 +472,16 @@ describe('program.main', () => {
       prop: 'prop',
     };
     const resolvedFakePath = path.resolve(fakePath);
+    const expectedArgv = {
+      _: ['lint'],
+      config: fakePath,
+    };
     const fakeLoadJSConfigFile = sinon.spy(() => {
       return configObject;
     });
-    const fakeApplyConfigToArgv = sinon.spy(() => {});
+    const fakeApplyConfigToArgv = sinon.spy(() => {
+      return expectedArgv;
+    });
 
     return execProgram(
       ['lint', '--config', fakePath],

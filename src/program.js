@@ -155,10 +155,11 @@ export class Program {
         });
       }
 
+      let argvFromConfig = { ...argv };
       if (argv.config) {
         const configFileName = path.resolve(argv.config);
         const configObject = loadJSConfigFile(configFileName);
-        applyConfigToArgv({
+        argvFromConfig = applyConfigToArgv({
           argv,
           configFileName,
           configObject,
@@ -166,7 +167,7 @@ export class Program {
         });
       }
 
-      await runCommand(argv, {shouldExitProgram});
+      await runCommand(argvFromConfig, {shouldExitProgram});
 
     } catch (error) {
       if (!(error instanceof UsageError) || argv.verbose) {
