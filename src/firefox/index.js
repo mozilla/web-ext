@@ -317,6 +317,39 @@ export function configureProfile(
   return Promise.resolve(profile);
 }
 
+export type getProfileFn = (profileName: string) => Promise<string | void>;
+
+export type CreateProfileFinderParams = {|
+  userDirectoryPath?: string,
+  FxProfile?: typeof FirefoxProfile
+|}
+
+export function defaultCreateProfileFinder(
+  {
+    userDirectoryPath,
+    FxProfile = FirefoxProfile,
+  }: CreateProfileFinderParams = {}
+): getProfileFn {
+  const finder = new FxProfile.Finder(userDirectoryPath);
+  const readProfiles = promisify(finder.readProfiles, finder);
+  const getPath = promisify(finder.getPath, finder);
+  return async (profileName: string): Promise<string | void> => {
+    try {
+      await readProfiles();
+      const hasProfileName = finder.profiles.filter(
+        (profileDef) => profileDef.Name === profileName).length !== 0;
+      if (hasProfileName) {
+        return await getPath(profileName);
+      }
+    } catch (error) {
+      if (!isErrorWithCode('ENOENT', error)) {
+        throw error;
+      }
+      log.warn('Unable to find Firefox profiles.ini');
+    }
+  };
+}
+
 // useProfile types and implementation.
 
 export type UseProfileParams = {
@@ -324,6 +357,7 @@ export type UseProfileParams = {
   configureThisProfile?: ConfigureProfileFn,
   isFirefoxDefaultProfile?: IsDefaultProfileFn,
   customPrefs?: FirefoxPreferences,
+  createProfileFinder?: typeof defaultCreateProfileFinder,
 };
 
 // Use the target path as a Firefox profile without cloning it
@@ -335,6 +369,7 @@ export async function useProfile(
     configureThisProfile = configureProfile,
     isFirefoxDefaultProfile = isDefaultProfile,
     customPrefs = {},
+    createProfileFinder = defaultCreateProfileFinder,
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
   const isForbiddenProfile = await isFirefoxDefaultProfile(profilePath);
@@ -346,7 +381,26 @@ export async function useProfile(
       '\nSee https://github.com/mozilla/web-ext/issues/1005'
     );
   }
-  const profile = new FirefoxProfile({destinationDirectory: profilePath});
+
+  let destinationDirectory;
+  const getProfilePath = createProfileFinder();
+
+  const profileIsDirPath = await isDirectory(profilePath);
+  if (profileIsDirPath) {
+    log.debug(`Using profile directory "${profilePath}"`);
+    destinationDirectory = profilePath;
+  } else {
+    log.debug(`Assuming ${profilePath} is a named profile`);
+    destinationDirectory = await getProfilePath(profilePath);
+    if (!destinationDirectory) {
+      throw new UsageError(
+        `The request "${profilePath}" profile name ` +
+        'cannot be resolved to a profile path'
+      );
+    }
+  }
+
+  const profile = new FirefoxProfile({destinationDirectory});
   return await configureThisProfile(profile, {app, customPrefs});
 }
 
