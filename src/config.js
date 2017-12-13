@@ -50,6 +50,7 @@ export function applyConfigToArgv({
         `an unknown option: "${option}"`);
     }
     if (options[decamelizedOptName].type === undefined) {
+      // This means yargs option type wasn't not defined correctly
       throw new WebExtError(
         `Option: ${option} was defined without a type.`);
     }

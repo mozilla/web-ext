@@ -661,37 +661,6 @@ describe('config', () => {
         'WebExtError: Option: apiUrl was defined without a type.');
     });
 
-    it('throws an error when the type of one of them is in config' +
-      ' missing', () => {
-      const params = makeArgv({
-        userCmd: ['sign'],
-        command: 'sign',
-        commandOpt: {
-          'api-url': {
-            requiresArg: true,
-            demand: false,
-            default: 'pretend-default-value-of-apiKey',
-          },
-          'api-key': {
-            requiresArg: true,
-            demand: false,
-            type: 'string',
-            default: 'pretend-default-value-of-apiKey',
-          },
-        },
-      });
-      const configObject = {
-        sign: {
-          apiUrl: 2,
-          apiKey: 'fake-api-key',
-        },
-      };
-      assert.throws(() => {
-        applyConf({...params, configObject});
-      }, WebExtError,
-        'WebExtError: Option: apiUrl was defined without a type.');
-    });
-
     it('throws an error when type of unrelated sub option is invalid', () => {
       const program = new Program(['run']);
 

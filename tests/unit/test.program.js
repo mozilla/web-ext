@@ -9,15 +9,20 @@ import {assert} from 'chai';
 
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
-import {onlyInstancesOf, UsageError} from '../../src/errors';
+import {
+  onlyInstancesOf,
+  UsageError,
+} from '../../src/errors';
 import {
   createFakeProcess,
   fake,
   makeSureItFails,
   ErrorWithCode,
 } from './helpers';
-import {ConsoleStream} from '../../src/util/logger';
-
+import {
+  consoleStream, // instance is imported to inspect logged messages
+  ConsoleStream,
+} from '../../src/util/logger';
 
 describe('program.Program', () => {
 
@@ -26,7 +31,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
-        getVersion: () => spy(),
+        getVersion: () => 'not-a-real-version',
         checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
@@ -216,6 +221,33 @@ describe('program.Program', () => {
       .then(() => {
         sinon.assert.notCalled(logStream.makeVerbose);
       });
+  });
+
+  it('logs UsageErrors into console', () => {
+    // Clear console stream from previous messages and start recording
+    consoleStream.stopCapturing();
+    consoleStream.flushCapturedLogs();
+    consoleStream.startCapturing();
+
+    const program = new Program(['thing']).command('thing', '', () => {
+      throw new UsageError('some error');
+    });
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+      },
+    });
+    return execProgram(program)
+      .then(makeSureItFails())
+      .catch(onlyInstancesOf(UsageError, (error) => {
+        const {capturedMessages} = consoleStream;
+        // Stop recording
+        consoleStream.stopCapturing();
+        assert.match(error.message, /some error/);
+        assert.ok(
+          capturedMessages.some((message) => message.match(/some error/)
+        ));
+      }));
   });
 
   it('throws an error about unknown commands', () => {
@@ -434,6 +466,53 @@ describe('program.main', () => {
       const options = fakeCommands.lint.firstCall.args[1];
       assert.strictEqual(options.shouldExitProgram, false);
     });
+  });
+
+  it('applies options from the specified config file', () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const fakePath = 'path/to/web-ext-config.js';
+    const configObject = {
+      prop: 'prop',
+    };
+    const resolvedFakePath = path.resolve(fakePath);
+    const expectedArgv = {
+      _: ['lint'],
+      config: fakePath,
+    };
+    const fakeLoadJSConfigFile = sinon.spy(() => {
+      return configObject;
+    });
+    const fakeApplyConfigToArgv = sinon.spy(() => {
+      return expectedArgv;
+    });
+
+    return execProgram(
+      ['lint', '--config', fakePath],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          applyConfigToArgv: fakeApplyConfigToArgv,
+          loadJSConfigFile: fakeLoadJSConfigFile,
+        },
+      })
+      .then(() => {
+        const options = fakeCommands.lint.firstCall.args[0];
+        assert.strictEqual(options.config, fakePath);
+        sinon.assert.calledOnce(fakeLoadJSConfigFile);
+        sinon.assert.calledWith(fakeLoadJSConfigFile,
+                                sinon.match(resolvedFakePath));
+        sinon.assert.calledOnce(fakeApplyConfigToArgv);
+        sinon.assert.calledWith(fakeApplyConfigToArgv, sinon.match({
+          configFileName: resolvedFakePath,
+          configObject,
+          argv: {
+            _: ['lint'],
+            config: fakePath,
+          },
+        }));
+      });
   });
 });
 
