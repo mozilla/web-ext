@@ -710,32 +710,33 @@ describe('config', () => {
           apiKey: 'fake-api-key',
         },
       };
-      assert.throws(() => {
-        applyConf({...params, configObject});
-      }, WebExtError,
-        'WebExtError: Option: apiUrl was defined without a type.');
+      assert.throws(
+        () => {
+          applyConf({...params, configObject});
+        },
+        WebExtError,
+        'WebExtError: Option: apiUrl was defined without a type.'
+      );
     });
 
     it('throws an error when type of unrelated sub option is invalid', () => {
       const program = new Program(['run']);
 
-      program.command('run', 'this is a fake command', sinon.stub(),
-        {
-          'no-reload': {
-            type: 'boolean',
-            demand: false,
-          },
-        });
+      program.command('run', 'this is a fake command', sinon.stub(), {
+        'no-reload': {
+          type: 'boolean',
+          demand: false,
+        },
+      });
 
-      program.command('sign', 'this is a fake command',
-        sinon.stub(), {
-          'api-url': {
-            requiresArg: true,
-            type: 'string',
-            demand: false,
-            default: 'pretend-default-value-of-apiKey',
-          },
-        });
+      program.command('sign', 'this is a fake command', sinon.stub(), {
+        'api-url': {
+          requiresArg: true,
+          type: 'string',
+          demand: false,
+          default: 'pretend-default-value-of-apiKey',
+        },
+      });
 
       const configObject = {
         sign: {
@@ -761,7 +762,7 @@ describe('config', () => {
         (tmpDir) => {
           assert.throws(() => {
             loadJSConfigFile((path.join(tmpDir.path(),
-              'non-existant-config.js')));
+                                        'non-existant-config.js')));
           }, UsageError, /Cannot read config file/);
         });
     });
@@ -770,11 +771,13 @@ describe('config', () => {
       return withTempDir (
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
-          fs.writeFileSync(configFilePath,
+          fs.writeFileSync(
+            configFilePath,
             // missing = in two places
             `module.exports {
                 sourceDir 'path/to/fake/source/dir',
-              };`);
+              };`
+          );
           assert.throws(() => {
             loadJSConfigFile(configFilePath);
           }, UsageError);
@@ -785,10 +788,12 @@ describe('config', () => {
       return withTempDir(
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
-          fs.writeFileSync(configFilePath,
+          fs.writeFileSync(
+            configFilePath,
             `module.exports = {
               sourceDir: 'path/to/fake/source/dir',
-            };`);
+            };`
+          );
           const configObj = loadJSConfigFile(configFilePath);
           assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
         });

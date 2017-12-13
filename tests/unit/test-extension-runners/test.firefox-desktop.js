@@ -393,29 +393,29 @@ describe('util/extension-runners/firefox-desktop', () => {
   });
 
   it('returns an error in the results when the extension is not reloadable',
-    async () => {
-      const {params, remoteFirefox} = prepareExtensionRunnerParams();
+     async () => {
+       const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
-      const runnerInstance = new FirefoxDesktopExtensionRunner(params);
-      await runnerInstance.run();
+       const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+       await runnerInstance.run();
 
-      await runnerInstance.reloadExtensionBySourceDir(
-        '/non-existent/source-dir'
-      ).then((results) => {
-        const error = results[0].reloadError;
-        assert.equal(
-          error instanceof WebExtError,
-          true
-        );
-        assert.equal(
-          error && error.message,
-          'Extension not reloadable: no addonId has been mapped to ' +
-          '"/non-existent/source-dir"'
-        );
-      });
+       await runnerInstance.reloadExtensionBySourceDir(
+         '/non-existent/source-dir'
+       ).then((results) => {
+         const error = results[0].reloadError;
+         assert.equal(
+           error instanceof WebExtError,
+           true
+         );
+         assert.equal(
+           error && error.message,
+           'Extension not reloadable: no addonId has been mapped to ' +
+             '"/non-existent/source-dir"'
+         );
+       });
 
-      sinon.assert.notCalled(remoteFirefox.reloadAddon);
-    });
+       sinon.assert.notCalled(remoteFirefox.reloadAddon);
+     });
 
   it('rejects an AllExtensionsReloadError if any extension fails to reload',
      async () => {

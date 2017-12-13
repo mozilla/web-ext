@@ -244,9 +244,9 @@ describe('program.Program', () => {
         // Stop recording
         consoleStream.stopCapturing();
         assert.match(error.message, /some error/);
-        assert.ok(
-          capturedMessages.some((message) => message.match(/some error/)
-        ));
+        assert.ok(capturedMessages.some(
+          (message) => message.match(/some error/))
+        );
       }));
   });
 
@@ -349,7 +349,7 @@ describe('program.main', () => {
       });
   });
 
-  it('can get the program version', () => {
+  it('can get the program version', async () => {
     const fakeVersionGetter = sinon.spy(() => '<version>');
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
@@ -357,15 +357,13 @@ describe('program.main', () => {
     const projectRoot = '/pretend/project/root';
     // For some reason, executing --version like this
     // requires a command. In the real CLI, it does not.
-    return execProgram(['--version', 'build'],
-      {
-        projectRoot,
-        commands: fakeCommands,
-        getVersion: fakeVersionGetter,
-      })
-      .then(() => {
-        sinon.assert.calledWith(fakeVersionGetter, projectRoot);
-      });
+    await execProgram(['--version', 'build'], {
+      projectRoot,
+      commands: fakeCommands,
+      getVersion: fakeVersionGetter,
+    });
+
+    sinon.assert.calledWith(fakeVersionGetter, projectRoot);
   });
 
   it('turns sourceDir into an absolute path', () => {
@@ -509,7 +507,7 @@ describe('program.defaultVersionGetter', () => {
       .then((pkgData) => {
         const testBuildEnv = {globalEnv: 'production'};
         assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
-                   JSON.parse(pkgData).version);
+                     JSON.parse(pkgData).version);
       });
   });
 
