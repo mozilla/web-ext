@@ -472,46 +472,30 @@ describe('program.main', () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
-    const fakePath = 'path/to/web-ext-config.js';
     const configObject = {
-      prop: 'prop',
+      lint: {
+        selfHosted: true,
+      },
     };
-    const resolvedFakePath = path.resolve(fakePath);
-    const expectedArgv = {
-      _: ['lint'],
-      config: fakePath,
-    };
+    // Instead of loading/parsing a real file, just return an object.
     const fakeLoadJSConfigFile = sinon.spy(() => {
       return configObject;
     });
-    const fakeApplyConfigToArgv = sinon.spy(() => {
-      return expectedArgv;
-    });
 
     return execProgram(
-      ['lint', '--config', fakePath],
+      ['lint', '--config', 'path/to/web-ext-config.js'],
       {
         commands: fakeCommands,
         runOptions: {
-          applyConfigToArgv: fakeApplyConfigToArgv,
           loadJSConfigFile: fakeLoadJSConfigFile,
         },
       })
       .then(() => {
         const options = fakeCommands.lint.firstCall.args[0];
-        assert.strictEqual(options.config, fakePath);
-        sinon.assert.calledOnce(fakeLoadJSConfigFile);
-        sinon.assert.calledWith(fakeLoadJSConfigFile,
-                                sinon.match(resolvedFakePath));
-        sinon.assert.calledOnce(fakeApplyConfigToArgv);
-        sinon.assert.calledWith(fakeApplyConfigToArgv, sinon.match({
-          configFileName: resolvedFakePath,
-          configObject,
-          argv: {
-            _: ['lint'],
-            config: fakePath,
-          },
-        }));
+        // This makes sure that the config object was applied
+        // to the lint command options.
+        assert.equal(
+          options.selfHosted, configObject.lint.selfHosted);
       });
   });
 });

@@ -155,7 +155,7 @@ export class Program {
         });
       }
 
-      let argvFromConfig = { ...argv };
+      let argvFromConfig = {...argv};
       if (argv.config) {
         const configFileName = path.resolve(argv.config);
         const configObject = loadJSConfigFile(configFileName);

@@ -157,6 +157,29 @@ describe('config', () => {
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
+    it('coerces config option values if needed', () => {
+      const coerce = (sourceDir) => `coerced(${sourceDir})`;
+      const params = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            // In the real world this would do something like
+            // (sourceDir) => path.resolve(sourceDir)
+            coerce,
+          },
+        },
+      });
+
+      const sourceDir = '/configured/source/dir';
+      const configObject = {sourceDir};
+
+      const newArgv = applyConf({...params, configObject});
+      assert.strictEqual(newArgv.sourceDir, coerce(sourceDir));
+    });
+
     it('uses a configured boolean value over an implicit default', () => {
       const params = makeArgv({
         globalOpt: {
@@ -506,6 +529,38 @@ describe('config', () => {
       };
       const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
+    });
+
+    it('preserves global option when sub-command options exist', () => {
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+          },
+        },
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+          },
+        },
+      });
+      const sourceDir = 'custom/source/dir';
+      const configObject = {
+        // This global option should not be affected by the
+        // recursion code that processes the sub-command option.
+        sourceDir,
+        sign: {
+          apiKey: 'custom-configured-key',
+        },
+      };
+      const newArgv = applyConf({...params, configObject});
+      assert.strictEqual(newArgv.sourceDir, sourceDir);
     });
 
     it('handles camel case sub-commands', () => {
