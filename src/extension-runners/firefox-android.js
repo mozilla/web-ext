@@ -10,6 +10,7 @@ import path from 'path';
 import readline from 'readline';
 import tty from 'tty';
 
+import {withTempDir} from '../util/temp-dir';
 import DefaultADBUtils from '../util/adb';
 import {
   showDesktopNotification as defaultDesktopNotifications,
@@ -63,7 +64,7 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxConnector,
   ADBUtils: typeof DefaultADBUtils,
-  buildSourceDir: (string) => Promise<ExtensionBuildResult>,
+  buildSourceDir: (string, string) => Promise<ExtensionBuildResult>,
   desktopNotifications: typeof defaultDesktopNotifications,
   stdin?: stream$Readable,
 |};
@@ -477,25 +478,27 @@ export class FirefoxAndroidExtensionRunner {
       },
     } = this;
 
-    const {extensionPath} = await buildSourceDir(sourceDir);
+    await withTempDir(async (tmpDir) => {
+      const {extensionPath} = await buildSourceDir(sourceDir, tmpDir.path());
 
-    const extFileName = path.basename(extensionPath, '.zip');
+      const extFileName = path.basename(extensionPath, '.zip');
 
-    let adbExtensionPath = this.adbExtensionsPathBySourceDir.get(sourceDir);
+      let adbExtensionPath = this.adbExtensionsPathBySourceDir.get(sourceDir);
 
-    if (!adbExtensionPath) {
-      adbExtensionPath = `${selectedArtifactsDir}/${extFileName}.xpi`;
-    }
+      if (!adbExtensionPath) {
+        adbExtensionPath = `${selectedArtifactsDir}/${extFileName}.xpi`;
+      }
 
-    log.debug(`Uploading ${extFileName} on the android device`);
+      log.debug(`Uploading ${extFileName} on the android device`);
 
-    await adbUtils.pushFile(
-      selectedAdbDevice, extensionPath, adbExtensionPath
-    );
+      await adbUtils.pushFile(
+        selectedAdbDevice, extensionPath, adbExtensionPath
+      );
 
-    log.debug(`Upload completed: ${adbExtensionPath}`);
+      log.debug(`Upload completed: ${adbExtensionPath}`);
 
-    this.adbExtensionsPathBySourceDir.set(sourceDir, adbExtensionPath);
+      this.adbExtensionsPathBySourceDir.set(sourceDir, adbExtensionPath);
+    });
   }
 
   async buildAndPushExtensions() {

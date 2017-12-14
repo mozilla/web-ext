@@ -1,7 +1,6 @@
 /* @flow */
 import defaultBuildExtension from './build';
 import DefaultADBUtils from '../util/adb';
-import {withTempDir} from '../util/temp-dir';
 import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
@@ -160,19 +159,17 @@ export default async function run(
       firefoxClient,
       ADBUtils: DefaultADBUtils,
       desktopNotifications: defaultDesktopNotifications,
-      buildSourceDir: (extensionSourceDir: string) => {
-        return withTempDir((tmpDir) => {
-          return buildExtension({
-            sourceDir: extensionSourceDir,
-            ignoreFiles,
-            asNeeded: false,
-            // Use a separate temporary directory for building the extension zip file
-            // that we are going to upload on the android device.
-            artifactsDir: tmpDir.path(),
-          }, {
-            // Suppress the message usually logged by web-ext build.
-            showReadyMessage: false,
-          });
+      buildSourceDir: (extensionSourceDir: string, tmpArtifactsDir: string) => {
+        return buildExtension({
+          sourceDir: extensionSourceDir,
+          ignoreFiles,
+          asNeeded: false,
+          // Use a separate temporary directory for building the extension zip file
+          // that we are going to upload on the android device.
+          artifactsDir: tmpArtifactsDir,
+        }, {
+          // Suppress the message usually logged by web-ext build.
+          showReadyMessage: false,
         });
       },
     };
