@@ -134,6 +134,7 @@ export class MultiExtensionRunner {
       promises.push(reloadPromise);
     }
 
+    // $FLOW_FIXME: When upgrading to Flow 0.61.0, it could not follow the type of sourceDir in the array of promises.
     return await Promise.all(promises).then((results) => {
       this.handleReloadResults(results);
       return results;
