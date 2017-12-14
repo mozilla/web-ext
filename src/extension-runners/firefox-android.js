@@ -41,11 +41,6 @@ import type {
 
 const log = createLogger(__filename);
 
-/**
- * This module provide an ExtensionRunner subclass that manage an extension executed
- * in a Firefox for Desktop instance.
- */
-
 export type FirefoxAndroidExtensionRunnerParams = {|
   ...ExtensionRunnerParams,
 
@@ -73,6 +68,9 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   stdin?: stream$Readable,
 |};
 
+/**
+ * Implements an IExtensionRunner which manages a Firefox for Android instance.
+ */
 export class FirefoxAndroidExtensionRunner {
   // Wait 3s before the next unix socket discovery loop.
   static unixSocketDiscoveryRetryInterval = 3 * 1000;
@@ -244,7 +242,7 @@ export class FirefoxAndroidExtensionRunner {
       await adbUtils.clearArtifactsDir(selectedAdbDevice);
     }
 
-    // Call all the registered clenaup callbacks.
+    // Call all the registered cleanup callbacks.
     for (const fn of this.cleanupCallbacks) {
       try {
         fn();
@@ -301,14 +299,17 @@ export class FirefoxAndroidExtensionRunner {
     devices = await adbUtils.discoverDevices();
 
     if (devices.length === 0) {
-      throw new UsageError('No Android device found through ADB.');
+      throw new UsageError(
+        'No Android device found through ADB. ' +
+        'Make sure the device is connected and USB debugging is enabled.'
+      );
     }
 
     if (!adbDevice) {
       const devicesMsg = devices.map((dev) => ` - ${dev}`).join('\n');
       log.info(`\nAndroid devices found:\n${devicesMsg}`);
       throw new UsageError(
-        'Select an android device using --android-device');
+        'Select an android device using --android-device=<name>');
     }
 
     const foundDevices = devices.filter((device) => {
@@ -318,11 +319,11 @@ export class FirefoxAndroidExtensionRunner {
     if (foundDevices.length === 0) {
       const devicesMsg = JSON.stringify(devices);
       throw new UsageError(
-        `Android Device ${adbDevice} was not found in list: ${devicesMsg}`);
+        `Android device ${adbDevice} was not found in list: ${devicesMsg}`);
     }
 
     this.selectedAdbDevice = foundDevices[0];
-    log.info(`Selected adb device: ${this.selectedAdbDevice}`);
+    log.info(`Selected ADB device: ${this.selectedAdbDevice}`);
   }
 
   async apkPackagesDiscoveryAndSelect() {
@@ -349,7 +350,16 @@ export class FirefoxAndroidExtensionRunner {
 
     if (!firefoxApk) {
       log.info(`\nPackages found:\n${pkgsListMsg(packages)}`);
-      throw new UsageError('Select one of the packages using --firefox-apk');
+
+      if (packages.length > 1) {
+        throw new UsageError('Select one of the packages using --firefox-apk');
+      }
+
+      // If only one APK has been found, select it even if it has not been
+      // specified explicitly on the comment line.
+      this.selectedFirefoxApk = packages[0];
+      log.info(`Selected Firefox for Android APK: ${this.selectedFirefoxApk}`);
+      return;
     }
 
     const filteredPackages = packages.filter((line) => line === firefoxApk);
@@ -372,7 +382,7 @@ export class FirefoxAndroidExtensionRunner {
       selectedFirefoxApk,
     } = this;
 
-    log.info(`Stop any existent instance of ${selectedFirefoxApk}...`);
+    log.info(`Stopping existing instances of ${selectedFirefoxApk}...`);
     await adbUtils.amForceStopAPK(selectedAdbDevice, selectedFirefoxApk);
   }
 

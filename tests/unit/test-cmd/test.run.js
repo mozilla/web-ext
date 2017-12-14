@@ -250,7 +250,7 @@ describe('run', () => {
 
        const {buildSourceDir} = FirefoxAndroidExtensionRunner.firstCall.args[0];
 
-       buildSourceDir('/fake/source/dir');
+       await buildSourceDir('/fake/source/dir');
 
        sinon.assert.calledWithMatch(
          cmd.options.buildExtension,

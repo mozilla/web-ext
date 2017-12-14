@@ -210,7 +210,7 @@ describe('util/extension-runners/firefox-android', () => {
 
         assert.instanceOf(actualException, UsageError);
         assert.match(actualException && actualException.message,
-                     /Android Device emulator-3 was not found in list:/);
+                     /Android device emulator-3 was not found in list:/);
       });
     });
 
@@ -298,6 +298,25 @@ describe('util/extension-runners/firefox-android', () => {
   });
 
   describe('a valid device and Firefox apk has been selected:', () => {
+
+    it('does select a Firefox apk if only one has been found', async () => {
+      const {params, fakeADBUtils} = prepareSelectedDeviceAndAPKParams();
+
+      fakeADBUtils.discoverInstalledFirefoxAPKs = sinon.spy(
+        () => Promise.resolve(['org.mozilla.firefox'])
+      );
+
+      delete params.firefoxApk;
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+
+      await runnerInstance.run();
+
+      sinon.assert.calledWithMatch(
+        fakeADBUtils.amForceStopAPK,
+        'emulator-1', 'org.mozilla.firefox'
+      );
+    });
 
     it('stops any running instances of the selected Firefox apk ' +
        'and then starts it on the temporary profile',
