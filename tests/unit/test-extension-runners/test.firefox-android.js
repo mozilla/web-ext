@@ -234,7 +234,7 @@ describe('util/extension-runners/firefox-android', () => {
         assert.instanceOf(actualException, UsageError);
         assert.match(
           actualException && actualException.message,
-            /No Firefox packages found of the selected Android device/
+          /No Firefox packages found of the selected Android device/
         );
       });
     });
@@ -261,7 +261,7 @@ describe('util/extension-runners/firefox-android', () => {
         assert.instanceOf(actualException, UsageError);
         assert.match(
           actualException && actualException.message,
-            /Select one of the packages using --firefox-apk/
+          /Select one of the packages using --firefox-apk/
         );
       });
     });
@@ -290,7 +290,7 @@ describe('util/extension-runners/firefox-android', () => {
            assert.instanceOf(actualException, UsageError);
            assert.match(
              actualException && actualException.message,
-               /Package org.mozilla.f was not found in list:/
+             /Package org.mozilla.f was not found in list:/
            );
          });
        });
@@ -728,31 +728,31 @@ describe('util/extension-runners/firefox-android', () => {
         {
           params: {profilePath: '/fake/dir'},
           expectedMessage: (
-              /Android target does not support custom profile paths/
+            /Android target does not support custom profile paths/
           ),
         },
         {
           params: {keepProfileChanges: true},
           expectedMessage: (
-              /Android target does not support --keep-profile-changes/
+            /Android target does not support --keep-profile-changes/
           ),
         },
         {
           params: {browserConsole: true},
           expectedMessage: (
-              /Android target does not support --browser-console/
+            /Android target does not support --browser-console/
           ),
         },
         {
           params: {preInstall: true},
           expectedMessage: (
-              /Android target does not support --pre-install option/
+            /Android target does not support --pre-install option/
           ),
         },
         {
           params: {startUrl: 'http://fake-start-url.org'},
           expectedMessage: (
-              /Android target does not support --start-url option/
+            /Android target does not support --start-url option/
           ),
         },
       ];

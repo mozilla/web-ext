@@ -9,15 +9,20 @@ import {assert} from 'chai';
 
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
-import {onlyInstancesOf, UsageError} from '../../src/errors';
+import {
+  onlyInstancesOf,
+  UsageError,
+} from '../../src/errors';
 import {
   createFakeProcess,
   fake,
   makeSureItFails,
   ErrorWithCode,
 } from './helpers';
-import {ConsoleStream} from '../../src/util/logger';
-
+import {
+  consoleStream, // instance is imported to inspect logged messages
+  ConsoleStream,
+} from '../../src/util/logger';
 
 describe('program.Program', () => {
 
@@ -26,7 +31,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
-        getVersion: () => spy(),
+        getVersion: () => 'not-a-real-version',
         checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
@@ -200,8 +205,7 @@ describe('program.Program', () => {
     program.command('thing', 'does a thing', () => {});
     return execProgram(program, {getVersion: version})
       .then(() => {
-        assert.equal(version.firstCall.args[0],
-                     path.join(__dirname, '..', '..'));
+        sinon.assert.calledWith(version, path.join(__dirname, '..', '..'));
       });
   });
 
@@ -217,6 +221,33 @@ describe('program.Program', () => {
       .then(() => {
         sinon.assert.notCalled(logStream.makeVerbose);
       });
+  });
+
+  it('logs UsageErrors into console', () => {
+    // Clear console stream from previous messages and start recording
+    consoleStream.stopCapturing();
+    consoleStream.flushCapturedLogs();
+    consoleStream.startCapturing();
+
+    const program = new Program(['thing']).command('thing', '', () => {
+      throw new UsageError('some error');
+    });
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+      },
+    });
+    return execProgram(program)
+      .then(makeSureItFails())
+      .catch(onlyInstancesOf(UsageError, (error) => {
+        const {capturedMessages} = consoleStream;
+        // Stop recording
+        consoleStream.stopCapturing();
+        assert.match(error.message, /some error/);
+        assert.ok(capturedMessages.some(
+          (message) => message.match(/some error/))
+        );
+      }));
   });
 
   it('throws an error about unknown commands', () => {
@@ -318,7 +349,7 @@ describe('program.main', () => {
       });
   });
 
-  it('can get the program version', () => {
+  it('can get the program version', async () => {
     const fakeVersionGetter = sinon.spy(() => '<version>');
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
@@ -326,15 +357,13 @@ describe('program.main', () => {
     const projectRoot = '/pretend/project/root';
     // For some reason, executing --version like this
     // requires a command. In the real CLI, it does not.
-    return execProgram(['--version', 'build'],
-      {
-        projectRoot,
-        commands: fakeCommands,
-        getVersion: fakeVersionGetter,
-      })
-      .then(() => {
-        sinon.assert.calledWith(fakeVersionGetter, projectRoot);
-      });
+    await execProgram(['--version', 'build'], {
+      projectRoot,
+      commands: fakeCommands,
+      getVersion: fakeVersionGetter,
+    });
+
+    sinon.assert.calledWith(fakeVersionGetter, projectRoot);
   });
 
   it('turns sourceDir into an absolute path', () => {
@@ -436,6 +465,37 @@ describe('program.main', () => {
       assert.strictEqual(options.shouldExitProgram, false);
     });
   });
+
+  it('applies options from the specified config file', () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const configObject = {
+      lint: {
+        selfHosted: true,
+      },
+    };
+    // Instead of loading/parsing a real file, just return an object.
+    const fakeLoadJSConfigFile = sinon.spy(() => {
+      return configObject;
+    });
+
+    return execProgram(
+      ['lint', '--config', 'path/to/web-ext-config.js'],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          loadJSConfigFile: fakeLoadJSConfigFile,
+        },
+      })
+      .then(() => {
+        const options = fakeCommands.lint.firstCall.args[0];
+        // This makes sure that the config object was applied
+        // to the lint command options.
+        assert.equal(
+          options.selfHosted, configObject.lint.selfHosted);
+      });
+  });
 });
 
 describe('program.defaultVersionGetter', () => {
@@ -447,7 +507,7 @@ describe('program.defaultVersionGetter', () => {
       .then((pkgData) => {
         const testBuildEnv = {globalEnv: 'production'};
         assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
-                   JSON.parse(pkgData).version);
+                     JSON.parse(pkgData).version);
       });
   });
 

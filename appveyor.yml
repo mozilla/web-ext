@@ -1,5 +1,8 @@
+## Force 64bit platform and nodejs, the addons-linter has dependencies which
+## do not provide a pre-compiled 32bit version of their nodejs binary module.
+platform: x64
 install:
-  - ps: Install-Product node $env:nodejs_version
+  - ps: Install-Product node $env:nodejs_version x64
   - set CI=true
   - set PATH=%APPDATA%\npm;%PATH%
   - npm install
@@ -27,7 +30,13 @@ test_script:
   ## (See #1082 for rationale).
   - npm run copy-dist-files-to-artifacts-dir
   - cd artifacts\production
+  ## NOTE: by setting the configured python to a batch file that exits with an error,
+  ## we are forcing the production mode tests to fail if any of the dependencies is
+  ## a binary dependency that is built using node-gyp.
+  - echo "exit /b 1" > C:\Python-forbidden-in-production-install.cmd
+  - npm config set python C:\Python-forbidden-in-production-install.cmd
   - npm install --production
   - cd ..\..
+  - npm config delete python
   - set TEST_WEB_EXT_BIN=artifacts\production\bin\web-ext
   - npm run test:functional

@@ -11,6 +11,10 @@ import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
+import {
+  loadJSConfigFile as defaultLoadJSConfigFile,
+  applyConfigToArgv as defaultApplyConfigToArgv,
+} from './config';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -20,13 +24,17 @@ type ProgramOptions = {|
   absolutePackageDir?: string,
 |}
 
+export type VersionGetterFn = (absolutePackageDir: string) => string;
+
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 type ExecuteOptions = {
   checkForUpdates?: Function,
   systemProcess?: typeof process,
   logStream?: typeof defaultLogStream,
-  getVersion?: Function,
+  getVersion?: VersionGetterFn,
+  applyConfigToArgv?: typeof defaultApplyConfigToArgv,
+  loadJSConfigFile?: typeof defaultLoadJSConfigFile,
   shouldExitProgram?: boolean,
   globalEnv?: string,
 }
@@ -115,6 +123,8 @@ export class Program {
     {
       checkForUpdates = defaultUpdateChecker, systemProcess = process,
       logStream = defaultLogStream, getVersion = defaultVersionGetter,
+      applyConfigToArgv = defaultApplyConfigToArgv,
+      loadJSConfigFile = defaultLoadJSConfigFile,
       shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
     }: ExecuteOptions = {}
   ): Promise<void> {
@@ -145,7 +155,19 @@ export class Program {
         });
       }
 
-      await runCommand(argv, {shouldExitProgram});
+      let argvFromConfig = {...argv};
+      if (argv.config) {
+        const configFileName = path.resolve(argv.config);
+        const configObject = loadJSConfigFile(configFileName);
+        argvFromConfig = applyConfigToArgv({
+          argv,
+          configFileName,
+          configObject,
+          options: this.options,
+        });
+      }
+
+      await runCommand(argvFromConfig, {shouldExitProgram});
 
     } catch (error) {
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -194,7 +216,7 @@ export function defaultVersionGetter(
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 type MainParams = {
-  getVersion?: Function,
+  getVersion?: VersionGetterFn,
   commands?: Object,
   argv: Array<any>,
   runOptions?: Object,
@@ -264,6 +286,13 @@ Example: $0 --help run.
     'no-input': {
       describe: 'Disable all features that require standard input',
       type: 'boolean',
+    },
+    'config': {
+      alias: 'c',
+      describe: 'Path to the config file',
+      default: undefined,
+      requiresArg: true,
+      type: 'string',
     },
   });
 
@@ -463,7 +492,7 @@ Example: $0 --help run.
       },
     })
     .command('docs', 'Open the web-ext documentation in a browser',
-      commands.docs, {});
+             commands.docs, {});
 
   return program.execute(absolutePackageDir, runOptions);
 }

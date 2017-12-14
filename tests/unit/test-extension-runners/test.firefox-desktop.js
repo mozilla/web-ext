@@ -35,6 +35,7 @@ const tempInstallResultMissingAddonId = {
 
 type PrepareParams = {
   params?: Object,
+  deps?: Object,
   fakeFirefoxApp?: Object,
   fakeRemoteFirefox?: Object,
   debuggerPort?: number,
@@ -149,7 +150,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     return runnerInstance.run()
       .then(makeSureItFails())
       .catch(onlyInstancesOf(WebExtError, (error) => {
-        assert.equal(remoteFirefox.installTemporaryAddon.called, true);
+        sinon.assert.called(remoteFirefox.installTemporaryAddon);
         assert.match(error.message, /use --pre-install/);
       }));
   });
@@ -392,29 +393,29 @@ describe('util/extension-runners/firefox-desktop', () => {
   });
 
   it('resolves to an array of WebExtError if the extension is not reloadable',
-    async () => {
-      const {params, remoteFirefox} = prepareExtensionRunnerParams();
+     async () => {
+       const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
-      const runnerInstance = new FirefoxDesktopExtensionRunner(params);
-      await runnerInstance.run();
+       const runnerInstance = new FirefoxDesktopExtensionRunner(params);
+       await runnerInstance.run();
 
-      await runnerInstance.reloadExtensionBySourceDir(
-        '/non-existent/source-dir'
-      ).then((results) => {
-        const error = results[0].reloadError;
-        assert.equal(
-          error instanceof WebExtError,
-          true
-        );
-        assert.equal(
-          error && error.message,
-          'Extension not reloadable: no addonId has been mapped to ' +
-          '"/non-existent/source-dir"'
-        );
-      });
+       await runnerInstance.reloadExtensionBySourceDir(
+         '/non-existent/source-dir'
+       ).then((results) => {
+         const error = results[0].reloadError;
+         assert.equal(
+           error instanceof WebExtError,
+           true
+         );
+         assert.equal(
+           error && error.message,
+           'Extension not reloadable: no addonId has been mapped to ' +
+             '"/non-existent/source-dir"'
+         );
+       });
 
-      sinon.assert.notCalled(remoteFirefox.reloadAddon);
-    });
+       sinon.assert.notCalled(remoteFirefox.reloadAddon);
+     });
 
   it('resolves to an AllExtensionsReloadError if any extension fails to reload',
      async () => {

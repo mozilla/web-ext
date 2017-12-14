@@ -36,7 +36,7 @@ export function applyConfigToArgv({
       typeof configObject[option] === 'object') {
       // Descend into the nested configuration for a sub-command.
       newArgv = applyConfigToArgv({
-        argv,
+        argv: newArgv,
         configObject: configObject[option],
         options: options[option],
         configFileName});
@@ -50,6 +50,7 @@ export function applyConfigToArgv({
         `an unknown option: "${option}"`);
     }
     if (options[decamelizedOptName].type === undefined) {
+      // This means yargs option type wasn't not defined correctly
       throw new WebExtError(
         `Option: ${option} was defined without a type.`);
     }
@@ -86,6 +87,13 @@ export function applyConfigToArgv({
     }
 
     newArgv[option] = configObject[option];
+
+    const coerce = options[decamelizedOptName].coerce;
+    if (coerce) {
+      log.debug(
+        `Calling coerce() on configured value for ${option}`);
+      newArgv[option] = coerce(newArgv[option]);
+    }
   }
   return newArgv;
 }

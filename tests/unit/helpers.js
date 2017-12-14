@@ -151,7 +151,8 @@ export function makeSureItFails(): Function {
  * assert.equal(fakeProcess.exit.called, true);
  *
  */
- // $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
+
+// $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
 export function fake<T>(
   original: Object, methods: Object = {}, skipProperties: Array<string> = []
 ): T {
@@ -220,7 +221,7 @@ type FakeFirefoxClientParams = {|
 export function fakeFirefoxClient({
   requestResult = {}, requestError,
   makeRequestResult = {}, makeRequestError,
-}: FakeFirefoxClientParams= {}) {
+}: FakeFirefoxClientParams = {}) {
   return {
     disconnect: sinon.spy(() => {}),
     request: sinon.spy(
