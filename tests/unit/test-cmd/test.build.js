@@ -91,12 +91,14 @@ describe('build', () => {
     return withTempDir(
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        fs.writeFileSync(messageFileName,
+        fs.writeFileSync(
+          messageFileName,
           `{"extensionName": {
               "message": "example extension",
               "description": "example description"
             }
-          }`);
+          }`
+        );
 
         const manifestWithRepeatingPattern = {
           name: '__MSG_extensionName__ __MSG_extensionName__',
@@ -118,8 +120,11 @@ describe('build', () => {
     return withTempDir(
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        fs.writeFileSync(messageFileName,
-          '{"simulated:" "json syntax error"');
+        fs.writeFileSync(
+          messageFileName,
+          '{"simulated:" "json syntax error"'
+        );
+
         return getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: manifestWithoutApps,
@@ -140,11 +145,14 @@ describe('build', () => {
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
         //This is missing the 'message' key
-        fs.writeFileSync(messageFileName,
+        fs.writeFileSync(
+          messageFileName,
           `{"extensionName": {
               "description": "example extension"
               }
-          }`);
+          }`
+        );
+
         const basicLocalizedManifest = {
           name: '__MSG_extensionName__',
           version: '0.0.1',
@@ -178,7 +186,7 @@ describe('build', () => {
           /Error: ENOENT: no such file or directory, open .*messages.json/);
         assert.match(error.message, /^Error reading messages.json/);
         assert.include(error.message,
-          '/path/to/non-existent-dir/messages.json');
+                       '/path/to/non-existent-dir/messages.json');
       });
   });
 
@@ -266,9 +274,10 @@ describe('build', () => {
           const args = onSourceChange.firstCall.args[0];
 
           sinon.assert.called(onSourceChange);
-          sinon.assert.calledWithMatch(onSourceChange,
-            {artifactsDir, sourceDir}
-          );
+          sinon.assert.calledWithMatch(onSourceChange, {
+            artifactsDir,
+            sourceDir,
+          });
 
           assert.typeOf(args.onChange, 'function');
 

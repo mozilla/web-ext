@@ -6,7 +6,7 @@ import tty from 'tty';
 import type Watchpack from 'watchpack';
 
 import type {
-  IExtensionRunner,  // eslint-disable-line import/named
+  IExtensionRunner, // eslint-disable-line import/named
   ExtensionRunnerReloadResult,
 } from './base';
 import {
@@ -217,7 +217,7 @@ export function defaultWatcherCreator(
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
- ): Watchpack {
+): Watchpack {
   const fileFilter = createFileFilter(
     {sourceDir, artifactsDir, ignoreFiles}
   );
