@@ -12,6 +12,8 @@ Ultimately, it aims to support web extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
 [Firefox web extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
+---
+
 ## Documentation
 
 * [Getting started with web-ext][web-ext-user-docs]
@@ -29,6 +31,8 @@ Here are the commands you can run. Click on each one for detailed documentation 
   * Create an extension package from source
 * [`docs`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext_docs)
   * Open the `web-ext` documentation in a browser
+
+---
 
 ## Installation from npm
 
@@ -70,6 +74,8 @@ version on the command line with this:
 
     npm run start:firefox -- --firefox=nightly
 
+---
+
 ## Installation from source
 
 You'll need:
@@ -108,6 +114,8 @@ need to relink it.
     cd /path/to/web-ext
     git pull
     npm run build
+
+---
 
 ## Using web-ext in NodeJS code
 
@@ -165,6 +173,7 @@ webExt.cmd.run({...}, {shouldExitProgram: false}, {
 });
 ```
 
+----
 
 ## Should I Use It?
 
@@ -173,12 +182,16 @@ This platform stabilized in
 [Firefox 48](https://blog.mozilla.org/addons/2016/04/29/webextensions-in-firefox-48/)
 which was released in April of 2016.
 
+---
+
 ## Get Involved
 
 Hi! This tool is under active development. To get involved you can watch the repo,
 file issues, create pull requests, or ask a question on
 [dev-addons](https://mail.mozilla.org/listinfo/dev-addons).
 Read the [contributing section](CONTRIBUTING.md) for how to develop new features.
+
+---
 
 ## Some Questions and Answers
 
@@ -244,3 +257,5 @@ Cons of creating a new tool:
 * The community of jpm contributors will need to shift focus to web-ext.
 
 [web-ext-user-docs]: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext
+
+---
