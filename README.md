@@ -274,3 +274,6 @@ Cons of creating a new tool:
 [web-ext-user-docs]: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext
 
 ---
+
+<img src="https://avatars2.githubusercontent.com/u/131524?s=200&v=4" width="150"></img> 
+<img src="http://cdn.ttgtmedia.com/ITKE/cwblogs/open-source-insider/Mozilla%20PL.png" width="150"></img>
