@@ -272,7 +272,7 @@ export class TCPConnectError extends ExtendableError {
 export class ErrorWithCode extends Error {
   code: string;
   constructor(code: ?string, message: ?string) {
-    super(message || 'pretend this is a system error');
+    super(`${code || ''}: ${message || 'pretend this is a system error'}`);
     this.code = code || 'SOME_CODE';
   }
 }

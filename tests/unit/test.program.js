@@ -317,14 +317,41 @@ describe('program.Program', () => {
 
 describe('program.main', () => {
 
-  function execProgram(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
-    const runOptions = {
-      getVersion: () => 'not-a-real-version',
-      checkForUpdates: spy(),
-      shouldExitProgram: false,
-      systemProcess: createFakeProcess(),
+  function execProgram(
+    argv,
+    {projectRoot = '', runOptions, ...mainOptions}: Object = {}
+  ) {
+    return main(
+      projectRoot,
+      {
+        argv,
+        runOptions: {
+          discoverConfigFiles: async () => [],
+          getVersion: () => 'not-a-real-version',
+          checkForUpdates: spy(),
+          shouldExitProgram: false,
+          systemProcess: createFakeProcess(),
+          ...runOptions,
+        },
+        ...mainOptions,
+      }
+    );
+  }
+
+  type MakeConfigLoaderParams = {|
+    configObjects: { [fileName: string]: Object },
+  |};
+
+  function makeConfigLoader(
+    {configObjects}: MakeConfigLoaderParams
+  ) {
+    return (fileName) => {
+      const conf = configObjects[fileName];
+      if (!conf) {
+        throw new Error(`Config file was not mapped: ${fileName}`);
+      }
+      return conf;
     };
-    return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
 
   it('executes a command handler', () => {
@@ -466,7 +493,7 @@ describe('program.main', () => {
     });
   });
 
-  it('applies options from the specified config file', () => {
+  it('applies options from the specified config file', async () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
@@ -480,21 +507,154 @@ describe('program.main', () => {
       return configObject;
     });
 
-    return execProgram(
+    await execProgram(
       ['lint', '--config', 'path/to/web-ext-config.js'],
       {
         commands: fakeCommands,
         runOptions: {
           loadJSConfigFile: fakeLoadJSConfigFile,
         },
-      })
-      .then(() => {
-        const options = fakeCommands.lint.firstCall.args[0];
-        // This makes sure that the config object was applied
-        // to the lint command options.
-        assert.equal(
-          options.selfHosted, configObject.lint.selfHosted);
-      });
+      }
+    );
+
+    const options = fakeCommands.lint.firstCall.args[0];
+    // This makes sure that the config object was applied
+    // to the lint command options.
+    assert.equal(
+      options.selfHosted, configObject.lint.selfHosted);
+  });
+
+  it('discovers config files', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const configObject = {
+      lint: {
+        selfHosted: true,
+      },
+    };
+    // Instead of loading/parsing a real file, just return an object.
+    const fakeLoadJSConfigFile = sinon.spy(() => {
+      return configObject;
+    });
+
+    await execProgram(
+      ['lint'],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles: async () => ['fake/config.js'],
+          loadJSConfigFile: fakeLoadJSConfigFile,
+        },
+      }
+    );
+
+    const options = fakeCommands.lint.firstCall.args[0];
+    // This makes sure that the config object was applied
+    // to the lint command options.
+    assert.equal(
+      options.selfHosted, configObject.lint.selfHosted);
+  });
+
+  it('lets you disable config discovery', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const discoverConfigFiles = sinon.spy(() => Promise.resolve([]));
+    await execProgram(
+      ['--no-config-discovery', 'lint'],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles,
+        },
+      }
+    );
+
+    sinon.assert.notCalled(discoverConfigFiles);
+  });
+
+  it('applies config files in order', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const globalConfig = 'home/dir/.web-ext-config.js';
+    const projectConfig = 'project/dir/web-ext-config.js';
+    const customConfig = path.resolve('custom/web-ext-config.js');
+
+    const loadJSConfigFile = makeConfigLoader({
+      configObjects: {
+        [globalConfig]: {
+          noInput: true,
+        },
+        [projectConfig]: {
+          verbose: true,
+        },
+        [customConfig]: {
+          lint: {
+            selfHosted: true,
+          },
+        },
+      },
+    });
+
+    await execProgram(
+      ['lint', '--config', customConfig],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles: async () => [
+            globalConfig, projectConfig,
+          ],
+          loadJSConfigFile,
+        },
+      }
+    );
+
+    const options = fakeCommands.lint.firstCall.args[0];
+    assert.equal(options.noInput, true);
+    assert.equal(options.verbose, true);
+    assert.equal(options.selfHosted, true);
+  });
+
+  it('overwrites old config values', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const globalConfig = path.resolve('home/dir/.web-ext-config.js');
+    const customConfig = path.resolve('custom/web-ext-config.js');
+
+    const finalSourceDir = path.resolve('final/source-dir');
+    const loadJSConfigFile = makeConfigLoader({
+      configObjects: {
+        // This config is loaded first.
+        [globalConfig]: {
+          sourceDir: 'first/source-dir',
+        },
+        // This config is loaded next which overwrites the old value.
+        [customConfig]: {
+          sourceDir: finalSourceDir,
+        },
+      },
+    });
+
+    await execProgram(
+      ['lint', '--config', customConfig],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles: async () => [globalConfig],
+          loadJSConfigFile,
+        },
+      }
+    );
+
+    const options = fakeCommands.lint.firstCall.args[0];
+    // This should equal the final configured value.
+    assert.equal(options.sourceDir, finalSourceDir);
   });
 });
 

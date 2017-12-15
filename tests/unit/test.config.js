@@ -9,6 +9,7 @@ import {fs} from 'mz';
 import {Program} from '../../src/program';
 import {
   applyConfigToArgv,
+  discoverConfigFiles,
   loadJSConfigFile,
 } from '../../src/config';
 import {withTempDir} from '../../src/util/temp-dir';
@@ -39,8 +40,11 @@ function makeArgv({
   if (commandOpt) {
     program.command(command, commandDesc, commandExecutor, commandOpt);
   }
+
+  const argv = program.yargs.exitProcess(false).argv;
   return {
-    argv: program.yargs.exitProcess(false).argv,
+    argv,
+    argvFromCLI: argv,
     options: program.options,
   };
 }
@@ -243,6 +247,33 @@ describe('config', () => {
       };
       const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
+    });
+
+    it('can load multiple configs', () => {
+      const params = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'file-path': {
+            demand: false,
+            type: 'string',
+          },
+        },
+      });
+
+      const firstConfigObject = {
+        filePath: 'first/path',
+      };
+      const secondConfigObject = {
+        filePath: 'second/path',
+      };
+
+      let argv = applyConf({
+        ...params, configObject: firstConfigObject,
+      });
+      argv = applyConf({
+        ...params, argv, configObject: secondConfigObject,
+      });
+      assert.strictEqual(argv.filePath, secondConfigObject.filePath);
     });
 
     it('uses CLI option over undefined configured option and default', () => {
@@ -472,6 +503,40 @@ describe('config', () => {
       };
       const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
+    });
+
+    it('can load multiple configs', () => {
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'file-path': {
+            demand: false,
+            type: 'string',
+          },
+        },
+      });
+
+      const firstConfigObject = {
+        sign: {
+          filePath: 'first/path',
+        },
+      };
+      const secondConfigObject = {
+        sign: {
+          filePath: 'second/path',
+        },
+      };
+
+      let argv = applyConf({
+        ...params, configObject: firstConfigObject,
+      });
+      argv = applyConf({
+        ...params, argv, configObject: secondConfigObject,
+      });
+      assert.strictEqual(
+        argv.filePath, secondConfigObject.sign.filePath
+      );
     });
 
     it('preserves default value if not in config', () => {
@@ -803,8 +868,87 @@ describe('config', () => {
       return withTempDir(
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
-          fs.writeFileSync(configFilePath, '{};');
+          fs.writeFileSync(configFilePath, 'module.exports = {};');
           loadJSConfigFile(configFilePath);
+        });
+    });
+  });
+
+  describe('discoverConfigFiles', () => {
+    function _discoverConfigFiles(params = {}) {
+      return discoverConfigFiles({
+        // By default, do not look in the real home directory.
+        getHomeDir: () => '/not-a-directory',
+        ...params,
+      });
+    }
+
+    it('finds a config in your home directory', () => {
+      return withTempDir(
+        async (tmpDir) => {
+          const homeDirConfig = path.join(
+            tmpDir.path(), '.web-ext-config.js'
+          );
+          await fs.writeFile(homeDirConfig, 'module.exports = {}');
+          assert.deepEqual(
+            // Stub out getHomeDir() so that it returns tmpDir.path()
+            // as if that was a user's home directory.
+            await _discoverConfigFiles({
+              getHomeDir: () => tmpDir.path(),
+            }),
+            [path.resolve(homeDirConfig)]
+          );
+        });
+    });
+
+    it('finds a config in your working directory', () => {
+      return withTempDir(
+        async (tmpDir) => {
+          const lastDir = process.cwd();
+          process.chdir(tmpDir.path());
+          try {
+            const expectedConfig = path.resolve(
+              path.join(process.cwd(), 'web-ext-config.js')
+            );
+            await fs.writeFile(expectedConfig, 'module.exports = {}');
+
+            assert.deepEqual(
+              await _discoverConfigFiles(),
+              [expectedConfig]
+            );
+          } finally {
+            process.chdir(lastDir);
+          }
+        });
+    });
+
+    it('discovers all config files', () => {
+      return withTempDir(
+        async (tmpDir) => {
+          const lastDir = process.cwd();
+          process.chdir(tmpDir.path());
+          try {
+            const fakeHomeDir = path.join(tmpDir.path(), 'home-dir');
+            await fs.mkdir(fakeHomeDir);
+            const globalConfig = path.resolve(
+              path.join(fakeHomeDir, '.web-ext-config.js')
+            );
+            await fs.writeFile(globalConfig, 'module.exports = {}');
+
+            const projectConfig = path.resolve(
+              path.join(process.cwd(), 'web-ext-config.js')
+            );
+            await fs.writeFile(projectConfig, 'module.exports = {}');
+
+            assert.deepEqual(
+              await _discoverConfigFiles({
+                getHomeDir: () => fakeHomeDir,
+              }),
+              [globalConfig, projectConfig]
+            );
+          } finally {
+            process.chdir(lastDir);
+          }
         });
     });
   });

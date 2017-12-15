@@ -142,7 +142,7 @@ describe('prepareArtifactsDir', () => {
          return prepareArtifactsDir(tmpPath, {asyncMkdirp: fakeAsyncMkdirp})
            .then(makeSureItFails(), (error) => {
              sinon.assert.called(fakeAsyncMkdirp);
-             assert.equal(error.message, 'an error');
+             assert.equal(error.message, 'ENOSPC: an error');
            });
        }
      ));
