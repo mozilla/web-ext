@@ -275,5 +275,5 @@ Cons of creating a new tool:
 
 ---
 
-<img src="https://avatars2.githubusercontent.com/u/131524?s=200&v=4" width="150"></img> 
-<img src="http://cdn.ttgtmedia.com/ITKE/cwblogs/open-source-insider/Mozilla%20PL.png" width="150"></img>
+<img src="https://avatars2.githubusercontent.com/u/131524?s=200&v=4" width="75"></img> 
+<img src="http://cdn.ttgtmedia.com/ITKE/cwblogs/open-source-insider/Mozilla%20PL.png" width="125"></img>
