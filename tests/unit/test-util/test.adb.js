@@ -19,6 +19,8 @@ package:org.mozilla.firefox
 package:org.some.other.software
 `;
 
+// NOTE: fake /proc/net/unix output format based on the output collected from
+// an android system.
 const fakeSocketFilePrefix = (
   '00000000: 00000003 00000000 00000000 0001 03  1857'
 );
@@ -31,6 +33,13 @@ const fakeUnixSocketFiles = (`
 ${fakeSocketFilePrefix} /dev/socket/mdns
 ${fakeSocketFilePrefix}  ${fakeRDPUnixSocketFile}
 `);
+
+// NOTE: fake 'pm dump <APK>' output related to the granted permissions for an
+// android application.
+const fakeAndroidGrantedPermissions = `
+android.permission.READ_EXTERNAL_STORAGE: granted=true
+android.permission.WRITE_EXTERNAL_STORAGE: granted=true
+`;
 
 // Enable chai-as-promised plugin.
 chai.use(chaiAsPromised);
@@ -370,10 +379,7 @@ describe('utils/adb', () => {
            adbkitUtil: {
              readAll: sinon.spy(() => {
                return Promise.resolve(
-                 new Buffer(`
-                android.permission.READ_EXTERNAL_STORAGE: granted=true
-                android.permission.WRITE_EXTERNAL_STORAGE: granted=true
-              `)
+                 new Buffer(fakeAndroidGrantedPermissions)
                );
              }),
            },
@@ -465,7 +471,10 @@ describe('utils/adb', () => {
       const promise = adbUtils.getOrCreateArtifactsDir('device1');
 
       await assert.isRejected(promise, WebExtError);
-      await assert.isRejected(promise, /Artifacts dir (.*) exists on/);
+      await assert.isRejected(
+        promise,
+        /Cannot create artifacts directory (.*) because it exists on (.*)/
+      );
 
       sinon.assert.calledOnce(adb.fakeADBClient.shell);
       sinon.assert.calledWithMatch(

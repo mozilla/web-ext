@@ -13,9 +13,13 @@ import defaultGetValidatedManifest from '../util/manifest';
 import {
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
-  FirefoxDesktopExtensionRunner as DefaultFirefoxDesktopExtensionRunner,
-  FirefoxAndroidExtensionRunner as defaultFirefoxAndroidExtensionRunner,
 } from '../extension-runners';
+import {
+  FirefoxDesktopExtensionRunner as DefaultFirefoxDesktopExtensionRunner,
+} from '../extension-runners/firefox-desktop';
+import {
+  FirefoxAndroidExtensionRunner as defaultFirefoxAndroidExtensionRunner,
+} from '../extension-runners/firefox-android';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 

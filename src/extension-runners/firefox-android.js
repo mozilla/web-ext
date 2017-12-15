@@ -394,7 +394,7 @@ export class FirefoxAndroidExtensionRunner {
       selectedFirefoxApk,
     } = this;
 
-    log.info(`Discovery android version for ${selectedAdbDevice}...`);
+    log.debug(`Discovering Android version for ${selectedAdbDevice}...`);
 
     const androidVersion = await adbUtils.getAndroidVersionNumber(
       selectedAdbDevice
@@ -404,9 +404,8 @@ export class FirefoxAndroidExtensionRunner {
       return;
     }
 
-    log.info(
-      `Discovery granted runtime permissions for ${selectedFirefoxApk}...`
-    );
+    log.debug('Checking read/write permissions needed for web-ext' +
+              `on ${selectedFirefoxApk}...`);
 
     // Runtime permission needed to be able to run Firefox on a temporarily created profile
     // on android versions >= 21.
@@ -568,7 +567,7 @@ export class FirefoxAndroidExtensionRunner {
 
     // Log the choosen tcp port at info level (useful to the user to be able
     // to connect the Firefox DevTools to the Firefox for Android instance).
-    log.info(`Android Remote Debugging TCP Port selected: ${tcpPort}`);
+    log.info(`You can connect to this Android device on TCP port ${tcpPort}`);
 
     await adbUtils.setupForward(
       selectedAdbDevice,
@@ -604,11 +603,11 @@ export class FirefoxAndroidExtensionRunner {
       port: selectedTCPPort,
     });
 
-    // Exit and clenaup the extension runner if the connection to the
+    // Exit and cleanup the extension runner if the connection to the
     // remote Firefox for Android instance has been closed.
     remoteFirefox.client.on('end', () => {
       if (!this.exiting) {
-        log.info('Exit on remote Firefox for Android connection disconnected');
+        log.info('Exiting the device because Firefox for Android disconnected');
         this.exit();
       }
     });
@@ -622,7 +621,7 @@ export class FirefoxAndroidExtensionRunner {
 
       if (!adbExtensionPath) {
         throw new WebExtError(
-          `Unexpected missing android device extension path for: ${sourceDir}`
+          `ADB extension path for "${sourceDir}" was unexpectedly empty`
         );
       }
 
@@ -635,7 +634,8 @@ export class FirefoxAndroidExtensionRunner {
 
       if (!addonId) {
         throw new WebExtError(
-          'Unexpected missing addonId in the installAsTemporaryAddon result'
+          'Received an empty addonId from ' +
+          `remoteFirefox.installTemporaryAddon("${adbExtensionPath}")`
         );
       }
 

@@ -354,7 +354,9 @@ Example: $0 --help run.
       'target': {
         alias: 't',
         describe: 'The extensions runners to enable (e.g. firefox-desktop, ' +
-          'firefox-android).',
+                  'firefox-android). Specify this option multiple times to ' +
+                  'run against multiple targets.',
+        default: 'firefox-desktop',
         demand: false,
         type: 'string',
       },

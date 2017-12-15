@@ -193,7 +193,8 @@ export default class ADBUtils {
 
     if (testDirOut !== '1') {
       throw new WebExtError(
-        `Artifacts dir ${artifactsDir} exists on ${deviceId}.`
+        `Cannot create artifacts directory ${artifactsDir} ` +
+        `because it exists on ${deviceId}.`
       );
     }
 
@@ -214,6 +215,10 @@ export default class ADBUtils {
 
     this.artifactsDirMap.delete(deviceId);
 
+    log.debug(
+      `Removing ${artifactsDir} artifacts directory on ${deviceId} device`
+    );
+
     await this.runShellCommand(deviceId, [
       'rm', '-rf', artifactsDir,
     ]);
@@ -230,7 +235,6 @@ export default class ADBUtils {
       await adbClient.push(deviceId, localPath, devicePath)
         .then(function(transfer) {
           return new Promise((resolve) => {
-            // TODO(rpl): optionally show progress in the console
             transfer.on('end', resolve);
           });
         });
@@ -317,7 +321,7 @@ export default class ADBUtils {
   async setupForward(deviceId: string, remote: string, local: string) {
     const {adbClient} = this;
 
-    // TODO(rpl): we should use adb.listForwards and reuse the existent one if any (especially
+    // TODO(rpl): we should use adb.listForwards and reuse the existing one if any (especially
     // because adbkit doesn't seem to support `adb forward --remote` yet).
     log.debug(`Configuring ADB forward for ${deviceId}: ${remote} -> ${local}`);
 

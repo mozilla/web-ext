@@ -29,10 +29,6 @@ export type MultiExtensionRunnerParams = {|
   desktopNotifications: typeof defaultDesktopNotifications,
 |};
 
-// Export everything exported by the firefox-desktop runner.
-export * from './firefox-desktop';
-export * from './firefox-android';
-
 
 /**
  * Implements an IExtensionRunner which allow the caller to

@@ -446,7 +446,7 @@ describe('util/extension-runners/firefox-android', () => {
          });
 
          const expectedErrorMessage = (
-           'Unexpected missing addonId in the installAsTemporaryAddon result'
+           /Received an empty addonId from remoteFirefox.installTemporaryAddon/
          );
 
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
@@ -454,7 +454,7 @@ describe('util/extension-runners/firefox-android', () => {
            .catch((error) => error)
            .then((error) => {
              assert.instanceOf(error, WebExtError);
-             assert.equal(
+             assert.match(
                error && error.message,
                expectedErrorMessage
              );
@@ -664,7 +664,7 @@ describe('util/extension-runners/firefox-android', () => {
          assert.instanceOf(actualError, WebExtError);
          assert.match(
            actualError && actualError.message,
-           /Unexpected missing android device extension path for:/
+           /ADB extension path for "(.*)" was unexpectedly empty/
          );
        });
 
