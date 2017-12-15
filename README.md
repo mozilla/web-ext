@@ -53,12 +53,12 @@ Here are the commands you can run. Click on each one for detailed documentation 
 
 First, make sure you are running the current
 [LTS](https://github.com/nodejs/LTS)
-(long term support) version of
+(long-term support) version of
 [NodeJS](https://nodejs.org/en/).
 
 ### Global command
 
-You can install this command onto your machine globally with:
+You can install this command on your machine globally with:
 
     npm install --global web-ext
 
@@ -71,7 +71,7 @@ as used by your team.
 
     npm install --save-dev web-ext
 
-Next you can use the `web-ext` command in your project as an
+Next, you can use the `web-ext` command in your project as an
 [npm script](https://docs.npmjs.com/misc/scripts).
 Here is an example where the `--source-dir` argument specifies where to find
 the source code for your extension.
@@ -214,7 +214,7 @@ Read the [contributing section](CONTRIBUTING.md) for how to develop new features
 
 This is a great question and one that we will ask ourselves for each new web-ext
 feature. Most web extension functionality is baked into the browsers
-themselves but a complimentary command line tool will still be helpful.
+themselves but a complementary command line tool will still be helpful.
 Here is a partial list of examples:
 
 * File watching.
@@ -248,25 +248,22 @@ Pros of creating a new tool:
   [Opera](https://dev.opera.com/extensions/).
   It would be hard to do that while preserving compatibility in jpm.
 * Creating SDK-based add-ons was overly complicated. With web extensions you no
-  longer need to convert your source into legacy artifacts and you won't need
-  boostrapping scripts.
+  longer need to convert your source into legacy artifacts and you won't need bootstrapping scripts.
 * There are superior features in Firefox now for developing extensions such
   as [loading](https://blog.mozilla.org/addons/2015/12/23/loading-temporary-add-ons/)
-  from source code instead of a packaged XPI. It will be
-  easier to reimagine a new tool around these work flows rather than
-  adjust jpm's existing work flows.
+  from source code instead of a packaged XPI. It will be easier to reimagine a new tool around these workflows rather than adjust jpm's existing workflows.
 * jpm's functional tests are slow, brittle and hard to run. There are flaky
   time-outs and we've run out of *low hanging fruit* fixes at this point.
 * Most of jpm's code was not designed to be unit testable which makes it hard to
   maintain and refactor.
 * jpm's code was written in ES5 which is cumbersome after coming from the ES6
-  Firefox code base or from most other languages with modern conveniences
+  Firefox codebase or from most other languages with modern conveniences
   (Python, Ruby, etc).
 * Some core functionality of jpm can be extracted and re-used in the new tool.
 
 Cons of creating a new tool:
 
-* Firefox extension developers will have to interrupt and re-arrange their work flows.
+* Firefox extension developers will have to interrupt and re-arrange their workflows.
 * Developers of existing add-ons will need to port to web extensions sooner rather than later.
 * The web-ext tool will require some ramp-up time for scaffolding.
 * The community of jpm contributors will need to shift focus to web-ext.
