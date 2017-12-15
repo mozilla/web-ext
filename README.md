@@ -12,6 +12,21 @@ Ultimately, it aims to support web extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
 [Firefox web extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
+Table of Contents (ToC)
+======================
+
+* [Documentation](#documentation)
+* [Installation from npm](#installation-from-npm)
+* [Global Command](#global-command)
+* [For Your Project](#for-your-project)
+* [Installation from source](#installation-from-source)
+* [Using webext in NodeJS code](#using-webext-in-nodejs-code)
+* [Should I Use It?](#should-i-use-it)
+* [Get Involved](#get-involved)
+* [Some questions and answers](#some-questions-and-answers)
+* [Why do we need a command line tool](#why-do-we-need-a-command-line-tool)
+* [Why not patch jpm for web extension support](#why-not-patch-jpm-for-web-extension-support)
+
 ---
 
 ## Documentation
