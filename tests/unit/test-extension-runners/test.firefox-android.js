@@ -493,17 +493,17 @@ describe('util/extension-runners/firefox-android', () => {
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
 
-         await runnerInstance.reloadExtensionBySourceDir(
+         const results = await runnerInstance.reloadExtensionBySourceDir(
            '/non-existent/source-dir'
-         ).then((results) => {
-           const error = results[0].reloadError;
-           assert.instanceOf(error, WebExtError);
-           assert.equal(
-             error && error.message,
-             'Extension not reloadable: no addonId has been mapped to ' +
-               '"/non-existent/source-dir"'
-           );
-         });
+         );
+
+         const error = results[0].reloadError;
+         assert.instanceOf(error, WebExtError);
+         assert.equal(
+           error && error.message,
+           'Extension not reloadable: no addonId has been mapped to ' +
+           '"/non-existent/source-dir"'
+         );
 
          sinon.assert.notCalled(runnerInstance.remoteFirefox.reloadAddon);
        });
@@ -522,16 +522,15 @@ describe('util/extension-runners/firefox-android', () => {
          const runnerInstance = new FirefoxAndroidExtensionRunner(params);
          await runnerInstance.run();
 
-         await runnerInstance.reloadAllExtensions()
-           .then((results) => {
-             const error = results[0].reloadError;
-             assert.instanceOf(error, WebExtError);
+         const results = await runnerInstance.reloadAllExtensions();
 
-             const {sourceDir} = params.extensions[0];
-             assert.ok(error && error.message.includes(
-               `Error on extension loaded from ${sourceDir}: `
-             ));
-           });
+         const error = results[0].reloadError;
+         assert.instanceOf(error, WebExtError);
+
+         const {sourceDir} = params.extensions[0];
+         assert.ok(error && error.message.includes(
+           `Error on extension loaded from ${sourceDir}: `
+         ));
 
          sinon.assert.called(runnerInstance.remoteFirefox.reloadAddon);
        });

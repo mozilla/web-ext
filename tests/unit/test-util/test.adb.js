@@ -3,7 +3,6 @@
 import EventEmitter from 'events';
 
 import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
 import {describe, it} from 'mocha';
 import sinon from 'sinon';
 
@@ -41,8 +40,6 @@ android.permission.READ_EXTERNAL_STORAGE: granted=true
 android.permission.WRITE_EXTERNAL_STORAGE: granted=true
 `;
 
-// Enable chai-as-promised plugin.
-chai.use(chaiAsPromised);
 const {assert} = chai;
 
 function getFakeADBKit(
