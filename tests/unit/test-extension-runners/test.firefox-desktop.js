@@ -392,7 +392,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     sinon.assert.calledOnce(remoteFirefox.reloadAddon);
   });
 
-  it('returns an error in the results when the extension is not reloadable',
+  it('resolves to an array of WebExtError if the extension is not reloadable',
      async () => {
        const {params, remoteFirefox} = prepareExtensionRunnerParams();
 
@@ -417,7 +417,7 @@ describe('util/extension-runners/firefox-desktop', () => {
        sinon.assert.notCalled(remoteFirefox.reloadAddon);
      });
 
-  it('rejects an AllExtensionsReloadError if any extension fails to reload',
+  it('resolves to an AllExtensionsReloadError if any extension fails to reload',
      async () => {
        const {params, remoteFirefox} = prepareExtensionRunnerParams({
          fakeRemoteFirefox: {
