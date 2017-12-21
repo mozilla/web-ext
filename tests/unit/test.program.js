@@ -7,6 +7,7 @@ import {fs} from 'mz';
 import sinon, {spy} from 'sinon';
 import {assert} from 'chai';
 
+import {applyConfigToArgv} from '../../src/config';
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
 import {
@@ -538,12 +539,13 @@ describe('program.main', () => {
       return configObject;
     });
 
+    const discoveredFile = 'fake/config.js';
     await execProgram(
       ['lint'],
       {
         commands: fakeCommands,
         runOptions: {
-          discoverConfigFiles: async () => ['fake/config.js'],
+          discoverConfigFiles: async () => [discoveredFile],
           loadJSConfigFile: fakeLoadJSConfigFile,
         },
       }
@@ -554,6 +556,8 @@ describe('program.main', () => {
     // to the lint command options.
     assert.equal(
       options.selfHosted, configObject.lint.selfHosted);
+
+    sinon.assert.calledWith(fakeLoadJSConfigFile, discoveredFile);
   });
 
   it('lets you disable config discovery', async () => {
@@ -599,12 +603,14 @@ describe('program.main', () => {
         },
       },
     });
+    const fakeApplyConfigToArgv = sinon.spy(applyConfigToArgv);
 
     await execProgram(
       ['lint', '--config', customConfig],
       {
         commands: fakeCommands,
         runOptions: {
+          applyConfigToArgv: fakeApplyConfigToArgv,
           discoverConfigFiles: async () => [
             globalConfig, projectConfig,
           ],
@@ -613,10 +619,22 @@ describe('program.main', () => {
       }
     );
 
+    // Check that the config files were all applied to argv.
     const options = fakeCommands.lint.firstCall.args[0];
     assert.equal(options.noInput, true);
     assert.equal(options.verbose, true);
     assert.equal(options.selfHosted, true);
+
+    // Make sure the config files were loaded in the right order.
+    assert.include(fakeApplyConfigToArgv.firstCall.args[0], {
+      configFileName: globalConfig,
+    });
+    assert.include(fakeApplyConfigToArgv.secondCall.args[0], {
+      configFileName: projectConfig,
+    });
+    assert.include(fakeApplyConfigToArgv.thirdCall.args[0], {
+      configFileName: customConfig,
+    });
   });
 
   it('overwrites old config values', async () => {

@@ -110,9 +110,8 @@ export function fixturePath(...pathParts: Array<string>): string {
  *
  * Usage:
  *
- *  Promise.resolve()
- *    .then(makeSureItFails())
- *    .catch((error) => {
+ *  Promise.reject(new Error('some error'))
+ *    .then(makeSureItFails(), (error) => {
  *      // Safely make assertions about the error...
  *    });
  */

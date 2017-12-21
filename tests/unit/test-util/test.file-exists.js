@@ -7,7 +7,7 @@ import {fs} from 'mz';
 
 import fileExists from '../../../src/util/file-exists';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {ErrorWithCode} from '../helpers';
+import {makeSureItFails, ErrorWithCode} from '../helpers';
 
 
 describe('util/file-exists', () => {
@@ -45,5 +45,16 @@ describe('util/file-exists', () => {
       },
     });
     assert.equal(exists, false);
+  });
+
+  it('throws unexpected errors', async () => {
+    const exists = fileExists('pretend/file', {
+      fileIsReadable: async () => {
+        throw new ErrorWithCode('EBUSY', 'device is busy');
+      },
+    });
+    await exists.then(makeSureItFails(), (error) => {
+      assert.equal(error.message, 'EBUSY: device is busy');
+    });
   });
 });

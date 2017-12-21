@@ -16,7 +16,7 @@ type ApplyConfigToArgvParams = {|
   // This is the argv object which will get updated by each
   // config applied.
   argv: Object,
-  // This is the argv that only has CLI values applies to it.
+  // This is the argv that only has CLI values applied to it.
   argvFromCLI: Object,
   configObject: Object,
   options: Object,
@@ -157,14 +157,14 @@ export async function discoverConfigFiles(
         log.debug(
           `Discovered config "${resolvedFileName}" does not ` +
           'exist or is not readable');
-        return false;
+        return undefined;
       }
     }
   ));
 
   const existingConfigs = [];
   configs.forEach((f) => {
-    if (f) {
+    if (typeof f === 'string') {
       existingConfigs.push(f);
     }
   });

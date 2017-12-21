@@ -36,10 +36,10 @@ type ExecuteOptions = {
   logStream?: typeof defaultLogStream,
   getVersion?: VersionGetterFn,
   applyConfigToArgv?: typeof defaultApplyConfigToArgv,
+  discoverConfigFiles?: typeof defaultConfigDiscovery,
   loadJSConfigFile?: typeof defaultLoadJSConfigFile,
   shouldExitProgram?: boolean,
   globalEnv?: string,
-  discoverConfigFiles?: typeof defaultConfigDiscovery,
 }
 
 
@@ -129,10 +129,10 @@ export class Program {
       logStream = defaultLogStream,
       getVersion = defaultVersionGetter,
       applyConfigToArgv = defaultApplyConfigToArgv,
+      discoverConfigFiles = defaultConfigDiscovery,
       loadJSConfigFile = defaultLoadJSConfigFile,
       shouldExitProgram = true,
       globalEnv = WEBEXT_BUILD_ENV,
-      discoverConfigFiles = defaultConfigDiscovery,
     }: ExecuteOptions = {}
   ): Promise<void> {
 

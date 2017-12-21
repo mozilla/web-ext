@@ -249,7 +249,7 @@ describe('config', () => {
       assert.strictEqual(newArgv.overwriteFiles, true);
     });
 
-    it('can load multiple configs', () => {
+    it('can load multiple configs for global options', () => {
       const params = makeArgv({
         userCmd: ['fakecommand'],
         globalOpt: {
@@ -260,6 +260,7 @@ describe('config', () => {
         },
       });
 
+      // Make sure the second global option overrides the first.
       const firstConfigObject = {
         filePath: 'first/path',
       };
@@ -505,7 +506,7 @@ describe('config', () => {
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
-    it('can load multiple configs', () => {
+    it('can load multiple configs for sub-command options', () => {
       const params = makeArgv({
         userCmd: ['sign'],
         command: 'sign',
@@ -517,6 +518,7 @@ describe('config', () => {
         },
       });
 
+      // Make sure the second sub-command option overrides the first.
       const firstConfigObject = {
         sign: {
           filePath: 'first/path',
