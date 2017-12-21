@@ -1,4 +1,5 @@
 /* @flow */
+import os from 'os';
 import path from 'path';
 import {readFileSync} from 'fs';
 
@@ -12,6 +13,7 @@ import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 import {
+  discoverConfigFiles as defaultConfigDiscovery,
   loadJSConfigFile as defaultLoadJSConfigFile,
   applyConfigToArgv as defaultApplyConfigToArgv,
 } from './config';
@@ -34,6 +36,7 @@ type ExecuteOptions = {
   logStream?: typeof defaultLogStream,
   getVersion?: VersionGetterFn,
   applyConfigToArgv?: typeof defaultApplyConfigToArgv,
+  discoverConfigFiles?: typeof defaultConfigDiscovery,
   loadJSConfigFile?: typeof defaultLoadJSConfigFile,
   shouldExitProgram?: boolean,
   globalEnv?: string,
@@ -121,11 +124,15 @@ export class Program {
   async execute(
     absolutePackageDir: string,
     {
-      checkForUpdates = defaultUpdateChecker, systemProcess = process,
-      logStream = defaultLogStream, getVersion = defaultVersionGetter,
+      checkForUpdates = defaultUpdateChecker,
+      systemProcess = process,
+      logStream = defaultLogStream,
+      getVersion = defaultVersionGetter,
       applyConfigToArgv = defaultApplyConfigToArgv,
+      discoverConfigFiles = defaultConfigDiscovery,
       loadJSConfigFile = defaultLoadJSConfigFile,
-      shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
+      shouldExitProgram = true,
+      globalEnv = WEBEXT_BUILD_ENV,
     }: ExecuteOptions = {}
   ): Promise<void> {
 
@@ -155,19 +162,46 @@ export class Program {
         });
       }
 
-      let argvFromConfig = {...argv};
+      let adjustedArgv = {...argv};
+      const configFiles = [];
+
+      if (argv.configDiscovery) {
+        log.debug(
+          'Discovering config files. ' +
+          'Set --no-config-discovery to disable');
+        const discoveredConfigs = await discoverConfigFiles();
+        configFiles.push(...discoveredConfigs);
+      } else {
+        log.debug('Not discovering config files');
+      }
+
       if (argv.config) {
-        const configFileName = path.resolve(argv.config);
+        configFiles.push(path.resolve(argv.config));
+      }
+
+      if (configFiles.length) {
+        const niceFileList = configFiles
+          .map((f) => f.replace(process.cwd(), '.'))
+          .map((f) => f.replace(os.homedir(), '~'))
+          .join(', ');
+        log.info(
+          'Applying config file' +
+          `${configFiles.length !== 1 ? 's' : ''}: ` +
+          `${niceFileList}`);
+      }
+
+      configFiles.forEach((configFileName) => {
         const configObject = loadJSConfigFile(configFileName);
-        argvFromConfig = applyConfigToArgv({
-          argv,
+        adjustedArgv = applyConfigToArgv({
+          argv: adjustedArgv,
+          argvFromCLI: argv,
           configFileName,
           configObject,
           options: this.options,
         });
-      }
+      });
 
-      await runCommand(argvFromConfig, {shouldExitProgram});
+      await runCommand(adjustedArgv, {shouldExitProgram});
 
     } catch (error) {
       if (!(error instanceof UsageError) || argv.verbose) {
@@ -289,10 +323,19 @@ Example: $0 --help run.
     },
     'config': {
       alias: 'c',
-      describe: 'Path to the config file',
+      describe: 'Path to a CommonJS config file to set ' +
+        'option defaults',
       default: undefined,
+      demand: false,
       requiresArg: true,
       type: 'string',
+    },
+    'config-discovery': {
+      describe: 'Discover config files in home directory and ' +
+        'working directory. Disable with --no-config-discovery.',
+      demand: false,
+      default: true,
+      type: 'boolean',
     },
   });
 

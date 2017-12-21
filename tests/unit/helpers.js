@@ -110,9 +110,8 @@ export function fixturePath(...pathParts: Array<string>): string {
  *
  * Usage:
  *
- *  Promise.resolve()
- *    .then(makeSureItFails())
- *    .catch((error) => {
+ *  Promise.reject(new Error('some error'))
+ *    .then(makeSureItFails(), (error) => {
  *      // Safely make assertions about the error...
  *    });
  */
@@ -272,7 +271,7 @@ export class TCPConnectError extends ExtendableError {
 export class ErrorWithCode extends Error {
   code: string;
   constructor(code: ?string, message: ?string) {
-    super(message || 'pretend this is a system error');
+    super(`${code || ''}: ${message || 'pretend this is a system error'}`);
     this.code = code || 'SOME_CODE';
   }
 }
