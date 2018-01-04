@@ -14,12 +14,12 @@ type CreateParams = {
   useLatest: boolean,
 }
 
-const execFile = promisify(childProcess.execFile);
+const exec = promisify(childProcess.exec);
 
 export default async function create(
   params: CreateParams,
 ): Promise<void> {
-  const npm_root = (await execFile('npm', ['root', '-g'])).trim();
+  const npm_root = (await exec('npm root -g')).trim();
   const NPM_PATH = path.join(npm_root, 'npm', 'bin', 'npm-cli.js');
 
   log.debug(`Using npm-cli from ${NPM_PATH}`);
