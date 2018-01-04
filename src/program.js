@@ -537,7 +537,20 @@ Example: $0 --help run.
       },
     })
     .command('docs', 'Open the web-ext documentation in a browser',
-             commands.docs, {});
+             commands.docs, {})
+    .command('create', 'Create a new WebExtension project', commands.create, {
+      'project-path': {
+        describe: 'The path to the project directory to create',
+        type: 'string',
+        requiresArg: true,
+        demand: true,
+      },
+      'use-latest': {
+        describe: 'Download and use the last released template from npm',
+        type: 'boolean',
+        default: false,
+      },
+    });
 
   return program.execute(absolutePackageDir, runOptions);
 }
