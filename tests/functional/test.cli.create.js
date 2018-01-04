@@ -28,7 +28,7 @@ function lintProjectPath({projectPath, tmpDir}) {
 describe('web-ext create', () => {
   it('should accept: --project-path PROJECTPATH',
      () => withTempDir((tmpDir) => {
-       const argv = ['create', '--project-path', 'project1'];
+       const argv = ['create', '--verbose', '--project-path', 'project1'];
        const cmd = execWebExt(argv, {cwd: tmpDir.path()});
 
        return cmd.waitForExit.then(async ({exitCode, stdout, stderr}) => {
