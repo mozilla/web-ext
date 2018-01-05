@@ -1,5 +1,19 @@
 {
   "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "arrowFunctions": true,
+      "blockBindings": true,
+      "classes": true,
+      "destructuring": true,
+      "defaultParams": true,
+      "modules": true,
+      "restParams": true,
+      "spread": true
+    },
+  },
   "plugins": [
     "async-await",
     "flowtype",
@@ -18,16 +32,6 @@
     "eslint:recommended",
     "plugin:flowtype/recommended"
   ],
-  "ecmaFeatures": {
-    "arrowFunctions": true,
-    "blockBindings": true,
-    "classes": true,
-    "destructuring": true,
-    "defaultParams": true,
-    "modules": true,
-    "restParams": true,
-    "spread": true
-  },
   "globals": {
     "exports": false,
     "module": false,
@@ -47,6 +51,9 @@
     "eqeqeq": [2, "allow-null"],
     "guard-for-in": 0,
     "indent": [2, 2, {
+      "CallExpression": {
+        "arguments": "first"
+      },
       "SwitchCase": 1,
       "VariableDeclarator": 1,
       "outerIIFEBody": 1,
@@ -113,7 +120,11 @@
     "require-yield": 2,
     "semi": [2, "always"],
     "space-before-blocks": [2, "always"],
-    "space-before-function-paren": [2, "never"],
+    "space-before-function-paren": [2, {
+      "anonymous": "never",
+      "named": "never",
+      "asyncArrow": "always"
+    }],
     "space-infix-ops": 2,
     "strict": [2, "never"],
     "valid-typeof": 2,

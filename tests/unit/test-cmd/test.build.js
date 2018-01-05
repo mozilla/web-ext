@@ -66,11 +66,9 @@ describe('build', () => {
     };
     return build(params, {packageCreator, createFileFilter}).then(() => {
       // ensure sourceDir, artifactsDir, ignoreFiles is used
-      assert.ok(createFileFilter.called);
-      assert.deepEqual(createFileFilter.firstCall.args[0], params);
+      sinon.assert.calledWithMatch(createFileFilter, params);
       // ensure packageCreator received correct fileFilter
-      assert.ok(packageCreator.called);
-      assert.equal(packageCreator.firstCall.args[0].fileFilter, fileFilter);
+      sinon.assert.calledWithMatch(packageCreator, {fileFilter});
     });
   });
 
@@ -93,12 +91,14 @@ describe('build', () => {
     return withTempDir(
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        fs.writeFileSync(messageFileName,
+        fs.writeFileSync(
+          messageFileName,
           `{"extensionName": {
               "message": "example extension",
               "description": "example description"
             }
-          }`);
+          }`
+        );
 
         const manifestWithRepeatingPattern = {
           name: '__MSG_extensionName__ __MSG_extensionName__',
@@ -120,8 +120,11 @@ describe('build', () => {
     return withTempDir(
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
-        fs.writeFileSync(messageFileName,
-          '{"simulated:" "json syntax error"');
+        fs.writeFileSync(
+          messageFileName,
+          '{"simulated:" "json syntax error"'
+        );
+
         return getDefaultLocalizedName({
           messageFile: messageFileName,
           manifestData: manifestWithoutApps,
@@ -129,8 +132,9 @@ describe('build', () => {
           .then(makeSureItFails())
           .catch((error) => {
             assert.instanceOf(error, UsageError);
-            assert.match(error.message, /Unexpected token '"' at 1:15/);
-            assert.match(error.message, /^Error parsing messages.json/);
+            assert.match(
+              error.message, /Unexpected string in JSON at position 14/);
+            assert.match(error.message, /^Error parsing messages\.json/);
             assert.include(error.message, messageFileName);
           });
       }
@@ -142,11 +146,14 @@ describe('build', () => {
       (tmpDir) => {
         const messageFileName = path.join(tmpDir.path(), 'messages.json');
         //This is missing the 'message' key
-        fs.writeFileSync(messageFileName,
+        fs.writeFileSync(
+          messageFileName,
           `{"extensionName": {
               "description": "example extension"
               }
-          }`);
+          }`
+        );
+
         const basicLocalizedManifest = {
           name: '__MSG_extensionName__',
           version: '0.0.1',
@@ -180,7 +187,7 @@ describe('build', () => {
           /Error: ENOENT: no such file or directory, open .*messages.json/);
         assert.match(error.message, /^Error reading messages.json/);
         assert.include(error.message,
-          '/path/to/non-existent-dir/messages.json');
+                       '/path/to/non-existent-dir/messages.json');
       });
   });
 
@@ -265,16 +272,20 @@ describe('build', () => {
           return buildResult;
         })
         .then((buildResult) => {
-          assert.equal(onSourceChange.called, true);
           const args = onSourceChange.firstCall.args[0];
-          assert.equal(args.sourceDir, sourceDir);
-          assert.equal(args.artifactsDir, artifactsDir);
+
+          sinon.assert.called(onSourceChange);
+          sinon.assert.calledWithMatch(onSourceChange, {
+            artifactsDir,
+            sourceDir,
+          });
+
           assert.typeOf(args.onChange, 'function');
 
           // Make sure it uses the file filter.
           assert.typeOf(args.shouldWatchFile, 'function');
           args.shouldWatchFile('/some/path');
-          assert.equal(fileFilter.wantFile.called, true);
+          sinon.assert.called(fileFilter.wantFile);
 
           // Remove the built extension.
           return fs.unlink(buildResult.extensionPath)
@@ -306,9 +317,8 @@ describe('build', () => {
         manifestData: basicManifest, onSourceChange, packageCreator,
       })
         .then(() => {
-          assert.equal(onSourceChange.called, true);
-          assert.equal(packageCreator.callCount, 1);
-
+          sinon.assert.called(onSourceChange);
+          sinon.assert.calledOnce(packageCreator);
           const {onChange} = onSourceChange.firstCall.args[0];
           packageResult = Promise.reject(new Error(
             'Simulate an error on the second call to packageCreator()'));

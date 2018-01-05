@@ -43,7 +43,7 @@ describe('firefox.remote', () => {
     it('connects on the default port', async () => {
       const {connect, options} = prepareConnection();
       await connect;
-      assert.equal(options.connectToFirefox.firstCall.args[0], 6005);
+      sinon.assert.calledWith(options.connectToFirefox, 6005);
     });
 
     it('lets you configure the port', async () => {
@@ -81,7 +81,8 @@ describe('firefox.remote', () => {
         const client = fakeFirefoxClient();
         const conn = makeInstance(client);
         conn.disconnect();
-        assert.equal(client.disconnect.called, true);
+
+        sinon.assert.called(client.disconnect);
       });
     });
 
@@ -97,10 +98,10 @@ describe('firefox.remote', () => {
         const conn = makeInstance(client);
         const response = await conn.addonRequest(addon, 'requestTypes');
 
-        assert.equal(client.client.makeRequest.called, true);
-        const args = client.client.makeRequest.firstCall.args;
-        assert.equal(args[0].type, 'requestTypes');
-        assert.equal(args[0].to, 'serv1.localhost');
+        sinon.assert.called(client.client.makeRequest);
+        sinon.assert.calledWithMatch(
+          client.client.makeRequest,
+          {type: 'requestTypes', to: 'serv1.localhost'});
 
         assert.deepEqual(response, stubResponse);
       });
@@ -179,7 +180,7 @@ describe('firefox.remote', () => {
         conn.addonRequest = sinon.spy(() => Promise.resolve(stubResponse));
 
         const returnedAddon = await conn.checkForAddonReloading(addon);
-        assert.equal(conn.addonRequest.called, true);
+        sinon.assert.called(conn.addonRequest);
         const args = conn.addonRequest.firstCall.args;
 
         assert.equal(args[0].id, addon.id);
@@ -211,7 +212,7 @@ describe('firefox.remote', () => {
         const checkedAddon = await conn.checkForAddonReloading(addon);
         const finalAddon = await conn.checkForAddonReloading(checkedAddon);
         // This should remember not to check a second time.
-        assert.equal(conn.addonRequest.callCount, 1);
+        sinon.assert.calledOnce(conn.addonRequest);
         assert.deepEqual(finalAddon, addon);
       });
     });
@@ -294,10 +295,10 @@ describe('firefox.remote', () => {
         conn.addonRequest = sinon.spy(() => Promise.resolve({}));
 
         await conn.reloadAddon('some-id');
-        assert.equal(conn.getInstalledAddon.called, true);
-        assert.equal(conn.getInstalledAddon.firstCall.args[0], 'some-id');
+        sinon.assert.called(conn.getInstalledAddon);
+        sinon.assert.calledWith(conn.getInstalledAddon, 'some-id');
+        sinon.assert.called(conn.addonRequest);
 
-        assert.equal(conn.addonRequest.called, true);
         const requestArgs = conn.addonRequest.firstCall.args;
         assert.deepEqual(requestArgs[0], addon);
         assert.equal(requestArgs[1], 'reload');
@@ -312,7 +313,8 @@ describe('firefox.remote', () => {
           sinon.spy((addonToCheck) => Promise.resolve(addonToCheck));
 
         await conn.reloadAddon(addon.id);
-        assert.equal(conn.checkForAddonReloading.called, true);
+
+        sinon.assert.called(conn.checkForAddonReloading);
         assert.deepEqual(conn.checkForAddonReloading.firstCall.args[0],
                          addon);
       });
@@ -344,7 +346,7 @@ describe('firefox.remote', () => {
         }));
 
       await firefoxClient({maxRetries: 3}, {connectToFirefox});
-      assert.equal(connectToFirefox.callCount, 2);
+      sinon.assert.calledTwice(connectToFirefox);
     });
 
     it('only retries connection errors', async () => {
@@ -354,7 +356,7 @@ describe('firefox.remote', () => {
       await firefoxClient({maxRetries: 2}, {connectToFirefox})
         .then(makeSureItFails())
         .catch((error) => {
-          assert.equal(connectToFirefox.callCount, 1);
+          sinon.assert.calledOnce(connectToFirefox);
           assert.equal(error.message, 'not a connection error');
         });
     });
@@ -366,7 +368,7 @@ describe('firefox.remote', () => {
       await firefoxClient({maxRetries: 2}, {connectToFirefox})
         .then(makeSureItFails())
         .catch((error) => {
-          assert.equal(connectToFirefox.callCount, 3);
+          sinon.assert.calledThrice(connectToFirefox);
           assert.equal(error.message, 'failure');
         });
     });

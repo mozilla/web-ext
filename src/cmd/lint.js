@@ -41,16 +41,16 @@ export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
 // Lint command types and implementation.
 
 export type LintCmdParams = {|
+  artifactsDir?: string,
+  boring?: boolean,
+  ignoreFiles?: Array<string>,
+  metadata?: boolean,
+  output?: LinterOutputType,
+  pretty?: boolean,
+  selfHosted?: boolean,
   sourceDir: string,
   verbose?: boolean,
-  selfHosted?: boolean,
-  boring?: boolean,
-  output?: LinterOutputType,
-  metadata?: boolean,
-  pretty?: boolean,
   warningsAsErrors?: boolean,
-  ignoreFiles?: Array<string>,
-  artifactsDir?: string,
 |};
 
 export type LintCmdOptions = {|
@@ -61,8 +61,16 @@ export type LintCmdOptions = {|
 
 export default function lint(
   {
-    verbose, sourceDir, selfHosted, boring, output,
-    metadata, pretty, warningsAsErrors, ignoreFiles, artifactsDir,
+    artifactsDir,
+    boring,
+    ignoreFiles,
+    metadata,
+    output,
+    pretty,
+    sourceDir,
+    selfHosted,
+    verbose,
+    warningsAsErrors,
   }: LintCmdParams,
   {
     createLinter = defaultLinterCreator,
