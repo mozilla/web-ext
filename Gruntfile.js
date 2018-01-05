@@ -30,13 +30,12 @@ module.exports = function(grunt) {
     'webpack:functional_tests',
   ]);
 
-  grunt.registerTask('test', 'run linting and test suites', function() {
+  grunt.registerTask('test', 'run linting and the unit test suite', function() {
     var tasks = [
       'lint',
       'flowbin:check',
       'build-tests',
       'mochaTest:unit',
-      'mochaTest:functional',
     ];
 
     // TODO: enable the flowbin:check task on AppVeyor (mozilla/web-ext#773)
@@ -46,6 +45,27 @@ module.exports = function(grunt) {
     }
 
     grunt.task.run(tasks);
+  });
+
+  grunt.registerTask('test:functional', 'run functional test suites', [
+    'build-tests',
+    'mochaTest:functional',
+  ]);
+
+  grunt.registerTask('copy-dist-files-to-artifacts-dir', function() {
+    const distFile = grunt.file.expand('./dist/**').filter((filename) => {
+      return filename.endsWith('web-ext.js');
+    });
+
+    if (distFile.length === 0) {
+      // By default grunt will exit here, unless the `--force` grunt option has been
+      // specified on the command line.
+      grunt.fail.warn(
+        'Required dist/ file missing. Run the build command first.'
+      );
+    }
+
+    grunt.task.run('copy:dist-files-to-artifacts-dir');
   });
 
   grunt.registerTask('develop', [

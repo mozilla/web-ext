@@ -110,9 +110,8 @@ export function fixturePath(...pathParts: Array<string>): string {
  *
  * Usage:
  *
- *  Promise.resolve()
- *    .then(makeSureItFails())
- *    .catch((error) => {
+ *  Promise.reject(new Error('some error'))
+ *    .then(makeSureItFails(), (error) => {
  *      // Safely make assertions about the error...
  *    });
  */
@@ -151,7 +150,8 @@ export function makeSureItFails(): Function {
  * assert.equal(fakeProcess.exit.called, true);
  *
  */
- // $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
+
+// $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
 export function fake<T>(
   original: Object, methods: Object = {}, skipProperties: Array<string> = []
 ): T {
@@ -220,7 +220,7 @@ type FakeFirefoxClientParams = {|
 export function fakeFirefoxClient({
   requestResult = {}, requestError,
   makeRequestResult = {}, makeRequestError,
-}: FakeFirefoxClientParams= {}) {
+}: FakeFirefoxClientParams = {}) {
   return {
     disconnect: sinon.spy(() => {}),
     request: sinon.spy(
@@ -271,7 +271,7 @@ export class TCPConnectError extends ExtendableError {
 export class ErrorWithCode extends Error {
   code: string;
   constructor(code: ?string, message: ?string) {
-    super(message || 'pretend this is a system error');
+    super(`${code || ''}: ${message || 'pretend this is a system error'}`);
     this.code = code || 'SOME_CODE';
   }
 }
