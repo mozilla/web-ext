@@ -62,7 +62,8 @@ describe('util/manifest', () => {
           .then(makeSureItFails())
           .catch(onlyInstancesOf(InvalidManifest, (error) => {
             assert.match(error.message, /Error parsing manifest\.json at /);
-            assert.include(error.message, 'Unexpected token \' \' at 2:49');
+            assert.include(
+              error.message, 'Unexpected token  in JSON at position 49');
             assert.include(error.message, manifestFile);
           }));
       }
