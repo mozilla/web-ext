@@ -4,7 +4,6 @@ import path from 'path';
 import {it, describe} from 'mocha';
 import {fs} from 'mz';
 import sinon from 'sinon';
-import {assert} from 'chai';
 
 import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
 import {withTempDir} from '../../src/util/temp-dir';
@@ -42,7 +41,7 @@ describe('watcher', () => {
           return whenFilesChanged
             .then(() => {
               watcher.close();
-              assert.equal(onChange.callCount, 1);
+              sinon.assert.calledOnce(onChange);
               // This delay seems to avoid stat errors from the watcher
               // which can happen when the temp dir is deleted (presumably
               // before watcher.close() has removed all listeners).
@@ -67,7 +66,7 @@ describe('watcher', () => {
         filePath: '/some/file.js',
         onChange,
       });
-      assert.equal(onChange.called, true);
+      sinon.assert.called(onChange);
     });
 
     it('ignores changes to artifacts', () => {
@@ -78,7 +77,7 @@ describe('watcher', () => {
         artifactsDir: '/some/artifacts/dir/',
         onChange,
       });
-      assert.equal(onChange.called, false);
+      sinon.assert.notCalled(onChange);
     });
 
     it('provides a callback for ignoring files', () => {
@@ -98,11 +97,9 @@ describe('watcher', () => {
       };
 
       proxyFileChanges({...conf, filePath: '/somewhere/freaky'});
-      assert.equal(conf.onChange.called, false);
-
+      sinon.assert.notCalled(conf.onChange);
       proxyFileChanges({...conf, filePath: '/any/file/'});
-      assert.equal(conf.onChange.called, true);
-
+      sinon.assert.called(conf.onChange);
     });
 
   });

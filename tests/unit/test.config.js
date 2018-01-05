@@ -9,6 +9,7 @@ import {fs} from 'mz';
 import {Program} from '../../src/program';
 import {
   applyConfigToArgv,
+  discoverConfigFiles,
   loadJSConfigFile,
 } from '../../src/config';
 import {withTempDir} from '../../src/util/temp-dir';
@@ -39,8 +40,11 @@ function makeArgv({
   if (commandOpt) {
     program.command(command, commandDesc, commandExecutor, commandOpt);
   }
+
+  const argv = program.yargs.exitProcess(false).argv;
   return {
-    argv: program.yargs.exitProcess(false).argv,
+    argv,
+    argvFromCLI: argv,
     options: program.options,
   };
 }
@@ -157,6 +161,29 @@ describe('config', () => {
       assert.strictEqual(newArgv.sourceDir, cmdLineSrcDir);
     });
 
+    it('coerces config option values if needed', () => {
+      const coerce = (sourceDir) => `coerced(${sourceDir})`;
+      const params = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+            // In the real world this would do something like
+            // (sourceDir) => path.resolve(sourceDir)
+            coerce,
+          },
+        },
+      });
+
+      const sourceDir = '/configured/source/dir';
+      const configObject = {sourceDir};
+
+      const newArgv = applyConf({...params, configObject});
+      assert.strictEqual(newArgv.sourceDir, coerce(sourceDir));
+    });
+
     it('uses a configured boolean value over an implicit default', () => {
       const params = makeArgv({
         globalOpt: {
@@ -220,6 +247,34 @@ describe('config', () => {
       };
       const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.overwriteFiles, true);
+    });
+
+    it('can load multiple configs for global options', () => {
+      const params = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'file-path': {
+            demand: false,
+            type: 'string',
+          },
+        },
+      });
+
+      // Make sure the second global option overrides the first.
+      const firstConfigObject = {
+        filePath: 'first/path',
+      };
+      const secondConfigObject = {
+        filePath: 'second/path',
+      };
+
+      let argv = applyConf({
+        ...params, configObject: firstConfigObject,
+      });
+      argv = applyConf({
+        ...params, argv, configObject: secondConfigObject,
+      });
+      assert.strictEqual(argv.filePath, secondConfigObject.filePath);
     });
 
     it('uses CLI option over undefined configured option and default', () => {
@@ -451,6 +506,41 @@ describe('config', () => {
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
     });
 
+    it('can load multiple configs for sub-command options', () => {
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'file-path': {
+            demand: false,
+            type: 'string',
+          },
+        },
+      });
+
+      // Make sure the second sub-command option overrides the first.
+      const firstConfigObject = {
+        sign: {
+          filePath: 'first/path',
+        },
+      };
+      const secondConfigObject = {
+        sign: {
+          filePath: 'second/path',
+        },
+      };
+
+      let argv = applyConf({
+        ...params, configObject: firstConfigObject,
+      });
+      argv = applyConf({
+        ...params, argv, configObject: secondConfigObject,
+      });
+      assert.strictEqual(
+        argv.filePath, secondConfigObject.sign.filePath
+      );
+    });
+
     it('preserves default value if not in config', () => {
       const params = makeArgv({
         userCmd: ['sign'],
@@ -506,6 +596,38 @@ describe('config', () => {
       };
       const newArgv = applyConf({...params, configObject});
       assert.strictEqual(newArgv.apiKey, cmdApiKey);
+    });
+
+    it('preserves global option when sub-command options exist', () => {
+      const params = makeArgv({
+        userCmd: ['sign'],
+        command: 'sign',
+        commandOpt: {
+          'api-key': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+          },
+        },
+        globalOpt: {
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demand: false,
+          },
+        },
+      });
+      const sourceDir = 'custom/source/dir';
+      const configObject = {
+        // This global option should not be affected by the
+        // recursion code that processes the sub-command option.
+        sourceDir,
+        sign: {
+          apiKey: 'custom-configured-key',
+        },
+      };
+      const newArgv = applyConf({...params, configObject});
+      assert.strictEqual(newArgv.sourceDir, sourceDir);
     });
 
     it('handles camel case sub-commands', () => {
@@ -655,63 +777,33 @@ describe('config', () => {
           apiKey: 'fake-api-key',
         },
       };
-      assert.throws(() => {
-        applyConf({...params, configObject});
-      }, WebExtError,
-        'WebExtError: Option: apiUrl was defined without a type.');
-    });
-
-    it('throws an error when the type of one of them is in config' +
-      ' missing', () => {
-      const params = makeArgv({
-        userCmd: ['sign'],
-        command: 'sign',
-        commandOpt: {
-          'api-url': {
-            requiresArg: true,
-            demand: false,
-            default: 'pretend-default-value-of-apiKey',
-          },
-          'api-key': {
-            requiresArg: true,
-            demand: false,
-            type: 'string',
-            default: 'pretend-default-value-of-apiKey',
-          },
+      assert.throws(
+        () => {
+          applyConf({...params, configObject});
         },
-      });
-      const configObject = {
-        sign: {
-          apiUrl: 2,
-          apiKey: 'fake-api-key',
-        },
-      };
-      assert.throws(() => {
-        applyConf({...params, configObject});
-      }, WebExtError,
-        'WebExtError: Option: apiUrl was defined without a type.');
+        WebExtError,
+        'WebExtError: Option: apiUrl was defined without a type.'
+      );
     });
 
     it('throws an error when type of unrelated sub option is invalid', () => {
       const program = new Program(['run']);
 
-      program.command('run', 'this is a fake command', sinon.stub(),
-        {
-          'no-reload': {
-            type: 'boolean',
-            demand: false,
-          },
-        });
+      program.command('run', 'this is a fake command', sinon.stub(), {
+        'no-reload': {
+          type: 'boolean',
+          demand: false,
+        },
+      });
 
-      program.command('sign', 'this is a fake command',
-        sinon.stub(), {
-          'api-url': {
-            requiresArg: true,
-            type: 'string',
-            demand: false,
-            default: 'pretend-default-value-of-apiKey',
-          },
-        });
+      program.command('sign', 'this is a fake command', sinon.stub(), {
+        'api-url': {
+          requiresArg: true,
+          type: 'string',
+          demand: false,
+          default: 'pretend-default-value-of-apiKey',
+        },
+      });
 
       const configObject = {
         sign: {
@@ -737,7 +829,7 @@ describe('config', () => {
         (tmpDir) => {
           assert.throws(() => {
             loadJSConfigFile((path.join(tmpDir.path(),
-              'non-existant-config.js')));
+                                        'non-existant-config.js')));
           }, UsageError, /Cannot read config file/);
         });
     });
@@ -746,11 +838,13 @@ describe('config', () => {
       return withTempDir (
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
-          fs.writeFileSync(configFilePath,
+          fs.writeFileSync(
+            configFilePath,
             // missing = in two places
             `module.exports {
                 sourceDir 'path/to/fake/source/dir',
-              };`);
+              };`
+          );
           assert.throws(() => {
             loadJSConfigFile(configFilePath);
           }, UsageError);
@@ -761,10 +855,12 @@ describe('config', () => {
       return withTempDir(
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
-          fs.writeFileSync(configFilePath,
+          fs.writeFileSync(
+            configFilePath,
             `module.exports = {
               sourceDir: 'path/to/fake/source/dir',
-            };`);
+            };`
+          );
           const configObj = loadJSConfigFile(configFilePath);
           assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
         });
@@ -774,8 +870,87 @@ describe('config', () => {
       return withTempDir(
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
-          fs.writeFileSync(configFilePath, '{};');
+          fs.writeFileSync(configFilePath, 'module.exports = {};');
           loadJSConfigFile(configFilePath);
+        });
+    });
+  });
+
+  describe('discoverConfigFiles', () => {
+    function _discoverConfigFiles(params = {}) {
+      return discoverConfigFiles({
+        // By default, do not look in the real home directory.
+        getHomeDir: () => '/not-a-directory',
+        ...params,
+      });
+    }
+
+    it('finds a config in your home directory', () => {
+      return withTempDir(
+        async (tmpDir) => {
+          const homeDirConfig = path.join(
+            tmpDir.path(), '.web-ext-config.js'
+          );
+          await fs.writeFile(homeDirConfig, 'module.exports = {}');
+          assert.deepEqual(
+            // Stub out getHomeDir() so that it returns tmpDir.path()
+            // as if that was a user's home directory.
+            await _discoverConfigFiles({
+              getHomeDir: () => tmpDir.path(),
+            }),
+            [path.resolve(homeDirConfig)]
+          );
+        });
+    });
+
+    it('finds a config in your working directory', () => {
+      return withTempDir(
+        async (tmpDir) => {
+          const lastDir = process.cwd();
+          process.chdir(tmpDir.path());
+          try {
+            const expectedConfig = path.resolve(
+              path.join(process.cwd(), 'web-ext-config.js')
+            );
+            await fs.writeFile(expectedConfig, 'module.exports = {}');
+
+            assert.deepEqual(
+              await _discoverConfigFiles(),
+              [expectedConfig]
+            );
+          } finally {
+            process.chdir(lastDir);
+          }
+        });
+    });
+
+    it('discovers all config files', () => {
+      return withTempDir(
+        async (tmpDir) => {
+          const lastDir = process.cwd();
+          process.chdir(tmpDir.path());
+          try {
+            const fakeHomeDir = path.join(tmpDir.path(), 'home-dir');
+            await fs.mkdir(fakeHomeDir);
+            const globalConfig = path.resolve(
+              path.join(fakeHomeDir, '.web-ext-config.js')
+            );
+            await fs.writeFile(globalConfig, 'module.exports = {}');
+
+            const projectConfig = path.resolve(
+              path.join(process.cwd(), 'web-ext-config.js')
+            );
+            await fs.writeFile(projectConfig, 'module.exports = {}');
+
+            assert.deepEqual(
+              await _discoverConfigFiles({
+                getHomeDir: () => fakeHomeDir,
+              }),
+              [globalConfig, projectConfig]
+            );
+          } finally {
+            process.chdir(lastDir);
+          }
         });
     });
   });
