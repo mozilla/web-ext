@@ -74,7 +74,7 @@
     "sign-addon": "0.2.2",
     "source-map-support": "0.5.0",
     "stream-to-promise": "2.2.0",
-    "tmp": "0.0.30",
+    "tmp": "0.0.33",
     "update-notifier": "2.3.0",
     "watchpack": "1.4.0",
     "yargs": "6.6.0",
