@@ -62,16 +62,14 @@ describe('lint', () => {
   it('runs as a binary', () => {
     const {lint, createLinter} = setUp();
     return lint().then(() => {
-      const args = createLinter.firstCall.args[0];
-      assert.equal(args.runAsBinary, true);
+      sinon.assert.calledWithMatch(createLinter, {runAsBinary: true});
     });
   });
 
   it('sets runAsBinary according shouldExitProgram option', () => {
     const {lint, createLinter} = setUp();
     return lint({}, {shouldExitProgram: false}).then(() => {
-      const args = createLinter.firstCall.args[0];
-      assert.strictEqual(args.runAsBinary, false);
+      sinon.assert.calledWithMatch(createLinter, {runAsBinary: false});
     });
   });
 
@@ -86,34 +84,46 @@ describe('lint', () => {
   it('passes warningsAsErrors to the linter', () => {
     const {lint, createLinter} = setUp();
     return lint({warningsAsErrors: true}).then(() => {
-      const config = createLinter.firstCall.args[0].config;
-      assert.equal(config.warningsAsErrors, true);
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          warningsAsErrors: true,
+        },
+      });
     });
   });
 
   it('passes warningsAsErrors undefined to the linter', () => {
     const {lint, createLinter} = setUp();
     return lint().then(() => {
-      const config = createLinter.firstCall.args[0].config;
-      assert.equal(config.warningsAsErrors, undefined);
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          warningsAsErrors: undefined,
+        },
+      });
     });
   });
 
   it('configures the linter when verbose', () => {
     const {lint, createLinter} = setUp();
     return lint({verbose: true}).then(() => {
-      const config = createLinter.firstCall.args[0].config;
-      assert.equal(config.logLevel, 'debug');
-      assert.equal(config.stack, true);
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          logLevel: 'debug',
+          stack: true,
+        },
+      });
     });
   });
 
   it('configures the linter when not verbose', () => {
     const {lint, createLinter} = setUp();
     return lint({verbose: false}).then(() => {
-      const config = createLinter.firstCall.args[0].config;
-      assert.equal(config.logLevel, 'fatal');
-      assert.equal(config.stack, false);
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          logLevel: 'fatal',
+          stack: false,
+        },
+      });
     });
   });
 
@@ -126,12 +136,15 @@ describe('lint', () => {
       boring: true,
       selfHosted: true,
     }).then(() => {
-      const config = createLinter.firstCall.args[0].config;
-      assert.strictEqual(config.pretty, true);
-      assert.strictEqual(config.metadata, true);
-      assert.strictEqual(config.output, 'json');
-      assert.strictEqual(config.boring, true);
-      assert.strictEqual(config.selfHosted, true);
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          pretty: true,
+          metadata: true,
+          output: 'json',
+          boring: true,
+          selfHosted: true,
+        },
+      });
     });
   });
 
