@@ -27,7 +27,6 @@ export type SignParams = {|
   artifactsDir: string,
   id?: string,
   ignoreFiles?: Array<string>,
-  noInput?: boolean,
   sourceDir: string,
   timeout: number,
   verbose?: boolean,
@@ -55,7 +54,6 @@ export default function sign(
     artifactsDir,
     id,
     ignoreFiles = [],
-    noInput = false,
     sourceDir,
     timeout,
     verbose,
@@ -134,7 +132,7 @@ export default function sign(
       } else {
         log.info('FAIL');
         throw new WebExtError(
-          'The WebExtension could not be signed');
+          'The extension could not be signed');
       }
 
       return signingResult;

@@ -7,17 +7,23 @@ import {fs} from 'mz';
 import sinon, {spy} from 'sinon';
 import {assert} from 'chai';
 
+import {applyConfigToArgv} from '../../src/config';
 import {defaultVersionGetter, main, Program} from '../../src/program';
 import commands from '../../src/cmd';
-import {onlyInstancesOf, UsageError} from '../../src/errors';
+import {
+  onlyInstancesOf,
+  UsageError,
+} from '../../src/errors';
 import {
   createFakeProcess,
   fake,
   makeSureItFails,
   ErrorWithCode,
 } from './helpers';
-import {ConsoleStream} from '../../src/util/logger';
-
+import {
+  consoleStream, // instance is imported to inspect logged messages
+  ConsoleStream,
+} from '../../src/util/logger';
 
 describe('program.Program', () => {
 
@@ -26,7 +32,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(__dirname, '..', '..');
     return program.execute(
       absolutePackageDir, {
-        getVersion: () => spy(),
+        getVersion: () => 'not-a-real-version',
         checkForUpdates: spy(),
         systemProcess: fakeProcess,
         shouldExitProgram: false,
@@ -200,8 +206,7 @@ describe('program.Program', () => {
     program.command('thing', 'does a thing', () => {});
     return execProgram(program, {getVersion: version})
       .then(() => {
-        assert.equal(version.firstCall.args[0],
-                     path.join(__dirname, '..', '..'));
+        sinon.assert.calledWith(version, path.join(__dirname, '..', '..'));
       });
   });
 
@@ -217,6 +222,33 @@ describe('program.Program', () => {
       .then(() => {
         sinon.assert.notCalled(logStream.makeVerbose);
       });
+  });
+
+  it('logs UsageErrors into console', () => {
+    // Clear console stream from previous messages and start recording
+    consoleStream.stopCapturing();
+    consoleStream.flushCapturedLogs();
+    consoleStream.startCapturing();
+
+    const program = new Program(['thing']).command('thing', '', () => {
+      throw new UsageError('some error');
+    });
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+      },
+    });
+    return execProgram(program)
+      .then(makeSureItFails())
+      .catch(onlyInstancesOf(UsageError, (error) => {
+        const {capturedMessages} = consoleStream;
+        // Stop recording
+        consoleStream.stopCapturing();
+        assert.match(error.message, /some error/);
+        assert.ok(capturedMessages.some(
+          (message) => message.match(/some error/))
+        );
+      }));
   });
 
   it('throws an error about unknown commands', () => {
@@ -286,14 +318,41 @@ describe('program.Program', () => {
 
 describe('program.main', () => {
 
-  function execProgram(argv, {projectRoot = '', ...mainOptions}: Object = {}) {
-    const runOptions = {
-      getVersion: () => 'not-a-real-version',
-      checkForUpdates: spy(),
-      shouldExitProgram: false,
-      systemProcess: createFakeProcess(),
+  function execProgram(
+    argv,
+    {projectRoot = '', runOptions, ...mainOptions}: Object = {}
+  ) {
+    return main(
+      projectRoot,
+      {
+        argv,
+        runOptions: {
+          discoverConfigFiles: async () => [],
+          getVersion: () => 'not-a-real-version',
+          checkForUpdates: spy(),
+          shouldExitProgram: false,
+          systemProcess: createFakeProcess(),
+          ...runOptions,
+        },
+        ...mainOptions,
+      }
+    );
+  }
+
+  type MakeConfigLoaderParams = {|
+    configObjects: { [fileName: string]: Object },
+  |};
+
+  function makeConfigLoader(
+    {configObjects}: MakeConfigLoaderParams
+  ) {
+    return (fileName) => {
+      const conf = configObjects[fileName];
+      if (!conf) {
+        throw new Error(`Config file was not mapped: ${fileName}`);
+      }
+      return conf;
     };
-    return main(projectRoot, {argv, runOptions, ...mainOptions});
   }
 
   it('executes a command handler', () => {
@@ -318,7 +377,7 @@ describe('program.main', () => {
       });
   });
 
-  it('can get the program version', () => {
+  it('can get the program version', async () => {
     const fakeVersionGetter = sinon.spy(() => '<version>');
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
@@ -326,15 +385,13 @@ describe('program.main', () => {
     const projectRoot = '/pretend/project/root';
     // For some reason, executing --version like this
     // requires a command. In the real CLI, it does not.
-    return execProgram(['--version', 'build'],
-      {
-        projectRoot,
-        commands: fakeCommands,
-        getVersion: fakeVersionGetter,
-      })
-      .then(() => {
-        sinon.assert.calledWith(fakeVersionGetter, projectRoot);
-      });
+    await execProgram(['--version', 'build'], {
+      projectRoot,
+      commands: fakeCommands,
+      getVersion: fakeVersionGetter,
+    });
+
+    sinon.assert.calledWith(fakeVersionGetter, projectRoot);
   });
 
   it('turns sourceDir into an absolute path', () => {
@@ -436,6 +493,187 @@ describe('program.main', () => {
       assert.strictEqual(options.shouldExitProgram, false);
     });
   });
+
+  it('applies options from the specified config file', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const configObject = {
+      lint: {
+        selfHosted: true,
+      },
+    };
+    // Instead of loading/parsing a real file, just return an object.
+    const fakeLoadJSConfigFile = sinon.spy(() => {
+      return configObject;
+    });
+
+    await execProgram(
+      ['lint', '--config', 'path/to/web-ext-config.js'],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          loadJSConfigFile: fakeLoadJSConfigFile,
+        },
+      }
+    );
+
+    const options = fakeCommands.lint.firstCall.args[0];
+    // This makes sure that the config object was applied
+    // to the lint command options.
+    assert.equal(
+      options.selfHosted, configObject.lint.selfHosted);
+  });
+
+  it('discovers config files', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const configObject = {
+      lint: {
+        selfHosted: true,
+      },
+    };
+    // Instead of loading/parsing a real file, just return an object.
+    const fakeLoadJSConfigFile = sinon.spy(() => {
+      return configObject;
+    });
+
+    const discoveredFile = 'fake/config.js';
+    await execProgram(
+      ['lint'],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles: async () => [discoveredFile],
+          loadJSConfigFile: fakeLoadJSConfigFile,
+        },
+      }
+    );
+
+    const options = fakeCommands.lint.firstCall.args[0];
+    // This makes sure that the config object was applied
+    // to the lint command options.
+    assert.equal(
+      options.selfHosted, configObject.lint.selfHosted);
+
+    sinon.assert.calledWith(fakeLoadJSConfigFile, discoveredFile);
+  });
+
+  it('lets you disable config discovery', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const discoverConfigFiles = sinon.spy(() => Promise.resolve([]));
+    await execProgram(
+      ['--no-config-discovery', 'lint'],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles,
+        },
+      }
+    );
+
+    sinon.assert.notCalled(discoverConfigFiles);
+  });
+
+  it('applies config files in order', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const globalConfig = 'home/dir/.web-ext-config.js';
+    const projectConfig = 'project/dir/web-ext-config.js';
+    const customConfig = path.resolve('custom/web-ext-config.js');
+
+    const loadJSConfigFile = makeConfigLoader({
+      configObjects: {
+        [globalConfig]: {
+          noInput: true,
+        },
+        [projectConfig]: {
+          verbose: true,
+        },
+        [customConfig]: {
+          lint: {
+            selfHosted: true,
+          },
+        },
+      },
+    });
+    const fakeApplyConfigToArgv = sinon.spy(applyConfigToArgv);
+
+    await execProgram(
+      ['lint', '--config', customConfig],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          applyConfigToArgv: fakeApplyConfigToArgv,
+          discoverConfigFiles: async () => [
+            globalConfig, projectConfig,
+          ],
+          loadJSConfigFile,
+        },
+      }
+    );
+
+    // Check that the config files were all applied to argv.
+    const options = fakeCommands.lint.firstCall.args[0];
+    assert.equal(options.noInput, true);
+    assert.equal(options.verbose, true);
+    assert.equal(options.selfHosted, true);
+
+    // Make sure the config files were loaded in the right order.
+    assert.include(fakeApplyConfigToArgv.firstCall.args[0], {
+      configFileName: globalConfig,
+    });
+    assert.include(fakeApplyConfigToArgv.secondCall.args[0], {
+      configFileName: projectConfig,
+    });
+    assert.include(fakeApplyConfigToArgv.thirdCall.args[0], {
+      configFileName: customConfig,
+    });
+  });
+
+  it('overwrites old config values', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const globalConfig = path.resolve('home/dir/.web-ext-config.js');
+    const customConfig = path.resolve('custom/web-ext-config.js');
+
+    const finalSourceDir = path.resolve('final/source-dir');
+    const loadJSConfigFile = makeConfigLoader({
+      configObjects: {
+        // This config is loaded first.
+        [globalConfig]: {
+          sourceDir: 'first/source-dir',
+        },
+        // This config is loaded next which overwrites the old value.
+        [customConfig]: {
+          sourceDir: finalSourceDir,
+        },
+      },
+    });
+
+    await execProgram(
+      ['lint', '--config', customConfig],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles: async () => [globalConfig],
+          loadJSConfigFile,
+        },
+      }
+    );
+
+    const options = fakeCommands.lint.firstCall.args[0];
+    // This should equal the final configured value.
+    assert.equal(options.sourceDir, finalSourceDir);
+  });
 });
 
 describe('program.defaultVersionGetter', () => {
@@ -447,7 +685,7 @@ describe('program.defaultVersionGetter', () => {
       .then((pkgData) => {
         const testBuildEnv = {globalEnv: 'production'};
         assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
-                   JSON.parse(pkgData).version);
+                     JSON.parse(pkgData).version);
       });
   });
 
