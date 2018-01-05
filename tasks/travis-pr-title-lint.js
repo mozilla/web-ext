@@ -112,8 +112,8 @@ module.exports = function(grunt) {
               // NOTE: page slice is going to be something like:
               // "<title> PR title by author · Pull Request #NUM · mozilla/web-ext · GitHub"
               var pageTitleParts = body.slice(titleStart, titleEnd)
-                  .replace('<title>', '')
-                  .split(' · ');
+                .replace('<title>', '')
+                .split(' · ');
 
               // Check that we have really got the title of a real pull request.
               var expectedPart1 = 'Pull Request #' +

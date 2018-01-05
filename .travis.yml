@@ -14,11 +14,24 @@ script:
 ## run eslint, flow and the unit test suite.
 - COVERAGE=y NODE_ENV=production npm test
 
+## NOTE: by setting the configured python to /bin/false we are forcing the production mode tests
+## to fail if any of the dependencies is a binary dependency that is build using node-gyp.
+- npm config set python /bin/false
+
 ## run functional test suite in a npm production environment
 ## (See #1082 for rationale).
 - npm run copy-dist-files-to-artifacts-dir
-- cd artifacts/production && npm install --production && cd -
-- TEST_WEB_EXT_BIN=./artifacts/production/bin/web-ext npm run test:functional
+- cd artifacts/production
+- npm install --production; export NPM_INSTALL_EXIT_CODE=$?
+- cd -
+- test $NPM_INSTALL_EXIT_CODE -eq 0 &&
+  TEST_WEB_EXT_BIN=./artifacts/production/bin/web-ext npm run test:functional
+
+## NOTE: remove the custom python path from the npm config, and also
+## remove production package.json (which seems to convince npm run travlis-pr-title-lint
+## to look for grunt in the production node_modules/ dir).
+- npm config delete python
+- rm artifacts/production/package.json
 
 ## lint the github PR title.
 - npm run travis-pr-title-lint
