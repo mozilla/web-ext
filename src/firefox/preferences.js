@@ -62,6 +62,7 @@ const prefsCommon: FirefoxPreferences = {
 const prefsFennec: FirefoxPreferences = {
   'browser.console.showInPanel': true,
   'browser.firstrun.show.uidiscovery': false,
+  'devtools.remote.usb.enabled': true,
 };
 
 // Prefs specific to Firefox for desktop.

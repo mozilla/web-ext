@@ -13,7 +13,9 @@ export const withTempDir = tmpDirUtils.withTempDir;
 
 export const functionalTestsDir = path.resolve(__dirname);
 export const projectDir = path.join(functionalTestsDir, '..', '..');
-export const webExt = path.join(projectDir, 'bin', 'web-ext');
+export const webExt = process.env.TEST_WEB_EXT_BIN ?
+  path.resolve(process.env.TEST_WEB_EXT_BIN) :
+  path.join(projectDir, 'bin', 'web-ext');
 export const fixturesDir = path.join(functionalTestsDir, '..', 'fixtures');
 export const minimalAddonPath = path.join(fixturesDir, 'minimal-web-ext');
 export const fakeFirefoxPath = path.join(

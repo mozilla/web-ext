@@ -1,16 +1,22 @@
 /* @flow */
+import os from 'os';
 import path from 'path';
 import {readFileSync} from 'fs';
 
+import camelCase from 'camelcase';
 import git from 'git-rev-sync';
 import yargs from 'yargs';
-import camelCase from 'camelcase';
 
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
 import {createLogger, consoleStream as defaultLogStream} from './util/logger';
 import {coerceCLICustomPreference} from './firefox/preferences';
 import {checkForUpdates as defaultUpdateChecker} from './util/updates';
+import {
+  discoverConfigFiles as defaultConfigDiscovery,
+  loadJSConfigFile as defaultLoadJSConfigFile,
+  applyConfigToArgv as defaultApplyConfigToArgv,
+} from './config';
 
 const log = createLogger(__filename);
 const envPrefix = 'WEB_EXT';
@@ -20,13 +26,18 @@ type ProgramOptions = {|
   absolutePackageDir?: string,
 |}
 
+export type VersionGetterFn = (absolutePackageDir: string) => string;
+
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 type ExecuteOptions = {
   checkForUpdates?: Function,
   systemProcess?: typeof process,
   logStream?: typeof defaultLogStream,
-  getVersion?: Function,
+  getVersion?: VersionGetterFn,
+  applyConfigToArgv?: typeof defaultApplyConfigToArgv,
+  discoverConfigFiles?: typeof defaultConfigDiscovery,
+  loadJSConfigFile?: typeof defaultLoadJSConfigFile,
   shouldExitProgram?: boolean,
   globalEnv?: string,
 }
@@ -39,7 +50,7 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
-  defaultValues: Object;
+  options: Object;
 
   constructor(
     argv: ?Array<string>,
@@ -63,14 +74,15 @@ export class Program {
     this.yargs.strict();
 
     this.commands = {};
-    this.defaultValues = {};
+    this.options = {};
   }
 
   command(
     name: string, description: string, executor: Function,
     commandOptions: Object = {}
   ): Program {
-    this.defaultValues[name] = setDefaultValues(commandOptions);
+    this.options[camelCase(name)] = commandOptions;
+
     this.yargs.command(name, description, (yargsForCmd) => {
       if (!commandOptions) {
         return;
@@ -96,7 +108,7 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
-    this.defaultValues = {...this.defaultValues, ...setDefaultValues(options)};
+    this.options = {...this.options, ...options};
     Object.keys(options).forEach((key) => {
       options[key].global = true;
       if (options[key].demand === undefined) {
@@ -112,9 +124,15 @@ export class Program {
   async execute(
     absolutePackageDir: string,
     {
-      checkForUpdates = defaultUpdateChecker, systemProcess = process,
-      logStream = defaultLogStream, getVersion = defaultVersionGetter,
-      shouldExitProgram = true, globalEnv = WEBEXT_BUILD_ENV,
+      checkForUpdates = defaultUpdateChecker,
+      systemProcess = process,
+      logStream = defaultLogStream,
+      getVersion = defaultVersionGetter,
+      applyConfigToArgv = defaultApplyConfigToArgv,
+      discoverConfigFiles = defaultConfigDiscovery,
+      loadJSConfigFile = defaultLoadJSConfigFile,
+      shouldExitProgram = true,
+      globalEnv = WEBEXT_BUILD_ENV,
     }: ExecuteOptions = {}
   ): Promise<void> {
 
@@ -123,9 +141,6 @@ export class Program {
 
     const argv = this.yargs.argv;
     const cmd = argv._[0];
-
-    // Command line option (pref) renamed for internal use (customPref).
-    argv.customPrefs = argv.pref;
 
     const runCommand = this.commands[cmd];
 
@@ -147,18 +162,58 @@ export class Program {
         });
       }
 
-      await runCommand(argv, {shouldExitProgram});
+      let adjustedArgv = {...argv};
+      const configFiles = [];
+
+      if (argv.configDiscovery) {
+        log.debug(
+          'Discovering config files. ' +
+          'Set --no-config-discovery to disable');
+        const discoveredConfigs = await discoverConfigFiles();
+        configFiles.push(...discoveredConfigs);
+      } else {
+        log.debug('Not discovering config files');
+      }
+
+      if (argv.config) {
+        configFiles.push(path.resolve(argv.config));
+      }
+
+      if (configFiles.length) {
+        const niceFileList = configFiles
+          .map((f) => f.replace(process.cwd(), '.'))
+          .map((f) => f.replace(os.homedir(), '~'))
+          .join(', ');
+        log.info(
+          'Applying config file' +
+          `${configFiles.length !== 1 ? 's' : ''}: ` +
+          `${niceFileList}`);
+      }
+
+      configFiles.forEach((configFileName) => {
+        const configObject = loadJSConfigFile(configFileName);
+        adjustedArgv = applyConfigToArgv({
+          argv: adjustedArgv,
+          argvFromCLI: argv,
+          configFileName,
+          configObject,
+          options: this.options,
+        });
+      });
+
+      await runCommand(adjustedArgv, {shouldExitProgram});
 
     } catch (error) {
-      const prefix = cmd ? `${cmd}: ` : '';
       if (!(error instanceof UsageError) || argv.verbose) {
-        log.error(`\n${prefix}${error.stack}\n`);
+        log.error(`\n${error.stack}\n`);
       } else {
-        log.error(`\n${prefix}${error}\n`);
+        log.error(`\n${error}\n`);
       }
       if (error.code) {
-        log.error(`${prefix}Error code: ${error.code}\n`);
+        log.error(`Error code: ${error.code}\n`);
       }
+
+      log.debug(`Command executed: ${cmd}`);
 
       if (this.shouldExitProgram) {
         systemProcess.exit(1);
@@ -171,20 +226,6 @@ export class Program {
 
 // A global variable generated by DefinePlugin, generated in webpack.config.js
 declare var WEBEXT_BUILD_ENV: string;
-
-function setDefaultValues(options: Object): Object {
-  const defaultValues = {};
-  Object.keys(options).forEach((key) => {
-    const camelCasedKey = camelCase(key);
-    if (options[key].type === 'boolean') {
-      defaultValues[camelCasedKey] = false;
-    }
-    if (typeof(options[key].default) !== 'undefined') {
-      defaultValues[camelCasedKey] = options[key].default;
-    }
-  });
-  return defaultValues;
-}
 
 //A defintion of type of argument for defaultVersionGetter
 type VersionGetterOptions = {
@@ -209,7 +250,7 @@ export function defaultVersionGetter(
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 type MainParams = {
-  getVersion?: Function,
+  getVersion?: VersionGetterFn,
   commands?: Object,
   argv: Array<any>,
   runOptions?: Object,
@@ -276,12 +317,32 @@ Example: $0 --help run.
       requiresArg: true,
       type: 'array',
     },
+    'no-input': {
+      describe: 'Disable all features that require standard input',
+      type: 'boolean',
+    },
+    'config': {
+      alias: 'c',
+      describe: 'Path to a CommonJS config file to set ' +
+        'option defaults',
+      default: undefined,
+      demand: false,
+      requiresArg: true,
+      type: 'string',
+    },
+    'config-discovery': {
+      describe: 'Discover config files in home directory and ' +
+        'working directory. Disable with --no-config-discovery.',
+      demand: false,
+      default: true,
+      type: 'boolean',
+    },
   });
 
   program
     .command(
       'build',
-      'Create a web extension package from source',
+      'Create an extension package from source',
       commands.build, {
         'as-needed': {
           describe: 'Watch for file changes and re-build as needed',
@@ -295,7 +356,7 @@ Example: $0 --help run.
       })
     .command(
       'sign',
-      'Sign the web extension so it can be installed in Firefox',
+      'Sign the extension so it can be installed in Firefox',
       commands.sign, {
         'api-key': {
           describe: 'API key (JWT issuer) from addons.mozilla.org',
@@ -332,7 +393,16 @@ Example: $0 --help run.
           type: 'number',
         },
       })
-    .command('run', 'Run the web extension', commands.run, {
+    .command('run', 'Run the extension', commands.run, {
+      'target': {
+        alias: 't',
+        describe: 'The extensions runners to enable (e.g. firefox-desktop, ' +
+                  'firefox-android). Specify this option multiple times to ' +
+                  'run against multiple targets.',
+        default: 'firefox-desktop',
+        demand: false,
+        type: 'string',
+      },
       'firefox': {
         alias: ['f', 'firefox-binary'],
         describe: 'Path or alias to a Firefox executable such as firefox-bin ' +
@@ -393,8 +463,43 @@ Example: $0 --help run.
         demand: false,
         type: 'boolean',
       },
+      // Firefox for Android CLI options.
+      'adb-bin': {
+        describe: 'Specify a custom path to the adb binary',
+        demand: false,
+        type: 'string',
+        requiresArg: true,
+      },
+      'adb-host': {
+        describe: 'Connect to adb on the specified host',
+        demand: false,
+        type: 'string',
+        requiresArg: true,
+      },
+      'adb-port': {
+        describe: 'Connect to adb on the specified port',
+        demand: false,
+        type: 'string',
+        requiresArg: true,
+      },
+      'adb-device': {
+        alias: ['android-device'],
+        describe: 'Connect to the specified adb device name',
+        demand: false,
+        type: 'string',
+        requiresArg: true,
+      },
+      'firefox-apk': {
+        describe: (
+          'Run a specific Firefox for Android APK. ' +
+          'Example: org.mozilla.fennec_aurora'
+        ),
+        demand: false,
+        type: 'string',
+        requiresArg: true,
+      },
     })
-    .command('lint', 'Validate the web extension source', commands.lint, {
+    .command('lint', 'Validate the extension source', commands.lint, {
       'output': {
         alias: 'o',
         describe: 'The type of output to generate',
@@ -432,7 +537,7 @@ Example: $0 --help run.
       },
     })
     .command('docs', 'Open the web-ext documentation in a browser',
-      commands.docs, {});
+             commands.docs, {});
 
   return program.execute(absolutePackageDir, runOptions);
 }
