@@ -1,17 +1,23 @@
 /* @flow */
+import os from 'os';
 import path from 'path';
 
 import requireUncached from 'require-uncached';
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 
+import fileExists from './util/file-exists';
 import {createLogger} from './util/logger';
 import {UsageError, WebExtError} from './errors';
 
 const log = createLogger(__filename);
 
 type ApplyConfigToArgvParams = {|
+  // This is the argv object which will get updated by each
+  // config applied.
   argv: Object,
+  // This is the argv that only has CLI values applied to it.
+  argvFromCLI: Object,
   configObject: Object,
   options: Object,
   configFileName: string,
@@ -19,6 +25,7 @@ type ApplyConfigToArgvParams = {|
 
 export function applyConfigToArgv({
   argv,
+  argvFromCLI,
   configObject,
   options,
   configFileName,
@@ -26,9 +33,9 @@ export function applyConfigToArgv({
   let newArgv = {...argv};
 
   for (const option in configObject) {
-
     if (camelCase(option) !== option) {
-      throw new UsageError(`The config option "${option}" must be ` +
+      throw new UsageError(
+        `The config option "${option}" must be ` +
         `specified in camel case: "${camelCase(option)}"`);
     }
 
@@ -36,7 +43,8 @@ export function applyConfigToArgv({
       typeof configObject[option] === 'object') {
       // Descend into the nested configuration for a sub-command.
       newArgv = applyConfigToArgv({
-        argv,
+        argv: newArgv,
+        argvFromCLI,
         configObject: configObject[option],
         options: options[option],
         configFileName});
@@ -50,6 +58,7 @@ export function applyConfigToArgv({
         `an unknown option: "${option}"`);
     }
     if (options[decamelizedOptName].type === undefined) {
+      // This means yargs option type wasn't not defined correctly
       throw new WebExtError(
         `Option: ${option} was defined without a type.`);
     }
@@ -73,19 +82,30 @@ export function applyConfigToArgv({
       }
     }
 
-    // we assume the value was set on the CLI if the default value is
-    // not the same as that on the argv object as there is a very rare chance
-    // of this happening
+    // This is our best effort (without patching yargs) to detect
+    // if a value was set on the CLI instead of in the config.
+    // It looks for a default value and if the argv value is
+    // different, it assumes that the value was configured on the CLI.
 
-    const wasValueSetOnCLI = typeof(argv[option]) !== 'undefined' &&
-      (argv[option] !== defaultValue);
+    const wasValueSetOnCLI =
+      typeof argvFromCLI[option] !== 'undefined' &&
+      argvFromCLI[option] !== defaultValue;
     if (wasValueSetOnCLI) {
-      log.debug(`Favoring CLI: ${option}=${argv[option]} over ` +
+      log.debug(
+        `Favoring CLI: ${option}=${argvFromCLI[option]} over ` +
         `configuration: ${option}=${configObject[option]}`);
+      newArgv[option] = argvFromCLI[option];
       continue;
     }
 
     newArgv[option] = configObject[option];
+
+    const coerce = options[decamelizedOptName].coerce;
+    if (coerce) {
+      log.debug(
+        `Calling coerce() on configured value for ${option}`);
+      newArgv[option] = coerce(newArgv[option]);
+    }
   }
   return newArgv;
 }
@@ -109,4 +129,44 @@ export function loadJSConfigFile(filePath: string): Object {
       'Did you set module.exports = {...}?');
   }
   return configObject;
+}
+
+type DiscoverConfigFilesParams = {|
+  getHomeDir: () => string,
+|};
+
+export async function discoverConfigFiles(
+  {getHomeDir = os.homedir}: DiscoverConfigFilesParams = {}
+): Promise<Array<string>> {
+  const magicConfigName = 'web-ext-config.js';
+
+  // Config files will be loaded in this order.
+  const possibleConfigs = [
+    // Look for a magic hidden config (preceded by dot) in home dir.
+    path.join(getHomeDir(), `.${magicConfigName}`),
+    // Look for a magic config in the current working directory.
+    path.join(process.cwd(), magicConfigName),
+  ];
+
+  const configs = await Promise.all(possibleConfigs.map(
+    async (fileName) => {
+      const resolvedFileName = path.resolve(fileName);
+      if (await fileExists(resolvedFileName)) {
+        return resolvedFileName;
+      } else {
+        log.debug(
+          `Discovered config "${resolvedFileName}" does not ` +
+          'exist or is not readable');
+        return undefined;
+      }
+    }
+  ));
+
+  const existingConfigs = [];
+  configs.forEach((f) => {
+    if (typeof f === 'string') {
+      existingConfigs.push(f);
+    }
+  });
+  return existingConfigs;
 }

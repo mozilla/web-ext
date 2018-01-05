@@ -47,5 +47,5 @@ describe('web-ext sign', () => {
          }
        });
      })
-    );
+  );
 });

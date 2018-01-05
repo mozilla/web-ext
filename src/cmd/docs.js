@@ -19,7 +19,7 @@ export const url = 'https://developer.mozilla.org/en-US/Add-ons' +
 
 export default function docs(
   params: DocsParams, {openUrl = defaultUrlOpener}: DocsOptions = {}
-) {
+): Promise<void> {
   return new Promise((resolve, reject) => {
     openUrl(url, (error) => {
       if (error) {

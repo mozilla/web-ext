@@ -6,7 +6,7 @@ import tty from 'tty';
 import type Watchpack from 'watchpack';
 
 import type {
-  IExtensionRunner,  // eslint-disable-line import/named
+  IExtensionRunner, // eslint-disable-line import/named
   ExtensionRunnerReloadResult,
 } from './base';
 import {
@@ -28,9 +28,6 @@ export type MultiExtensionRunnerParams = {|
   runners: Array<IExtensionRunner>,
   desktopNotifications: typeof defaultDesktopNotifications,
 |};
-
-// Export everything exported by the firefox-desktop runner.
-export * from './firefox-desktop';
 
 
 /**
@@ -134,6 +131,7 @@ export class MultiExtensionRunner {
       promises.push(reloadPromise);
     }
 
+    // $FLOW_FIXME: When upgrading to Flow 0.61.0, it could not follow the type of sourceDir in the array of promises.
     return await Promise.all(promises).then((results) => {
       this.handleReloadResults(results);
       return results;
@@ -216,7 +214,7 @@ export function defaultWatcherCreator(
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
- ): Watchpack {
+): Watchpack {
   const fileFilter = createFileFilter(
     {sourceDir, artifactsDir, ignoreFiles}
   );

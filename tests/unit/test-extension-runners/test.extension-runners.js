@@ -69,24 +69,24 @@ describe('util/extension-runners', () => {
   describe('MultiExtensionRunner', () => {
 
     it('calls the "run" method on all the created IExtensionRunner',
-      async () => {
-        const params = prepareExtensionRunnerParams();
-        const [
-          fakeExtensionRunner, anotherFakeExtensionRunner,
-        ] = params.runners;
+       async () => {
+         const params = prepareExtensionRunnerParams();
+         const [
+           fakeExtensionRunner, anotherFakeExtensionRunner,
+         ] = params.runners;
 
-        sinon.spy(fakeExtensionRunner, 'run');
-        sinon.spy(anotherFakeExtensionRunner, 'run');
+         sinon.spy(fakeExtensionRunner, 'run');
+         sinon.spy(anotherFakeExtensionRunner, 'run');
 
-        const runnerInstance = new MultiExtensionRunner(params);
+         const runnerInstance = new MultiExtensionRunner(params);
 
-        assert.equal(runnerInstance.getName(), 'Multi Extension Runner');
+         assert.equal(runnerInstance.getName(), 'Multi Extension Runner');
 
-        await runnerInstance.run();
+         await runnerInstance.run();
 
-        sinon.assert.calledOnce(fakeExtensionRunner.run);
-        sinon.assert.calledOnce(anotherFakeExtensionRunner.run);
-      });
+         sinon.assert.calledOnce(fakeExtensionRunner.run);
+         sinon.assert.calledOnce(anotherFakeExtensionRunner.run);
+       });
 
     it('calls the "reloadAllExtensions" on all the created runners',
        async () => {
@@ -159,87 +159,91 @@ describe('util/extension-runners', () => {
     });
 
     it('shows a desktop notification on errors while reloading all extensions',
-      async () => {
-        const params = prepareExtensionRunnerParams();
-        const fakeExtensionRunner = createFakeExtensionRunner({
-          overriddenMethods: {
-            getName: () => 'fakeExtensionRunner',
-            reloadAllExtensions: () => {
-              return Promise.reject(new Error('reload error 1'));
-            },
-          },
-        });
-        const anotherFakeExtensionRunner = createFakeExtensionRunner({
-          getName: () => 'anotherFakeExtensionRunner',
-          overriddenMethods: {
-            reloadAllExtensions: () => {
-              return Promise.reject(new Error('reload error 2'));
-            },
-          },
-        });
+       async () => {
+         const params = prepareExtensionRunnerParams();
+         const fakeExtensionRunner = createFakeExtensionRunner({
+           overriddenMethods: {
+             getName: () => 'fakeExtensionRunner',
+             reloadAllExtensions: () => {
+               return Promise.reject(new Error('reload error 1'));
+             },
+           },
+         });
+         const anotherFakeExtensionRunner = createFakeExtensionRunner({
+           getName: () => 'anotherFakeExtensionRunner',
+           overriddenMethods: {
+             reloadAllExtensions: () => {
+               return Promise.reject(new Error('reload error 2'));
+             },
+           },
+         });
 
-        params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
+         params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
 
-        const runnerInstance = new MultiExtensionRunner(params);
+         const runnerInstance = new MultiExtensionRunner(params);
 
-        await runnerInstance.reloadAllExtensions();
+         await runnerInstance.reloadAllExtensions();
 
-        sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
-        sinon.assert.calledOnce(anotherFakeExtensionRunner.reloadAllExtensions);
-        sinon.assert.callCount(params.desktopNotifications, 2);
-        sinon.assert.calledWith(
-          params.desktopNotifications,
-          sinon.match({
-            title: sinon.match(/web-ext run: extension reload error/),
-            message: sinon.match(/on "fakeExtensionRunner" - reload error 1/),
-          })
-        );
-      });
+         sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
+         sinon.assert.calledOnce(
+           anotherFakeExtensionRunner.reloadAllExtensions
+         );
+         sinon.assert.callCount(params.desktopNotifications, 2);
+         sinon.assert.calledWith(
+           params.desktopNotifications,
+           sinon.match({
+             title: sinon.match(/web-ext run: extension reload error/),
+             message: sinon.match(/on "fakeExtensionRunner" - reload error 1/),
+           })
+         );
+       });
 
     it('shows a desktop notification on errors while reloading an extension',
-      async () => {
-        const params = prepareExtensionRunnerParams();
-        const fakeExtensionRunner = createFakeExtensionRunner({
-          overriddenMethods: {
-            getName: () => 'fakeExtensionRunner',
-            reloadExtensionBySourceDir: () => {
-              return Promise.reject(new Error('reload error 1'));
-            },
-          },
-        });
-        const anotherFakeExtensionRunner = createFakeExtensionRunner({
-          overriddenMethods: {
-            reloadExtensionBySourceDir: () => Promise.resolve(),
-            getName: () => 'anotherFakeExtensionRunner',
-          },
-        });
+       async () => {
+         const params = prepareExtensionRunnerParams();
+         const fakeExtensionRunner = createFakeExtensionRunner({
+           overriddenMethods: {
+             getName: () => 'fakeExtensionRunner',
+             reloadExtensionBySourceDir: () => {
+               return Promise.reject(new Error('reload error 1'));
+             },
+           },
+         });
+         const anotherFakeExtensionRunner = createFakeExtensionRunner({
+           overriddenMethods: {
+             reloadExtensionBySourceDir: () => Promise.resolve(),
+             getName: () => 'anotherFakeExtensionRunner',
+           },
+         });
 
-        params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
+         params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
 
-        const runnerInstance = new MultiExtensionRunner(params);
-        const sourceDir = '/fake/sourceDir';
-        const res = await runnerInstance.reloadExtensionBySourceDir(sourceDir);
-        const errors = res.filter((r) => r.reloadError);
+         const runnerInstance = new MultiExtensionRunner(params);
+         const sourceDir = '/fake/sourceDir';
+         const res = await runnerInstance.reloadExtensionBySourceDir(sourceDir);
+         const errors = res.filter((r) => r.reloadError);
 
-        assert.equal(res.length, 2);
-        assert.equal(errors.length, 1);
+         assert.equal(res.length, 2);
+         assert.equal(errors.length, 1);
 
-        sinon.assert.calledOnce(fakeExtensionRunner.reloadExtensionBySourceDir);
-        sinon.assert.calledOnce(
-          anotherFakeExtensionRunner.reloadExtensionBySourceDir
-        );
-        sinon.assert.calledOnce(params.desktopNotifications);
+         sinon.assert.calledOnce(
+           fakeExtensionRunner.reloadExtensionBySourceDir
+         );
+         sinon.assert.calledOnce(
+           anotherFakeExtensionRunner.reloadExtensionBySourceDir
+         );
+         sinon.assert.calledOnce(params.desktopNotifications);
 
-        sinon.assert.calledWith(
-          params.desktopNotifications,
-          sinon.match({
-            title: sinon.match(/web-ext run: extension reload error/),
-            message: sinon.match(
-              /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/
-            ),
-          })
-        );
-      });
+         sinon.assert.calledWith(
+           params.desktopNotifications,
+           sinon.match({
+             title: sinon.match(/web-ext run: extension reload error/),
+             message: sinon.match(
+               /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/
+             ),
+           })
+         );
+       });
 
     describe('registerCleanup', () => {
 
@@ -522,63 +526,63 @@ describe('util/extension-runners', () => {
     });
 
     it('can still reload when user presses R after a reload error',
-      async () => {
-        const {extensionRunner, reloadStrategy} = prepare({
-          stubExtensionRunner: {
-            reloadAllExtensions: sinon.spy(
-              () => Promise.reject(Error('fake reload error'))
-            ),
-          },
-        });
+       async () => {
+         const {extensionRunner, reloadStrategy} = prepare({
+           stubExtensionRunner: {
+             reloadAllExtensions: sinon.spy(
+               () => Promise.reject(Error('fake reload error'))
+             ),
+           },
+         });
 
-        const fakeStdin = new tty.ReadStream();
-        sinon.spy(fakeStdin, 'setRawMode');
+         const fakeStdin = new tty.ReadStream();
+         sinon.spy(fakeStdin, 'setRawMode');
 
-        try {
-          await reloadStrategy({}, {stdin: fakeStdin});
-          // Wait for one tick for reloadStrategy's keypress processing loop
-          // to be ready.
-          await Promise.resolve();
+         try {
+           await reloadStrategy({}, {stdin: fakeStdin});
+           // Wait for one tick for reloadStrategy's keypress processing loop
+           // to be ready.
+           await Promise.resolve();
 
-          fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-          // Wait for one tick to give reloadStrategy the chance to handle
-          // the keypress event.
-          await Promise.resolve();
-          sinon.assert.called(fakeStdin.setRawMode);
-          sinon.assert.calledOnce(extensionRunner.reloadAllExtensions);
-          fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-          await Promise.resolve();
-          sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
-        } finally {
-          exitKeypressLoop(fakeStdin);
-        }
-      });
+           fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+           // Wait for one tick to give reloadStrategy the chance to handle
+           // the keypress event.
+           await Promise.resolve();
+           sinon.assert.called(fakeStdin.setRawMode);
+           sinon.assert.calledOnce(extensionRunner.reloadAllExtensions);
+           fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+           await Promise.resolve();
+           sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
+         } finally {
+           exitKeypressLoop(fakeStdin);
+         }
+       });
 
     it('shuts down firefox on user request (CTRL+C in shell console)',
-      async () => {
-        const {extensionRunner, reloadStrategy} = prepare({
-          stubExtensionRunner: {
-            async exit() {},
-          },
-        });
-        const fakeStdin = new tty.ReadStream();
+       async () => {
+         const {extensionRunner, reloadStrategy} = prepare({
+           stubExtensionRunner: {
+             async exit() {},
+           },
+         });
+         const fakeStdin = new tty.ReadStream();
 
-        try {
-          await reloadStrategy({}, {stdin: fakeStdin});
+         try {
+           await reloadStrategy({}, {stdin: fakeStdin});
 
-          // Wait for one tick.
-          await Promise.resolve();
+           // Wait for one tick.
+           await Promise.resolve();
 
-          fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
 
-          // Wait for one tick.
-          await Promise.resolve();
+           // Wait for one tick.
+           await Promise.resolve();
 
-          sinon.assert.called(extensionRunner.exit);
-        } finally {
-          exitKeypressLoop(fakeStdin);
-        }
-      });
+           sinon.assert.called(extensionRunner.exit);
+         } finally {
+           exitKeypressLoop(fakeStdin);
+         }
+       });
 
     it('pauses the web-ext process (CTRL+Z in shell console)', async () => {
       const {reloadStrategy} = prepare();
