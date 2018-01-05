@@ -259,8 +259,7 @@ describe('sign', () => {
         .then(makeSureItFails())
         .catch((error) => {
           assert.instanceOf(error, WebExtError);
-          assert.match(error.message,
-                       /The WebExtension could not be signed/);
+          assert.match(error.message, /The extension could not be signed/);
         });
     }
   ));
