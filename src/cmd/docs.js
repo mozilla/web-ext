@@ -5,17 +5,21 @@ import {createLogger} from '../util/logger';
 
 const log = createLogger(__filename);
 
+type DocsParams = {
+  noInput?: boolean,
+  shouldExitProgram?: boolean,
+}
+
 type DocsOptions = {
   openUrl?: typeof defaultUrlOpener,
-  shouldExitProgram?: boolean,
 }
 
 export const url = 'https://developer.mozilla.org/en-US/Add-ons' +
   '/WebExtensions/Getting_started_with_web-ext';
 
 export default function docs(
-  params: Object, {openUrl = defaultUrlOpener}: DocsOptions = {}
-) {
+  params: DocsParams, {openUrl = defaultUrlOpener}: DocsOptions = {}
+): Promise<void> {
   return new Promise((resolve, reject) => {
     openUrl(url, (error) => {
       if (error) {

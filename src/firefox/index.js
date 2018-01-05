@@ -189,6 +189,90 @@ export async function run(
 }
 
 
+// isDefaultProfile types and implementation.
+
+const DEFAULT_PROFILES_NAMES = [
+  'default',
+  'dev-edition-default',
+];
+
+export type IsDefaultProfileFn = (
+  profilePathOrName: string,
+  ProfileFinder?: typeof FirefoxProfile.Finder,
+  fsStat?: typeof fs.stat,
+) => Promise<boolean>;
+
+/*
+ * Tests if a profile is a default Firefox profile (both as a profile name or
+ * profile path).
+ *
+ * Returns a promise that resolves to true if the profile is one of default Firefox profile.
+ */
+export async function isDefaultProfile(
+  profilePathOrName: string,
+  ProfileFinder?: typeof FirefoxProfile.Finder = FirefoxProfile.Finder,
+  fsStat?: typeof fs.stat = fs.stat,
+): Promise<boolean> {
+  if (DEFAULT_PROFILES_NAMES.includes(profilePathOrName)) {
+    return true;
+  }
+
+  const baseProfileDir = ProfileFinder.locateUserDirectory();
+  const profilesIniPath = path.join(baseProfileDir, 'profiles.ini');
+  try {
+    await fsStat(profilesIniPath);
+  } catch (error) {
+    if (isErrorWithCode('ENOENT', error)) {
+      log.debug(`profiles.ini not found: ${error}`);
+
+      // No profiles exist yet, default to false (the default profile name contains a
+      // random generated component).
+      return false;
+    }
+
+    // Re-throw any unexpected exception.
+    throw error;
+  }
+
+  // Check for profile dir path.
+  const finder = new ProfileFinder(baseProfileDir);
+  const readProfiles = promisify(finder.readProfiles, finder);
+
+  await readProfiles();
+
+  const normalizedProfileDirPath = path.normalize(
+    path.join(path.resolve(profilePathOrName), path.sep)
+  );
+
+  for (const profile of finder.profiles) {
+    // Check if the profile dir path or name is one of the default profiles
+    // defined in the profiles.ini file.
+    if (DEFAULT_PROFILES_NAMES.includes(profile.Name) ||
+        profile.Default === '1') {
+      let profileFullPath;
+
+      // Check for profile name.
+      if (profile.Name === profilePathOrName) {
+        return true;
+      }
+
+      // Check for profile path.
+      if (profile.IsRelative === '1') {
+        profileFullPath = path.join(baseProfileDir, profile.Path, path.sep);
+      } else {
+        profileFullPath = path.join(profile.Path, path.sep);
+      }
+
+      if (path.normalize(profileFullPath) === normalizedProfileDirPath) {
+        return true;
+      }
+    }
+  }
+
+  // Profile directory not found.
+  return false;
+}
+
 // configureProfile types and implementation.
 
 export type ConfigureProfileOptions = {|
@@ -238,6 +322,7 @@ export function configureProfile(
 export type UseProfileParams = {
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
+  isFirefoxDefaultProfile?: IsDefaultProfileFn,
   customPrefs?: FirefoxPreferences,
 };
 
@@ -248,9 +333,19 @@ export async function useProfile(
   {
     app,
     configureThisProfile = configureProfile,
+    isFirefoxDefaultProfile = isDefaultProfile,
     customPrefs = {},
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
+  const isForbiddenProfile = await isFirefoxDefaultProfile(profilePath);
+  if (isForbiddenProfile) {
+    throw new UsageError(
+      'Cannot use --keep-profile-changes on a default profile' +
+      ` ("${profilePath}")` +
+      ' because web-ext will make it insecure and unsuitable for daily use.' +
+      '\nSee https://github.com/mozilla/web-ext/issues/1005'
+    );
+  }
   const profile = new FirefoxProfile({destinationDirectory: profilePath});
   return await configureThisProfile(profile, {app, customPrefs});
 }
