@@ -132,8 +132,9 @@ describe('build', () => {
           .then(makeSureItFails())
           .catch((error) => {
             assert.instanceOf(error, UsageError);
-            assert.match(error.message, /Unexpected token '"' at 1:15/);
-            assert.match(error.message, /^Error parsing messages.json/);
+            assert.match(
+              error.message, /Unexpected string in JSON at position 14/);
+            assert.match(error.message, /^Error parsing messages\.json/);
             assert.include(error.message, messageFileName);
           });
       }
