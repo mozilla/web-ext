@@ -342,7 +342,7 @@ export class FirefoxAndroidExtensionRunner {
 
     if (packages.length === 0) {
       throw new UsageError(
-        'No Firefox packages found of the selected Android device');
+        'No Firefox packages were found on the selected Android device');
     }
 
     const pkgsListMsg = (pkgs) => {
