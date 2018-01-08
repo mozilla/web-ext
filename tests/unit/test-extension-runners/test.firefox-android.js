@@ -234,7 +234,7 @@ describe('util/extension-runners/firefox-android', () => {
         assert.instanceOf(actualException, UsageError);
         assert.match(
           actualException && actualException.message,
-          /No Firefox packages found of the selected Android device/
+          /No Firefox packages were found on the selected Android device/
         );
       });
     });
