@@ -418,7 +418,7 @@ describe('config', () => {
         () => applyConf({...params, configObject}),
         UsageError,
         'UsageError: The config file at some/path/to/config.js specified the ' +
-        'type of "retries" incorrectly as "string" (expected type: "number")'
+        'type of "retries" incorrectly as "string" (expected type "number")'
       );
     });
 
@@ -837,7 +837,7 @@ describe('config', () => {
           configObject});
       }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly as "number"' +
-        ' (expected type: "string")');
+        ' (expected type "string")');
     });
 
   });
