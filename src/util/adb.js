@@ -163,7 +163,7 @@ export default class ADBUtils {
     for (const perm of permissions) {
       if (!permissionsMap[perm]) {
         throw new UsageError(
-          `Required ${perm} has not be granted for ${apk}` +
+          `Required ${perm} has not be granted for ${apk}. ` +
           'Please grant them using the Android Settings ' +
           'or using the following adb command:\n' +
           `\t adb shell pm grant ${apk} ${perm}\n`
