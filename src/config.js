@@ -74,7 +74,7 @@ export function applyConfigToArgv({
     if (optionType !== expectedType) {
       throw new UsageError(`The config file at ${configFileName} specified ` +
         `the type of "${option}" incorrectly as "${optionType}"` +
-        ` (expected type: "${expectedType}")`);
+        ` (expected type "${expectedType}")`);
     }
 
     let defaultValue;
