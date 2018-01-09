@@ -277,6 +277,25 @@ describe('config', () => {
       assert.strictEqual(argv.filePath, secondConfigObject.filePath);
     });
 
+    it('recognizes array config values as array types', () => {
+      const params = makeArgv({
+        userCmd: ['fakecommand'],
+        globalOpt: {
+          'ignore-files': {
+            demand: false,
+            type: 'array',
+          },
+        },
+      });
+
+      const configObject = {
+        ignoreFiles: ['file1', 'file2'],
+      };
+
+      const argv = applyConf({...params, configObject});
+      assert.strictEqual(argv.ignoreFiles, configObject.ignoreFiles);
+    });
+
     it('uses CLI option over undefined configured option and default', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
       const params = makeArgv({
