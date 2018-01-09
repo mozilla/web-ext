@@ -239,7 +239,7 @@ export class FirefoxAndroidExtensionRunner {
     await this.adbForceStopSelectedPackage();
 
     if (selectedArtifactsDir) {
-      log.info('Cleanup artifacts dir created on the Android device...');
+      log.debug('Cleaning up artifacts directory on the Android device...');
       await adbUtils.clearArtifactsDir(selectedAdbDevice);
     }
 
