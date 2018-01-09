@@ -193,6 +193,7 @@ export function fake<T>(
     stub[key] = sinon.spy(stub[key]);
   });
 
+  // $FLOW_IGNORE: fake can return any kind of object for testing.
   return stub;
 }
 
