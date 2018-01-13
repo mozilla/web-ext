@@ -503,7 +503,6 @@ describe('firefox', () => {
          );
          let exception;
 
-<<<<<<< HEAD
          try {
            await firefox.useProfile('default', {
              configureThisProfile,
@@ -512,19 +511,38 @@ describe('firefox', () => {
          } catch (error) {
            exception = error;
          }
-
+         assert.instanceOf(exception, UsageError);
          assert.match(
            exception && exception.message,
            /Cannot use --keep-profile-changes on a default profile/
          );
        });
-=======
-        assert.match(
-          exception && exception.message,
-            /Cannot use --keep-profile-changes on a default profile/
-        );
-      });
->>>>>>> tests: new tests fro useProfile
+
+    it('rejects to a UsageError when profle is not found',
+       async () => {
+         const fakeGetProfilePath = sinon.spy(() => Promise.resolve(false));
+         const createProfileFinder = () => {
+           return fakeGetProfilePath;
+         };
+         const isFirefoxDefaultProfile = sinon.spy(
+           () => Promise.resolve(false)
+         );
+         let exception;
+         try {
+           await firefox.useProfile('profileName', {
+             createProfileFinder,
+             isFirefoxDefaultProfile,
+           });
+         } catch (error) {
+           exception = error;
+         }
+         assert.instanceOf(exception, UsageError);
+         assert.match(
+           exception && exception.message,
+           /The request "profileName" profile name cannot be resolved/
+         );
+       }
+    );
 
     it('resolves to a FirefoxProfile instance', () => withBaseProfile(
       async (baseProfile) => {
@@ -565,7 +583,7 @@ describe('firefox', () => {
           sinon.assert.calledOnce(fakeGetProfilePath);
           sinon.assert.calledWith(
             fakeGetProfilePath,
-            sinon.match('profileNames')
+            sinon.match('profileName')
           );
         } catch (error) {
           throw error;
@@ -578,7 +596,7 @@ describe('firefox', () => {
         try {
           const app = 'fennec';
           const createProfileFinder = () => {
-            return (profilePath) => Promise.resolve(baseProfile.path());
+            return () => Promise.resolve(baseProfile.path());
           };
           const isFirefoxDefaultProfile = sinon.spy(
             () => Promise.resolve(false)
@@ -591,7 +609,7 @@ describe('firefox', () => {
           sinon.assert.calledOnce(isFirefoxDefaultProfile);
           sinon.assert.calledWith(
             isFirefoxDefaultProfile,
-            sinon.match('profileNames')
+            sinon.match('profileName')
           );
         } catch (error) {
           throw error;
@@ -603,13 +621,14 @@ describe('firefox', () => {
       async (baseProfile) => {
         try {
           const app = 'fennec';
+          const profilePath = baseProfile.path();
           const createProfileFinder = () => {
-            return (profilePath) => Promise.resolve(baseProfile.path());
+            return () => Promise.resolve(profilePath);
           };
           const isFirefoxDefaultProfile = sinon.spy(
             () => Promise.resolve(false)
           );
-          await firefox.useProfile(baseProfile.path(), {
+          await firefox.useProfile(profilePath, {
             app,
             createProfileFinder,
             isFirefoxDefaultProfile,
@@ -617,7 +636,7 @@ describe('firefox', () => {
           sinon.assert.calledOnce(isFirefoxDefaultProfile);
           sinon.assert.calledWith(
             isFirefoxDefaultProfile,
-            sinon.match(baseProfile.path())
+            sinon.match(profilePath)
           );
         } catch (error) {
           throw error;
@@ -639,6 +658,46 @@ describe('firefox', () => {
           });
       }
     ));
+
+  });
+
+  describe('defaultCreateProfileFinder', () => {
+
+    it('creates a finder', async () => {
+      try {
+        const FxProfile = {
+          Finder: sinon.spy(() => () => Promise.resolve()),
+        };
+        firefox.defaultCreateProfileFinder({FxProfile});
+        sinon.assert.called(FxProfile.Finder);
+        sinon.assert.calledWith(
+          FxProfile.Finder,
+          sinon.notOk,
+        );
+      } catch (error) {
+        throw error;
+      }
+    });
+
+    it('creates finder based on userDirectoryPath if present', async () => {
+      try {
+        const FxProfile = {
+          Finder: sinon.spy(() => () => Promise.resolve()),
+        };
+        const userDirectoryPath = '/non/existent/path';
+
+        firefox.defaultCreateProfileFinder({userDirectoryPath, FxProfile});
+
+        sinon.assert.called(FxProfile.Finder);
+        sinon.assert.calledWith(
+          FxProfile.Finder,
+          sinon.match(userDirectoryPath),
+        );
+      } catch (error) {
+        throw error;
+      }
+    });
+
 
   });
 

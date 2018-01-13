@@ -317,26 +317,36 @@ export function configureProfile(
   return Promise.resolve(profile);
 }
 
-export function defaultCreateProfileFinder(userDirectoryPath?: string) {
-  const finder = new FirefoxProfile.Finder(userDirectoryPath);
+export type getProfileFN = (profileName: string) => Promise<string | void>;
+
+export type CreateProfileFinderParams = {|
+  userDirectoryPath?: string,
+  FxProfile?: typeof FirefoxProfile
+|}
+
+export function defaultCreateProfileFinder(
+  {
+    userDirectoryPath,
+    FxProfile = FirefoxProfile,
+  }: CreateProfileFinderParams = {}
+): getProfileFN {
+  const finder = new FxProfile.Finder(userDirectoryPath);
   const readProfiles = promisify(finder.readProfiles, finder);
   const getPath = promisify(finder.getPath, finder);
-  return async (profileName: string) => {
-    const profilesIniPath = path.join(
-      userDirectoryPath || FirefoxProfile.Finder.locateUserDirectory(),
-      'profiles.ini');
+  return async (profileName: string): Promise<string | void> => {
     try {
-      await fs.stat(profilesIniPath);
+      await readProfiles();
+      const hasProfileName = finder.profiles.filter(
+        (profileDef) => profileDef.Name === profileName).length !== 0;
+      if (hasProfileName) {
+        return await getPath(profileName);
+      }
     } catch (error) {
       if (isErrorWithCode('ENOENT', error)) {
         log.warn('No firefox profiles exist');
+      } else {
+        throw error;
       }
-    }
-    await readProfiles();
-    const hasProfileName = finder.profiles.filter(
-      (profileDef) => profileDef.Name === profileName).length !== 0;
-    if (hasProfileName) {
-      return await getPath(profileName);
     }
   };
 }
@@ -382,11 +392,11 @@ export async function useProfile(
     destinationDirectory = profilePath;
   } else {
     log.debug(`Assuming ${profilePath} is a named profile`);
-    destinationDirectory = getProfilePath(profilePath);
+    destinationDirectory = await getProfilePath(profilePath);
     if (!destinationDirectory) {
       throw new UsageError(
-        `The request "${profilePath}" profile name
-        cannot be resolved to a profile path`
+        `The request "${profilePath}" profile name ` +
+        'cannot be resolved to a profile path'
       );
     }
   }
