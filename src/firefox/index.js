@@ -363,30 +363,25 @@ export async function useProfile(
     createProfileFinder = defaultCreateProfileFinder,
   }: UseProfileParams = {},
 ): Promise<FirefoxProfile> {
+  const isForbiddenProfile = await isFirefoxDefaultProfile(profilePath);
+  if (isForbiddenProfile) {
+    throw new UsageError(
+      'Cannot use --keep-profile-changes on a default profile' +
+      ` ("${profilePath}")` +
+      ' because web-ext will make it insecure and unsuitable for daily use.' +
+      '\nSee https://github.com/mozilla/web-ext/issues/1005'
+    );
+  }
+
   let destinationDirectory;
   const getProfilePath = createProfileFinder();
 
   const profileIsAPath = await isDirectory(profilePath);
   if (profileIsAPath) {
     log.debug(`Using profile directory "${profilePath}"`);
-    const isForbiddenProfile = await isFirefoxDefaultProfile(profilePath);
-    if (isForbiddenProfile) {
-      throw new UsageError(
-        'Cannot use --keep-profile-changes on a default profile' +
-        ` ("${profilePath}")` +
-        ' because web-ext will make it insecure and unsuitable for daily use.' +
-        '\nSee https://github.com/mozilla/web-ext/issues/1005'
-      );
-    }
     destinationDirectory = profilePath;
   } else {
     log.debug(`Assuming ${profilePath} is a named profile`);
-    if (profilePath === 'default' ||
-    profilePath === 'dev-edition-default') {
-      throw new WebExtError(
-        `Cannot use the blacklisted named profile "${profilePath}"`
-      );
-    }
     destinationDirectory = getProfilePath(profilePath);
     if (!destinationDirectory) {
       throw new UsageError(

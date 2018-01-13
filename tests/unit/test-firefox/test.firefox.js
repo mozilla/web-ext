@@ -503,6 +503,7 @@ describe('firefox', () => {
          );
          let exception;
 
+<<<<<<< HEAD
          try {
            await firefox.useProfile('default', {
              configureThisProfile,
@@ -517,14 +518,110 @@ describe('firefox', () => {
            /Cannot use --keep-profile-changes on a default profile/
          );
        });
+=======
+        assert.match(
+          exception && exception.message,
+            /Cannot use --keep-profile-changes on a default profile/
+        );
+      });
+>>>>>>> tests: new tests fro useProfile
 
     it('resolves to a FirefoxProfile instance', () => withBaseProfile(
-      (baseProfile) => {
-        const configureThisProfile = (profile) => Promise.resolve(profile);
-        return firefox.useProfile(baseProfile.path(), {configureThisProfile})
-          .then((profile) => {
-            assert.instanceOf(profile, FirefoxProfile);
+      async (baseProfile) => {
+        try {
+          const app = 'fennec';
+          const configureThisProfile = (profile) => Promise.resolve(profile);
+          const createProfileFinder = () => {
+            return (profilePath) => Promise.resolve(profilePath);
+          };
+          const profile = await firefox.useProfile(baseProfile.path(), {
+            app,
+            configureThisProfile,
+            createProfileFinder,
           });
+          assert.instanceOf(profile, FirefoxProfile);
+        } catch (error) {
+          throw error;
+        }
+      }
+    ));
+
+    it('looks for profile path if passed a name', () => withBaseProfile(
+      async (baseProfile) => {
+        try {
+          const app = 'fennec';
+          const fakeGetProfilePath = sinon.spy(() => baseProfile.path());
+          const createProfileFinder = () => {
+            return fakeGetProfilePath;
+          };
+          const isFirefoxDefaultProfile = sinon.spy(
+            () => Promise.resolve(false)
+          );
+          await firefox.useProfile('profileName', {
+            app,
+            createProfileFinder,
+            isFirefoxDefaultProfile,
+          });
+          sinon.assert.calledOnce(fakeGetProfilePath);
+          sinon.assert.calledWith(
+            fakeGetProfilePath,
+            sinon.match('profileNames')
+          );
+        } catch (error) {
+          throw error;
+        }
+      }
+    ));
+
+    it('checks if named profile is default', () => withBaseProfile(
+      async (baseProfile) => {
+        try {
+          const app = 'fennec';
+          const createProfileFinder = () => {
+            return (profilePath) => Promise.resolve(baseProfile.path());
+          };
+          const isFirefoxDefaultProfile = sinon.spy(
+            () => Promise.resolve(false)
+          );
+          await firefox.useProfile('profileName', {
+            app,
+            createProfileFinder,
+            isFirefoxDefaultProfile,
+          });
+          sinon.assert.calledOnce(isFirefoxDefaultProfile);
+          sinon.assert.calledWith(
+            isFirefoxDefaultProfile,
+            sinon.match('profileNames')
+          );
+        } catch (error) {
+          throw error;
+        }
+      }
+    ));
+
+    it('checks if path leads to default profile', () => withBaseProfile(
+      async (baseProfile) => {
+        try {
+          const app = 'fennec';
+          const createProfileFinder = () => {
+            return (profilePath) => Promise.resolve(baseProfile.path());
+          };
+          const isFirefoxDefaultProfile = sinon.spy(
+            () => Promise.resolve(false)
+          );
+          await firefox.useProfile(baseProfile.path(), {
+            app,
+            createProfileFinder,
+            isFirefoxDefaultProfile,
+          });
+          sinon.assert.calledOnce(isFirefoxDefaultProfile);
+          sinon.assert.calledWith(
+            isFirefoxDefaultProfile,
+            sinon.match(baseProfile.path())
+          );
+        } catch (error) {
+          throw error;
+        }
       }
     ));
 
