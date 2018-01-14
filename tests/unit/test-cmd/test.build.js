@@ -78,12 +78,14 @@ describe('build', () => {
   it('handles repeating localization keys', () => withTempDir(
     async (tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      await fs.writeFile(messageFileName,
+      await fs.writeFile(
+        messageFileName,
         `{"extensionName": {
             "message": "example extension",
             "description": "example description"
           }
-        }`);
+        }`
+      );
 
       const manifestWithRepeatingPattern = {
         name: '__MSG_extensionName__ __MSG_extensionName__',
@@ -110,7 +112,7 @@ describe('build', () => {
         makeSureItFails();
       } catch (error) {
         assert.instanceOf(error, UsageError);
-        assert.match(error.message, /Unexpected token '"' at 1:15/);
+        assert.match(error.message, /Unexpected string in JSON at position 14/);
         assert.match(error.message, /^Error parsing messages.json/);
         assert.include(error.message, messageFileName);
       }
@@ -121,7 +123,8 @@ describe('build', () => {
     async (tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
       //This is missing the 'message' key
-      await fs.writeFile(messageFileName,
+      await fs.writeFile(
+        messageFileName,
         `{"extensionName": {
             "description": "example extension"
             }
@@ -139,7 +142,8 @@ describe('build', () => {
         makeSureItFails();
       } catch (error) {
         assert.instanceOf(error, UsageError);
-        assert.match(error.message,
+        assert.match(
+          error.message,
           /The locale file .*messages\.json is missing key: extensionName/);
       }
     }
@@ -155,7 +159,8 @@ describe('build', () => {
     } catch (error) {
       log.info(error);
       assert.instanceOf(error, UsageError);
-      assert.match(error.message,
+      assert.match(
+        error.message,
         /Error: ENOENT: no such file or directory, open .*messages.json/);
       assert.match(error.message, /^Error reading messages.json/);
       assert.include(error.message, '/path/to/non-existent-dir/messages.json');
@@ -191,7 +196,8 @@ describe('build', () => {
       }, {
         manifestData: basicManifest,
       });
-      assert.match(buildResult.extensionPath,
+      assert.match(
+        buildResult.extensionPath,
         /the_extension-0\.0\.1\.zip$/);
       buildResult.extensionPath;
     }
@@ -275,7 +281,8 @@ describe('build', () => {
         onChange();
         makeSureItFails();
       } catch (error) {
-        assert.include(error && error.message,
+        assert.include(
+          error && error.message,
           'Simulate an error on the second call to packageCreator()');
       }
     }
