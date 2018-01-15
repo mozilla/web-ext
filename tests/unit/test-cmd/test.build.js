@@ -71,7 +71,6 @@ describe('build', () => {
       });
       assert.match(buildResult.extensionPath,
                    /name_of_the_extension-1\.0\.zip$/);
-      buildResult.extensionPath;
     }
   ));
 
@@ -169,6 +168,7 @@ describe('build', () => {
 
   it('can build an extension without an ID', () => withTempDir(
     async (tmpDir) => {
+      // Make sure a manifest without an ID doesn't throw an error.
       await build({
         sourceDir: fixturePath('minimal-web-ext'),
         artifactsDir: tmpDir.path(),
@@ -199,7 +199,6 @@ describe('build', () => {
       assert.match(
         buildResult.extensionPath,
         /the_extension-0\.0\.1\.zip$/);
-      buildResult.extensionPath;
     }
   ));
 
@@ -235,7 +234,7 @@ describe('build', () => {
       });
       // Make sure we still have a build result.
       assert.match(buildResult.extensionPath, /\.zip$/);
-      assert.equal(onSourceChange.called, true);
+      sinon.assert.called(onSourceChange);
       const args = onSourceChange.firstCall.args[0];
       assert.equal(args.sourceDir, sourceDir);
       assert.equal(args.artifactsDir, artifactsDir);
@@ -270,7 +269,7 @@ describe('build', () => {
       }, {
         manifestData: basicManifest, onSourceChange, packageCreator,
       });
-      assert.equal(onSourceChange.called, true);
+      sinon.assert.called(onSourceChange);
       assert.equal(packageCreator.callCount, 1);
 
       const {onChange} = onSourceChange.firstCall.args[0];

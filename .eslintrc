@@ -107,6 +107,10 @@
     "no-underscore-dangle": 0,
     "no-unneeded-ternary": 2,
     "no-unused-vars": 2,
+    "no-unused-expressions": [2, {
+      "allowShortCircuit": true,
+      "allowTernary": true
+    }],
     "no-with": 2,
     "object-property-newline": [2, {
       "allowMultiplePropertiesPerLine": true
