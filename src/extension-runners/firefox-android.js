@@ -400,7 +400,13 @@ export class FirefoxAndroidExtensionRunner {
       selectedAdbDevice
     );
 
-    if (androidVersion < 21) {
+    if (typeof androidVersion !== 'number' || isNaN(androidVersion)) {
+      throw new WebExtError(`Invalid Android version: ${androidVersion}`);
+    }
+
+    log.debug(`Detected Android version ${androidVersion}`);
+
+    if (androidVersion < 23) {
       return;
     }
 
