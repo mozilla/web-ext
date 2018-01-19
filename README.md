@@ -145,7 +145,7 @@ If you would like to control logging, you can access the logger object. Here is 
 
 ```js
 webExt.util.logger.consoleStream.makeVerbose();
-webExt.cmd.run({...}, {shouldExitProgram: false});
+webExt.cmd.run({sourceDir: './src'}, {shouldExitProgram: false});
 ```
 
 You can also disable the use of standard input:
@@ -157,12 +157,16 @@ webExt.cmd.run({noInput: true}, {shouldExitProgram: false});
 `web-ext` is designed for WebExtensions but you can try disabling manifest validation to work with legacy extensions. This is not officially supported.
 
 ```js
-webExt.cmd.run({...}, {shouldExitProgram: false}, {
-  getValidatedManifest: () => ({
-    name: 'some-fake-name',
-    version: '1.0.0',
-  }),
-});
+webExt.cmd.run(
+  {sourceDir: './src'},
+  {
+    getValidatedManifest: () => ({
+      name: 'some-fake-name',
+      version: '1.0.0',
+    }),
+    shouldExitProgram: false,
+  },
+);
 ```
 
 
