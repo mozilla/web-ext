@@ -135,6 +135,24 @@ export function loadJSConfigFile(filePath: string): Object {
   return configObject;
 }
 
+export function loadJSONConfigFile(filePath: string): Object {
+  const resolvedFilePath = path.resolve(filePath);
+  log.debug(
+    `Loading JSON config file: "${filePath}" ` +
+    `(resolved to "${resolvedFilePath}")`);
+  let configObject;
+  try {
+    const topLevelConfig = requireUncached(resolvedFilePath);
+    configObject = topLevelConfig.webExt || {};
+  } catch (error) {
+    log.debug('Handling error:', error);
+    throw new UsageError(
+      `Cannot read config file: ${resolvedFilePath}\n` +
+      `Error: ${error.message}`);
+  }
+  return configObject;
+}
+
 type DiscoverConfigFilesParams = {|
   getHomeDir: () => string,
 |};
@@ -150,6 +168,8 @@ export async function discoverConfigFiles(
     path.join(getHomeDir(), `.${magicConfigName}`),
     // Look for a magic config in the current working directory.
     path.join(process.cwd(), magicConfigName),
+    // Look for webExt key in package.json file
+    path.join(process.cwd(), 'package.json'),
   ];
 
   const configs = await Promise.all(possibleConfigs.map(

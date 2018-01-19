@@ -15,6 +15,7 @@ import {checkForUpdates as defaultUpdateChecker} from './util/updates';
 import {
   discoverConfigFiles as defaultConfigDiscovery,
   loadJSConfigFile as defaultLoadJSConfigFile,
+  loadJSONConfigFile as defaultLoadJSONConfigFile,
   applyConfigToArgv as defaultApplyConfigToArgv,
 } from './config';
 
@@ -38,6 +39,7 @@ type ExecuteOptions = {
   applyConfigToArgv?: typeof defaultApplyConfigToArgv,
   discoverConfigFiles?: typeof defaultConfigDiscovery,
   loadJSConfigFile?: typeof defaultLoadJSConfigFile,
+  loadJSONConfigFile?: typeof defaultLoadJSONConfigFile,
   shouldExitProgram?: boolean,
   globalEnv?: string,
 }
@@ -131,6 +133,7 @@ export class Program {
       applyConfigToArgv = defaultApplyConfigToArgv,
       discoverConfigFiles = defaultConfigDiscovery,
       loadJSConfigFile = defaultLoadJSConfigFile,
+      loadJSONConfigFile = defaultLoadJSONConfigFile,
       shouldExitProgram = true,
       globalEnv = WEBEXT_BUILD_ENV,
     }: ExecuteOptions = {}
@@ -191,7 +194,8 @@ export class Program {
       }
 
       configFiles.forEach((configFileName) => {
-        const configObject = loadJSConfigFile(configFileName);
+        const configObject = configFileName.endsWith('package.json') ?
+          loadJSONConfigFile(configFileName) : loadJSConfigFile(configFileName);
         adjustedArgv = applyConfigToArgv({
           argv: adjustedArgv,
           argvFromCLI: argv,
