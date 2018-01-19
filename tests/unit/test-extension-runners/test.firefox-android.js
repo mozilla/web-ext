@@ -704,7 +704,7 @@ describe('util/extension-runners/firefox-android', () => {
          sinon.assert.calledOnce(anotherCallback);
        });
 
-    it('raised an error when unable to find an android version number',
+    it('raises an error when unable to find an android version number',
        async () => {
          async function expectInvalidVersionError(version: any) {
            const {
@@ -718,8 +718,9 @@ describe('util/extension-runners/firefox-android', () => {
            const runnerInstance = new FirefoxAndroidExtensionRunner(params);
            const promise = runnerInstance.run();
 
-           assert.isRejected(promise, WebExtError);
-           assert.isRejected(promise, `Invalid Android version: ${version}`);
+           const expectedMsg = `Invalid Android version: ${version}`;
+           await assert.isRejected(promise, WebExtError);
+           await assert.isRejected(promise, expectedMsg);
          }
 
          await expectInvalidVersionError(undefined);
