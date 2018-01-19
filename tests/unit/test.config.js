@@ -296,6 +296,30 @@ describe('config', () => {
       assert.strictEqual(argv.ignoreFiles, configObject.ignoreFiles);
     });
 
+    it('does not mistake an array config values for a sub-command',
+       () => {
+         const params = makeArgv({
+           userCmd: ['fakecommand'],
+           globalOpt: {
+             pref: {
+               demand: false,
+               type: 'string',
+             },
+           },
+         });
+
+         const configObject = {
+           pref: ['pref1=true', 'pref2=false'],
+         };
+
+         // TODO: expect a raised exception array is not a string
+         assert.throws(
+           () => applyConf({...params, configObject}),
+           UsageError,
+           'type of "pref" incorrectly as "array" (expected type "string")'
+         );
+       });
+
     it('uses CLI option over undefined configured option and default', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
       const params = makeArgv({

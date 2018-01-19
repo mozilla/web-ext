@@ -401,7 +401,7 @@ Example: $0 --help run.
                   'run against multiple targets.',
         default: 'firefox-desktop',
         demand: false,
-        type: 'string',
+        type: 'array',
       },
       'firefox': {
         alias: ['f', 'firefox-binary'],
@@ -447,7 +447,7 @@ Example: $0 --help run.
                   'preference.',
         demand: false,
         requiresArg: true,
-        type: 'string',
+        type: 'array',
         coerce: coerceCLICustomPreference,
       },
       'start-url': {
@@ -455,7 +455,7 @@ Example: $0 --help run.
         describe: 'Launch firefox at specified page',
         demand: false,
         requiresArg: true,
-        type: 'string',
+        type: 'array',
       },
       'browser-console': {
         alias: ['bc'],

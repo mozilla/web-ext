@@ -32,14 +32,17 @@ export function applyConfigToArgv({
 }: ApplyConfigToArgvParams): Object {
   let newArgv = {...argv};
 
-  for (const option in configObject) {
+  for (const option of Object.keys(configObject)) {
     if (camelCase(option) !== option) {
       throw new UsageError(
         `The config option "${option}" must be ` +
         `specified in camel case: "${camelCase(option)}"`);
     }
 
-    if (typeof options[option] === 'object' &&
+    // A config option cannot be a sub-command config
+    // object if it is an array.
+    if (!Array.isArray(configObject[option]) &&
+      typeof options[option] === 'object' &&
       typeof configObject[option] === 'object') {
       // Descend into the nested configuration for a sub-command.
       newArgv = applyConfigToArgv({

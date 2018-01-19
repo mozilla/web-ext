@@ -449,7 +449,7 @@ describe('program.main', () => {
       .then(() => {
         sinon.assert.calledWithMatch(
           fakeCommands.run,
-          {startUrl: 'www.example.com'}
+          {startUrl: ['www.example.com']}
         );
       });
   });
