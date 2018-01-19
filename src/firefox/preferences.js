@@ -89,6 +89,11 @@ const prefsFirefox: FirefoxPreferences = {
   'browser.selfsupport.url': 'https://localhost/selfrepair',
   // Disable Reader Mode UI tour
   'browser.reader.detectedFirstArticle': true,
+
+  // Set the policy firstURL to an empty string to prevent
+  // the privacy info page to be opened on every "web-ext run".
+  // (See #1114 for rationale)
+  'datareporting.policy.firstRunURL': '',
 };
 
 const prefs = {
