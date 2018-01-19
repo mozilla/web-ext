@@ -400,7 +400,13 @@ export class FirefoxAndroidExtensionRunner {
       selectedAdbDevice
     );
 
-    if (androidVersion < 21) {
+    if (typeof androidVersion !== 'number' || Number.isNaN(androidVersion)) {
+      throw new WebExtError(`Invalid Android version: ${androidVersion}`);
+    }
+
+    log.debug(`Detected Android version ${androidVersion}`);
+
+    if (androidVersion < 23) {
       return;
     }
 
@@ -408,7 +414,8 @@ export class FirefoxAndroidExtensionRunner {
               `on ${selectedFirefoxApk}...`);
 
     // Runtime permission needed to be able to run Firefox on a temporarily created profile
-    // on android versions >= 21.
+    // on android versions >= 23 (Android Marshmallow, which is the first version where
+    // these permissions are optional and have to be granted explicitly).
     await adbUtils.ensureRequiredAPKRuntimePermissions(
       selectedAdbDevice, selectedFirefoxApk, [
         'android.permission.READ_EXTERNAL_STORAGE',
