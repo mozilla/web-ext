@@ -18,6 +18,9 @@ describe('firefox/preferences', () => {
       assert.equal(prefs['devtools.debugger.remote-enabled'], true);
       // This is a Firefox only pref.
       assert.equal(prefs['devtools.chrome.enabled'], true);
+      // This is a Firefox only pref that we set to prevent Firefox
+      // to open the privacy policy info page on every "web-ext run".
+      assert.equal(prefs['datareporting.policy.firstRunURL'], '');
     });
 
     it('gets Fennec prefs with some defaults', () => {
