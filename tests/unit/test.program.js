@@ -683,11 +683,9 @@ describe('program.main', () => {
 
     const customConfig = path.resolve('custom/web-ext-config.js');
 
-    const finalSourceDir = path.resolve('final/source-dir');
     const loadJSConfigFile = makeConfigLoader({
       configObjects: {
         [customConfig]: {
-          sourceDir: finalSourceDir,
           verbose: true,
         },
       },
