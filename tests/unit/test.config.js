@@ -296,6 +296,26 @@ describe('config', () => {
       assert.strictEqual(argv.ignoreFiles, configObject.ignoreFiles);
     });
 
+    it('does not mistake an array config values for a sub-command',
+       () => {
+         const params = makeArgv({
+           userCmd: ['fakecommand'],
+           globalOpt: {
+             pref: {
+               demand: false,
+               type: 'array',
+             },
+           },
+         });
+
+         const configObject = {
+           pref: ['pref1=true', 'pref2=false'],
+         };
+
+         const resultArgv = applyConf({...params, configObject});
+         assert.strictEqual(resultArgv.pref, configObject.pref);
+       });
+
     it('uses CLI option over undefined configured option and default', () => {
       const cmdLineSrcDir = '/user/specified/source/dir/';
       const params = makeArgv({

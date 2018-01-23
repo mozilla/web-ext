@@ -50,6 +50,7 @@ export class Program {
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
+  verboseEnabled: boolean;
   options: Object;
 
   constructor(
@@ -69,6 +70,7 @@ export class Program {
     // config (See web-ext#469 for rationale).
     const yargsInstance = yargs(argv, absolutePackageDir);
 
+    this.verboseEnabled = false;
     this.shouldExitProgram = true;
     this.yargs = yargsInstance;
     this.yargs.strict();
@@ -121,6 +123,19 @@ export class Program {
     return this;
   }
 
+  enableVerboseMode(
+    logStream: typeof defaultLogStream,
+    version: string
+  ): void {
+    if (this.verboseEnabled) {
+      return;
+    }
+
+    logStream.makeVerbose();
+    log.info('Version:', version);
+    this.verboseEnabled = true;
+  }
+
   async execute(
     absolutePackageDir: string,
     {
@@ -135,19 +150,20 @@ export class Program {
       globalEnv = WEBEXT_BUILD_ENV,
     }: ExecuteOptions = {}
   ): Promise<void> {
-
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
 
     const argv = this.yargs.argv;
     const cmd = argv._[0];
 
+    const version = getVersion(absolutePackageDir);
     const runCommand = this.commands[cmd];
 
     if (argv.verbose) {
-      logStream.makeVerbose();
-      log.info('Version:', getVersion(absolutePackageDir));
+      this.enableVerboseMode(logStream, version);
     }
+
+    let adjustedArgv = {...argv};
 
     try {
       if (cmd === undefined) {
@@ -162,7 +178,6 @@ export class Program {
         });
       }
 
-      let adjustedArgv = {...argv};
       const configFiles = [];
 
       if (argv.configDiscovery) {
@@ -201,10 +216,15 @@ export class Program {
         });
       });
 
+      if (adjustedArgv.verbose) {
+        // Ensure that the verbose is enabled when specified in a config file.
+        this.enableVerboseMode(logStream, version);
+      }
+
       await runCommand(adjustedArgv, {shouldExitProgram});
 
     } catch (error) {
-      if (!(error instanceof UsageError) || argv.verbose) {
+      if (!(error instanceof UsageError) || adjustedArgv.verbose) {
         log.error(`\n${error.stack}\n`);
       } else {
         log.error(`\n${error}\n`);
@@ -401,7 +421,7 @@ Example: $0 --help run.
                   'run against multiple targets.',
         default: 'firefox-desktop',
         demand: false,
-        type: 'string',
+        type: 'array',
       },
       'firefox': {
         alias: ['f', 'firefox-binary'],
@@ -447,7 +467,7 @@ Example: $0 --help run.
                   'preference.',
         demand: false,
         requiresArg: true,
-        type: 'string',
+        type: 'array',
         coerce: coerceCLICustomPreference,
       },
       'start-url': {
@@ -455,7 +475,7 @@ Example: $0 --help run.
         describe: 'Launch firefox at specified page',
         demand: false,
         requiresArg: true,
-        type: 'string',
+        type: 'array',
       },
       'browser-console': {
         alias: ['bc'],

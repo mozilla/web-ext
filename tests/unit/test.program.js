@@ -449,7 +449,7 @@ describe('program.main', () => {
       .then(() => {
         sinon.assert.calledWithMatch(
           fakeCommands.run,
-          {startUrl: 'www.example.com'}
+          {startUrl: ['www.example.com']}
         );
       });
   });
@@ -673,6 +673,37 @@ describe('program.main', () => {
     const options = fakeCommands.lint.firstCall.args[0];
     // This should equal the final configured value.
     assert.equal(options.sourceDir, finalSourceDir);
+  });
+
+  it('enables verbose more from config file', async () => {
+    const logStream = fake(new ConsoleStream());
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const customConfig = path.resolve('custom/web-ext-config.js');
+
+    const loadJSConfigFile = makeConfigLoader({
+      configObjects: {
+        [customConfig]: {
+          verbose: true,
+        },
+      },
+    });
+
+    await execProgram(
+      ['lint', '--config', customConfig],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles: async () => [],
+          loadJSConfigFile,
+          logStream,
+        },
+      }
+    );
+
+    sinon.assert.called(logStream.makeVerbose);
   });
 });
 

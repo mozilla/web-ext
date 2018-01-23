@@ -122,14 +122,9 @@ export function getPrefs(
 }
 
 export function coerceCLICustomPreference(
-  cliPrefs: string | Array<string>
+  cliPrefs: Array<string>
 ): FirefoxPreferences {
   const customPrefs = {};
-
-  if (!Array.isArray(cliPrefs)) {
-    cliPrefs = [cliPrefs];
-  }
-
 
   for (const pref of cliPrefs) {
     const prefsAry = pref.split('=');

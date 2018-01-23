@@ -73,7 +73,7 @@ describe('run', () => {
 
   it('passes startUrl parameter to Firefox when specified', async () => {
     const cmd = prepareRun();
-    const expectedStartUrls = 'www.example.com';
+    const expectedStartUrls = ['www.example.com'];
     const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
 
     await cmd.run({startUrl: expectedStartUrls},
