@@ -674,6 +674,39 @@ describe('program.main', () => {
     // This should equal the final configured value.
     assert.equal(options.sourceDir, finalSourceDir);
   });
+
+  it('enables verbose more from config file', async () => {
+    const logStream = fake(new ConsoleStream());
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+
+    const customConfig = path.resolve('custom/web-ext-config.js');
+
+    const finalSourceDir = path.resolve('final/source-dir');
+    const loadJSConfigFile = makeConfigLoader({
+      configObjects: {
+        [customConfig]: {
+          sourceDir: finalSourceDir,
+          verbose: true,
+        },
+      },
+    });
+
+    await execProgram(
+      ['lint', '--config', customConfig],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          discoverConfigFiles: async () => [],
+          loadJSConfigFile,
+          logStream,
+        },
+      }
+    );
+
+    sinon.assert.called(logStream.makeVerbose);
+  });
 });
 
 describe('program.defaultVersionGetter', () => {

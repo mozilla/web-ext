@@ -144,10 +144,15 @@ export class Program {
 
     const runCommand = this.commands[cmd];
 
+    let versionLogged = false;
+
     if (argv.verbose) {
       logStream.makeVerbose();
       log.info('Version:', getVersion(absolutePackageDir));
+      versionLogged = true;
     }
+
+    let adjustedArgv = {...argv};
 
     try {
       if (cmd === undefined) {
@@ -162,7 +167,6 @@ export class Program {
         });
       }
 
-      let adjustedArgv = {...argv};
       const configFiles = [];
 
       if (argv.configDiscovery) {
@@ -201,10 +205,18 @@ export class Program {
         });
       });
 
+      if (adjustedArgv.verbose) {
+        logStream.makeVerbose();
+
+        if (!versionLogged) {
+          log.info('Version:', getVersion(absolutePackageDir));
+        }
+      }
+
       await runCommand(adjustedArgv, {shouldExitProgram});
 
     } catch (error) {
-      if (!(error instanceof UsageError) || argv.verbose) {
+      if (!(error instanceof UsageError) || adjustedArgv.verbose) {
         log.error(`\n${error.stack}\n`);
       } else {
         log.error(`\n${error}\n`);
