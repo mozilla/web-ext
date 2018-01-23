@@ -40,8 +40,8 @@ export type CmdRunParams = {|
   noReload: boolean,
   preInstall: boolean,
   sourceDir: string,
-  startUrl?: string | Array<string>,
-  target?: string | Array<string>,
+  startUrl?: Array<string>,
+  target?: Array<string>,
 
   // Android CLI options.
   adbBin?: string,
