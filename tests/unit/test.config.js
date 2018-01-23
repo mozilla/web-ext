@@ -303,7 +303,7 @@ describe('config', () => {
            globalOpt: {
              pref: {
                demand: false,
-               type: 'string',
+               type: 'array',
              },
            },
          });
@@ -312,12 +312,8 @@ describe('config', () => {
            pref: ['pref1=true', 'pref2=false'],
          };
 
-         // TODO: expect a raised exception array is not a string
-         assert.throws(
-           () => applyConf({...params, configObject}),
-           UsageError,
-           'type of "pref" incorrectly as "array" (expected type "string")'
-         );
+         const resultArgv = applyConf({...params, configObject});
+         assert.strictEqual(resultArgv.pref, configObject.pref);
        });
 
     it('uses CLI option over undefined configured option and default', () => {
