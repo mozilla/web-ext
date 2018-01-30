@@ -49,7 +49,7 @@
   ],
   "dependencies": {
     "adbkit": "2.11.0",
-    "addons-linter": "0.33.0",
+    "addons-linter": "0.34.0",
     "babel-polyfill": "6.26.0",
     "babel-runtime": "6.26.0",
     "bunyan": "1.8.12",
