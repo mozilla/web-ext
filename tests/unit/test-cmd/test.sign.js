@@ -288,6 +288,34 @@ describe('sign', () => {
     }
   ));
 
+  it('passes the channel parameter to the signer', () => withTempDir(
+    (tmpDir) => {
+      const stubs = getStubs();
+      const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
+      const applications: ExtensionManifestApplications =
+        stubs.preValidatedManifest.applications || {gecko: {}};
+      return sign(tmpDir, stubs, {extraArgs: {
+        artifactsDir,
+        channel: 'unlisted',
+      }})
+        .then(() => {
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(stubs.signAddon, {
+            apiKey: stubs.signingConfig.apiKey,
+            apiProxy: stubs.signingConfig.apiProxy,
+            apiSecret: stubs.signingConfig.apiSecret,
+            apiUrlPrefix: stubs.signingConfig.apiUrlPrefix,
+            downloadDir: artifactsDir,
+            id: applications.gecko.id,
+            timeout: stubs.signingConfig.timeout,
+            version: stubs.preValidatedManifest.version,
+            xpiPath: stubs.buildResult.extensionPath,
+            channel: 'unlisted',
+          });
+        });
+    }
+  ));
+
   it('passes the verbose flag to the signer', () => withTempDir(
     (tmpDir) => {
       const stubs = getStubs();
