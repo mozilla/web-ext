@@ -412,6 +412,11 @@ Example: $0 --help run.
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },
+        'channel': {
+          describe: 'The channel for which to sign the addon. Either ' +
+          '\'listed\' or \'unlisted\'',
+          type: 'string',
+        },
       })
     .command('run', 'Run the extension', commands.run, {
       'target': {
