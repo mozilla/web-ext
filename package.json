@@ -105,7 +105,7 @@
     "eslint-plugin-flowtype": "2.44.0",
     "eslint-plugin-import": "2.8.0",
     "firefox-client": "0.3.0",
-    "flow-bin": "0.65.0",
+    "flow-bin": "0.66.0",
     "grunt": "1.0.2",
     "grunt-contrib-clean": "1.1.0",
     "grunt-contrib-copy": "1.0.0",
