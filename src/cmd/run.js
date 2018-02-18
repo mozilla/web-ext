@@ -14,16 +14,12 @@ import {
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
 } from '../extension-runners';
-import {linter as defaultLinter} from '../util/linter';
-import defaultSourceWatcher from '../watcher';
 import {
   FirefoxDesktopExtensionRunner as DefaultFirefoxDesktopExtensionRunner,
 } from '../extension-runners/firefox-desktop';
 import {
   FirefoxAndroidExtensionRunner as defaultFirefoxAndroidExtensionRunner,
 } from '../extension-runners/firefox-android';
-import {linter as defaultLinter} from '../util/linter';
-
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 
@@ -46,15 +42,13 @@ export type CmdRunParams = {|
   startUrl?: Array<string>,
   target?: Array<string>,
   lint: boolean,
-
+  failOnLint: boolean,
   // Android CLI options.
   adbBin?: string,
   adbHost?: string,
   adbPort?: string,
   adbDevice?: string,
   firefoxApk?: string,
-  failOnLint: boolean,
-
 |};
 
 export type CmdRunOptions = {|
@@ -68,7 +62,6 @@ export type CmdRunOptions = {|
   FirefoxDesktopExtensionRunner?: typeof DefaultFirefoxDesktopExtensionRunner,
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
   getValidatedManifest?: typeof defaultGetValidatedManifest,
-  linter: typeof defaultLinter,
 |};
 
 export default async function run(
@@ -105,7 +98,6 @@ export default async function run(
     FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
-    linter = defaultLinter, createFileFilter = defaultFileFilterCreator,
   }: CmdRunOptions = {}): Promise<DefaultMultiExtensionRunner> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -121,10 +113,6 @@ export default async function run(
   const manifestData = await getValidatedManifest(sourceDir);
 
   const runners = [];
-
-  if (lint) {
-    await linter({sourceDir, artifactsDir, ignoreFiles});
-  }
 
   const commonRunnerParams = {
     // Common options.
@@ -203,6 +191,11 @@ export default async function run(
   const extensionRunner = new MultiExtensionRunner({
     desktopNotifications,
     runners,
+    sourceDir,
+    artifactsDir,
+    ignoreFiles,
+    lint,
+    failOnLint,
   });
 
   await extensionRunner.run();

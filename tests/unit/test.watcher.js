@@ -67,7 +67,7 @@ describe('watcher', () => {
         onChange,
       });
       sinon.assert.called(onChange);
-      assert.equal(onChange.firstCall.args[0], '/some/file.js'); //TODO fix
+      sinon.assert.calledWithMatch(onChange, '/some/file.js');
     });
 
     it('ignores changes to artifacts', () => {

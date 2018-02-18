@@ -33,7 +33,6 @@ describe('run', () => {
       failOnLint: false,
       keepProfileChanges: false,
       browserConsole: false,
-      lint: false,
     };
     const options = {
       buildExtension: sinon.spy(() => {}),
@@ -230,19 +229,6 @@ describe('run', () => {
     const cmd = prepareRun();
     const extensionRunner = await cmd.run();
     assert.instanceOf(extensionRunner, FakeExtensionRunner);
-  });
-
-  it('allows to lint ', () => {
-    const cmd = prepareRun();
-    const {sourceDir, artifactsDir} = cmd.argv;
-    const {linter} = cmd.options;
-    const ignoreFiles = undefined;
-
-    return cmd.run({lint: true}).then(() => {
-      assert.ok(linter.called);
-      assert.deepEqual(linter.firstCall.args[0],
-                       {sourceDir, artifactsDir, ignoreFiles});
-    });
   });
 
   it('creates a Firefox Desktop runner if targets is an empty array',

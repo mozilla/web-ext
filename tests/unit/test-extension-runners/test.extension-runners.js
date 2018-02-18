@@ -266,6 +266,7 @@ describe('util/extension-runners', () => {
            runners: params.runners,
            desktopNotifications: params.desktopNotifications,
            lint: true,
+           failOnLint: false,
            linter,
            ...expectedLinterParams,
          };
