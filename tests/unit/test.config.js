@@ -905,12 +905,45 @@ describe('config', () => {
         });
     });
 
+    it('parses package.json file correctly', () => {
+      return withTempDir(
+        (tmpDir) => {
+          const configFilePath = path.join(tmpDir.path(), 'package.json');
+          fs.writeFileSync(
+            configFilePath,
+            `{
+                "name": "dummyPackage.json",
+                "webExt": {
+                  "sourceDir": "path/to/fake/source/dir"
+                }
+            }`
+          );
+          const configObj = loadJSConfigFile(configFilePath);
+          assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
+        });
+    });
+
     it('does not throw an error for an empty config', () => {
       return withTempDir(
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
           fs.writeFileSync(configFilePath, 'module.exports = {};');
           loadJSConfigFile(configFilePath);
+        });
+    });
+
+    it('returns an empty object when webExt key is not in package.json', () => {
+      return withTempDir(
+        (tmpDir) => {
+          const configFilePath = path.join(tmpDir.path(), 'package.json');
+          fs.writeFileSync(
+            configFilePath,
+            `{
+              "name": "dummyPackage.json"
+            }`
+          );
+          const configObj = loadJSConfigFile(configFilePath);
+          assert.deepEqual(configObj, {});
         });
     });
   });
@@ -927,6 +960,7 @@ describe('config', () => {
     it('finds a config in your home directory', () => {
       return withTempDir(
         async (tmpDir) => {
+          const packageJSON = path.join(process.cwd(), 'package.json');
           const homeDirConfig = path.join(
             tmpDir.path(), '.web-ext-config.js'
           );
@@ -937,7 +971,7 @@ describe('config', () => {
             await _discoverConfigFiles({
               getHomeDir: () => tmpDir.path(),
             }),
-            [path.resolve(homeDirConfig)]
+            [path.resolve(homeDirConfig), packageJSON]
           );
         });
     });

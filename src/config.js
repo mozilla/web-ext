@@ -131,6 +131,10 @@ export function loadJSConfigFile(filePath: string): Object {
       `Cannot read config file: ${resolvedFilePath}\n` +
       `Error: ${error.message}`);
   }
+  if (filePath.endsWith('package.json')) {
+    log.debug('Looking for webExt key inside package.json file');
+    configObject = configObject.webExt || {};
+  }
   if (Object.keys(configObject).length === 0) {
     log.debug(`Config file ${resolvedFilePath} did not define any options. ` +
       'Did you set module.exports = {...}?');
@@ -153,6 +157,8 @@ export async function discoverConfigFiles(
     path.join(getHomeDir(), `.${magicConfigName}`),
     // Look for a magic config in the current working directory.
     path.join(process.cwd(), magicConfigName),
+    // Look for webExt key inside package.json file
+    path.join(process.cwd(), 'package.json'),
   ];
 
   const configs = await Promise.all(possibleConfigs.map(
