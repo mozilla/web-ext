@@ -905,12 +905,47 @@ describe('config', () => {
         });
     });
 
+    it('parses package.json file correctly', () => {
+      return withTempDir(
+        (tmpDir) => {
+          const configFilePath = path.join(tmpDir.path(), 'package.json');
+          fs.writeFileSync(
+            configFilePath,
+            `{
+                "name": "dummy-package-json",
+                "version": "1.0.0",
+                "webExt": {
+                  "sourceDir": "path/to/fake/source/dir"
+                }
+            }`
+          );
+          const configObj = loadJSConfigFile(configFilePath);
+          assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
+        });
+    });
+
     it('does not throw an error for an empty config', () => {
       return withTempDir(
         (tmpDir) => {
           const configFilePath = path.join(tmpDir.path(), 'config.js');
           fs.writeFileSync(configFilePath, 'module.exports = {};');
           loadJSConfigFile(configFilePath);
+        });
+    });
+
+    it('returns an empty object when webExt key is not in package.json', () => {
+      return withTempDir(
+        (tmpDir) => {
+          const configFilePath = path.join(tmpDir.path(), 'package.json');
+          fs.writeFileSync(
+            configFilePath,
+            `{
+              "name": "dummy-package-json",
+              "version": "1.0.0"
+            }`
+          );
+          const configObj = loadJSConfigFile(configFilePath);
+          assert.deepEqual(configObj, {});
         });
     });
   });
@@ -927,6 +962,10 @@ describe('config', () => {
     it('finds a config in your home directory', () => {
       return withTempDir(
         async (tmpDir) => {
+          // This is actually web-ext itself's package.json file, which
+          // will be discovered because it's inside current working
+          // directory
+          const packageJSON = path.join(process.cwd(), 'package.json');
           const homeDirConfig = path.join(
             tmpDir.path(), '.web-ext-config.js'
           );
@@ -937,7 +976,7 @@ describe('config', () => {
             await _discoverConfigFiles({
               getHomeDir: () => tmpDir.path(),
             }),
-            [path.resolve(homeDirConfig)]
+            [path.resolve(homeDirConfig), packageJSON]
           );
         });
     });
@@ -976,6 +1015,18 @@ describe('config', () => {
             );
             await fs.writeFile(globalConfig, 'module.exports = {}');
 
+            const packageJSONConfig = path.resolve(
+              path.join(process.cwd(), 'package.json')
+            );
+            await fs.writeFile(
+              packageJSONConfig,
+              `{
+                "name": "dummy-package-json",
+                "version": "1.0.0",
+                "webExt": {}
+              }`
+            );
+
             const projectConfig = path.resolve(
               path.join(process.cwd(), 'web-ext-config.js')
             );
@@ -985,7 +1036,7 @@ describe('config', () => {
               await _discoverConfigFiles({
                 getHomeDir: () => fakeHomeDir,
               }),
-              [globalConfig, projectConfig]
+              [globalConfig, packageJSONConfig, projectConfig]
             );
           } finally {
             process.chdir(lastDir);
