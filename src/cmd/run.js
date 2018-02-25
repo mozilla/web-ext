@@ -22,6 +22,7 @@ import {
 } from '../extension-runners/firefox-android';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
+import {linter as defaultLinter} from '../util/linter';
 
 const log = createLogger(__filename);
 
@@ -62,6 +63,8 @@ export type CmdRunOptions = {|
   FirefoxDesktopExtensionRunner?: typeof DefaultFirefoxDesktopExtensionRunner,
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
   getValidatedManifest?: typeof defaultGetValidatedManifest,
+  linter: typeof defaultLinter,
+  exit?: typeof process.exit,
 |};
 
 export default async function run(
@@ -98,6 +101,7 @@ export default async function run(
     FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
+    linter = defaultLinter, exit = process.exit,
   }: CmdRunOptions = {}): Promise<DefaultMultiExtensionRunner> {
 
   log.info(`Running web extension from ${sourceDir}`);
@@ -198,6 +202,28 @@ export default async function run(
     failOnLint,
   });
 
+  let linterResult;
+  if (lint) {
+    linterResult = await linter({
+      sourceDir,
+      artifactsDir,
+      ignoreFiles,
+    });
+  }
+
+  if (linterResult && linterResult.summary.errors > 0) {
+    if (failOnLint) {
+      exit();
+    } else {
+      const message =
+      `${linterResult.errors.length} linting error(s)`;
+      desktopNotifications({
+        title: 'web-ext run: linter error',
+        message,
+      });
+    }
+  }
+
   await extensionRunner.run();
 
   if (noReload) {
@@ -211,8 +237,6 @@ export default async function run(
       artifactsDir,
       ignoreFiles,
       noInput,
-      lint,
-      failOnLint,
     });
   }
 

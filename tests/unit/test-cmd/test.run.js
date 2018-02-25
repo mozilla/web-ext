@@ -11,6 +11,7 @@ import {
   FakeExtensionRunner,
   getFakeFirefox,
   getFakeRemoteFirefox,
+  makeSureItFails,
 } from '../helpers';
 import {createLogger} from '../../../src/util/logger';
 
@@ -51,6 +52,7 @@ describe('run', () => {
       FirefoxDesktopExtensionRunner: sinon.spy(FakeExtensionRunner),
       MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
       desktopNotifications: sinon.spy(() => {}),
+      linter: sinon.spy(() => Promise.resolve()),
     };
 
     return {
@@ -84,6 +86,80 @@ describe('run', () => {
       FirefoxDesktopExtensionRunner, {startUrl: expectedStartUrls}
     );
   });
+
+
+  it('allows to lint ', () => {
+    const cmd = prepareRun();
+    const {sourceDir, artifactsDir} = cmd.argv;
+    const {linter} = cmd.options;
+    const ignoreFiles = undefined;
+
+    return cmd.run({lint: true}).then(() => {
+      sinon.assert.called(linter);
+      sinon.assert.calledWithMatch(
+        linter, {sourceDir, artifactsDir, ignoreFiles}
+      );
+    });
+  });
+
+  it('shows a desktop notification on linting errors', async () => {
+    const cmd = prepareRun();
+    const lintResults = {
+      count: 2,
+      summary: {
+        errors: 2,
+        notices: 0,
+        arnings: 0,
+      },
+      errors: [{}, {}],
+    };
+    const linter = sinon.spy(() => Promise.resolve(lintResults));
+    const {desktopNotifications} = cmd.options;
+    const expectedDesktopNotification = {
+      title: 'web-ext run: linter error',
+      message: '2 linting error(s)',
+    };
+
+    return cmd.run({lint: true}, {linter}).then(() => {
+      sinon.assert.calledOnce(desktopNotifications);
+      sinon.assert.calledWith(
+        desktopNotifications,
+        expectedDesktopNotification
+      );
+    });
+  });
+
+  it('fails when addons linter fails', async () => {
+    const cmd = prepareRun();
+    const linter = sinon.spy(() => Promise.reject(Error('Linter failure')));
+
+    return cmd.run({lint: true}, {linter}).then(makeSureItFails())
+      .catch((error) => {
+        sinon.assert.calledOnce(linter);
+        assert.match(error.message, /Linter failure/);
+      });
+  });
+
+  it('fails on linting errors when specified', async () => {
+    const cmd = prepareRun();
+    const lintResults = {
+      count: 2,
+      summary: {
+        errors: 2,
+        notices: 0,
+        arnings: 0,
+      },
+      errors: [{}, {}],
+    };
+    const linter = sinon.spy(() => Promise.resolve(lintResults));
+    const exit = sinon.spy(() => Promise.resolve());
+
+    return cmd.run({lint: true, failOnLint: true}, {linter, exit})
+      .then(() => {
+        sinon.assert.calledOnce(exit);
+      });
+  });
+
 
   it('passes the expected parameters to the extension runner', async () => {
     const cmd = prepareRun();
@@ -177,19 +253,20 @@ describe('run', () => {
   it('can watch and reload the extension', async () => {
     const cmd = prepareRun();
     const {sourceDir, artifactsDir} = cmd.argv;
-    const {reloadStrategy} = cmd.options;
+    const {MultiExtensionRunner} = cmd.options;
 
     await cmd.run({
       noReload: false,
       lint: true,
       failOnLint: true,
     });
-    assert.equal(reloadStrategy.called, true);
-    const args = reloadStrategy.firstCall.args[0];
-    assert.equal(args.sourceDir, sourceDir);
-    assert.equal(args.artifactsDir, artifactsDir);
-    assert.ok(args.lint);
-    assert.ok(args.failOnLint);
+    sinon.assert.called(MultiExtensionRunner);
+    sinon.assert.calledWithMatch(MultiExtensionRunner, {
+      sourceDir,
+      artifactsDir,
+      lint: true,
+      failOnLint: true,
+    });
   });
 
   it('can disable input in the reload strategy', async () => {

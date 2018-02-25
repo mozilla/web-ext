@@ -77,32 +77,11 @@ export class MultiExtensionRunner {
    */
   async run(): Promise<void> {
     const promises = [];
-    const {sourceDir, artifactsDir, ignoreFiles} = this;
     for (const runner of this.extensionRunners) {
       promises.push(runner.run());
     }
 
     await Promise.all(promises);
-
-    if (this.lint) {
-      const linterResult = await this.linter({
-        sourceDir,
-        artifactsDir,
-        ignoreFiles,
-      });
-      if (linterResult && linterResult.summary.errors > 0) {
-        if (this.failOnLint) {
-          this.exit();
-        } else {
-          const message =
-          `${linterResult.errors.length} linting error(s)`;
-          this.desktopNotifications({
-            title: 'web-ext run: linter error',
-            message,
-          });
-        }
-      }
-    }
   }
 
   /**
@@ -151,6 +130,28 @@ export class MultiExtensionRunner {
     sourceDir: string
   ): Promise<Array<ExtensionRunnerReloadResult>> {
     log.debug(`Reloading add-on at ${sourceDir}`);
+
+    const {artifactsDir, ignoreFiles} = this;
+
+    if (this.lint) {
+      const linterResult = await this.linter({
+        sourceDir,
+        artifactsDir,
+        ignoreFiles,
+      });
+      if (linterResult && linterResult.summary.errors > 0) {
+        if (this.failOnLint) {
+          this.exit();
+        } else {
+          const message =
+          `${linterResult.errors.length} linting error(s)`;
+          this.desktopNotifications({
+            title: 'web-ext run: linter error',
+            message,
+          });
+        }
+      }
+    }
 
     const promises = [];
     for (const runner of this.extensionRunners) {
@@ -238,27 +239,20 @@ export class MultiExtensionRunner {
 
 export type WatcherCreatorParams = {|
   reloadExtension: (string) => void,
-  exitExtension: () => Promise<void>,
   sourceDir: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
-  desktopNotifications?: typeof defaultDesktopNotifications,
-  lint: boolean,
-  failOnLint: boolean,
-  linter?: typeof defaultLinter,
 |};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    reloadExtension, exitExtension, sourceDir, artifactsDir, ignoreFiles,
+    reloadExtension, sourceDir, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
-    createFileFilter = defaultFileFilterCreator, lint = false,
-    failOnLint = false, linter = defaultLinter,
-    desktopNotifications = defaultDesktopNotifications,
+    createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
 ): Watchpack {
   const fileFilter = createFileFilter(
@@ -267,28 +261,7 @@ export function defaultWatcherCreator(
   return onSourceChange({
     sourceDir,
     artifactsDir,
-    onChange: async (filePath) => {
-      if (lint) {
-        const linterResult = await linter({
-          artifactsDir,
-          sourceDir,
-          filePath,
-        });
-        if (linterResult && linterResult.summary.errors > 0) {
-          if (failOnLint) {
-            exitExtension();
-          } else {
-            const message =
-            `${linterResult.errors.length} linting error(s)`;
-            desktopNotifications({
-              title: 'web-ext run: linter error',
-              message,
-            });
-          }
-        }
-      }
-      reloadExtension(sourceDir);
-    },
+    onChange: () => reloadExtension(sourceDir),
     shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
 }
@@ -302,8 +275,6 @@ export type ReloadStrategyParams = {|
   artifactsDir: string,
   ignoreFiles?: Array<string>,
   noInput?: boolean,
-  lint: boolean,
-  failOnLint: boolean,
 |};
 
 export type ReloadStrategyOptions = {|
@@ -319,8 +290,6 @@ export function defaultReloadStrategy(
     ignoreFiles,
     noInput = false,
     sourceDir,
-    lint,
-    failOnLint,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
@@ -337,12 +306,9 @@ export function defaultReloadStrategy(
     reloadExtension: (watchedSourceDir) => {
       extensionRunner.reloadExtensionBySourceDir(watchedSourceDir);
     },
-    exitExtension: extensionRunner.exit,
     sourceDir,
     artifactsDir,
     ignoreFiles,
-    lint,
-    failOnLint,
   });
 
   extensionRunner.registerCleanup(() => {
