@@ -48,6 +48,8 @@
     "opera"
   ],
   "dependencies": {
+    "@cliqz-oss/firefox-client": "0.3.1",
+    "@cliqz-oss/node-firefox-connect": "1.2.1",
     "adbkit": "2.11.0",
     "addons-linter": "0.36.1",
     "babel-polyfill": "6.26.0",
@@ -65,7 +67,6 @@
     "minimatch": "3.0.4",
     "mkdirp": "0.5.1",
     "mz": "2.7.0",
-    "node-firefox-connect": "1.2.0",
     "node-notifier": "5.2.1",
     "open": "0.0.5",
     "parse-json": "4.0.0",
@@ -104,7 +105,6 @@
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "2.46.1",
     "eslint-plugin-import": "2.8.0",
-    "firefox-client": "0.3.0",
     "flow-bin": "0.65.0",
     "grunt": "1.0.2",
     "grunt-contrib-clean": "1.1.0",

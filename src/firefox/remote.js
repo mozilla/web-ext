@@ -1,7 +1,7 @@
 /* @flow */
-import defaultFirefoxConnector from 'node-firefox-connect';
+import defaultFirefoxConnector from '@cliqz-oss/node-firefox-connect';
 // RemoteFirefox types and implementation
-import type FirefoxClient from 'firefox-client'; //eslint-disable-line import/no-extraneous-dependencies
+import type FirefoxClient from '@cliqz-oss/firefox-client';
 
 import {createLogger} from '../util/logger';
 import {
