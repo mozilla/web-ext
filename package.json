@@ -73,7 +73,7 @@
     "regenerator-runtime": "0.11.1",
     "require-uncached": "1.0.3",
     "sign-addon": "0.3.0",
-    "source-map-support": "0.5.3",
+    "source-map-support": "0.5.4",
     "stream-to-promise": "2.2.0",
     "tmp": "0.0.33",
     "update-notifier": "2.3.0",
