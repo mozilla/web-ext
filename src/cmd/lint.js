@@ -25,6 +25,7 @@ export type LinterCreatorParams = {|
     output?: LinterOutputType,
     boring?: boolean,
     selfHosted?: boolean,
+    langpack?: boolean,
     shouldScanFile: (fileName: string) => boolean,
     _: Array<string>,
   |},
@@ -91,6 +92,7 @@ export default function lint(
       output,
       boring,
       selfHosted,
+      langpack: false,
       shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
       // This mimics the first command line argument from yargs,
       // which should be the directory to the extension.
