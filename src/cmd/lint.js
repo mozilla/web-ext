@@ -69,7 +69,7 @@ export default function lint(
     output,
     pretty,
     sourceDir,
-    selfHosted,
+    selfHosted = false,
     verbose,
     warningsAsErrors,
   }: LintCmdParams,
