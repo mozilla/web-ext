@@ -2,9 +2,10 @@
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
+import {createInstance as defaultLinterCreator} from 'addons-linter';
 
 import defaultLintCommand from '../../../src/cmd/lint';
-import {makeSureItFails} from '../helpers';
+import {makeSureItFails, fixturePath} from '../helpers';
 
 type setUpParams = {|
   createLinter?: Function,
@@ -167,4 +168,11 @@ describe('lint', () => {
     });
   });
 
+  it('runs with addons-linter', () => {
+    const {lint, createLinter} = setUp({createLinter: defaultLinterCreator});
+    return lint({sourceDir: fixturePath('minimal-web-ext')}).then(() => {
+      const config = createLinter.firstCall.args[0].config;
+      assert.equal(config._[0], fixturePath('minimal-web-ext'));
+    });
+  });
 });
