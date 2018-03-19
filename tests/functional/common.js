@@ -49,7 +49,7 @@ export function withTempAddonDir(
       .then(() => {
         process.chdir(tmpDir.path());
 
-        return makePromise(tempAddonDir, tmpDir)
+        return makePromise(tempAddonDir, tmpDir.path())
           .then(() => process.chdir(projectDir))
           .catch((err) => {
             process.chdir(projectDir);

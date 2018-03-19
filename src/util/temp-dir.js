@@ -7,6 +7,8 @@ import {createLogger} from './logger';
 const log = createLogger(__filename);
 
 
+export type MakePromiseCallback = (tmpDir: TempDir) => any;
+
 /*
  * Work with a self-destructing temporary directory in a promise chain.
  *
@@ -22,7 +24,7 @@ const log = createLogger(__filename);
  * );
  *
  */
-export function withTempDir(makePromise: Function): Promise<any> {
+export function withTempDir(makePromise: MakePromiseCallback): Promise<any> {
   const tmpDir = new TempDir();
   return tmpDir.create()
     .then(() => {
