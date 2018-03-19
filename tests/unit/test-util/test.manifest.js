@@ -158,6 +158,38 @@ describe('util/manifest', () => {
       }
     ));
 
+    it('allows comments in manifest JSON', () =>
+      withTempDir(async (tmpDir) => {
+        const manifestWithComments = `{
+          "name": "the extension",
+          "version": "0.0.1" // comments
+        }`;
+        const manifestFile = path.join(tmpDir.path(), 'manifest.json');
+        await fs.writeFile(manifestFile, manifestWithComments);
+        const manifestData = await getValidatedManifest(tmpDir.path());
+
+        assert.deepEqual(manifestData, manifestWithoutApps);
+      })
+    );
+
+    it('reports an error with line number in manifest JSON with comments', () =>
+      withTempDir(async (tmpDir) => {
+        const invalidManifestWithComments = `{
+          // a comment in its own line
+          // another comment on its own line
+          "name": "I'm an invalid JSON Manifest
+        }`;
+        const manifestFile = path.join(tmpDir.path(), 'manifest.json');
+        await fs.writeFile(manifestFile, invalidManifestWithComments);
+        const promise = getValidatedManifest(tmpDir.path());
+
+        const error = await assert.isRejected(promise, InvalidManifest);
+        await assert.isRejected(promise, /Error parsing manifest\.json at /);
+        assert.include(error.message, 'in JSON at position 133');
+        assert.include(error.message, manifestFile);
+      })
+    );
+
   });
 
   describe('getManifestId', () => {
