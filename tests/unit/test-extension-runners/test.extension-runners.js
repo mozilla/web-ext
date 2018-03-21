@@ -14,8 +14,6 @@ import {
 } from '../../../src/extension-runners';
 import {
   FakeExtensionRunner,
-  getFakeFirefox,
-  getFakeRemoteFirefox,
 } from '../helpers';
 import type {
   IExtensionRunner, // eslint-disable-line import/named
@@ -38,10 +36,6 @@ function createFakeExtensionRunner(
 function prepareExtensionRunnerParams(params) {
   return {
     runners: [new FakeExtensionRunner(), new FakeExtensionRunner()],
-    firefoxApp: getFakeFirefox(),
-    firefoxClient: () => {
-      return Promise.resolve(getFakeRemoteFirefox());
-    },
     desktopNotifications: sinon.spy(() => {}),
     ...params,
   };
