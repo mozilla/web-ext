@@ -8,7 +8,7 @@ import {
 describe('web-ext', () => {
   it('should accept: --help', () => withTempDir((tmpDir) => {
     const argv = ['--help'];
-    const cmd = execWebExt(argv, {cwd: tmpDir});
+    const cmd = execWebExt(argv, {cwd: tmpDir.path()});
 
     return cmd.waitForExit.then(({exitCode, stdout, stderr}) => {
       if (exitCode !== 0) {
