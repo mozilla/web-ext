@@ -278,7 +278,7 @@ export function defaultReloadStrategy(
     }
   });
 
-  if (allowInput && stdin.isTTY && stdin instanceof tty.ReadStream) {
+  if (allowInput && stdin instanceof tty.ReadStream && stdin.isTTY) {
     readline.emitKeypressEvents(stdin);
     stdin.setRawMode(true);
 
