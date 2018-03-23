@@ -75,6 +75,7 @@
     "sign-addon": "0.3.0",
     "source-map-support": "0.5.3",
     "stream-to-promise": "2.2.0",
+    "strip-json-comments": "2.0.1",
     "tmp": "0.0.33",
     "update-notifier": "2.3.0",
     "watchpack": "1.5.0",
