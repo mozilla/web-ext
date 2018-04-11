@@ -5,12 +5,12 @@ import {createLogger} from '../util/logger';
 
 const log = createLogger(__filename);
 
-type DocsParams = {
+export type DocsParams = {
   noInput?: boolean,
   shouldExitProgram?: boolean,
 }
 
-type DocsOptions = {
+export type DocsOptions = {
   openUrl?: typeof defaultUrlOpener,
 }
 
