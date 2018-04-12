@@ -63,7 +63,7 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   // Injected Dependencies.
   firefoxApp: typeof defaultFirefoxApp,
   firefoxClient: typeof defaultFirefoxConnector,
-  ADBUtils: typeof DefaultADBUtils,
+  ADBUtils?: typeof DefaultADBUtils,
   buildSourceDir: (string, string) => Promise<ExtensionBuildResult>,
   desktopNotifications: typeof defaultDesktopNotifications,
   stdin?: stream$Readable,
@@ -107,9 +107,10 @@ export class FirefoxAndroidExtensionRunner {
       adbBin,
       adbHost,
       adbPort,
+      ADBUtils = DefaultADBUtils,
     } = this.params;
 
-    this.adbUtils = new this.params.ADBUtils({
+    this.adbUtils = new ADBUtils({
       adbBin, adbHost, adbPort,
     });
 

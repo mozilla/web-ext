@@ -1,6 +1,5 @@
 /* @flow */
 import defaultBuildExtension from './build';
-import DefaultADBUtils from '../util/adb';
 import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
@@ -14,11 +13,11 @@ import {
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
 } from '../extension-runners';
-import {
-  FirefoxDesktopExtensionRunner as DefaultFirefoxDesktopExtensionRunner,
+import typeof {
+  FirefoxDesktopExtensionRunner as FirefoxDesktopExtensionRunnerType,
 } from '../extension-runners/firefox-desktop';
-import {
-  FirefoxAndroidExtensionRunner as defaultFirefoxAndroidExtensionRunner,
+import typeof {
+  FirefoxAndroidExtensionRunner as FirefoxAndroidExtensionRunnerType,
 } from '../extension-runners/firefox-android';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
@@ -58,8 +57,8 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   shouldExitProgram?: boolean,
-  FirefoxAndroidExtensionRunner?: typeof defaultFirefoxAndroidExtensionRunner,
-  FirefoxDesktopExtensionRunner?: typeof DefaultFirefoxDesktopExtensionRunner,
+  FirefoxAndroidExtensionRunner?: FirefoxAndroidExtensionRunnerType,
+  FirefoxDesktopExtensionRunner?: FirefoxDesktopExtensionRunnerType,
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
   getValidatedManifest?: typeof defaultGetValidatedManifest,
 |};
@@ -92,8 +91,8 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
-    FirefoxAndroidExtensionRunner = defaultFirefoxAndroidExtensionRunner,
-    FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
+    FirefoxAndroidExtensionRunner,
+    FirefoxDesktopExtensionRunner,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
   }: CmdRunOptions = {}): Promise<DefaultMultiExtensionRunner> {
@@ -136,6 +135,11 @@ export default async function run(
       firefoxClient,
     };
 
+    if (!FirefoxDesktopExtensionRunner) {
+      ({FirefoxDesktopExtensionRunner} =
+        require('../extension-runners/firefox-desktop'));
+    }
+
     const firefoxDesktopRunner = new FirefoxDesktopExtensionRunner(
       firefoxDesktopRunnerParams
     );
@@ -161,7 +165,6 @@ export default async function run(
       // Injected dependencies.
       firefoxApp,
       firefoxClient,
-      ADBUtils: DefaultADBUtils,
       desktopNotifications: defaultDesktopNotifications,
       buildSourceDir: (extensionSourceDir: string, tmpArtifactsDir: string) => {
         return buildExtension({
@@ -177,6 +180,11 @@ export default async function run(
         });
       },
     };
+
+    if (!FirefoxAndroidExtensionRunner) {
+      ({FirefoxAndroidExtensionRunner} =
+        require('../extension-runners/firefox-android'));
+    }
 
     const firefoxAndroidRunner = new FirefoxAndroidExtensionRunner({
       ...commonRunnerParams,
