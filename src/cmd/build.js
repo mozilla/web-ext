@@ -78,7 +78,7 @@ export async function getDefaultLocalizedName(
   }
 
   try {
-    messageData = parseJSON(messageContents, messageFile);
+    messageData = parseJSON(String(messageContents), messageFile);
   } catch (error) {
     throw new UsageError(
       `Error parsing messages.json ${error}`);
