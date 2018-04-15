@@ -9,9 +9,12 @@ import type {
   IExtensionRunner, // eslint-disable-line import/named
   ExtensionRunnerReloadResult,
 } from './base';
+import {WebExtError} from '../errors';
 import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
+import type {FirefoxAndroidExtensionRunnerParams} from './firefox-android';
+import type {FirefoxDesktopExtensionRunnerParams} from './firefox-desktop';
 import {createLogger} from '../util/logger';
 import type {FileFilterCreatorFn} from '../util/file-filter';
 import {
@@ -23,12 +26,35 @@ import type {OnSourceChangeFn} from '../watcher';
 
 const log = createLogger(__filename);
 
+export type ExtensionRunnerConfig = {|
+  target: 'firefox-desktop',
+  params: FirefoxDesktopExtensionRunnerParams,
+|} | {|
+  target: 'firefox-android',
+  params: FirefoxAndroidExtensionRunnerParams,
+|};
 
 export type MultiExtensionRunnerParams = {|
   runners: Array<IExtensionRunner>,
   desktopNotifications: typeof defaultDesktopNotifications,
 |};
 
+export async function createExtensionRunner(config: ExtensionRunnerConfig) {
+  switch (config.target) {
+    case 'firefox-desktop': {
+      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
+      const {FirefoxDesktopExtensionRunner} = require('./firefox-desktop');
+      return new FirefoxDesktopExtensionRunner(config.params);
+    }
+    case 'firefox-android': {
+      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
+      const {FirefoxAndroidExtensionRunner} = require('./firefox-android');
+      return new FirefoxAndroidExtensionRunner(config.params);
+    }
+    default:
+      throw new WebExtError(`Unknown target: "${config.target}"`);
+  }
+}
 
 /**
  * Implements an IExtensionRunner which allow the caller to
