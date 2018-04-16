@@ -20,47 +20,47 @@ const tempInstallResult = {
   addon: {id: 'some-addon@test-suite'},
 };
 
+function prepareRun(fakeInstallResult) {
+  const sourceDir = fixturePath('minimal-web-ext');
+
+  const argv = {
+    artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
+    sourceDir,
+    noReload: true,
+    keepProfileChanges: false,
+    browserConsole: false,
+  };
+  const options = {
+    buildExtension: sinon.spy(() => {}),
+    firefoxApp: getFakeFirefox(),
+    firefoxClient: sinon.spy(() => {
+      return Promise.resolve(getFakeRemoteFirefox({
+        installTemporaryAddon: () =>
+          Promise.resolve(
+            fakeInstallResult || tempInstallResult
+          ),
+      }));
+    }),
+    reloadStrategy: sinon.spy(() => {
+      log.debug('fake: reloadStrategy()');
+    }),
+    MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
+    desktopNotifications: sinon.spy(() => {}),
+  };
+
+  return {
+    argv,
+    options,
+    run: (customArgv = {}, customOpt = {}) => run(
+      {...argv, ...customArgv},
+      {...options, ...customOpt}
+    ),
+  };
+}
+
 describe('run', () => {
   let androidRunnerStub: sinon.SinonStub;
   let desktopRunnerStub: sinon.SinonStub;
-
-  function prepareRun(fakeInstallResult) {
-    const sourceDir = fixturePath('minimal-web-ext');
-
-    const argv = {
-      artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
-      sourceDir,
-      noReload: true,
-      keepProfileChanges: false,
-      browserConsole: false,
-    };
-    const options = {
-      buildExtension: sinon.spy(() => {}),
-      firefoxApp: getFakeFirefox(),
-      firefoxClient: sinon.spy(() => {
-        return Promise.resolve(getFakeRemoteFirefox({
-          installTemporaryAddon: () =>
-            Promise.resolve(
-              fakeInstallResult || tempInstallResult
-            ),
-        }));
-      }),
-      reloadStrategy: sinon.spy(() => {
-        log.debug('fake: reloadStrategy()');
-      }),
-      MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
-      desktopNotifications: sinon.spy(() => {}),
-    };
-
-    return {
-      argv,
-      options,
-      run: (customArgv = {}, customOpt = {}) => run(
-        {...argv, ...customArgv},
-        {...options, ...customOpt}
-      ),
-    };
-  }
 
   beforeEach(() => {
     androidRunnerStub = sinon.stub(
