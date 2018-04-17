@@ -1,6 +1,5 @@
 /* @flow */
 import defaultBuildExtension from './build';
-import DefaultADBUtils from '../util/adb';
 import {
   showDesktopNotification as defaultDesktopNotifications,
 } from '../util/desktop-notifier';
@@ -11,15 +10,10 @@ import {
 import {createLogger} from '../util/logger';
 import defaultGetValidatedManifest from '../util/manifest';
 import {
+  createExtensionRunner,
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
 } from '../extension-runners';
-import {
-  FirefoxDesktopExtensionRunner as DefaultFirefoxDesktopExtensionRunner,
-} from '../extension-runners/firefox-desktop';
-import {
-  FirefoxAndroidExtensionRunner as defaultFirefoxAndroidExtensionRunner,
-} from '../extension-runners/firefox-android';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
 
@@ -58,8 +52,6 @@ export type CmdRunOptions = {|
   firefoxClient: typeof defaultFirefoxClient,
   reloadStrategy: typeof defaultReloadStrategy,
   shouldExitProgram?: boolean,
-  FirefoxAndroidExtensionRunner?: typeof defaultFirefoxAndroidExtensionRunner,
-  FirefoxDesktopExtensionRunner?: typeof DefaultFirefoxDesktopExtensionRunner,
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
   getValidatedManifest?: typeof defaultGetValidatedManifest,
 |};
@@ -92,8 +84,6 @@ export default async function run(
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
-    FirefoxAndroidExtensionRunner = defaultFirefoxAndroidExtensionRunner,
-    FirefoxDesktopExtensionRunner = DefaultFirefoxDesktopExtensionRunner,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
   }: CmdRunOptions = {}): Promise<DefaultMultiExtensionRunner> {
@@ -136,10 +126,10 @@ export default async function run(
       firefoxClient,
     };
 
-    const firefoxDesktopRunner = new FirefoxDesktopExtensionRunner(
-      firefoxDesktopRunnerParams
-    );
-
+    const firefoxDesktopRunner = await createExtensionRunner({
+      target: 'firefox-desktop',
+      params: firefoxDesktopRunnerParams,
+    });
     runners.push(firefoxDesktopRunner);
   }
 
@@ -161,7 +151,6 @@ export default async function run(
       // Injected dependencies.
       firefoxApp,
       firefoxClient,
-      ADBUtils: DefaultADBUtils,
       desktopNotifications: defaultDesktopNotifications,
       buildSourceDir: (extensionSourceDir: string, tmpArtifactsDir: string) => {
         return buildExtension({
@@ -178,11 +167,10 @@ export default async function run(
       },
     };
 
-    const firefoxAndroidRunner = new FirefoxAndroidExtensionRunner({
-      ...commonRunnerParams,
-      ...firefoxAndroidRunnerParams,
+    const firefoxAndroidRunner = await createExtensionRunner({
+      target: 'firefox-android',
+      params: firefoxAndroidRunnerParams,
     });
-
     runners.push(firefoxAndroidRunner);
   }
 

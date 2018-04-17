@@ -1,7 +1,7 @@
 /* @flow */
 import path from 'path';
 
-import {describe, it} from 'mocha';
+import {afterEach, beforeEach, describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
@@ -20,66 +20,80 @@ const tempInstallResult = {
   addon: {id: 'some-addon@test-suite'},
 };
 
+function prepareRun(fakeInstallResult) {
+  const sourceDir = fixturePath('minimal-web-ext');
+
+  const argv = {
+    artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
+    sourceDir,
+    noReload: true,
+    keepProfileChanges: false,
+    browserConsole: false,
+  };
+  const options = {
+    buildExtension: sinon.spy(() => {}),
+    firefoxApp: getFakeFirefox(),
+    firefoxClient: sinon.spy(() => {
+      return Promise.resolve(getFakeRemoteFirefox({
+        installTemporaryAddon: () =>
+          Promise.resolve(
+            fakeInstallResult || tempInstallResult
+          ),
+      }));
+    }),
+    reloadStrategy: sinon.spy(() => {
+      log.debug('fake: reloadStrategy()');
+    }),
+    MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
+    desktopNotifications: sinon.spy(() => {}),
+  };
+
+  return {
+    argv,
+    options,
+    run: (customArgv = {}, customOpt = {}) => run(
+      {...argv, ...customArgv},
+      {...options, ...customOpt}
+    ),
+  };
+}
+
 describe('run', () => {
+  let androidRunnerStub: sinon.SinonStub;
+  let desktopRunnerStub: sinon.SinonStub;
 
-  function prepareRun(fakeInstallResult) {
-    const sourceDir = fixturePath('minimal-web-ext');
+  beforeEach(() => {
+    androidRunnerStub = sinon.stub(
+      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
+      require('../../../src/extension-runners/firefox-android'),
+      'FirefoxAndroidExtensionRunner');
 
-    const argv = {
-      artifactsDir: path.join(sourceDir, 'web-ext-artifacts'),
-      sourceDir,
-      noReload: true,
-      keepProfileChanges: false,
-      browserConsole: false,
-    };
-    const options = {
-      buildExtension: sinon.spy(() => {}),
-      firefoxApp: getFakeFirefox(),
-      firefoxClient: sinon.spy(() => {
-        return Promise.resolve(getFakeRemoteFirefox({
-          installTemporaryAddon: () =>
-            Promise.resolve(
-              fakeInstallResult || tempInstallResult
-            ),
-        }));
-      }),
-      reloadStrategy: sinon.spy(() => {
-        log.debug('fake: reloadStrategy()');
-      }),
-      FirefoxDesktopExtensionRunner: sinon.spy(FakeExtensionRunner),
-      MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
-      desktopNotifications: sinon.spy(() => {}),
-    };
-
-    return {
-      argv,
-      options,
-      run: (customArgv = {}, customOpt = {}) => run(
-        {...argv, ...customArgv},
-        {...options, ...customOpt}
-      ),
-    };
-  }
+    desktopRunnerStub = sinon.stub(
+      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
+      require('../../../src/extension-runners/firefox-desktop'),
+      'FirefoxDesktopExtensionRunner');
+  });
+  afterEach(() => {
+    androidRunnerStub.restore();
+    androidRunnerStub = undefined;
+    desktopRunnerStub.restore();
+    desktopRunnerStub = undefined;
+  });
 
   it('passes a custom Firefox binary when specified', async () => {
     const firefox = '/pretend/path/to/Firefox/firefox-bin';
     const cmd = prepareRun();
-    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
-    await cmd.run({firefox}, {FirefoxDesktopExtensionRunner});
-    sinon.assert.calledWithMatch(
-      FirefoxDesktopExtensionRunner, {firefoxBinary: firefox}
-    );
+    await cmd.run({firefox});
+    sinon.assert.calledWithMatch(desktopRunnerStub, {firefoxBinary: firefox});
   });
 
   it('passes startUrl parameter to Firefox when specified', async () => {
     const cmd = prepareRun();
     const expectedStartUrls = ['www.example.com'];
-    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
 
-    await cmd.run({startUrl: expectedStartUrls},
-                  {FirefoxDesktopExtensionRunner});
+    await cmd.run({startUrl: expectedStartUrls});
     sinon.assert.calledWithMatch(
-      FirefoxDesktopExtensionRunner, {startUrl: expectedStartUrls}
+      desktopRunnerStub, {startUrl: expectedStartUrls}
     );
   });
 
@@ -94,12 +108,10 @@ describe('run', () => {
       firefoxProfile: '/path/to/custom/profile',
     };
 
-    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
+    await cmd.run(runOptions);
 
-    await cmd.run(runOptions, {FirefoxDesktopExtensionRunner});
-
-    assert.ok(FirefoxDesktopExtensionRunner.called);
-    const runnerParams = FirefoxDesktopExtensionRunner.firstCall.args[0];
+    sinon.assert.calledOnce(desktopRunnerStub);
+    const runnerParams = desktopRunnerStub.firstCall.args[0];
 
     // The runner should receive the same parameters as the options sent
     // to run() with just a few minor adjustments.
@@ -124,11 +136,10 @@ describe('run', () => {
   it('passes the expected dependencies to the extension runner', async () => {
     const cmd = prepareRun();
     const {firefoxApp, firefoxClient} = cmd.options;
-    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
 
-    await cmd.run({}, {FirefoxDesktopExtensionRunner});
-    assert.ok(FirefoxDesktopExtensionRunner.called);
-    const runnerParams = FirefoxDesktopExtensionRunner.firstCall.args[0];
+    await cmd.run({});
+    sinon.assert.calledOnce(desktopRunnerStub);
+    const runnerParams = desktopRunnerStub.firstCall.args[0];
     assert.deepEqual({
       firefoxApp: runnerParams.firefoxApp,
       firefoxClient: runnerParams.firefoxClient,
@@ -189,66 +200,49 @@ describe('run', () => {
   it('creates a Firefox Desktop runner if targets is an empty array',
      async () => {
        const cmd = prepareRun();
-       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
-       await cmd.run({target: []}, {FirefoxDesktopExtensionRunner});
-       sinon.assert.calledOnce(FirefoxDesktopExtensionRunner);
+       await cmd.run({target: []});
+       sinon.assert.notCalled(androidRunnerStub);
+       sinon.assert.calledOnce(desktopRunnerStub);
      });
 
   it('creates a Firefox Desktop runner if "firefox-desktop" is in target',
      async () => {
        const cmd = prepareRun();
-       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
-       await cmd.run({target: ['firefox-desktop']}, {
-         FirefoxDesktopExtensionRunner,
-       });
-       sinon.assert.calledOnce(FirefoxDesktopExtensionRunner);
+       await cmd.run({target: ['firefox-desktop']});
+       sinon.assert.notCalled(androidRunnerStub);
+       sinon.assert.calledOnce(desktopRunnerStub);
      });
 
   it('creates a Firefox Android runner if "firefox-android" is in target',
      async () => {
        const cmd = prepareRun();
-       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
-       const FirefoxAndroidExtensionRunner = sinon.spy(FakeExtensionRunner);
-       await cmd.run({target: ['firefox-android']}, {
-         FirefoxDesktopExtensionRunner,
-         FirefoxAndroidExtensionRunner,
-       });
+       await cmd.run({target: ['firefox-android']});
 
-       sinon.assert.calledOnce(FirefoxAndroidExtensionRunner);
-       sinon.assert.notCalled(FirefoxDesktopExtensionRunner);
+       sinon.assert.calledOnce(androidRunnerStub);
+       sinon.assert.notCalled(desktopRunnerStub);
      });
 
   it('creates multiple extension runners', async () => {
     const cmd = prepareRun();
-    const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
-    const FirefoxAndroidExtensionRunner = sinon.spy(FakeExtensionRunner);
-    await cmd.run({target: ['firefox-android', 'firefox-desktop']}, {
-      FirefoxDesktopExtensionRunner,
-      FirefoxAndroidExtensionRunner,
-    });
+    await cmd.run({target: ['firefox-android', 'firefox-desktop']});
 
-    sinon.assert.calledOnce(FirefoxAndroidExtensionRunner);
-    sinon.assert.calledOnce(FirefoxDesktopExtensionRunner);
+    sinon.assert.calledOnce(androidRunnerStub);
+    sinon.assert.calledOnce(desktopRunnerStub);
   });
 
   it('provides a buildSourceDir method to the Firefox Android runner',
      async () => {
        const cmd = prepareRun();
-       const FirefoxDesktopExtensionRunner = sinon.spy(FakeExtensionRunner);
-       const FirefoxAndroidExtensionRunner = sinon.spy(FakeExtensionRunner);
-       await cmd.run({target: ['firefox-android']}, {
-         FirefoxDesktopExtensionRunner,
-         FirefoxAndroidExtensionRunner,
-       });
+       await cmd.run({target: ['firefox-android']});
 
        sinon.assert.calledWithMatch(
-         FirefoxAndroidExtensionRunner,
+         androidRunnerStub,
          {
            buildSourceDir: sinon.match.func,
          }
        );
 
-       const {buildSourceDir} = FirefoxAndroidExtensionRunner.firstCall.args[0];
+       const {buildSourceDir} = androidRunnerStub.firstCall.args[0];
 
        await buildSourceDir('/fake/source/dir');
 
