@@ -1,5 +1,5 @@
 /* @flow */
-import {WriteStream} from 'tty';
+import {Writable as WritableStream} from 'stream';
 
 import bunyan from 'bunyan';
 import sinon from 'sinon';
@@ -37,7 +37,7 @@ describe('logger', () => {
 
     // NOTE: create a fake process that makes flow happy.
     function fakeProcess() {
-      class FakeWritableStream extends WriteStream {
+      class FakeWritableStream extends WritableStream {
         write(): boolean {
           return true;
         }

@@ -1,7 +1,6 @@
 /* @flow */
 
 import EventEmitter from 'events';
-import tty from 'tty';
 
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
@@ -23,6 +22,7 @@ import {
   basicManifest,
   getFakeFirefox,
   getFakeRemoteFirefox,
+  FakeStdin,
 } from '../helpers';
 
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
@@ -588,7 +588,7 @@ describe('util/extension-runners/firefox-android', () => {
            throw new UsageError('fake user exit');
          });
 
-         const fakeStdin = new tty.ReadStream();
+         const fakeStdin = new FakeStdin();
 
          params.stdin = fakeStdin;
 
