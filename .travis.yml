@@ -5,6 +5,7 @@ sudo: false
 node_js:
 - '6'
 - '8'
+- '10'
 
 before_script:
 # If this command fails and you can't fix it, file an issue and add an exception to .nsprc
