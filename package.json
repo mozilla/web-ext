@@ -68,7 +68,7 @@
     "mkdirp": "0.5.1",
     "mz": "2.7.0",
     "node-notifier": "5.2.1",
-    "open": "0.0.5",
+    "opn": "^5.3.0",
     "parse-json": "4.0.0",
     "regenerator-runtime": "0.11.1",
     "require-uncached": "1.0.3",
