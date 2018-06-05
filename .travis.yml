@@ -3,7 +3,6 @@ sudo: false
 
 # Keep this in sync with appveyor.yml
 node_js:
-- '6'
 - '8'
 - '10'
 

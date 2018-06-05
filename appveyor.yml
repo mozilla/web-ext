@@ -16,8 +16,8 @@ shallow_clone: true
 # Keep the following configs in sync with .travis.yml
 environment:
   matrix:
-    - nodejs_version: '6'
     - nodejs_version: '8'
+    - nodejs_version: '10'
 
 test_script:
   - node --version
