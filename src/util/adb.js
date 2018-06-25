@@ -99,7 +99,8 @@ export default class ADBUtils {
   }
 
   async discoverInstalledFirefoxAPKs(
-    deviceId: string
+    deviceId: string,
+    firefoxApk?: string
   ): Promise<Array<string>> {
     log.debug(`Listing installed Firefox APKs on ${deviceId}`);
 
@@ -110,6 +111,11 @@ export default class ADBUtils {
     return pmList.split('\n')
       .map((line) => line.replace('package:', '').trim())
       .filter((line) => {
+        // Look for an exact match if firefoxApk is defined.
+        if (firefoxApk) {
+          return line === firefoxApk;
+        }
+        // Match any package name that starts with the package name of a Firefox for Android browser.
         return (
           line.startsWith('org.mozilla.fennec') ||
             line.startsWith('org.mozilla.firefox')
