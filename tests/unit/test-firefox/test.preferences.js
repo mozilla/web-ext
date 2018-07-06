@@ -92,13 +92,13 @@ describe('firefox/preferences', () => {
       assert.throws(
         () => coerceCLICustomPreference(['test.invalid.prop']),
         UsageError,
-        'UsageError: Incomplete custom preference: "test.invalid.prop". ' +
+        'Incomplete custom preference: "test.invalid.prop". ' +
         'Syntax expected: "prefname=prefvalue".'
       );
 
       assert.throws(() => coerceCLICustomPreference(['*&%£=true']),
                     UsageError,
-                    'UsageError: Invalid custom preference name: *&%£');
+                    'Invalid custom preference name: *&%£');
     });
 
   });

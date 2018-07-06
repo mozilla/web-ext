@@ -400,7 +400,7 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config option "source-dir" must be ' +
+      }, UsageError, 'The config option "source-dir" must be ' +
         'specified in camel case: "sourceDir"');
     });
 
@@ -418,7 +418,7 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config file ' +
+      }, UsageError, 'The config file ' +
       'at some/path/to/config.js specified an unknown option: "randomDir"');
     });
 
@@ -437,7 +437,7 @@ describe('config', () => {
       assert.throws(
         () => applyConf({...params, configObject}),
         UsageError,
-        'UsageError: The config file at some/path/to/config.js specified the ' +
+        'The config file at some/path/to/config.js specified the ' +
         'type of "retries" incorrectly as "string" (expected type "number")'
       );
     });
@@ -456,7 +456,7 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+      }, UsageError, 'The config file at some/path/to/config.js ' +
         'specified the type of "sourceDir" incorrectly');
     });
 
@@ -689,7 +689,7 @@ describe('config', () => {
       assert.throws(
         () => applyConf({...params, configObject}),
         UsageError,
-        'UsageError: The config file at some/path/to/config.js ' +
+        'The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly'
       );
     });
@@ -714,7 +714,7 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config option "api-url"' +
+      }, UsageError, 'The config option "api-url"' +
         ' must be specified in camel case: "apiUrl"');
     });
 
@@ -738,7 +738,7 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config file at ' +
+      }, UsageError, 'The config file at ' +
       'some/path/to/config.js specified an unknown option: "randomOption"');
     });
 
@@ -762,7 +762,7 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+      }, UsageError, 'The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly');
     });
 
@@ -794,7 +794,7 @@ describe('config', () => {
       };
       assert.throws(() => {
         applyConf({...params, configObject});
-      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+      }, UsageError, 'The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly');
     });
 
@@ -821,7 +821,7 @@ describe('config', () => {
           applyConf({...params, configObject});
         },
         WebExtError,
-        'WebExtError: Option: apiUrl was defined without a type.'
+        'Option: apiUrl was defined without a type.'
       );
     });
 
@@ -855,7 +855,7 @@ describe('config', () => {
           argv: program.yargs.exitProcess(false).argv,
           options: program.options,
           configObject});
-      }, UsageError, 'UsageError: The config file at some/path/to/config.js ' +
+      }, UsageError, 'The config file at some/path/to/config.js ' +
         'specified the type of "apiUrl" incorrectly as "number"' +
         ' (expected type "string")');
     });
