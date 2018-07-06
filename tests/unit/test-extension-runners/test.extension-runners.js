@@ -418,7 +418,6 @@ describe('util/extension-runners', () => {
       sinon.assert.calledWith(
         createWatcher,
         sinon.match({
-          client: sentArgs.client,
           sourceDir: sentArgs.sourceDir,
           artifactsDir: sentArgs.artifactsDir,
           ignoreFiles: sentArgs.ignoreFiles,

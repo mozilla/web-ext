@@ -115,10 +115,12 @@ describe('run', () => {
 
     // The runner should receive the same parameters as the options sent
     // to run() with just a few minor adjustments.
-    const expectedRunnerParams = { ...runOptions };
-    expectedRunnerParams.firefoxBinary = runOptions.firefox;
+    const expectedRunnerParams = {
+      ...runOptions,
+      firefoxBinary: runOptions.firefox,
+      customPrefs: runOptions.pref,
+    };
     delete expectedRunnerParams.firefox;
-    expectedRunnerParams.customPrefs = runOptions.pref;
     delete expectedRunnerParams.pref;
 
     assert.deepEqual({
