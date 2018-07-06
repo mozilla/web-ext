@@ -119,7 +119,7 @@
     "grunt-webpack": "3.0.2",
     "load-grunt-configs": "1.0.0",
     "load-grunt-tasks": "3.5.2",
-    "mocha": "4.1.0",
+    "mocha": "5.2.0",
     "mocha-multi": "1.0.1",
     "nsp": "3.2.1",
     "object.entries": "1.0.4",
