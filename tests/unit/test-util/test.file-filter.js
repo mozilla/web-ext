@@ -131,4 +131,34 @@ describe('util/file-filter', () => {
     });
   });
 
+  describe('negation', () => {
+    const filter = newFileFilter({
+      sourceDir: '/src',
+      ignoreFiles: [
+        '!node_modules/libdweb/src/**',
+      ],
+    });
+
+    it('ignore paths not captured by negation', () => {
+      assert.equal(filter.wantFile('/src/node_modules/lib/foo.js'), false);
+      assert.equal(filter.wantFile('/src/node_modules/lib'), false);
+      assert.equal(filter.wantFile('/src/node_modules/what.js'), false);
+      assert.equal(filter.wantFile('/src/node_modules/libdweb/what.js'), false);
+      assert.equal(filter.wantFile('/src/node_modules/libdweb/src.js'), false);
+      assert.equal(filter.wantFile('/src/node_modules/libdweb/src'), false);
+    });
+
+    it('includes paths captured by negation', () => {
+      assert.equal(
+        filter.wantFile('/src/node_modules/libdweb/src/lib.js'),
+        true);
+      assert.equal(
+        filter.wantFile('/src/node_modules/libdweb/src/sub/lib.js'),
+        true);
+      assert.equal(
+        filter.wantFile('/src/node_modules/libdweb/src/node_modules/lib.js'),
+        true);
+    });
+  });
+
 });
