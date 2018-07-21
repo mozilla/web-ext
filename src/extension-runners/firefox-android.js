@@ -338,7 +338,8 @@ export class FirefoxAndroidExtensionRunner {
     } = this;
     // Discovery and select a Firefox for Android version.
     const packages = await adbUtils.discoverInstalledFirefoxAPKs(
-      selectedAdbDevice
+      selectedAdbDevice,
+      firefoxApk
     );
 
     if (packages.length === 0) {

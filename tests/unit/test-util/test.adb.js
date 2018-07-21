@@ -15,6 +15,8 @@ import ADBUtils from '../../../src/util/adb';
 const fakeADBPackageList = `
 package:org.mozilla.fennec
 package:org.mozilla.firefox
+package:com.some.firefox.fork
+package:com.some.firefox.fork2
 package:org.some.other.software
 `;
 
@@ -235,6 +237,29 @@ describe('utils/adb', () => {
       sinon.assert.calledOnce(adb.fakeADBClient.shell);
       sinon.assert.calledOnce(adb.util.readAll);
       assert.deepEqual(packages, ['org.mozilla.fennec', 'org.mozilla.firefox']);
+    });
+
+    it('resolves the given firefox APK with exact package name', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          shell: sinon.spy(() => Promise.resolve('')),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => {
+            return Promise.resolve(Buffer.from(fakeADBPackageList));
+          }),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const promise = adbUtils.discoverInstalledFirefoxAPKs(
+        'device1',
+        'com.some.firefox.fork'
+      );
+      const packages = await assert.isFulfilled(promise);
+      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.util.readAll);
+      assert.deepEqual(packages, ['com.some.firefox.fork']);
     });
   });
 
