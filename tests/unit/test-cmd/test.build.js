@@ -372,6 +372,40 @@ describe('build', () => {
       });
   });
 
+  it('zips a package and includes a file from a negated filter', () => {
+    const zipFile = new ZipFile();
+
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+          ignoreFiles: [
+            '!node_modules',
+            '!node_modules/pkg1',
+            '!node_modules/pkg1/**',
+          ],
+        })
+          .then((buildResult) => {
+            assert.match(buildResult.extensionPath,
+                         /minimal_extension-1\.0\.zip$/);
+            return buildResult.extensionPath;
+          })
+          .then((extensionPath) => zipFile.open(extensionPath))
+          .then(() => zipFile.extractFilenames())
+          .then((fileNames) => {
+            fileNames.sort();
+            assert.deepEqual(fileNames, [
+              'background-script.js', 'manifest.json',
+              'node_modules/',
+              'node_modules/pkg1/',
+              'node_modules/pkg1/file1.txt',
+            ]);
+            return zipFile.close();
+          })
+    );
+  });
+
   describe('safeFileName', () => {
 
     it('makes names safe for writing to a file system', () => {
