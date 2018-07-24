@@ -1,7 +1,7 @@
 /* @flow */
 import path from 'path';
 
-import minimatch from 'minimatch';
+import multimatch from 'multimatch';
 
 import {createLogger} from './logger';
 
@@ -88,7 +88,12 @@ export class FileFilter {
    */
   addToIgnoreList(files: Array<string>) {
     for (const file of files) {
-      this.filesToIgnore.push(this.resolveWithSourceDir(file));
+      if (file.charAt(0) === '!') {
+        const resolvedFile = this.resolveWithSourceDir(file.substr(1));
+        this.filesToIgnore.push(`!${resolvedFile}`);
+      } else {
+        this.filesToIgnore.push(this.resolveWithSourceDir(file));
+      }
     }
   }
 
@@ -104,12 +109,10 @@ export class FileFilter {
    */
   wantFile(filePath: string): boolean {
     const resolvedPath = this.resolveWithSourceDir(filePath);
-    for (const test of this.filesToIgnore) {
-      if (minimatch(resolvedPath, test)) {
-        log.debug(
-          `FileFilter: ignoring file ${resolvedPath} (it matched ${test})`);
-        return false;
-      }
+    const matches = multimatch(resolvedPath, this.filesToIgnore);
+    if (matches.length > 0) {
+      log.debug(`FileFilter: ignoring file ${resolvedPath}`);
+      return false;
     }
     return true;
   }
