@@ -56,7 +56,7 @@
     "babel-runtime": "6.26.0",
     "bunyan": "1.8.12",
     "camelcase": "4.1.0",
-    "debounce": "1.1.0",
+    "debounce": "1.2.0",
     "decamelize": "2.0.0",
     "es6-error": "4.1.1",
     "es6-promisify": "5.0.0",
