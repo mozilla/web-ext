@@ -698,6 +698,39 @@ describe('firefox', () => {
       }
     });
 
+    it('returns a function that looks for a default profile', async () => {
+      try {
+        const FxProfile = {
+          Finder: sinon.spy(() => () => Promise.resolve({})),
+        };
+        const fakeReadProfiles = sinon.spy(() => Promise.resolve());
+        const fakeGetPath = sinon.spy(() => Promise.resolve());
+        FxProfile.Finder.prototype.readProfiles = fakeReadProfiles;
+        FxProfile.Finder.prototype.getPath = fakeGetPath;
+        FxProfile.Finder.prototype.profiles = [{
+          Name: 'someName',
+        }];
+
+        const userDirectoryPath = '/non/existent/path';
+
+        const getter = firefox.defaultCreateProfileFinder({
+          userDirectoryPath,
+          FxProfile,
+        });
+
+        await getter('someName');
+
+        sinon.assert.called(fakeReadProfiles);
+        sinon.assert.called(fakeGetPath);
+        sinon.assert.calledWith(
+          fakeGetPath,
+          sinon.match('someName'),
+        );
+      } catch (error) {
+        throw error;
+      }
+    });
+
 
   });
 
