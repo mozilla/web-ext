@@ -342,11 +342,10 @@ export function defaultCreateProfileFinder(
         return await getPath(profileName);
       }
     } catch (error) {
-      if (isErrorWithCode('ENOENT', error)) {
-        log.warn('No firefox profiles exist');
-      } else {
+      if (!isErrorWithCode('ENOENT', error)) {
         throw error;
       }
+      log.warn('Unable to find Firefox profiles.ini');
     }
   };
 }
