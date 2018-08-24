@@ -317,7 +317,7 @@ export function configureProfile(
   return Promise.resolve(profile);
 }
 
-export type getProfileFN = (profileName: string) => Promise<string | void>;
+export type getProfileFn = (profileName: string) => Promise<string | void>;
 
 export type CreateProfileFinderParams = {|
   userDirectoryPath?: string,
@@ -329,7 +329,7 @@ export function defaultCreateProfileFinder(
     userDirectoryPath,
     FxProfile = FirefoxProfile,
   }: CreateProfileFinderParams = {}
-): getProfileFN {
+): getProfileFn {
   const finder = new FxProfile.Finder(userDirectoryPath);
   const readProfiles = promisify(finder.readProfiles, finder);
   const getPath = promisify(finder.getPath, finder);
@@ -385,8 +385,8 @@ export async function useProfile(
   let destinationDirectory;
   const getProfilePath = createProfileFinder();
 
-  const profileIsAPath = await isDirectory(profilePath);
-  if (profileIsAPath) {
+  const profileIsDirPath = await isDirectory(profilePath);
+  if (profileIsDirPath) {
     log.debug(`Using profile directory "${profilePath}"`);
     destinationDirectory = profilePath;
   } else {
