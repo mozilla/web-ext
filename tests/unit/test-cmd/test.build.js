@@ -116,6 +116,33 @@ describe('build', () => {
     );
   });
 
+  it('handles comments in messages.json', () => {
+    return withTempDir(
+      (tmpDir) => {
+        const messageFileName = path.join(tmpDir.path(), 'messages.json');
+        fs.writeFileSync(
+          messageFileName,
+          `{"extensionName": {
+              "message": "example extension", // comments
+              "description": "example with comments"
+            }
+          }`
+        );
+
+        return getDefaultLocalizedName({
+          messageFile: messageFileName,
+          manifestData: {
+            name: '__MSG_extensionName__',
+            version: '0.0.1',
+          },
+        })
+          .then((result) => {
+            assert.match(result, /example extension/);
+          });
+      }
+    );
+  });
+
   it('checks locale file for malformed json', () => {
     return withTempDir(
       (tmpDir) => {

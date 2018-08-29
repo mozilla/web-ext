@@ -4,6 +4,7 @@ import {createWriteStream} from 'fs';
 
 import {fs} from 'mz';
 import parseJSON from 'parse-json';
+import stripJsonComments from 'strip-json-comments';
 import defaultEventToPromise from 'event-to-promise';
 
 import defaultSourceWatcher from '../watcher';
@@ -71,14 +72,14 @@ export async function getDefaultLocalizedName(
   let extensionName: string = manifestData.name;
 
   try {
-    messageContents = await fs.readFile(messageFile);
+    messageContents = await fs.readFile(messageFile, {encoding: 'utf-8'});
   } catch (error) {
     throw new UsageError(
       `Error reading messages.json file at ${messageFile}: ${error}`);
   }
 
   try {
-    messageData = parseJSON(String(messageContents), messageFile);
+    messageData = parseJSON(stripJsonComments(messageContents), messageFile);
   } catch (error) {
     throw new UsageError(
       `Error parsing messages.json ${error}`);
