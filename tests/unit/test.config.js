@@ -955,6 +955,7 @@ describe('config', () => {
       return discoverConfigFiles({
         // By default, do not look in the real home directory.
         getHomeDir: () => '/not-a-directory',
+        getConfigDir: () => '/not-a-directory',
         ...params,
       });
     }
@@ -975,8 +976,32 @@ describe('config', () => {
             // as if that was a user's home directory.
             await _discoverConfigFiles({
               getHomeDir: () => tmpDir.path(),
+              getConfigDir: () => null,
             }),
             [path.resolve(homeDirConfig), packageJSON]
+          );
+        });
+    });
+
+    it('finds a config in your XDG config directory', () => {
+      return withTempDir(
+        async (tmpDir) => {
+          // This is actually web-ext itself's package.json file, which
+          // will be discovered because it's inside current working
+          // directory
+          const packageJSON = path.join(process.cwd(), 'package.json');
+          const configDirConfig = path.join(
+            tmpDir.path(), 'web-ext-config.js'
+          );
+          await fs.writeFile(configDirConfig, 'module.exports = {}');
+          assert.deepEqual(
+            // Stub out getHomeDir() so that it returns tmpDir.path()
+            // as if that was a user's home directory.
+            await _discoverConfigFiles({
+              getHomeDir: () => '/not-a-directory',
+              getConfigDir: () => tmpDir.path(),
+            }),
+            [path.resolve(configDirConfig), packageJSON]
           );
         });
     });
@@ -1015,6 +1040,13 @@ describe('config', () => {
             );
             await fs.writeFile(globalConfig, 'module.exports = {}');
 
+            const fakeConfigDir = path.join(tmpDir.path(), 'config-dir');
+            await fs.mkdir(fakeConfigDir);
+            const globalXDGConfig = path.resolve(
+              path.join(fakeConfigDir, 'web-ext-config.js')
+            );
+            await fs.writeFile(globalXDGConfig, 'module.exports = {}');
+
             const packageJSONConfig = path.resolve(
               path.join(process.cwd(), 'package.json')
             );
@@ -1035,8 +1067,9 @@ describe('config', () => {
             assert.deepEqual(
               await _discoverConfigFiles({
                 getHomeDir: () => fakeHomeDir,
+                getConfigDir: () => fakeConfigDir,
               }),
-              [globalConfig, packageJSONConfig, projectConfig]
+              [globalXDGConfig, globalConfig, packageJSONConfig, projectConfig]
             );
           } finally {
             process.chdir(lastDir);

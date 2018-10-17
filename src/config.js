@@ -5,6 +5,7 @@ import path from 'path';
 import requireUncached from 'require-uncached';
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
+import xdgBasedir from 'xdg-basedir';
 
 import fileExists from './util/file-exists';
 import {createLogger} from './util/logger';
@@ -143,11 +144,15 @@ export function loadJSConfigFile(filePath: string): Object {
 }
 
 type DiscoverConfigFilesParams = {|
-  getHomeDir: () => string,
+  getHomeDir?: () => string,
+  getConfigDir?: () => ?string,
 |};
 
 export async function discoverConfigFiles(
-  {getHomeDir = os.homedir}: DiscoverConfigFilesParams = {}
+  {
+    getHomeDir = os.homedir,
+    getConfigDir = () => xdgBasedir.config,
+  }: DiscoverConfigFilesParams = {}
 ): Promise<Array<string>> {
   const magicConfigName = 'web-ext-config.js';
 
@@ -160,6 +165,12 @@ export async function discoverConfigFiles(
     // Look for a magic config in the current working directory.
     path.join(process.cwd(), magicConfigName),
   ];
+
+  // Add magic config in XDG config dir as first file to load.
+  const configDir = getConfigDir();
+  if (configDir) {
+    possibleConfigs.unshift(path.join(configDir, magicConfigName));
+  }
 
   const configs = await Promise.all(possibleConfigs.map(
     async (fileName) => {
