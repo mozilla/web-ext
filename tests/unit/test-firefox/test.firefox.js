@@ -614,12 +614,18 @@ describe('firefox', () => {
 
   describe('defaultCreateProfileFinder', () => {
 
-    function prepareReaderTest(readProfileReturns) {
-      const fakeReadProfiles = sinon.spy(() => {
-        return readProfileReturns;
-      });
+    // Define the params type for the prepareProfileFinderTest helper.
+    type PrepareProfileFinderTestParams = {|
+      readProfileReturns?: Promise<void>,
+      getPathReturns?: Promise<string>,
+    |};
 
-      const fakeGetPath = sinon.spy(() => Promise.resolve());
+    function prepareProfileFinderTest({
+      readProfileReturns = Promise.resolve(),
+      getPathReturns = Promise.resolve('/fake/path'),
+    }: PrepareProfileFinderTestParams = {}) {
+      const fakeReadProfiles = sinon.spy(() => readProfileReturns);
+      const fakeGetPath = sinon.spy(() => getPathReturns);
       const fakeProfiles = [{Name: 'someName'}];
       const userDirectoryPath = '/non/existent/path';
 
@@ -662,33 +668,31 @@ describe('firefox', () => {
       firefox.defaultCreateProfileFinder({userDirectoryPath, FxProfile});
 
       sinon.assert.called(FxProfile.Finder);
-      sinon.assert.calledWith(
-        FxProfile.Finder,
-        sinon.match(userDirectoryPath),
-      );
+      sinon.assert.calledWith(FxProfile.Finder, sinon.match(userDirectoryPath));
     });
 
     it('returns a finder that resolves a profile name', async () => {
+      const expectedResolvedProfilePath = '/fake/resolved/profile/path';
       const {
         fakeReadProfiles,
         fakeGetPath,
         FxProfile,
         userDirectoryPath,
-      } = prepareReaderTest(Promise.resolve());
+      } = prepareProfileFinderTest({
+        getPathReturns: Promise.resolve(expectedResolvedProfilePath),
+      });
 
-      const getter = firefox.defaultCreateProfileFinder({
+      const profileFinder = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
         FxProfile,
       });
 
-      await getter('someName');
+      assert.equal(await profileFinder('someName'), expectedResolvedProfilePath,
+                   'Got the expected profile path resolved');
 
       sinon.assert.called(fakeReadProfiles);
       sinon.assert.called(fakeGetPath);
-      sinon.assert.calledWith(
-        fakeGetPath,
-        sinon.match('someName'),
-      );
+      sinon.assert.calledWith(fakeGetPath, sinon.match('someName'));
     });
 
     it('returns a finder that resolves undefined for no profiles.ini',
@@ -698,9 +702,11 @@ describe('firefox', () => {
            fakeGetPath,
            FxProfile,
            userDirectoryPath,
-         } = prepareReaderTest(
-           Promise.reject(new ErrorWithCode('ENOENT', 'fake ENOENT error'))
-         );
+         } = prepareProfileFinderTest({
+           readProfileReturns: Promise.reject(
+             new ErrorWithCode('ENOENT', 'fake ENOENT error')
+           ),
+         });
 
          const getter = firefox.defaultCreateProfileFinder({
            userDirectoryPath,
@@ -724,9 +730,11 @@ describe('firefox', () => {
            fakeGetPath,
            FxProfile,
            userDirectoryPath,
-         } = prepareReaderTest(
-           Promise.reject(new Error('unspecified error'))
-         );
+         } = prepareProfileFinderTest({
+           readProfileReturns: Promise.reject(
+             new Error('unspecified error')
+           ),
+         });
 
          const getter = firefox.defaultCreateProfileFinder({
            userDirectoryPath,
