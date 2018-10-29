@@ -1,6 +1,10 @@
 language: node_js
 sudo: false
 
+os:
+- linux
+- windows
+
 # Keep this in sync with appveyor.yml
 node_js:
 - '6'
