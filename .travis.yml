@@ -10,6 +10,13 @@ node_js:
 - '6'
 - '8'
 
+# Skip node_js 6 on travis windows workers (as it often fails because
+# travis fails to init the node_js 6 environment).
+matrix:
+  exclude:
+  - node_js: '6'
+    os: windows
+
 before_script:
 # If this command fails and you can't fix it, file an issue and add an exception to .nsprc
 - npm run nsp-check
