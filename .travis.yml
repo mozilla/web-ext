@@ -19,7 +19,7 @@ matrix:
 
 before_script:
 # If this command fails and you can't fix it, file an issue and add an exception to .nsprc
-- npm run nsp-check
+- if [[ "$TRAVIS_OS_NAME" != 'windows' ]]; then npm run nsp-check; fi
 
 # Keep this in sync with appveyor.yml
 script:
@@ -46,7 +46,7 @@ script:
 - rm artifacts/production/package.json
 
 ## lint the github PR title.
-- npm run travis-pr-title-lint
+- if [[ "$TRAVIS_OS_NAME" != 'windows' ]]; then npm run travis-pr-title-lint; fi
 
 after_script: npm run publish-coverage
 
