@@ -578,9 +578,13 @@ export class FirefoxAndroidExtensionRunner {
     // to connect the Firefox DevTools to the Firefox for Android instance).
     log.info(`You can connect to this Android device on TCP port ${tcpPort}`);
 
+    const forwardSocketSpec = this.selectedRDPSocketFile.startsWith('@') ?
+      `localabstract:${this.selectedRDPSocketFile.substr(1)}`
+      : `localfilesystem:${this.selectedRDPSocketFile}`;
+
     await adbUtils.setupForward(
       selectedAdbDevice,
-      `localfilesystem:${this.selectedRDPSocketFile}`,
+      forwardSocketSpec,
       `tcp:${tcpPort}`
     );
 

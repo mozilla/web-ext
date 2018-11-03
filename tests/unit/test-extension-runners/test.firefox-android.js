@@ -43,6 +43,10 @@ const fakeRDPUnixSocketFile = (
   '/data/data/org.mozilla.firefox/firefox-debugger-socket'
 );
 
+const fakeRDPUnixAbstractSocketFile = (
+  '@org.mozilla.firefox/firefox-debugger-socket'
+);
+
 type PrepareParams = {
   params?: Object,
   debuggerPort?: number,
@@ -101,7 +105,8 @@ function prepareExtensionRunnerParams({
   };
 }
 
-function prepareSelectedDeviceAndAPKParams(overriddenProperties = {}) {
+function prepareSelectedDeviceAndAPKParams(
+  overriddenProperties = {}, adbOverrides = {}) {
   const fakeADBUtils = {
     discoverDevices: sinon.spy(() => Promise.resolve([
       'emulator-1', 'emulator-2',
@@ -124,6 +129,7 @@ function prepareSelectedDeviceAndAPKParams(overriddenProperties = {}) {
     clearArtifactsDir: sinon.spy(() => Promise.resolve()),
     setUserAbortDiscovery: sinon.spy(() => {}),
     ensureRequiredAPKRuntimePermissions: sinon.spy(() => Promise.resolve()),
+    ...adbOverrides,
   };
 
   const {params} = prepareExtensionRunnerParams({
@@ -388,6 +394,36 @@ describe('util/extension-runners/firefox-android', () => {
            fakeADBUtils.setupForward,
            'emulator-1',
            `localfilesystem:${runnerInstance.selectedRDPSocketFile}`,
+           `tcp:${runnerInstance.selectedTCPPort}`,
+         );
+
+         sinon.assert.callOrder(
+           fakeADBUtils.discoverRDPUnixSocket,
+           fakeADBUtils.setupForward
+         );
+       });
+
+    it('discovers the RDP abstract unix socket and forward it on',
+       async () => {
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams({}, {
+           discoverRDPUnixSocket: sinon.spy(
+             () => Promise.resolve(fakeRDPUnixAbstractSocketFile)
+           )});
+
+         const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+         await runnerInstance.run();
+
+         sinon.assert.calledWithMatch(
+           fakeADBUtils.discoverRDPUnixSocket,
+           'emulator-1', 'org.mozilla.firefox'
+         );
+
+         sinon.assert.calledWithMatch(
+           fakeADBUtils.setupForward,
+           'emulator-1',
+           'localabstract:org.mozilla.firefox/firefox-debugger-socket',
            `tcp:${runnerInstance.selectedTCPPort}`,
          );
 
