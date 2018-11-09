@@ -5,7 +5,6 @@ os:
 - linux
 - windows
 
-# Keep this in sync with appveyor.yml
 node_js:
 - '6'
 - '8'
@@ -70,3 +69,4 @@ deploy:
     secure: CVUpq7hp1/CvAD40vA0cm+5jI7Izlsb83mCNrAt7Qcjb4orFWTHUxE3Y0a5wGS2gAIr5l/hd/CruXdy4EfMVS6GyW5qhTeWxS0b36+t542z4Xlk9eY4UvB5DdKMJKH8RT+Sz8E/Sx6fhISgvQW48rGJCq3ePaH54mLkXLRJW7HqZxSnrAGc8XLiTJOUPKhOzo4AALXvLKDB+doTtHtSDFD+G+kpABMlJBw849V4mGVi/oUpK5Z/tnCjBBKIaU2Cw//2rE0Wo2mN4osq9eUHxNNTA4fTZoEONaDN/zeYhp3IjYc4cRVK611xnhITLW8CJwRSFJYaoPDB0S1sHOuIcl026SC36m01m7vb0RdxzxhTRBcdClSgo0VcqWHjGjZ5knR1s3ztUcOgVbkcuyQ7x03jp7DEe52sH86myzpWpymu6StRXQix4YjkDoGMFczhPmOP+fWYUex87VCsF1f3rdXJSQmtFuM4Tm11E4WoZGaLB5cgKTNZodJ5v6+UK5u3mop59fIJsIrFF+NKCJNnHvegchiLyGiOJb5wYWpnP4/O2XXNvDEtSPJBRGT/fcHVnYBr6hAl6ux/z4ND3xX77hKKnqQk+CrR28aQpURBNJMKFgtW2DcABAXTZ16ezhXsPlIp6/2GXu0VozTTnwPCRhvsl+s+dqqJu0faxSo+vB7s=
   on:
     tags: true
+    condition: $TRAVIS_OS_NAME = 'linux'
