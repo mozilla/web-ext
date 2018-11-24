@@ -288,6 +288,17 @@ describe('sign', () => {
     }
   ));
 
+  it('passes the channel parameter to the signer', () => withTempDir(
+    (tmpDir) => {
+      const stubs = getStubs();
+      return sign(tmpDir, stubs, {extraArgs: {channel: 'unlisted'}})
+        .then(() => {
+          sinon.assert.called(stubs.signAddon);
+          sinon.assert.calledWithMatch(stubs.signAddon, {channel: 'unlisted'});
+        });
+    }
+  ));
+
   it('passes the verbose flag to the signer', () => withTempDir(
     (tmpDir) => {
       const stubs = getStubs();
