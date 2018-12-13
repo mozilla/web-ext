@@ -12,8 +12,8 @@ import {
   MultiExtensionRunner,
 } from '../../../src/extension-runners';
 import {
+  createFakeStdin,
   FakeExtensionRunner,
-  FakeStdin,
 } from '../helpers';
 import type {
   IExtensionRunner, // eslint-disable-line import/named
@@ -486,7 +486,7 @@ describe('util/extension-runners', () => {
     it('can reload when user presses R in shell console', async () => {
       const {extensionRunner, reloadStrategy} = prepare();
 
-      const fakeStdin = new FakeStdin();
+      const fakeStdin = createFakeStdin();
       sinon.spy(fakeStdin, 'setRawMode');
       sinon.spy(extensionRunner, 'reloadAllExtensions');
 
@@ -516,7 +516,7 @@ describe('util/extension-runners', () => {
       const {extensionRunner, reloadStrategy} = prepare();
       sinon.spy(extensionRunner, 'registerCleanup');
 
-      const fakeStdin = new FakeStdin();
+      const fakeStdin = createFakeStdin();
       sinon.spy(fakeStdin, 'pause');
       sinon.spy(fakeStdin, 'setRawMode');
 
@@ -543,7 +543,7 @@ describe('util/extension-runners', () => {
            },
          });
 
-         const fakeStdin = new FakeStdin();
+         const fakeStdin = createFakeStdin();
          sinon.spy(fakeStdin, 'setRawMode');
 
          try {
@@ -574,7 +574,7 @@ describe('util/extension-runners', () => {
            },
          });
 
-         const fakeStdin = new FakeStdin();
+         const fakeStdin = createFakeStdin();
 
          try {
            await reloadStrategy({}, {stdin: fakeStdin});
@@ -596,7 +596,7 @@ describe('util/extension-runners', () => {
     it('pauses the web-ext process (CTRL+Z in shell console)', async () => {
       const {reloadStrategy} = prepare();
 
-      const fakeStdin = new FakeStdin();
+      const fakeStdin = createFakeStdin();
 
       const setRawMode = sinon.spy(fakeStdin, 'setRawMode');
       const fakeKill = sinon.spy(() => {});
