@@ -8,7 +8,6 @@
 import net from 'net';
 import path from 'path';
 import readline from 'readline';
-import tty from 'tty';
 
 import {withTempDir} from '../util/temp-dir';
 import DefaultADBUtils from '../util/adb';
@@ -25,6 +24,7 @@ import {
   connectWithMaxRetries as defaultFirefoxConnector,
 } from '../firefox/remote';
 import {createLogger} from '../util/logger';
+import {isTTY, setRawMode} from '../util/stdin';
 import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
@@ -547,9 +547,9 @@ export class FirefoxAndroidExtensionRunner {
 
     // TODO: use noInput property to decide if we should
     // disable direct keypress handling.
-    if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+    if (isTTY(stdin)) {
       readline.emitKeypressEvents(stdin);
-      stdin.setRawMode(true);
+      setRawMode(stdin, true);
 
       stdin.on('keypress', handleCtrlC);
     }
@@ -565,7 +565,7 @@ export class FirefoxAndroidExtensionRunner {
         )
       );
     } finally {
-      if (stdin.isTTY && stdin instanceof tty.ReadStream) {
+      if (isTTY(stdin)) {
         stdin.removeListener('keypress', handleCtrlC);
       }
     }

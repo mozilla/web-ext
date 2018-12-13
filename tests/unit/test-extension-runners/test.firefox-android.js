@@ -20,9 +20,9 @@ import {
 } from '../../../src/errors';
 import {
   basicManifest,
+  createFakeStdin,
   getFakeFirefox,
   getFakeRemoteFirefox,
-  FakeStdin,
 } from '../helpers';
 
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
@@ -624,7 +624,7 @@ describe('util/extension-runners/firefox-android', () => {
            throw new UsageError('fake user exit');
          });
 
-         const fakeStdin = new FakeStdin();
+         const fakeStdin = createFakeStdin();
 
          params.stdin = fakeStdin;
 

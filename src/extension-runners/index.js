@@ -1,7 +1,6 @@
 /* @flow */
 
 import readline from 'readline';
-import tty from 'tty';
 
 import type Watchpack from 'watchpack';
 
@@ -20,6 +19,9 @@ import type {FileFilterCreatorFn} from '../util/file-filter';
 import {
   createFileFilter as defaultFileFilterCreator,
 } from '../util/file-filter';
+import {
+  isTTY, setRawMode,
+} from '../util/stdin';
 import defaultSourceWatcher from '../watcher';
 import type {OnSourceChangeFn} from '../watcher';
 
@@ -304,9 +306,9 @@ export function defaultReloadStrategy(
     }
   });
 
-  if (allowInput && stdin instanceof tty.ReadStream && stdin.isTTY) {
+  if (allowInput && isTTY(stdin)) {
     readline.emitKeypressEvents(stdin);
-    stdin.setRawMode(true);
+    setRawMode(stdin, true);
 
     const keypressUsageInfo = 'Press R to reload (and Ctrl-C to quit)';
 
@@ -330,9 +332,7 @@ export function defaultReloadStrategy(
 
           // NOTE: Switch the raw mode off before suspending (needed to make the keypress event
           // to work correctly when the nodejs process is resumed).
-          if (stdin instanceof tty.ReadStream) {
-            stdin.setRawMode(false);
-          }
+          setRawMode(stdin, false);
 
           log.info('\nweb-ext has been suspended on user request');
           kill(process.pid, 'SIGTSTP');
@@ -340,10 +340,9 @@ export function defaultReloadStrategy(
           // Prepare to resume.
 
           log.info(`\nweb-ext has been resumed. ${keypressUsageInfo}`);
+
           // Switch the raw mode on on resume.
-          if (stdin instanceof tty.ReadStream) {
-            stdin.setRawMode(true);
-          }
+          setRawMode(stdin, true);
         } else if (keyPressed.name === 'r') {
           log.debug('Reloading installed extensions on user request');
           extensionRunner.reloadAllExtensions();

@@ -2,6 +2,7 @@
 import path from 'path';
 import EventEmitter from 'events';
 import tty from 'tty';
+import stream from 'stream';
 
 import sinon from 'sinon';
 import yauzl from 'yauzl';
@@ -337,9 +338,17 @@ export function getFakeRemoteFirefox(implementations: Object = {}) {
   return fake(RemoteFirefox.prototype, implementations);
 }
 
-export class FakeStdin extends tty.ReadStream {
-  constructor() {
-    // $FLOW_FIXME: flow doesn't yet recognize 0 as a valid parameter of tty.ReadStream.
-    super(0);
+class FakeStdin extends stream.Readable {
+  get isTTY() {
+    return true;
   }
+
+  // Fake tty.ReadStream methods.
+  setRawMode() {}
+  _read() {}
+}
+
+export function createFakeStdin(): tty.ReadStream {
+  // $FLOW_IGNORE: flow complains that the return value is incompatible with tty.ReadStream
+  return new FakeStdin();
 }
