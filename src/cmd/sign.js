@@ -30,6 +30,7 @@ export type SignParams = {|
   sourceDir: string,
   timeout: number,
   verbose?: boolean,
+  channel?: string,
 |};
 
 export type SignOptions = {
@@ -57,6 +58,7 @@ export default function sign(
     sourceDir,
     timeout,
     verbose,
+    channel,
   }: SignParams,
   {
     build = defaultBuilder,
@@ -118,6 +120,7 @@ export default function sign(
         xpiPath: buildResult.extensionPath,
         version: manifestData.version,
         downloadDir: artifactsDir,
+        channel,
       });
 
       if (signingResult.id) {
