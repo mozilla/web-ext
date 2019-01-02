@@ -122,7 +122,7 @@
     "mocha": "5.2.0",
     "mocha-multi": "1.0.1",
     "object.entries": "1.0.4",
-    "object.values": "1.0.4",
+    "object.values": "1.1.0",
     "prettyjson": "1.2.1",
     "shelljs": "0.8.3",
     "sinon": "6.1.2",
