@@ -4,8 +4,8 @@
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
   "engines": {
-    "node": ">=6.0.0",
-    "npm": ">=3.0.0"
+    "node": ">=8.0.0",
+    "npm": ">=5.0.0"
   },
   "engine-strict": true,
   "bin": {

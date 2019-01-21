@@ -6,7 +6,6 @@ os:
 - windows
 
 node_js:
-- '6'
 - '8'
 - '10'
 
@@ -15,8 +14,6 @@ node_js:
 matrix:
   fast_finish: true
   exclude:
-  - node_js: '6'
-    os: windows
   - node_js: '8'
     os: windows
 
