@@ -12,6 +12,7 @@ Ultimately, it aims to support browser extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
 [Firefox Extensions](https://developer.mozilla.org/en-US/Add-ons/WebExtensions).
 
+
 ## Documentation
 
 * [Getting started with web-ext][web-ext-user-docs]
