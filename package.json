@@ -51,7 +51,7 @@
     "@cliqz-oss/firefox-client": "0.3.1",
     "@cliqz-oss/node-firefox-connect": "1.2.1",
     "adbkit": "2.11.0",
-    "addons-linter": "1.4.1",
+    "addons-linter": "1.6.1",
     "babel-polyfill": "6.26.0",
     "babel-runtime": "6.26.0",
     "bunyan": "1.8.12",
