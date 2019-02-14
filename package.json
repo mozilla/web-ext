@@ -128,7 +128,7 @@
     "sinon": "6.1.2",
     "webpack": "3.11.0",
     "webpack-dev-server": "2.11.1",
-    "yauzl": "2.9.1"
+    "yauzl": "2.10.0"
   },
   "author": "Kumar McMillan",
   "license": "MPL-2.0",
