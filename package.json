@@ -62,7 +62,7 @@
     "es6-promisify": "5.0.0",
     "event-to-promise": "0.8.0",
     "firefox-profile": "1.2.0",
-    "fx-runner": "1.0.9",
+    "fx-runner": "1.0.10",
     "git-rev-sync": "1.9.1",
     "mkdirp": "0.5.1",
     "multimatch": "2.1.0",
