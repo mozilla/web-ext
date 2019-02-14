@@ -4,7 +4,6 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import defaultLintCommand from '../../../src/cmd/lint';
-import {makeSureItFails} from '../helpers';
 
 type setUpParams = {|
   createLinter?: Function,
@@ -47,16 +46,15 @@ describe('lint', () => {
     });
   });
 
-  it('fails when the linter fails', () => {
+  it('fails when the linter fails', async () => {
     const createLinter = () => {
       return {
         run: () => Promise.reject(new Error('some error from the linter')),
       };
     };
     const {lint} = setUp({createLinter});
-    return lint().then(makeSureItFails(), (error) => {
-      assert.match(error.message, /error from the linter/);
-    });
+
+    await assert.isRejected(lint(), /error from the linter/);
   });
 
   it('runs as a binary', () => {
