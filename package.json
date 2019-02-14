@@ -106,7 +106,7 @@
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "2.49.3",
     "eslint-plugin-import": "2.13.0",
-    "flow-bin": "0.75.0",
+    "flow-bin": "0.93.0",
     "grunt": "1.0.3",
     "grunt-contrib-clean": "1.1.0",
     "grunt-contrib-copy": "1.0.0",

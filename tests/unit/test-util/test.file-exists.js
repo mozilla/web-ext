@@ -7,7 +7,7 @@ import {fs} from 'mz';
 
 import fileExists from '../../../src/util/file-exists';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {makeSureItFails, ErrorWithCode} from '../helpers';
+import {ErrorWithCode} from '../helpers';
 
 
 describe('util/file-exists', () => {
@@ -53,8 +53,7 @@ describe('util/file-exists', () => {
         throw new ErrorWithCode('EBUSY', 'device is busy');
       },
     });
-    await exists.then(makeSureItFails(), (error) => {
-      assert.equal(error.message, 'EBUSY: device is busy');
-    });
+
+    await assert.isRejected(exists, 'EBUSY: device is busy');
   });
 });

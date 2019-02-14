@@ -134,16 +134,17 @@ describe('prepareArtifactsDir', () => {
 
   it('throws error when creating a folder if there is not enough space',
      () => withTempDir(
-       (tmpDir) => {
+       async (tmpDir) => {
          const fakeAsyncMkdirp = sinon.spy(
            () => Promise.reject(new ErrorWithCode('ENOSPC', 'an error'))
          );
          const tmpPath = path.join(tmpDir.path(), 'build', 'subdir');
-         return prepareArtifactsDir(tmpPath, {asyncMkdirp: fakeAsyncMkdirp})
-           .then(makeSureItFails(), (error) => {
-             sinon.assert.called(fakeAsyncMkdirp);
-             assert.equal(error.message, 'ENOSPC: an error');
-           });
+
+         await assert.isRejected(
+           prepareArtifactsDir(tmpPath, {asyncMkdirp: fakeAsyncMkdirp}),
+           'ENOSPC: an error');
+
+         sinon.assert.called(fakeAsyncMkdirp);
        }
      ));
 
