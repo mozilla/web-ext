@@ -35,7 +35,7 @@ describe('webExt', () => {
         const expectedResult = {};
         stub.returns(expectedResult);
 
-        const runCommand : Function = webExt.cmd[cmd];
+        const runCommand: Function = webExt.cmd[cmd];
         const result = await runCommand(params, options);
 
         // Check whether parameters and return values are forwarded as-is.
