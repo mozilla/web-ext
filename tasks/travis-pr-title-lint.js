@@ -6,8 +6,6 @@ var https = require('https');
 
 var changelogLintPkg = require('conventional-changelog-lint');
 var fs = require('mz').fs;
-var objectValues = require('object.values');
-var objectEntries = require('object.entries');
 
 
 var changelogLint = changelogLintPkg.default;
@@ -208,15 +206,6 @@ module.exports = function(grunt) {
       if (process.env.TRAVIS_PULL_REQUEST &&
           process.env.TRAVIS_PULL_REQUEST !== 'false') {
         var done = this.async();
-
-        // Install ES6/ES7 polyfills required to use changelog-lint
-        // programmatically.
-        if (!Object.values) {
-          objectValues.shim();
-        }
-        if (!Object.entries) {
-          objectEntries.shim();
-        }
 
         getGitBranchCommits()
           .then(function(commits) {
