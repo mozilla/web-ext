@@ -7,17 +7,11 @@ module.exports = {
     reporterOptions: {
       spec: '-',
     },
+    require: [
+      '@babel/register',
+      './tests/setup',
+    ],
   },
-  unit: ['dist/unit-tests.js'],
-  functional: ['dist/functional-tests.js'],
+  unit: ['./tests/unit/test.setup.js', './tests/unit/**/test.*.js'],
+  functional: ['./tests/functional/**/test.*.js'],
 };
-
-if (process.env.COVERAGE === 'y') {
-  var path = require('path');
-
-  var coverageReporterModulePath = path.resolve(
-    path.join(__dirname, '..', '..', 'tests', 'coverage-reporter.js')
-  );
-
-  module.exports.options.reporterOptions[coverageReporterModulePath] = '-';
-}

@@ -46,7 +46,7 @@ jobs:
 
 script:
 ## run eslint, flow and the unit test suite.
-- COVERAGE=y NODE_ENV=production npm test
+- npm run test-coverage
 
 ## NOTE: by setting the configured python to /bin/false we are forcing the production mode tests
 ## to fail if any of the dependencies is a binary dependency that is build using node-gyp.
@@ -54,6 +54,7 @@ script:
 
 ## run functional test suite in a npm production environment
 ## (See #1082 for rationale).
+- NODE_ENV=production npm run build
 - npm run copy-dist-files-to-artifacts-dir
 - cd artifacts/production
 - npm install --production; export NPM_INSTALL_EXIT_CODE=$?

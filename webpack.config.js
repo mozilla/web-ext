@@ -25,16 +25,9 @@ var rules = [
   },
 ];
 
-if (process.env.COVERAGE === 'y') {
-  rules.push({
-    test: /\.js$/,
-    enforce: 'pre',
-    exclude: /(node_modules|bower_components|test)/,
-    loaders: 'babel-istanbul-loader',
-  });
-}
-
 module.exports = {
+  mode: process.env.NODE_ENV && process.env.NODE_ENV !== 'test' ?
+    process.env.NODE_ENV : 'development',
   entry: './src/main.js',
   target: 'node',
   node: {

@@ -629,14 +629,13 @@ describe('firefox', () => {
       const fakeProfiles = [{Name: 'someName'}];
       const userDirectoryPath = '/non/existent/path';
 
-      const FxProfile = {
-        Finder() {
-          return {
-            readProfiles: fakeReadProfiles,
-            getPath: fakeGetPath,
-            profiles: fakeProfiles,
-          };
-        },
+      const FxProfile = {};
+      FxProfile.Finder = function Finder() {
+        return {
+          readProfiles: fakeReadProfiles,
+          getPath: fakeGetPath,
+          profiles: fakeProfiles,
+        };
       };
 
       return {
