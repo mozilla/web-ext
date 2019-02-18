@@ -123,7 +123,7 @@
     "mocha-multi": "1.0.1",
     "prettyjson": "1.2.1",
     "shelljs": "0.8.3",
-    "sinon": "7.2.3",
+    "sinon": "7.2.4",
     "webpack": "3.11.0",
     "webpack-dev-server": "2.11.1",
     "yauzl": "2.10.0"
