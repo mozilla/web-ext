@@ -12,4 +12,3 @@ node_modules
 dist/*
 artifacts/*
 coverage/*
-package-lock.json
