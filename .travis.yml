@@ -60,7 +60,7 @@ script:
 - npm install --production; export NPM_INSTALL_EXIT_CODE=$?
 - cd -
 - test $NPM_INSTALL_EXIT_CODE -eq 0 &&
-  TEST_WEB_EXT_BIN=./artifacts/production/bin/web-ext npm run test:functional
+  TEST_WEB_EXT_BIN=./artifacts/production/bin/web-ext node scripts/test-functional
 
 ## NOTE: remove the custom python path from the npm config, and also
 ## remove production package.json (which seems to convince npm run travlis-pr-title-lint
