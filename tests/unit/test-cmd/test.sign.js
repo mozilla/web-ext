@@ -397,6 +397,17 @@ describe('sign', () => {
       }
     ));
 
+    it('throws unexpected errors', async () => {
+      const fakeAsyncFsReadFile = sinon.spy(async () => {
+        throw new Error('Unexpected fs.readFile error');
+      });
+      await assert.isRejected(
+        getIdFromSourceDir('fakeSourceDir', fakeAsyncFsReadFile),
+        /Unexpected fs.readFile error/);
+
+      sinon.assert.calledOnce(fakeAsyncFsReadFile);
+    });
+
   });
 
 });

@@ -43,7 +43,7 @@ describe('program.Program', () => {
   it('executes a command callback', () => {
     const thing = spy(() => Promise.resolve());
     const program = new Program(['thing'])
-      .command('thing', 'does a thing', thing);
+      .command('thing', 'does a thing', thing, null);
     return execProgram(program)
       .then(() => {
         sinon.assert.called(thing);

@@ -148,4 +148,18 @@ describe('prepareArtifactsDir', () => {
        }
      ));
 
+  it('throws on unexpected errors', () => withTempDir(async (tmpDir) => {
+    const fakeAsyncFsAccess = sinon.spy(
+      () => Promise.reject(new Error('Unexpected fs.access error')));
+    const fakeAsyncMkdirp = sinon.spy(
+      () => Promise.reject(new Error('Unexpected mkdirp error')));
+
+    await assert.isRejected(prepareArtifactsDir(tmpDir.path(), {
+      asyncFsAccess: fakeAsyncFsAccess,
+      asyncMkdirp: fakeAsyncMkdirp,
+    }), /Unexpected fs.access error/);
+
+    sinon.assert.called(fakeAsyncFsAccess);
+    sinon.assert.notCalled(fakeAsyncMkdirp);
+  }));
 });

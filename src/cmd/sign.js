@@ -15,6 +15,8 @@ import type {ExtensionManifest} from '../util/manifest';
 
 const log = createLogger(__filename);
 
+const defaultAsyncFsReadFile = fs.readFile.bind(fs);
+
 export const extensionIdFile = '.web-extension-id';
 
 // Sign command types and implementation.
@@ -145,14 +147,15 @@ export default function sign(
 
 
 export async function getIdFromSourceDir(
-  sourceDir: string
+  sourceDir: string,
+  asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile,
 ): Promise<string | void> {
   const filePath = path.join(sourceDir, extensionIdFile);
 
   let content;
 
   try {
-    content = await fs.readFile(filePath);
+    content = await asyncFsReadFile(filePath);
   } catch (error) {
     if (isErrorWithCode('ENOENT', error)) {
       log.debug(`No ID file found at: ${filePath}`);
