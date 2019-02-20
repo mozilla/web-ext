@@ -1,14 +1,17 @@
 {
-  "presets": ["es2015", "stage-2"],
+  "presets": [
+    ["@babel/env", {
+      "targets": {"node": "8"}
+    }],
+    "@babel/flow"
+  ],
   "plugins": [
-    "transform-flow-strip-types",
-    "transform-class-properties",
-    "transform-es2015-modules-commonjs",
-    [
-      "transform-runtime", {
-        "polyfill": false,
-        "regenerator": true
-      }
-    ]
-  ]
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-transform-runtime"
+  ],
+  "env": {
+    "test": {
+      "plugins": [ "istanbul" ]
+    }
+  }
 }

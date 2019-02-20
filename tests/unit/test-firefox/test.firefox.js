@@ -629,14 +629,13 @@ describe('firefox', () => {
       const fakeProfiles = [{Name: 'someName'}];
       const userDirectoryPath = '/non/existent/path';
 
-      const FxProfile = {
-        Finder() {
-          return {
-            readProfiles: fakeReadProfiles,
-            getPath: fakeGetPath,
-            profiles: fakeProfiles,
-          };
-        },
+      const FxProfile = {};
+      FxProfile.Finder = function Finder() {
+        return {
+          readProfiles: fakeReadProfiles,
+          getPath: fakeGetPath,
+          profiles: fakeProfiles,
+        };
       };
 
       return {
@@ -950,6 +949,20 @@ describe('firefox', () => {
       }
     ));
 
+    it('throws on unexpected errors', () => setUp(
+      async (data) => {
+        const fakeAsyncFsStat = sinon.spy(async () => {
+          throw new Error('Unexpected fs.stat error');
+        });
+        await assert.isRejected(firefox.installExtension({
+          ...data,
+          asyncFsStat: fakeAsyncFsStat,
+        }), /Unexpected fs.stat error/);
+
+        sinon.assert.calledOnce(fakeAsyncFsStat);
+      }
+    ));
+
   });
 
   describe('defaultRemotePortFinder', () => {
@@ -1010,6 +1023,17 @@ describe('firefox', () => {
           assert.isNumber(port);
           sinon.assert.calledTwice(connectToFirefox);
         });
+    });
+
+    it('throws on unexpected errors', () => {
+      const connectToFirefox = sinon.spy(async () => {
+        throw new Error('Unexpected connect error');
+      });
+
+      assert.isRejected(findRemotePort({connectToFirefox}),
+                        /Unxpected connect error/);
+
+      sinon.assert.calledOnce(connectToFirefox);
     });
 
   });

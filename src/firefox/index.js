@@ -27,6 +27,8 @@ import type {ExtensionManifest} from '../util/manifest';
 
 const log = createLogger(__filename);
 
+const defaultAsyncFsStat = fs.stat.bind(fs);
+
 export const defaultFirefoxEnv = {
   XPCOM_DEBUG_BREAK: 'stack',
   NS_TRACE_MALLOC_DISABLE_STACKS: '1',
@@ -492,6 +494,7 @@ export type InstallExtensionParams = {|
   manifestData: ExtensionManifest,
   profile: FirefoxProfile,
   extensionPath: string,
+  asyncFsStat?: typeof defaultAsyncFsStat,
 |};
 
 /*
@@ -511,6 +514,7 @@ export async function installExtension(
     manifestData,
     profile,
     extensionPath,
+    asyncFsStat = defaultAsyncFsStat,
   }: InstallExtensionParams): Promise<any> {
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
@@ -522,7 +526,7 @@ export async function installExtension(
   }
 
   try {
-    await fs.stat(profile.extensionsDir);
+    await asyncFsStat(profile.extensionsDir);
   } catch (error) {
     if (isErrorWithCode('ENOENT', error)) {
       log.debug(`Creating extensions directory: ${profile.extensionsDir}`);

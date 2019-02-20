@@ -24,17 +24,10 @@ module.exports = function(grunt) {
     'webpack:build',
   ]);
 
-  grunt.registerTask('build-tests', [
-    'build',
-    'webpack:unit_tests',
-    'webpack:functional_tests',
-  ]);
-
   grunt.registerTask('test', 'run linting and the unit test suite', function() {
     var tasks = [
       'lint',
       'flowbin:check',
-      'build-tests',
       'mochaTest:unit',
     ];
 
@@ -47,7 +40,7 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('test:functional', 'run functional test suites', [
-    'build-tests',
+    'build',
     'mochaTest:functional',
   ]);
 

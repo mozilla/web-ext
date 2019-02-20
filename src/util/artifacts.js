@@ -7,15 +7,21 @@ import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';
 
 const log = createLogger(__filename);
+
 const defaultAsyncMkdirp = promisify(mkdirp);
+const defaultAsyncFsAccess = fs.access.bind(fs);
 
 type PrepareArtifactsDirOptions = {
   asyncMkdirp?: typeof defaultAsyncMkdirp,
+  asyncFsAccess?: typeof defaultAsyncFsAccess,
 }
 
 export async function prepareArtifactsDir(
   artifactsDir: string,
-  {asyncMkdirp = defaultAsyncMkdirp}: PrepareArtifactsDirOptions = {},
+  {
+    asyncMkdirp = defaultAsyncMkdirp,
+    asyncFsAccess = defaultAsyncFsAccess,
+  }: PrepareArtifactsDirOptions = {},
 ): Promise<string> {
   try {
     const stats = await fs.stat(artifactsDir);
@@ -25,7 +31,7 @@ export async function prepareArtifactsDir(
     }
     // If the artifactsDir already exists, check that we have the write permissions on it.
     try {
-      await fs.access(artifactsDir, fs.W_OK);
+      await asyncFsAccess(artifactsDir, fs.W_OK);
     } catch (accessErr) {
       if (isErrorWithCode('EACCES', accessErr)) {
         throw new UsageError(

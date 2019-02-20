@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+const shell = require('shelljs');
+
+let result = shell.exec('npm run test:functional');
+
+// Try to re-run the functional tests once more if they fails on a travis windows worker (#1510).
+if (result.code !== 0 && process.env.TRAVIS_OS_NAME === 'windows') {
+  console.log('*** Functional tests failure on a travis window worker, trying to re-run once more...');
+  result = shell.exec('npm run test:functional');
+}
+
+process.exit(result.code);
