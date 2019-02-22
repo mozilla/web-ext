@@ -97,7 +97,7 @@
     "conventional-changelog-cli": "2.0.12",
     "conventional-changelog-lint": "2.1.1",
     "copy-dir": "0.4.0",
-    "coveralls": "3.0.2",
+    "coveralls": "3.0.3",
     "cross-env": "5.2.0",
     "deepcopy": "2.0.0",
     "doctoc": "1.4.0",
