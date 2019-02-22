@@ -1,12 +1,9 @@
-{
-  "extends": ["angular"],
+module.exports = {
+  "extends": ["@commitlint/config-conventional"],
   "rules": {
-    "body-tense": [0, "never"],
     "body-leading-blank": [0, "never"],
     "footer-leading-blank": [0, "never"],
     "header-max-length": [1, "always", 72],
-    "subject-tense": [0, "never"],
-    "footer-tense": [0, "never"],
     "subject-case": [0, "never"],
     "subject-full-stop": [0, "never"]
   }

@@ -74,6 +74,4 @@ module.exports = function(grunt) {
       ]);
     }
   });
-
-  require('./tasks/travis-pr-title-lint')(grunt);
 };
