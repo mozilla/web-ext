@@ -30,14 +30,16 @@ describe('program.Program', () => {
   function execProgram(program, options = {}) {
     const fakeProcess = createFakeProcess();
     const absolutePackageDir = path.join(__dirname, '..', '..');
-    return program.execute(
-      absolutePackageDir, {
-        getVersion: () => 'not-a-real-version',
-        checkForUpdates: spy(),
-        systemProcess: fakeProcess,
-        shouldExitProgram: false,
-        ...options,
-      });
+    if (program.absolutePackageDir == null) {
+      program.absolutePackageDir = absolutePackageDir;
+    }
+    return program.execute({
+      getVersion: () => 'not-a-real-version',
+      checkForUpdates: spy(),
+      systemProcess: fakeProcess,
+      shouldExitProgram: false,
+      ...options,
+    });
   }
 
   it('executes a command callback', () => {
@@ -216,6 +218,7 @@ describe('program.Program', () => {
     program.setGlobalOptions({
       verbose: {
         type: 'boolean',
+        demand: false,
       },
     });
     return execProgram(program, {logStream})
@@ -236,6 +239,7 @@ describe('program.Program', () => {
     program.setGlobalOptions({
       verbose: {
         type: 'boolean',
+        demand: false,
       },
     });
     return execProgram(program)
@@ -326,9 +330,9 @@ describe('program.main', () => {
       projectRoot,
       {
         argv,
+        getVersion: () => 'not-a-real-version',
         runOptions: {
           discoverConfigFiles: async () => [],
-          getVersion: () => 'not-a-real-version',
           checkForUpdates: spy(),
           shouldExitProgram: false,
           systemProcess: createFakeProcess(),
@@ -567,7 +571,7 @@ describe('program.main', () => {
 
     const discoverConfigFiles = sinon.spy(() => Promise.resolve([]));
     await execProgram(
-      ['--no-config-discovery', 'lint'],
+      ['lint', '--no-config-discovery'],
       {
         commands: fakeCommands,
         runOptions: {

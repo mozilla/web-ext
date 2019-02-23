@@ -189,6 +189,7 @@ describe('config', () => {
         globalOpt: {
           'overwrite-files': {
             type: 'boolean',
+            demand: false,
             // No default is set here explicitly but yargs will set it to
             // false implicitly.
           },
@@ -326,6 +327,7 @@ describe('config', () => {
           },
           'verbose': {
             type: 'boolean',
+            demand: false,
           },
         },
       });
@@ -376,6 +378,7 @@ describe('config', () => {
           'source-dir': {
             type: 'string',
             default: undefined,
+            demand: false,
           },
         },
       });

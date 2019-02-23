@@ -79,7 +79,7 @@
     "tmp": "0.0.33",
     "update-notifier": "2.3.0",
     "watchpack": "1.5.0",
-    "yargs": "6.6.0",
+    "yargs": "13.2.1",
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
@@ -130,9 +130,6 @@
   },
   "author": "Kumar McMillan",
   "license": "MPL-2.0",
-  "yargs": {
-    "boolean-negation": false
-  },
   "nyc": {
     "include": "src/**/*.js",
     "reporter": [

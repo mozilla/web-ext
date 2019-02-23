@@ -47,6 +47,7 @@ type ExecuteOptions = {
  * The command line program.
  */
 export class Program {
+  absolutePackageDir: string;
   yargs: any;
   commands: { [key: string]: Function };
   shouldExitProgram: boolean;
@@ -66,13 +67,21 @@ export class Program {
     argv = argv || process.argv.slice(2);
 
     // NOTE: always initialize yargs explicitly with the package dir
-    // so that we are sure that it is going to load the 'boolean-negation: false'
-    // config (See web-ext#469 for rationale).
+    // so that we are sure that it is going to load web-ext package.json
+    // (e.g. in tests yargs would end up loading yargs config from the
+    // mocha package.json), See web-ext#469 for rationale.
     const yargsInstance = yargs(argv, absolutePackageDir);
 
+    this.absolutePackageDir = absolutePackageDir;
     this.verboseEnabled = false;
     this.shouldExitProgram = true;
     this.yargs = yargsInstance;
+
+    // The following yargs configuration option is needed to fix #304.
+    this.yargs.parserConfiguration({
+      'boolean-negation': false,
+    });
+
     this.yargs.strict();
 
     this.commands = {};
@@ -137,7 +146,6 @@ export class Program {
   }
 
   async execute(
-    absolutePackageDir: string,
     {
       checkForUpdates = defaultUpdateChecker,
       systemProcess = process,
@@ -154,9 +162,10 @@ export class Program {
     this.yargs.exitProcess(this.shouldExitProgram);
 
     const argv = this.yargs.argv;
+
     const cmd = argv._[0];
 
-    const version = getVersion(absolutePackageDir);
+    const version = getVersion(this.absolutePackageDir);
     const runCommand = this.commands[cmd];
 
     if (argv.verbose) {
@@ -174,13 +183,16 @@ export class Program {
       }
       if (globalEnv === 'production') {
         checkForUpdates ({
-          version: getVersion(absolutePackageDir),
+          version: getVersion(this.absolutePackageDir),
         });
       }
 
       const configFiles = [];
 
-      if (argv.configDiscovery) {
+      // Because of an issue with yargs special handling for '--no-' option prefix (See #306)
+      // we need to look explicitly for the options  --config-discovery and --no-config-discovery
+      // (See #1307).
+      if (argv.configDiscovery && !argv.noConfigDiscovery) {
         log.debug(
           'Discovering config files. ' +
           'Set --no-config-discovery to disable');
@@ -283,8 +295,8 @@ export function main(
     runOptions = {},
   }: MainParams = {}
 ): Promise<any> {
-
   const program = new Program(argv, {absolutePackageDir});
+  const version = getVersion(absolutePackageDir);
 
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
@@ -302,7 +314,7 @@ Example: $0 --help run.
     .help('help')
     .alias('h', 'help')
     .env(envPrefix)
-    .version(() => getVersion(absolutePackageDir))
+    .version(version)
     .demandCommand(1, 'You must specify a command')
     .strict();
 
@@ -327,6 +339,7 @@ Example: $0 --help run.
       alias: 'v',
       describe: 'Show verbose output',
       type: 'boolean',
+      demand: false,
     },
     'ignore-files': {
       alias: 'i',
@@ -340,6 +353,7 @@ Example: $0 --help run.
     'no-input': {
       describe: 'Disable all features that require standard input',
       type: 'boolean',
+      demand: false,
     },
     'config': {
       alias: 'c',
@@ -564,5 +578,5 @@ Example: $0 --help run.
     .command('docs', 'Open the web-ext documentation in a browser',
              commands.docs, {});
 
-  return program.execute(absolutePackageDir, runOptions);
+  return program.execute({getVersion, ...runOptions});
 }
