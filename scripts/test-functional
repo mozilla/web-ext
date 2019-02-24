@@ -2,12 +2,53 @@
 
 const shell = require('shelljs');
 
-let result = shell.exec('npm run test:functional');
+const config = require('./lib/config');
+const {mochaFunctional} = require('./lib/mocha');
 
-// Try to re-run the functional tests once more if they fails on a travis windows worker (#1510).
-if (result.code !== 0 && process.env.TRAVIS_OS_NAME === 'windows') {
-  console.log('*** Functional tests failure on a travis window worker, trying to re-run once more...');
-  result = shell.exec('npm run test:functional');
+shell.set('-e');
+
+const testProductionMode = process.env.TEST_PRODUCTION_MODE === '1';
+
+let execBuildOptions = {};
+let execMochaOptions = {};
+
+if (testProductionMode) {
+  execBuildOptions = {
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+    },
+  };
+
+  execMochaOptions = {
+    env: {
+      ...process.env,
+      TEST_WEB_EXT_BIN: './artifacts/production/bin/web-ext',
+    },
+  };
 }
 
-process.exit(result.code);
+shell.exec('npm run build', execBuildOptions);
+
+if (testProductionMode) {
+  shell.echo('\nPreparing web-ext production mode environment...\n');
+  shell.rm('-rf', config.copy.productionModeArtifacts.dest);
+  shell.mkdir('-p', config.copy.productionModeArtifacts.dest);
+  shell.cp('-rf', config.copy.productionModeArtifacts.src,
+           config.copy.productionModeArtifacts.dest);
+
+  shell.pushd(config.copy.productionModeArtifacts.dest);
+  shell.exec('npm install --production');
+  shell.popd();
+  shell.echo('\nProduction mode environment successfully created.\n');
+}
+
+let ok = mochaFunctional(execMochaOptions);
+
+// Try to re-run the functional tests once more if they fails on a travis windows worker (#1510).
+if (!ok && process.env.TRAVIS_OS_NAME === 'windows') {
+  console.log('*** Functional tests failure on a travis window worker, trying to re-run once more...');
+  ok = mochaFunctional(execMochaOptions);
+}
+
+process.exit(ok ? 0 : 1);

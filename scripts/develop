@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+
+const path = require('path');
+
+const Watchpack = require('watchpack');
+const notifier = require('node-notifier');
+
+const config = require('./lib/config');
+const eslint = require('./lib/eslint');
+const {flowStatus} = require('./lib/flow');
+const {mochaUnit, mochaFunctional} = require('./lib/mocha');
+
+console.log('Starting flow server...');
+if (!flowStatus()) {
+  process.exit(1);
+}
+
+const wp = new Watchpack();
+wp.watch(config.watch.files, config.watch.dirs);
+
+function notify(message) {
+  notifier.notify({title: 'web-ext develop: ', message});
+}
+
+let changed = new Set();
+
+wp.on('change', (changedFile) => {
+  changed.add(changedFile);
+});
+
+wp.on('aggregated', () => {
+  // Filter out temp files from detected changes.
+  const changes = Array.from(changed).filter((filePath) => {
+    return !path.basename(filePath).startsWith('.#');
+  });
+  changed = new Set();
+
+  if (changes.length === 0) {
+    return;
+  }
+
+  const changesDetected = `\nChanges detected. ${changes.slice(0, 5).join(' ')}...`;
+  console.log(changesDetected);
+  notify(changesDetected);
+
+  console.log('\nRunning flow checks');
+  if (!flowStatus()) {
+    notify('flow check errors');
+    return;
+  }
+
+  console.log('\nRunning eslint checks');
+  if (!eslint()) {
+    notify('eslint errors');
+    return;
+  }
+
+  console.log('\nRunning unit tests');
+  if (!mochaUnit()) {
+    notify('mocha unit tests errors');
+    return;
+  }
+
+  console.log('\nRunning functional tests');
+  if (!mochaFunctional()) {
+    notify('mocha functional tests errors');
+    return;
+  }
+
+  console.log('\nDone. Waiting for changes...');
+});

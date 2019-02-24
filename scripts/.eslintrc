@@ -2,5 +2,6 @@
   "rules": {
     "no-console": 0,
     "import/no-extraneous-dependencies": 0,
+    "max-len": 0,
   }
 }

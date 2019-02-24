@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+const eslint = require('./lib/eslint');
+const {flowCheck} = require('./lib/flow');
+const {mochaUnit} = require('./lib/mocha');
+
+console.log('Running eslint...');
+if (!eslint()) {
+  process.exit(1);
+}
+
+console.log('Running flow check...');
+if (!flowCheck()) {
+  process.exit(1);
+}
+
+console.log('Running mocha unit tests...');
+const ok = mochaUnit();
+process.exit(ok ? 0 : 1);

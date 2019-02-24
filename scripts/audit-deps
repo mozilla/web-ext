@@ -32,11 +32,11 @@ if (auditRes.code !== 0) {
   const exceptions = JSON.parse(shell.cat('.nsprc')).exceptions;
   const auditReport = JSON.parse(auditRes.stdout);
 
-  for (let advId of Object.keys(auditReport.advisories)) {
+  for (const advId of Object.keys(auditReport.advisories)) {
     const adv = auditReport.advisories[advId];
 
     if (exceptions.includes(adv.url)) {
-      ignoredIssues.push(adv)
+      ignoredIssues.push(adv);
       continue;
     }
     blockingIssues.push(adv);
@@ -51,14 +51,14 @@ function formatFinding(desc) {
 }
 
 function formatAdvisory(adv) {
-  const findings = adv.findings.map(formatFinding).map(msg => `  ${msg}`).join('\n');
+  const findings = adv.findings.map(formatFinding).map((msg) => `  ${msg}`).join('\n');
   return `${adv.module_name} (${adv.url}):\n${findings}`;
 }
 
 if (ignoredIssues.length > 0) {
   console.log('\n== audit-deps: ignored security issues (based on .nsprc exceptions)\n');
 
-  for (let adv of ignoredIssues) {
+  for (const adv of ignoredIssues) {
     console.log(formatAdvisory(adv));
   }
 }
@@ -66,7 +66,7 @@ if (ignoredIssues.length > 0) {
 if (blockingIssues.length > 0) {
   console.log('\n== audit-deps: blocking security issues\n');
 
-  for (let adv of blockingIssues) {
+  for (const adv of blockingIssues) {
     console.log(formatAdvisory(adv));
   }
 
