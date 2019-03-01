@@ -218,7 +218,7 @@ describe('program.Program', () => {
     program.setGlobalOptions({
       verbose: {
         type: 'boolean',
-        demand: false,
+        demandOption: false,
       },
     });
     return execProgram(program, {logStream})
@@ -239,7 +239,7 @@ describe('program.Program', () => {
     program.setGlobalOptions({
       verbose: {
         type: 'boolean',
-        demand: false,
+        demandOption: false,
       },
     });
     return execProgram(program)

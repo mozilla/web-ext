@@ -278,12 +278,13 @@ program
     'file-path': {
       describe: 'An absolute file path.',
       alias: ['fp'],
-      demand: false,
+      demandOption: false,
       requiresArg: true,
       type: 'string',
     },
   })
 ````
+
 This option can be used like `web-ext run --file-path=./path/to/file` or
 `--fp=./path/to/file`. Since Yargs can be pretty powerful yet not completely
 intuitive at times, you may need to dig into the

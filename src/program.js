@@ -122,10 +122,10 @@ export class Program {
     this.options = {...this.options, ...options};
     Object.keys(options).forEach((key) => {
       options[key].global = true;
-      if (options[key].demand === undefined) {
+      if (options[key].demandOption === undefined) {
         // By default, all options should be "demanded" otherwise
         // yargs.strict() will think they are missing when declared.
-        options[key].demand = true;
+        options[key].demandOption = true;
       }
     });
     this.yargs.options(options);
@@ -182,9 +182,7 @@ export class Program {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
       if (globalEnv === 'production') {
-        checkForUpdates ({
-          version: getVersion(this.absolutePackageDir),
-        });
+        checkForUpdates({version});
       }
 
       const configFiles = [];
@@ -339,35 +337,35 @@ Example: $0 --help run.
       alias: 'v',
       describe: 'Show verbose output',
       type: 'boolean',
-      demand: false,
+      demandOption: false,
     },
     'ignore-files': {
       alias: 'i',
       describe: 'A list of glob patterns to define which files should be ' +
                 'ignored. (Example: --ignore-files=path/to/first.js ' +
                 'path/to/second.js "**/*.log")',
-      demand: false,
+      demandOption: false,
       requiresArg: true,
       type: 'array',
     },
     'no-input': {
       describe: 'Disable all features that require standard input',
       type: 'boolean',
-      demand: false,
+      demandOption: false,
     },
     'config': {
       alias: 'c',
       describe: 'Path to a CommonJS config file to set ' +
         'option defaults',
       default: undefined,
-      demand: false,
+      demandOption: false,
       requiresArg: true,
       type: 'string',
     },
     'config-discovery': {
       describe: 'Discover config files in home directory and ' +
         'working directory. Disable with --no-config-discovery.',
-      demand: false,
+      demandOption: false,
       default: true,
       type: 'boolean',
     },
@@ -394,32 +392,32 @@ Example: $0 --help run.
       commands.sign, {
         'api-key': {
           describe: 'API key (JWT issuer) from addons.mozilla.org',
-          demand: true,
+          demandOption: true,
           type: 'string',
         },
         'api-secret': {
           describe: 'API secret (JWT secret) from addons.mozilla.org',
-          demand: true,
+          demandOption: true,
           type: 'string',
         },
         'api-url-prefix': {
           describe: 'Signing API URL prefix',
           default: 'https://addons.mozilla.org/api/v3',
-          demand: true,
+          demandOption: true,
           type: 'string',
         },
         'api-proxy': {
           describe:
             'Use a proxy to access the signing API. ' +
             'Example: https://yourproxy:6000 ',
-          demand: false,
+          demandOption: false,
           type: 'string',
         },
         'id': {
           describe:
             'A custom ID for the extension. This has no effect if the ' +
             'extension already declares an explicit ID in its manifest.',
-          demand: false,
+          demandOption: false,
           type: 'string',
         },
         'timeout': {
@@ -439,7 +437,7 @@ Example: $0 --help run.
                   'firefox-android). Specify this option multiple times to ' +
                   'run against multiple targets.',
         default: 'firefox-desktop',
-        demand: false,
+        demandOption: false,
         type: 'array',
       },
       'firefox': {
@@ -449,7 +447,7 @@ Example: $0 --help run.
                   'If not specified, the default Firefox will be used. ' +
                   'You can specify the following aliases in lieu of a path: ' +
                   'firefox, beta, nightly, firefoxdeveloperedition.',
-        demand: false,
+        demandOption: false,
         type: 'string',
       },
       'firefox-profile': {
@@ -458,25 +456,25 @@ Example: $0 --help run.
                   'can be specified as a directory or a name, such as one ' +
                   'you would see in the Profile Manager. If not specified, ' +
                   'a new temporary profile will be created.',
-        demand: false,
+        demandOption: false,
         type: 'string',
       },
       'keep-profile-changes': {
         describe: 'Run Firefox directly in custom profile. Any changes to ' +
                   'the profile will be saved.',
-        demand: false,
+        demandOption: false,
         type: 'boolean',
       },
       'no-reload': {
         describe: 'Do not reload the extension when source files change',
-        demand: false,
+        demandOption: false,
         type: 'boolean',
       },
       'pre-install': {
         describe: 'Pre-install the extension into the profile before ' +
                   'startup. This is only needed to support older versions ' +
                   'of Firefox.',
-        demand: false,
+        demandOption: false,
         type: 'boolean',
       },
       'pref': {
@@ -484,7 +482,7 @@ Example: $0 --help run.
                   '(example: --pref=general.useragent.locale=fr-FR). ' +
                   'You can repeat this option to set more than one ' +
                   'preference.',
-        demand: false,
+        demandOption: false,
         requiresArg: true,
         type: 'array',
         coerce: coerceCLICustomPreference,
@@ -492,39 +490,39 @@ Example: $0 --help run.
       'start-url': {
         alias: ['u', 'url'],
         describe: 'Launch firefox at specified page',
-        demand: false,
+        demandOption: false,
         requiresArg: true,
         type: 'array',
       },
       'browser-console': {
         alias: ['bc'],
         describe: 'Open the DevTools Browser Console.',
-        demand: false,
+        demandOption: false,
         type: 'boolean',
       },
       // Firefox for Android CLI options.
       'adb-bin': {
         describe: 'Specify a custom path to the adb binary',
-        demand: false,
+        demandOption: false,
         type: 'string',
         requiresArg: true,
       },
       'adb-host': {
         describe: 'Connect to adb on the specified host',
-        demand: false,
+        demandOption: false,
         type: 'string',
         requiresArg: true,
       },
       'adb-port': {
         describe: 'Connect to adb on the specified port',
-        demand: false,
+        demandOption: false,
         type: 'string',
         requiresArg: true,
       },
       'adb-device': {
         alias: ['android-device'],
         describe: 'Connect to the specified adb device name',
-        demand: false,
+        demandOption: false,
         type: 'string',
         requiresArg: true,
       },
@@ -533,7 +531,7 @@ Example: $0 --help run.
           'Run a specific Firefox for Android APK. ' +
           'Example: org.mozilla.fennec_aurora'
         ),
-        demand: false,
+        demandOption: false,
         type: 'string',
         requiresArg: true,
       },
