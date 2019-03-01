@@ -1,7 +1,9 @@
 /* eslint max-len: 0 */
 
 const https = require('https');
+const execSync = require('child_process').execSync;
 
+const Entities = require('html-entities').AllHtmlEntities;
 const shelljs = require('shelljs');
 
 const {
@@ -130,6 +132,9 @@ function getPullRequestTitle() {
         reject(err);
       });
     });
+  }).then((message) => {
+    const entities = new Entities();
+    return entities.decode(message);
   });
 }
 
@@ -138,13 +143,25 @@ function lintMessage(message) {
     throw new Error('Unable to lint an empty message.');
   }
 
-  const res = shelljs.exec(`echo ${message} | commitlint`, {silent: true});
+  try {
+    return execSync('commitlint', {
+      input: message,
+      windowsHide: true,
+      encoding: 'utf-8',
+    }).trim();
+  } catch (e) {
+    // execSync failure or timeouts.
+    if (e.error) {
+      throw e.error;
+    }
 
-  if (res.code !== 0) {
-    throw res.stdout;
+    // commitlint non-zero exit
+    if (e.status) {
+      // stderr by default will be output to the parent process' stderr and so we just throw stdout (See
+      // https://nodejs.org/api/child_process.html#child_process_child_process_execsync_command_options)
+      throw e.stdout.trim();
+    }
   }
-
-  return res.stdout.trim();
 }
 
 async function runChangelogLinting() {
