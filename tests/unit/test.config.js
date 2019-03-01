@@ -66,7 +66,7 @@ describe('config', () => {
           'source-dir': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -83,7 +83,7 @@ describe('config', () => {
           'source-dir': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'default/value/option/definition',
           },
         },
@@ -103,7 +103,7 @@ describe('config', () => {
           'source-dir': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'default/value/option/definition',
           },
         },
@@ -121,12 +121,12 @@ describe('config', () => {
           'source-dir': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'default/value/option/definition',
           },
           'artifacts-dir': {
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -145,12 +145,12 @@ describe('config', () => {
           'source-dir': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'default/value/option/definition',
           },
           'artifacts-dir': {
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -169,7 +169,7 @@ describe('config', () => {
           'source-dir': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             // In the real world this would do something like
             // (sourceDir) => path.resolve(sourceDir)
             coerce,
@@ -189,6 +189,7 @@ describe('config', () => {
         globalOpt: {
           'overwrite-files': {
             type: 'boolean',
+            demandOption: false,
             // No default is set here explicitly but yargs will set it to
             // false implicitly.
           },
@@ -254,7 +255,7 @@ describe('config', () => {
         userCmd: ['fakecommand'],
         globalOpt: {
           'file-path': {
-            demand: false,
+            demandOption: false,
             type: 'string',
           },
         },
@@ -282,7 +283,7 @@ describe('config', () => {
         userCmd: ['fakecommand'],
         globalOpt: {
           'ignore-files': {
-            demand: false,
+            demandOption: false,
             type: 'array',
           },
         },
@@ -302,7 +303,7 @@ describe('config', () => {
            userCmd: ['fakecommand'],
            globalOpt: {
              pref: {
-               demand: false,
+               demandOption: false,
                type: 'array',
              },
            },
@@ -326,6 +327,7 @@ describe('config', () => {
           },
           'verbose': {
             type: 'boolean',
+            demandOption: false,
           },
         },
       });
@@ -376,6 +378,7 @@ describe('config', () => {
           'source-dir': {
             type: 'string',
             default: undefined,
+            demandOption: false,
           },
         },
       });
@@ -391,7 +394,7 @@ describe('config', () => {
         globalOpt: {
           'source-dir': {
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -409,7 +412,7 @@ describe('config', () => {
         globalOpt: {
           'source-dir': {
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -447,7 +450,7 @@ describe('config', () => {
         globalOpt: {
           'source-dir': {
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -486,7 +489,7 @@ describe('config', () => {
           'api-key': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value',
           },
         },
@@ -509,7 +512,7 @@ describe('config', () => {
           'api-key': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value',
           },
         },
@@ -532,7 +535,7 @@ describe('config', () => {
           'api-key': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -551,7 +554,7 @@ describe('config', () => {
         command: 'sign',
         commandOpt: {
           'file-path': {
-            demand: false,
+            demandOption: false,
             type: 'string',
           },
         },
@@ -588,13 +591,13 @@ describe('config', () => {
           'api-key': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
           'api-url': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiUrl',
           },
         },
@@ -617,13 +620,13 @@ describe('config', () => {
           'api-key': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
           'api-url': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiUrl',
           },
         },
@@ -645,14 +648,14 @@ describe('config', () => {
           'api-key': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
         globalOpt: {
           'source-dir': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
           },
         },
       });
@@ -702,7 +705,7 @@ describe('config', () => {
           'api-url': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
         },
@@ -726,7 +729,7 @@ describe('config', () => {
           'api-url': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
         },
@@ -750,7 +753,7 @@ describe('config', () => {
           'api-url': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
         },
@@ -775,13 +778,13 @@ describe('config', () => {
           'api-url': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
           'api-key': {
             requiresArg: true,
             type: 'string',
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
         },
@@ -805,7 +808,7 @@ describe('config', () => {
         commandOpt: {
           'api-url': {
             requiresArg: true,
-            demand: false,
+            demandOption: false,
             default: 'pretend-default-value-of-apiKey',
           },
         },
@@ -831,7 +834,7 @@ describe('config', () => {
       program.command('run', 'this is a fake command', sinon.stub(), {
         'no-reload': {
           type: 'boolean',
-          demand: false,
+          demandOption: false,
         },
       });
 
@@ -839,7 +842,7 @@ describe('config', () => {
         'api-url': {
           requiresArg: true,
           type: 'string',
-          demand: false,
+          demandOption: false,
           default: 'pretend-default-value-of-apiKey',
         },
       });
