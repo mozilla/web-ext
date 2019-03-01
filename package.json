@@ -105,7 +105,7 @@
     "eslint-plugin-import": "2.16.0",
     "flow-bin": "0.93.0",
     "html-entities": "1.2.1",
-    "mocha": "6.0.0",
+    "mocha": "6.0.2",
     "nyc": "13.3.0",
     "prettyjson": "1.2.1",
     "shelljs": "0.8.3",
