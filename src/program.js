@@ -67,9 +67,12 @@ export class Program {
     argv = argv || process.argv.slice(2);
 
     // NOTE: always initialize yargs explicitly with the package dir
-    // so that we are sure that it is going to load web-ext package.json
+    // to avoid side-effects due to yargs looking for its configuration
+    // section from a package.json file stored in an arbitrary directory
     // (e.g. in tests yargs would end up loading yargs config from the
-    // mocha package.json), See web-ext#469 for rationale.
+    // mocha package.json). web-ext package.json doesn't contain any yargs
+    // section as it is deprecated and we configure yargs using
+    // yargs.parserConfiguration. See web-ext#469 for rationale.
     const yargsInstance = yargs(argv, absolutePackageDir);
 
     this.absolutePackageDir = absolutePackageDir;
