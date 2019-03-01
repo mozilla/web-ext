@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+
+const shell = require('shelljs');
+
+const config = require('./lib/config');
+const webpack = require('./lib/webpack');
+
+shell.set('-e');
+
+shell.echo('Clean dist files...');
+shell.rm('-rf', config.clean);
+
+shell.echo('Running webpack...');
+webpack().catch(() => {
+  process.exit(1);
+});

@@ -54,17 +54,10 @@ script:
 
 ## run functional test suite in a npm production environment
 ## (See #1082 for rationale).
-- NODE_ENV=production npm run build
-- npm run copy-dist-files-to-artifacts-dir
-- cd artifacts/production
-- npm install --production; export NPM_INSTALL_EXIT_CODE=$?
-- cd -
-- test $NPM_INSTALL_EXIT_CODE -eq 0 &&
-  TEST_WEB_EXT_BIN=./artifacts/production/bin/web-ext node scripts/test-functional
+- TEST_PRODUCTION_MODE=1 npm run test-functional
 
 ## NOTE: remove the custom python path from the npm config, and also
-## remove production package.json (which seems to convince npm run travlis-pr-title-lint
-## to look for grunt in the production node_modules/ dir).
+## remove production package.json.
 - npm config delete python
 - rm artifacts/production/package.json
 

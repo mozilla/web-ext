@@ -1,0 +1,4 @@
+dist/
+coverage/
+artifacts/
+commitlint.config.js
