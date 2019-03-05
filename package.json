@@ -63,7 +63,7 @@
     "fx-runner": "1.0.10",
     "git-rev-sync": "1.12.0",
     "mkdirp": "0.5.1",
-    "multimatch": "2.1.0",
+    "multimatch": "3.0.0",
     "mz": "2.7.0",
     "node-notifier": "5.2.1",
     "opn": "5.3.0",
