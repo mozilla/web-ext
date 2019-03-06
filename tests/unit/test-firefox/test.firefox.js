@@ -16,10 +16,10 @@ import {
   fixturePath,
   fake,
   makeSureItFails,
+  manifestWithoutApps,
   TCPConnectError,
   ErrorWithCode,
 } from '../helpers';
-import {manifestWithoutApps} from '../test-util/test.manifest';
 import {RemoteFirefox} from '../../../src/firefox/remote';
 import type {RemotePortFinderParams} from '../../../src/firefox/index';
 
@@ -616,17 +616,29 @@ describe('firefox', () => {
 
     // Define the params type for the prepareProfileFinderTest helper.
     type PrepareProfileFinderTestParams = {|
-      readProfileReturns?: Promise<void>,
-      getPathReturns?: Promise<string>,
+      readProfiles?: Function,
+      getPath?: Function,
+      profiles?: Array<{Name: string}>,
     |};
 
+    const defaultFakeProfiles = [{Name: 'someName'}];
+
+    function defaultReadProfilesMock(cb) {
+      cb(undefined, defaultFakeProfiles);
+    }
+
+    function defaultGetPathMock(name, cb) {
+      cb(undefined, '/fake/path');
+    }
+
     function prepareProfileFinderTest({
-      readProfileReturns = Promise.resolve(),
-      getPathReturns = Promise.resolve('/fake/path'),
+      readProfiles = defaultReadProfilesMock,
+      getPath = defaultGetPathMock,
+      profiles = defaultFakeProfiles,
     }: PrepareProfileFinderTestParams = {}) {
-      const fakeReadProfiles = sinon.spy(() => readProfileReturns);
-      const fakeGetPath = sinon.spy(() => getPathReturns);
-      const fakeProfiles = [{Name: 'someName'}];
+      const fakeReadProfiles = sinon.spy(readProfiles);
+      const fakeGetPath = sinon.spy(getPath);
+      const fakeProfiles = profiles;
       const userDirectoryPath = '/non/existent/path';
 
       const FxProfile = {};
@@ -647,22 +659,17 @@ describe('firefox', () => {
       };
     }
 
-    it('creates a finder', async () => {
-      const FxProfile = {
-        Finder: sinon.spy(function() {
-          return {};
-        }),
-      };
+    it('creates a finder', () => {
+      const {FxProfile} = prepareProfileFinderTest();
+      FxProfile.Finder = sinon.spy(FxProfile.Finder);
       firefox.defaultCreateProfileFinder({FxProfile});
       sinon.assert.calledWith(FxProfile.Finder, sinon.match(undefined));
     });
 
     it('creates finder based on userDirectoryPath if present', async () => {
-      const FxProfile = {
-        Finder: sinon.spy(function() {
-          return {};
-        }),
-      };
+      const {FxProfile} = prepareProfileFinderTest();
+      FxProfile.Finder = sinon.spy(FxProfile.Finder);
+
       const userDirectoryPath = '/non/existent/path';
       firefox.defaultCreateProfileFinder({userDirectoryPath, FxProfile});
 
@@ -678,7 +685,9 @@ describe('firefox', () => {
         FxProfile,
         userDirectoryPath,
       } = prepareProfileFinderTest({
-        getPathReturns: Promise.resolve(expectedResolvedProfilePath),
+        getPath(name, cb) {
+          cb(undefined, expectedResolvedProfilePath);
+        },
       });
 
       const profileFinder = firefox.defaultCreateProfileFinder({
@@ -702,9 +711,9 @@ describe('firefox', () => {
            FxProfile,
            userDirectoryPath,
          } = prepareProfileFinderTest({
-           readProfileReturns: Promise.reject(
-             new ErrorWithCode('ENOENT', 'fake ENOENT error')
-           ),
+           readProfiles(cb) {
+             cb(new ErrorWithCode('ENOENT', 'fake ENOENT error'));
+           },
          });
 
          const getter = firefox.defaultCreateProfileFinder({
@@ -713,13 +722,14 @@ describe('firefox', () => {
          });
 
          const res = await getter('someName');
+
+         sinon.assert.called(fakeReadProfiles);
+         sinon.assert.notCalled(fakeGetPath);
+
          assert.equal(
            res,
            undefined,
            'Got an undefined result when the profiles.ini file does not exist');
-
-         sinon.assert.called(fakeReadProfiles);
-         sinon.assert.notCalled(fakeGetPath);
        });
 
     it('returns a finder that throws unexpected errors',
@@ -730,9 +740,9 @@ describe('firefox', () => {
            FxProfile,
            userDirectoryPath,
          } = prepareProfileFinderTest({
-           readProfileReturns: Promise.reject(
-             new Error('unspecified error')
-           ),
+           readProfiles(cb) {
+             cb(new Error('unspecified error'));
+           },
          });
 
          const getter = firefox.defaultCreateProfileFinder({
@@ -742,7 +752,7 @@ describe('firefox', () => {
 
          const promise = getter('someName');
 
-         assert.isRejected(
+         await assert.isRejected(
            promise,
            'unspecified error',
            'Throws expected error'
@@ -1025,13 +1035,13 @@ describe('firefox', () => {
         });
     });
 
-    it('throws on unexpected errors', () => {
+    it('throws on unexpected errors', async () => {
       const connectToFirefox = sinon.spy(async () => {
         throw new Error('Unexpected connect error');
       });
 
-      assert.isRejected(findRemotePort({connectToFirefox}),
-                        /Unxpected connect error/);
+      await assert.isRejected(findRemotePort({connectToFirefox}),
+                              /Unexpected connect error/);
 
       sinon.assert.calledOnce(connectToFirefox);
     });

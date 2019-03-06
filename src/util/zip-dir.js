@@ -1,5 +1,6 @@
 /* @flow */
 import zipDirModule from 'zip-dir';
-import promisify from 'es6-promisify';
+
+import promisify from './promisify';
 
 export const zipDir = promisify(zipDirModule);

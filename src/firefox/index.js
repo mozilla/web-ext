@@ -6,9 +6,9 @@ import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
   from 'firefox-profile';
 import {fs} from 'mz';
-import promisify from 'es6-promisify';
 import eventToPromise from 'event-to-promise';
 
+import promisify from '../util/promisify';
 import isDirectory from '../util/is-directory';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';

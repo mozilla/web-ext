@@ -6,18 +6,18 @@ import {fs} from 'mz';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
-import promisify from 'es6-promisify';
 
 import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
 import {getManifestId} from '../../../src/util/manifest';
+import promisify from '../../../src/util/promisify';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {manifestWithoutApps} from '../test-util/test.manifest';
 import completeSignCommand, {
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
 } from '../../../src/cmd/sign';
 import {
   basicManifest,
   makeSureItFails,
+  manifestWithoutApps,
   fixturePath,
 } from '../helpers';
 // Import flow type

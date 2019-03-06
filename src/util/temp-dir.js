@@ -1,8 +1,8 @@
 /* @flow */
 import tmp from 'tmp';
-import promisify from 'es6-promisify';
 
 import {createLogger} from './logger';
+import promisify from './promisify';
 
 const log = createLogger(__filename);
 
@@ -63,7 +63,7 @@ export class TempDir {
    * been created.
    */
   create(): Promise<TempDir> {
-    const createTempDir = promisify(tmp.dir, {multiArgs: true});
+    const createTempDir = promisify(tmp.dir, tmp, {multiArgs: true});
     return createTempDir(
       {
         prefix: 'tmp-web-ext-',

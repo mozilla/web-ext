@@ -4,14 +4,15 @@ import EventEmitter from 'events';
 import tty from 'tty';
 import stream from 'stream';
 
+import deepcopy from 'deepcopy';
 import sinon from 'sinon';
 import yauzl from 'yauzl';
 import ExtendableError from 'es6-error';
-import promisify from 'es6-promisify';
 
 import {createLogger} from '../../src/util/logger';
 import * as defaultFirefoxApp from '../../src/firefox';
 import {RemoteFirefox} from '../../src/firefox/remote';
+import promisify from '../../src/util/promisify';
 
 const log = createLogger(__filename);
 
@@ -280,7 +281,7 @@ export class ErrorWithCode extends Error {
 }
 
 /*
- * A basic manifest fixture using in unit tests.
+ * A basic manifest fixture used in unit tests.
  */
 export const basicManifest = {
   name: 'the extension',
@@ -291,6 +292,12 @@ export const basicManifest = {
     },
   },
 };
+
+/*
+ * A basic manifest fixture without an applications property.
+ */
+export const manifestWithoutApps = deepcopy(basicManifest);
+delete manifestWithoutApps.applications;
 
 /*
  * A class that implements an empty IExtensionRunner interface.

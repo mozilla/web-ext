@@ -3,10 +3,10 @@ import path from 'path';
 import {ChildProcess, spawn} from 'child_process';
 
 import copyDir from 'copy-dir';
-import promisify from 'es6-promisify';
 import prettyjson from 'prettyjson';
 
 import * as tmpDirUtils from '../../src/util/temp-dir';
+import promisify from '../../src/util/promisify';
 
 export const withTempDir = tmpDirUtils.withTempDir;
 
