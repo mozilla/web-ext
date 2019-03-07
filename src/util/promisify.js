@@ -31,7 +31,11 @@ export default function(
         }
       }
 
-      fnWithCb(...(callerArgs.concat(cb)));
+      try {
+        fnWithCb(...(callerArgs.concat(cb)));
+      } catch (err) {
+        reject(err);
+      }
     });
   };
 }
