@@ -55,17 +55,35 @@ describe('nodejs util.promisify', () => {
 describe('web-ext util.promisify.multiArgsPromisedFn custom helper', () => {
   it('optionally pass multiple results to a wrapped function', async () => {
     const expectedResults = ['result1', 'result2'];
+    const expectedError = new Error('Fake error');
 
-    const fnCallMultiArgs = sinon.spy(function(cb) {
-      setTimeout(() => cb(undefined, ...expectedResults));
+    const fnCallMultiArgs = sinon.spy(function(behavior, cb) {
+      if (behavior === 'throw') {
+        throw expectedError;
+      } else if (behavior === 'reject') {
+        setTimeout(() => cb(expectedError));
+      } else {
+        setTimeout(() => cb(undefined, ...expectedResults));
+      }
     });
 
     fnCallMultiArgs[promisify.custom] = multiArgsPromisedFn(fnCallMultiArgs);
 
     const promisedFnMultiArgs = promisify(fnCallMultiArgs);
 
-    await assert.becomes(promisedFnMultiArgs(), expectedResults);
+    // Test success scenario.
+    await assert.becomes(promisedFnMultiArgs(undefined), expectedResults);
     sinon.assert.calledOnce(fnCallMultiArgs);
-    sinon.assert.calledWith(fnCallMultiArgs, sinon.match.func);
+    sinon.assert.calledWith(fnCallMultiArgs, undefined, sinon.match.func);
+
+    // Test throw scenario.
+    await assert.isRejected(promisedFnMultiArgs('throw'), expectedError);
+    sinon.assert.calledTwice(fnCallMultiArgs);
+    sinon.assert.calledWith(fnCallMultiArgs, 'throw', sinon.match.func);
+
+    // Test reject scenario.
+    await assert.isRejected(promisedFnMultiArgs('reject'), expectedError);
+    sinon.assert.calledThrice(fnCallMultiArgs);
+    sinon.assert.calledWith(fnCallMultiArgs, 'reject', sinon.match.func);
   });
 });
