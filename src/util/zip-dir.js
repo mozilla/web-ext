@@ -1,6 +1,6 @@
 /* @flow */
-import zipDirModule from 'zip-dir';
+import {promisify} from 'util';
 
-import promisify from './promisify';
+import zipDirModule from 'zip-dir';
 
 export const zipDir = promisify(zipDirModule);

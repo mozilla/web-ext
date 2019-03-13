@@ -3,6 +3,7 @@ import path from 'path';
 import EventEmitter from 'events';
 import tty from 'tty';
 import stream from 'stream';
+import {promisify} from 'util';
 
 import deepcopy from 'deepcopy';
 import sinon from 'sinon';
@@ -12,7 +13,6 @@ import ExtendableError from 'es6-error';
 import {createLogger} from '../../src/util/logger';
 import * as defaultFirefoxApp from '../../src/firefox';
 import {RemoteFirefox} from '../../src/firefox/remote';
-import promisify from '../../src/util/promisify';
 
 const log = createLogger(__filename);
 

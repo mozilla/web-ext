@@ -1,38 +1,25 @@
 /* @flow */
 
-// promisify helper types and implementation
-
-type PromisifyOptions = {|
-  multiArgs: boolean,
-|};
-
-export default function(
-  fn: Function,
-  bindObject: ?Object = null,
-  options: PromisifyOptions = {multiArgs: false}
-) {
-  let fnWithCb = fn;
-  if (bindObject != null) {
-    fnWithCb = fn.bind(bindObject);
-  }
-
-  return function(...callerArgs: Array<any>): Promise<any> {
+// A small promisify helper to make it easier to customize a
+// function promisified (using the 'util' module available in
+// nodejs >= 8) to resolve to an array of results:
+//
+//    import {promisify} from 'util';
+//    import {multiArgsPromisedFn} from '../util/promisify';
+//
+//    aCallbackBasedFn[promisify.custom] = multiArgsPromisedFn(tmp.dir);
+//    ...
+export function multiArgsPromisedFn(fn: Function): Function {
+  return (...callerArgs: Array<any>): Promise<any> => {
     return new Promise((resolve, reject) => {
-      function cb(err, ...rest) {
-        if (err) {
-          reject(err);
-          return;
-        }
-
-        if (options && options.multiArgs) {
-          resolve(rest);
-        } else {
-          resolve(rest[0]);
-        }
-      }
-
       try {
-        fnWithCb(...(callerArgs.concat(cb)));
+        fn(...callerArgs, (err, ...rest) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(rest);
+          }
+        });
       } catch (err) {
         reject(err);
       }

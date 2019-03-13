@@ -1,11 +1,13 @@
 /* @flow */
+import {promisify} from 'util';
+
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import promisify from '../../../src/util/promisify';
+import {multiArgsPromisedFn} from '../../../src/util/promisify';
 
-describe('util.promisify', () => {
+describe('nodejs util.promisify', () => {
   it('wraps a nodejs callback-based function into a promised function',
      async () => {
        const expectedParam1 = 'param-value-1';
@@ -48,22 +50,9 @@ describe('util.promisify', () => {
        sinon.assert.calledOnce(fnCallThrow);
        sinon.assert.calledWith(fnCallThrow, sinon.match.func);
      });
+});
 
-  it('optionally bind the function to a given object', async () => {
-    const obj = {
-      method: sinon.spy(function(cb) {
-        assert.equal(this, obj, 'The method is binded on the expected object');
-        cb();
-      }),
-    };
-
-    const promisedFn = promisify(obj.method, obj);
-
-    await assert.isFulfilled(promisedFn());
-    sinon.assert.calledOnce(obj.method);
-    sinon.assert.calledWith(obj.method, sinon.match.func);
-  });
-
+describe('web-ext util.promisify.multiArgsPromisedFn custom helper', () => {
   it('optionally pass multiple results to a wrapped function', async () => {
     const expectedResults = ['result1', 'result2'];
 
@@ -71,8 +60,9 @@ describe('util.promisify', () => {
       setTimeout(() => cb(undefined, ...expectedResults));
     });
 
-    const promisedFnMultiArgs = promisify(
-      fnCallMultiArgs, null, {multiArgs: true});
+    fnCallMultiArgs[promisify.custom] = multiArgsPromisedFn(fnCallMultiArgs);
+
+    const promisedFnMultiArgs = promisify(fnCallMultiArgs);
 
     await assert.becomes(promisedFnMultiArgs(), expectedResults);
     sinon.assert.calledOnce(fnCallMultiArgs);

@@ -1,5 +1,6 @@
 /* @flow */
 import path from 'path';
+import {promisify} from 'util';
 
 import copyDir from 'copy-dir';
 import {fs} from 'mz';
@@ -9,7 +10,6 @@ import sinon from 'sinon';
 
 import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
 import {getManifestId} from '../../../src/util/manifest';
-import promisify from '../../../src/util/promisify';
 import {withTempDir} from '../../../src/util/temp-dir';
 import completeSignCommand, {
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,

@@ -1,6 +1,7 @@
 /* @flow */
 import nodeFs from 'fs';
 import path from 'path';
+import {promisify} from 'util';
 
 import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
@@ -8,7 +9,6 @@ import FirefoxProfile, {copyFromUserProfile as defaultUserProfileCopier}
 import {fs} from 'mz';
 import eventToPromise from 'event-to-promise';
 
-import promisify from '../util/promisify';
 import isDirectory from '../util/is-directory';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
@@ -238,7 +238,7 @@ export async function isDefaultProfile(
 
   // Check for profile dir path.
   const finder = new ProfileFinder(baseProfileDir);
-  const readProfiles = promisify(finder.readProfiles, finder);
+  const readProfiles = promisify(finder.readProfiles.bind(finder));
 
   await readProfiles();
 
@@ -333,8 +333,8 @@ export function defaultCreateProfileFinder(
   }: CreateProfileFinderParams = {}
 ): getProfileFn {
   const finder = new FxProfile.Finder(userDirectoryPath);
-  const readProfiles = promisify(finder.readProfiles, finder);
-  const getPath = promisify(finder.getPath, finder);
+  const readProfiles = promisify(finder.readProfiles.bind(finder));
+  const getPath = promisify(finder.getPath.bind(finder));
   return async (profileName: string): Promise<string | void> => {
     try {
       await readProfiles();
