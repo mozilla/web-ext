@@ -74,8 +74,7 @@ export class TempDir {
         // This allows us to remove a non-empty tmp dir.
         unsafeCleanup: true,
       })
-      .then((args) => {
-        const [tmpPath, removeTempDir] = args;
+      .then(([tmpPath, removeTempDir]) => {
         this._path = tmpPath;
         this._removeTempDir = removeTempDir;
         log.debug(`Created temporary directory: ${this.path()}`);
