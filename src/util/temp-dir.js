@@ -12,6 +12,8 @@ export type MakePromiseCallback = (tmpDir: TempDir) => any;
 
 tmp.dir[promisify.custom] = multiArgsPromisedFn(tmp.dir);
 
+const createTempDir = promisify(tmp.dir);
+
 /*
  * Work with a self-destructing temporary directory in a promise chain.
  *
@@ -66,9 +68,6 @@ export class TempDir {
    * been created.
    */
   create(): Promise<TempDir> {
-    //const createTempDir = promisify(tmp.dir, tmp, {multiArgs: true});
-    const createTempDir = promisify(tmp.dir);
-
     return createTempDir(
       {
         prefix: 'tmp-web-ext-',
