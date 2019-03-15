@@ -1,13 +1,18 @@
 /* @flow */
+import {promisify} from 'util';
+
 import tmp from 'tmp';
-import promisify from 'es6-promisify';
 
 import {createLogger} from './logger';
+import {multiArgsPromisedFn} from './promisify';
 
 const log = createLogger(__filename);
 
 export type MakePromiseCallback = (tmpDir: TempDir) => any;
 
+tmp.dir[promisify.custom] = multiArgsPromisedFn(tmp.dir);
+
+const createTempDir = promisify(tmp.dir);
 
 /*
  * Work with a self-destructing temporary directory in a promise chain.
@@ -63,15 +68,13 @@ export class TempDir {
    * been created.
    */
   create(): Promise<TempDir> {
-    const createTempDir = promisify(tmp.dir, {multiArgs: true});
     return createTempDir(
       {
         prefix: 'tmp-web-ext-',
         // This allows us to remove a non-empty tmp dir.
         unsafeCleanup: true,
       })
-      .then((args) => {
-        const [tmpPath, removeTempDir] = args;
+      .then(([tmpPath, removeTempDir]) => {
         this._path = tmpPath;
         this._removeTempDir = removeTempDir;
         log.debug(`Created temporary directory: ${this.path()}`);

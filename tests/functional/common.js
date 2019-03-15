@@ -1,9 +1,9 @@
 /* @flow */
 import path from 'path';
 import {ChildProcess, spawn} from 'child_process';
+import {promisify} from 'util';
 
 import copyDir from 'copy-dir';
-import promisify from 'es6-promisify';
 import prettyjson from 'prettyjson';
 
 import * as tmpDirUtils from '../../src/util/temp-dir';
@@ -36,9 +36,10 @@ export type TempAddonParams = {|
 |};
 
 export type TempAddonCallback =
-  (tmpAddonDir: string, tmpDir: string) => Promise<any>
+  (tmpAddonDir: string, tmpDir: string) => Promise<any>;
 
 const copyDirAsPromised = promisify(copyDir);
+
 export function withTempAddonDir(
   {addonPath}: TempAddonParams,
   makePromise: TempAddonCallback,

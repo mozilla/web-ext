@@ -1,7 +1,8 @@
 /* @flow */
+import {promisify} from 'util';
+
 import {fs} from 'mz';
 import mkdirp from 'mkdirp';
-import promisify from 'es6-promisify';
 
 import {UsageError, isErrorWithCode} from '../errors';
 import {createLogger} from './logger';

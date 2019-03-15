@@ -9,11 +9,11 @@ import {fs} from 'mz';
 import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
 import getValidatedManifest, {getManifestId} from '../../../src/util/manifest';
 import {withTempDir} from '../../../src/util/temp-dir';
-import {basicManifest, makeSureItFails} from '../helpers';
-
-
-export const manifestWithoutApps = deepcopy(basicManifest);
-delete manifestWithoutApps.applications;
+import {
+  basicManifest,
+  makeSureItFails,
+  manifestWithoutApps,
+} from '../helpers';
 
 
 describe('util/manifest', () => {

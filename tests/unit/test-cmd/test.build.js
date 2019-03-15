@@ -18,9 +18,9 @@ import {
   basicManifest,
   fixturePath,
   makeSureItFails,
+  manifestWithoutApps,
   ZipFile,
 } from '../helpers';
-import {manifestWithoutApps} from '../test-util/test.manifest';
 import {UsageError} from '../../../src/errors';
 import {createLogger} from '../../../src/util/logger';
 
