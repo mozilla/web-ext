@@ -14,17 +14,13 @@
 export function multiArgsPromisedFn(fn: Function): Function {
   return (...callerArgs: Array<any>): Promise<any> => {
     return new Promise((resolve, reject) => {
-      try {
-        fn(...callerArgs, (err, ...rest) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(rest);
-          }
-        });
-      } catch (err) {
-        reject(err);
-      }
+      fn(...callerArgs, (err, ...rest) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rest);
+        }
+      });
     });
   };
 }
