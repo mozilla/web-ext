@@ -217,9 +217,8 @@ export class FirefoxDesktopExtensionRunner {
       startUrl,
       firefoxApp,
       firefoxClient,
+      binaryArgs = [],
     } = this.params;
-
-    const binaryArgs = [];
 
     if (browserConsole) {
       binaryArgs.push('-jsconsole');
