@@ -98,7 +98,7 @@
     "cross-env": "5.2.0",
     "deepcopy": "2.0.0",
     "doctoc": "1.4.0",
-    "eslint": "5.15.1",
+    "eslint": "5.15.2",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "3.4.2",
     "eslint-plugin-import": "2.16.0",
