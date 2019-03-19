@@ -46,7 +46,7 @@
     "opera"
   ],
   "dependencies": {
-    "@babel/polyfill": "7.2.5",
+    "@babel/polyfill": "7.4.0",
     "@babel/runtime": "7.3.4",
     "@cliqz-oss/firefox-client": "0.3.1",
     "@cliqz-oss/node-firefox-connect": "1.2.1",
