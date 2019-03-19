@@ -872,6 +872,12 @@ describe('util/extension-runners/firefox-android', () => {
             /Android target does not support --start-url option/
           ),
         },
+        {
+          params: {binaryArgs: ['-headless=false']},
+          expectedMessage: (
+            /Android target does not support --binary-args option/
+          ),
+        },
       ];
 
       for (const testCase of optionsWarningTestCases) {

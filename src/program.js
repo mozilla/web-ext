@@ -503,6 +503,12 @@ Example: $0 --help run.
         demandOption: false,
         type: 'boolean',
       },
+      'binary-args': {
+        describe: 'Browser binary options. More at - ' +
+        'https://developer.mozilla.org/en-US/docs/Mozilla/Command_Line_Options',
+        demandOption: false,
+        type: 'array',
+      },
       // Firefox for Android CLI options.
       'adb-bin': {
         describe: 'Specify a custom path to the adb binary',

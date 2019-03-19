@@ -261,6 +261,7 @@ export class FirefoxAndroidExtensionRunner {
   }
 
   printIgnoredParamsWarnings() {
+
     if (this.params.profilePath) {
       log.warn(
         'Firefox for Android target does not support custom profile paths.'
@@ -288,6 +289,12 @@ export class FirefoxAndroidExtensionRunner {
     if (this.params.startUrl) {
       log.warn(
         'Firefox for Android target does not support --start-url option.'
+      );
+    }
+
+    if (this.params.binaryArgs) {
+      log.warn(
+        'Firefox for Android target does not support --binary-args option.'
       );
     }
   }

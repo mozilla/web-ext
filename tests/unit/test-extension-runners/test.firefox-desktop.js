@@ -202,6 +202,14 @@ describe('util/extension-runners/firefox-desktop', () => {
     ]);
   });
 
+  it('passes binaryArgs tp Firefox', async () => {
+    await testBinaryArgs({
+      binaryArgs: ['-headless=true', '-jsconsole'],
+    }, [
+      '-headless=true', '-jsconsole',
+    ]);
+  });
+
   it('passes a custom Firefox profile when specified', async () => {
     const {params} = prepareExtensionRunnerParams({
       params: {
