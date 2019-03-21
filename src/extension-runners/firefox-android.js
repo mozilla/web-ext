@@ -42,6 +42,19 @@ import type {
 
 const log = createLogger(__filename);
 
+const ignoredParams = {
+  profilePath: '--profile-path',
+  keepProfileChanges: '--keep-profile-changes',
+  browserConsole: '--browser-console',
+  preInstall: '--pre-install',
+  startUrl: '--start-url',
+  binaryArgs: '--binary-args',
+};
+
+const getIgnoredParamsWarningsMessage = (optionName) => {
+  return `Firefox for Android target does not support ${optionName} option`;
+};
+
 export type FirefoxAndroidExtensionRunnerParams = {|
   ...ExtensionRunnerParams,
 
@@ -261,42 +274,13 @@ export class FirefoxAndroidExtensionRunner {
   }
 
   printIgnoredParamsWarnings() {
-
-    if (this.params.profilePath) {
-      log.warn(
-        'Firefox for Android target does not support custom profile paths.'
-      );
-    }
-
-    if (this.params.keepProfileChanges) {
-      log.warn(
-        'Firefox for Android target does not support --keep-profile-changes.'
-      );
-    }
-
-    if (this.params.browserConsole) {
-      log.warn(
-        'Firefox for Android target does not support --browser-console option.'
-      );
-    }
-
-    if (this.params.preInstall) {
-      log.warn(
-        'Firefox for Android target does not support --pre-install option.'
-      );
-    }
-
-    if (this.params.startUrl) {
-      log.warn(
-        'Firefox for Android target does not support --start-url option.'
-      );
-    }
-
-    if (this.params.binaryArgs) {
-      log.warn(
-        'Firefox for Android target does not support --binary-args option.'
-      );
-    }
+    Object.keys(ignoredParams).forEach((ignoredParam) => {
+      if (this.params[ignoredParam]) {
+        log.warn(
+          getIgnoredParamsWarningsMessage(ignoredParams[ignoredParam])
+        );
+      }
+    });
   }
 
   async adbDevicesDiscoveryAndSelect() {

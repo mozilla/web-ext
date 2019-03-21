@@ -845,7 +845,7 @@ describe('util/extension-runners/firefox-android', () => {
         {
           params: {profilePath: '/fake/dir'},
           expectedMessage: (
-            /Android target does not support custom profile paths/
+            /Android target does not support --profile-path/
           ),
         },
         {
@@ -863,19 +863,19 @@ describe('util/extension-runners/firefox-android', () => {
         {
           params: {preInstall: true},
           expectedMessage: (
-            /Android target does not support --pre-install option/
+            /Android target does not support --pre-install/
           ),
         },
         {
           params: {startUrl: 'http://fake-start-url.org'},
           expectedMessage: (
-            /Android target does not support --start-url option/
+            /Android target does not support --start-url/
           ),
         },
         {
           params: {binaryArgs: ['-headless=false']},
           expectedMessage: (
-            /Android target does not support --binary-args option/
+            /Android target does not support --binary-args/
           ),
         },
       ];
