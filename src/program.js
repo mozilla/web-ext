@@ -504,8 +504,7 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'binary-args': {
-        describe: 'Browser binary options. More at - ' +
-        'https://developer.mozilla.org/en-US/docs/Mozilla/Command_Line_Options',
+        describe: 'Additional CLI options passed to the Browser binary',
         demandOption: false,
         type: 'array',
       },
