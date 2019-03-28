@@ -155,7 +155,7 @@ describe('util/extension-runners/firefox-desktop', () => {
       }));
   });
 
-  async function testBinaryArgs(extensionRunnerParams, expectedBinaryArgs) {
+  async function testArgs(extensionRunnerParams, expectedArgs) {
     const {params} = prepareExtensionRunnerParams({
       params: {
         ...extensionRunnerParams,
@@ -172,14 +172,14 @@ describe('util/extension-runners/firefox-desktop', () => {
       params.firefoxApp.run,
       sinon.match.any,
       sinon.match.has(
-        'binaryArgs',
-        sinon.match.array.deepEquals(expectedBinaryArgs)
+        'args',
+        sinon.match.array.deepEquals(expectedArgs)
       )
     );
   }
 
   it('passes -jsconsole when --browser-console is specified', async () => {
-    await testBinaryArgs({
+    await testArgs({
       browserConsole: true,
     }, [
       '-jsconsole',
@@ -187,7 +187,7 @@ describe('util/extension-runners/firefox-desktop', () => {
   });
 
   it('passes single url parameter to Firefox when specified', async () => {
-    await testBinaryArgs({
+    await testArgs({
       startUrl: 'url1',
     }, [
       '--url', 'url1',
@@ -195,16 +195,16 @@ describe('util/extension-runners/firefox-desktop', () => {
   });
 
   it('passes multiple url parameters to Firefox when specified', async () => {
-    await testBinaryArgs({
+    await testArgs({
       startUrl: ['url1', 'url2'],
     }, [
       '--url', 'url1', '--url', 'url2',
     ]);
   });
 
-  it('passes binaryArgs to Firefox', async () => {
-    await testBinaryArgs({
-      binaryArgs: ['-headless=true', '-jsconsole'],
+  it('passes args to Firefox', async () => {
+    await testArgs({
+      args: ['-headless=true', '-jsconsole'],
     }, [
       '-headless=true', '-jsconsole',
     ]);

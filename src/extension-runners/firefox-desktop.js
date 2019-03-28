@@ -217,21 +217,21 @@ export class FirefoxDesktopExtensionRunner {
       startUrl,
       firefoxApp,
       firefoxClient,
-      binaryArgs = [],
+      args = [],
     } = this.params;
 
     if (browserConsole) {
-      binaryArgs.push('-jsconsole');
+      args.push('-jsconsole');
     }
     if (startUrl) {
       const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
       for (const url of urls) {
-        binaryArgs.push('--url', url);
+        args.push('--url', url);
       }
     }
 
     this.runningInfo = await firefoxApp.run(this.profile, {
-      firefoxBinary, binaryArgs,
+      firefoxBinary, args,
     });
 
     this.runningInfo.firefox.on('close', () => {

@@ -88,7 +88,7 @@ export type FirefoxRunnerParams = {|
   'no-remote'?: boolean,
   'foreground'?: boolean,
   'listen': number,
-  'binary-args'?: Array<string> | string,
+  'args'?: Array<string> | string,
   'env'?: {
     [key: string]: string
   },
@@ -122,7 +122,6 @@ export type FirefoxRunOptions = {|
   fxRunner?: FirefoxRunnerFn,
   findRemotePort?: RemotePortFinderFn,
   firefoxBinary?: string,
-  binaryArgs?: Array<string>,
   args?: Array<any>,
 |};
 
@@ -134,7 +133,7 @@ export async function run(
   {
     fxRunner = defaultFxRunner,
     findRemotePort = defaultRemotePortFinder,
-    firefoxBinary, binaryArgs,
+    firefoxBinary, args,
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxInfo> {
 
@@ -143,9 +142,9 @@ export async function run(
   const remotePort = await findRemotePort();
 
   const results = await fxRunner({
+    args,
     // if this is falsey, fxRunner tries to find the default one.
     'binary': firefoxBinary,
-    'binary-args': binaryArgs,
     // This ensures a new instance of Firefox is created. It has nothing
     // to do with the devtools remote debugger.
     'no-remote': true,

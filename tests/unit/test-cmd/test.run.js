@@ -106,7 +106,7 @@ describe('run', () => {
       firefox: '/path/to/custom/bin/firefox',
       pref: {'my.custom.pref': 'value'},
       firefoxProfile: '/path/to/custom/profile',
-      binaryArgs: ['-headless=false'],
+      args: ['-headless=false'],
     };
 
     await cmd.run(runOptions);
@@ -131,7 +131,7 @@ describe('run', () => {
       firefoxBinary: runnerParams.firefoxBinary,
       customPrefs: runnerParams.customPrefs,
       firefoxProfile: runnerParams.profilePath,
-      binaryArgs: runnerParams.binaryArgs,
+      args: runnerParams.args,
     }, expectedRunnerParams);
     assert.equal(runnerParams.extensions.length, 1);
     assert.equal(runnerParams.extensions[0].sourceDir, cmd.argv.sourceDir);
