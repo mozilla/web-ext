@@ -52,7 +52,7 @@ const ignoredParams = {
 };
 
 const getIgnoredParamsWarningsMessage = (optionName) => {
-  return `Firefox for Android target does not support ${optionName} option`;
+  return `The Firefox for Android target does not support ${optionName}`;
 };
 
 export type FirefoxAndroidExtensionRunnerParams = {|
