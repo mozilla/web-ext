@@ -138,11 +138,12 @@ describe('firefox', () => {
 
     it('passes binary args to Firefox', () => {
       const fxRunner = createFakeFxRunner();
-      const args = '--safe-mode';
-      return runFirefox({fxRunner, args})
+      const binaryArgs = '--safe-mode';
+      return runFirefox({fxRunner, binaryArgs})
         .then(() => {
           sinon.assert.called(fxRunner);
-          assert.equal(fxRunner.firstCall.args[0].args, args);
+          assert.equal(fxRunner.firstCall.args[0]['binary-args'],
+                       binaryArgs);
         });
     });
 

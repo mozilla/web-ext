@@ -48,7 +48,7 @@ const ignoredParams = {
   browserConsole: '--browser-console',
   preInstall: '--pre-install',
   startUrl: '--start-url',
-  args: '--args',
+  binaryArgs: '--binary-args',
 };
 
 const getIgnoredParamsWarningsMessage = (optionName) => {

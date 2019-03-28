@@ -503,8 +503,7 @@ Example: $0 --help run.
         demandOption: false,
         type: 'boolean',
       },
-      'args': {
-        alias: ['arg'],
+      'binary-args': {
         describe: 'Additional CLI options passed to the Browser binary',
         demandOption: false,
         type: 'array',

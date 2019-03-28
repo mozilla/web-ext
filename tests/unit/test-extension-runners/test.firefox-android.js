@@ -873,9 +873,9 @@ describe('util/extension-runners/firefox-android', () => {
           ),
         },
         {
-          params: {args: ['-headless=false']},
+          params: {binaryArgs: ['-headless=false']},
           expectedMessage: (
-            /Android target does not support --args/
+            /Android target does not support --binary-args/
           ),
         },
       ];
