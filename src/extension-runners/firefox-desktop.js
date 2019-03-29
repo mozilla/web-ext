@@ -217,6 +217,7 @@ export class FirefoxDesktopExtensionRunner {
       startUrl,
       firefoxApp,
       firefoxClient,
+      args,
     } = this.params;
 
     const binaryArgs = [];
@@ -229,6 +230,10 @@ export class FirefoxDesktopExtensionRunner {
       for (const url of urls) {
         binaryArgs.push('--url', url);
       }
+    }
+
+    if (args) {
+      binaryArgs.push(...args);
     }
 
     this.runningInfo = await firefoxApp.run(this.profile, {

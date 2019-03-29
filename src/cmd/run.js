@@ -36,6 +36,7 @@ export type CmdRunParams = {|
   sourceDir: string,
   startUrl?: Array<string>,
   target?: Array<string>,
+  args?: Array<string>,
 
   // Android CLI options.
   adbBin?: string,
@@ -77,6 +78,7 @@ export default async function run(
     adbPort,
     adbDevice,
     firefoxApk,
+    args,
   }: CmdRunParams,
   {
     buildExtension = defaultBuildExtension,
@@ -107,6 +109,7 @@ export default async function run(
     extensions: [{sourceDir, manifestData}],
     keepProfileChanges,
     startUrl,
+    args,
     desktopNotifications,
   };
 
