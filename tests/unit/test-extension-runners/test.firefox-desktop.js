@@ -204,7 +204,7 @@ describe('util/extension-runners/firefox-desktop', () => {
 
   it('passes binaryArgs to Firefox', async () => {
     await testBinaryArgs({
-      binaryArgs: ['-headless=true', '-jsconsole'],
+      args: ['-headless=true', '-jsconsole'],
     }, [
       '-headless=true', '-jsconsole',
     ]);
