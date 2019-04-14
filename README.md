@@ -55,12 +55,13 @@ as used by your team.
 Next you can use the `web-ext` command in your project as an
 [npm script](https://docs.npmjs.com/misc/scripts).
 Here is an example where the `--source-dir` argument specifies where to find
-the source code for your extension.
+the source code for your extension, and `--firefox-profile` indicating that 
+you would like to load and keep settings from between sessions.
 
 `package.json`
 ```json
 "scripts": {
-  "start:firefox": "web-ext run --source-dir ./extension-dist/",
+  "start:firefox": "web-ext run --source-dir ./extension-dist/ --firefox-profile=default",
 }
 ```
 
