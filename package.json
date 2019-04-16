@@ -53,7 +53,7 @@
     "adbkit": "2.11.0",
     "addons-linter": "1.9.0",
     "bunyan": "1.8.12",
-    "camelcase": "5.2.0",
+    "camelcase": "5.3.1",
     "debounce": "1.2.0",
     "decamelize": "3.0.0",
     "es6-error": "4.1.1",
