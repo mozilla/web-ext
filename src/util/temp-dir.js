@@ -76,7 +76,12 @@ export class TempDir {
       })
       .then(([tmpPath, removeTempDir]) => {
         this._path = tmpPath;
-        this._removeTempDir = removeTempDir;
+        this._removeTempDir = () => new Promise((resolve, reject) => {
+          // `removeTempDir` parameter is a `next` callback which
+          // is called once the dir has been removed.
+          const next = (err) => err ? reject(err) : resolve();
+          removeTempDir(next);
+        });
         log.debug(`Created temporary directory: ${this.path()}`);
         return this;
       });
@@ -100,8 +105,8 @@ export class TempDir {
    * Promise().catch(tmp.errorHandler())
    */
   errorHandler(): Function {
-    return (error) => {
-      this.remove();
+    return async (error) => {
+      await this.remove();
       throw error;
     };
   }
@@ -113,8 +118,8 @@ export class TempDir {
    * Promise().then(tmp.successHandler())
    */
   successHandler(): Function {
-    return (promiseResult) => {
-      this.remove();
+    return async (promiseResult) => {
+      await this.remove();
       return promiseResult;
     };
   }
@@ -127,7 +132,7 @@ export class TempDir {
       return;
     }
     log.debug(`Removing temporary directory: ${this.path()}`);
-    this._removeTempDir && this._removeTempDir();
+    return this._removeTempDir && this._removeTempDir();
   }
 
 }
