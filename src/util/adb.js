@@ -160,7 +160,8 @@ export default class ADBUtils {
     // Set to true the required permissions that have been granted.
     for (const line of pmDumpLogs) {
       for (const perm of permissions) {
-        if (line.includes(`${perm}: granted=true`)) {
+        if (line.includes(`${perm}: granted=true`) ||
+            line.includes(`${perm}, granted=true`)) {
           permissionsMap[perm] = true;
         }
       }
