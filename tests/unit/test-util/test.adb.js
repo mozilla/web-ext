@@ -37,9 +37,16 @@ ${fakeSocketFilePrefix}  ${fakeRDPUnixSocketFile}
 
 // NOTE: fake 'pm dump <APK>' output related to the granted permissions for an
 // android application.
-const fakeAndroidGrantedPermissions = `
+const fakeAndroidGrantedPermissionsColon = `
 android.permission.READ_EXTERNAL_STORAGE: granted=true
 android.permission.WRITE_EXTERNAL_STORAGE: granted=true
+`;
+
+// Some Android device uses a comma instead of a double colon
+// (See #1583).
+const fakeAndroidGrantedPermissionsComma = `
+android.permission.READ_EXTERNAL_STORAGE, granted=true
+android.permission.WRITE_EXTERNAL_STORAGE, granted=true
 `;
 
 const {assert} = chai;
@@ -392,36 +399,41 @@ describe('utils/adb', () => {
          );
        });
 
-    it('does not reject when all the required permissions have been granted',
-       async () => {
-         const adb = getFakeADBKit({
-           adbClient: {
-             shell: sinon.spy(() => Promise.resolve('')),
-           },
-           adbkitUtil: {
-             readAll: sinon.spy(() => {
-               return Promise.resolve(
-                 new Buffer(fakeAndroidGrantedPermissions)
-               );
-             }),
-           },
-         });
-         const adbUtils = new ADBUtils({adb});
+    describe('Android Granted Permissions discovery', async () => {
+      async function assertPermissions(fakeAndroidPmDump) {
+        const adb = getFakeADBKit({
+          adbClient: {
+            shell: sinon.spy(() => Promise.resolve('')),
+          },
+          adbkitUtil: {
+            readAll: sinon.spy(() => {
+              return Promise.resolve(new Buffer(fakeAndroidPmDump));
+            }),
+          },
+        });
+        const adbUtils = new ADBUtils({adb});
 
-         const promise = adbUtils.ensureRequiredAPKRuntimePermissions(
-           'device1', 'org.mozilla.firefox', [
-             'android.permission.READ_EXTERNAL_STORAGE',
-             'android.permission.WRITE_EXTERNAL_STORAGE',
-           ]
-         );
+        const promise = adbUtils.ensureRequiredAPKRuntimePermissions(
+          'device1', 'org.mozilla.firefox', [
+            'android.permission.READ_EXTERNAL_STORAGE',
+            'android.permission.WRITE_EXTERNAL_STORAGE',
+          ]
+        );
 
-         await assert.isFulfilled(promise);
-         sinon.assert.calledOnce(adb.fakeADBClient.shell);
-         sinon.assert.calledWith(
-           adb.fakeADBClient.shell,
-           'device1', ['pm', 'dump', 'org.mozilla.firefox']
-         );
-       });
+        await assert.isFulfilled(promise);
+        sinon.assert.calledOnce(adb.fakeADBClient.shell);
+        sinon.assert.calledWith(
+          adb.fakeADBClient.shell,
+          'device1', ['pm', 'dump', 'org.mozilla.firefox']
+        );
+      }
+
+      it('detects permissions on pm versions that uses colon separator',
+         () => assertPermissions(fakeAndroidGrantedPermissionsColon));
+
+      it('detects permissions on pm versions that uses comma separator',
+         () => assertPermissions(fakeAndroidGrantedPermissionsComma));
+    });
   });
 
   describe('amForceStopAPK', () => {
