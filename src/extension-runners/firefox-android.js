@@ -423,13 +423,17 @@ export class FirefoxAndroidExtensionRunner {
       selectedAdbDevice,
       selectedFirefoxApk,
       params: {
+        customPrefs,
         firefoxApp,
       },
     } = this;
     // Create the preferences file and the Fennec temporary profile.
     log.debug(`Preparing a temporary profile for ${selectedFirefoxApk}...`);
 
-    const profile = await firefoxApp.createProfile({app: 'fennec'});
+    const profile = await firefoxApp.createProfile({
+      app: 'fennec',
+      customPrefs,
+    });
 
     // Choose a artifacts dir name for the assets pushed to the
     // Android device.

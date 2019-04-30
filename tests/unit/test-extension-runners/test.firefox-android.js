@@ -351,6 +351,31 @@ describe('util/extension-runners/firefox-android', () => {
          );
        });
 
+    it('supports custom prefs via --pref', async () => {
+      const fakeFirefoxApp = {
+        createProfile: sinon.spy(() => {
+          return Promise.resolve({profileDir: '/path/to/fake/profile'});
+        }),
+      };
+      const {params} = prepareSelectedDeviceAndAPKParams({
+        fakeFirefoxApp,
+      });
+
+      // cmd/run.js maps --pref to customPrefs.
+      params.customPrefs = {'some.pref.name': 123};
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+
+      sinon.assert.calledWithMatch(
+        fakeFirefoxApp.createProfile,
+        {
+          app: 'fennec',
+          customPrefs: {'some.pref.name': 123},
+        },
+      );
+    });
+
     it('builds and pushes the extension xpi to the android device',
        async () => {
          const {
