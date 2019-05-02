@@ -57,7 +57,7 @@ function getFakeADBKit(
   const fakeTransfer = new EventEmitter();
   const adbUtilReadAllStub = sinon.stub();
 
-  adbUtilReadAllStub.onCall(0).returns(Promise.resolve(new Buffer('')));
+  adbUtilReadAllStub.onCall(0).returns(Promise.resolve(Buffer.from('')));
 
   const fakeADBClient = {
     listDevices: sinon.spy(() => {
@@ -195,7 +195,7 @@ describe('utils/adb', () => {
         },
         adbkitUtil: {
           readAll: sinon.spy(() => {
-            return Promise.resolve(new Buffer('fake_data_result'));
+            return Promise.resolve(Buffer.from('fake_data_result'));
           }),
         },
       });
@@ -233,7 +233,7 @@ describe('utils/adb', () => {
         },
         adbkitUtil: {
           readAll: sinon.spy(() => {
-            return Promise.resolve(new Buffer(fakeADBPackageList));
+            return Promise.resolve(Buffer.from(fakeADBPackageList));
           }),
         },
       });
@@ -292,9 +292,7 @@ describe('utils/adb', () => {
         },
         adbkitUtil: {
           readAll: sinon.spy(() => {
-            return Promise.resolve(
-              new Buffer('UnexpectedNaN')
-            );
+            return Promise.resolve(Buffer.from('UnexpectedNaN'));
           }),
         },
       });
@@ -320,9 +318,7 @@ describe('utils/adb', () => {
         },
         adbkitUtil: {
           readAll: sinon.spy(() => {
-            return Promise.resolve(
-              new Buffer('21')
-            );
+            return Promise.resolve(Buffer.from('21'));
           }),
         },
       });
@@ -369,10 +365,8 @@ describe('utils/adb', () => {
            },
            adbkitUtil: {
              readAll: sinon.spy(() => {
-               return Promise.resolve(
-                 // No granted permissions in the output.
-                 new Buffer('')
-               );
+               // No granted permissions in the output.
+               return Promise.resolve(Buffer.from(''));
              }),
            },
          });
@@ -407,7 +401,7 @@ describe('utils/adb', () => {
           },
           adbkitUtil: {
             readAll: sinon.spy(() => {
-              return Promise.resolve(new Buffer(fakeAndroidPmDump));
+              return Promise.resolve(Buffer.from(fakeAndroidPmDump));
             }),
           },
         });
@@ -497,7 +491,7 @@ describe('utils/adb', () => {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
-          readAll: sinon.spy(() => Promise.resolve(new Buffer('0\n'))),
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('0\n'))),
         },
       });
       const adbUtils = new ADBUtils({adb});
@@ -522,7 +516,7 @@ describe('utils/adb', () => {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
-          readAll: sinon.spy(() => Promise.resolve(new Buffer('1\n'))),
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('1\n'))),
         },
       });
       const adbUtils = new ADBUtils({adb});
@@ -549,7 +543,7 @@ describe('utils/adb', () => {
              shell: sinon.spy(() => Promise.resolve('')),
            },
            adbkitUtil: {
-             readAll: sinon.spy(() => Promise.resolve(new Buffer('1\n'))),
+             readAll: sinon.spy(() => Promise.resolve(Buffer.from('1\n'))),
            },
          });
          const adbUtils = new ADBUtils({adb});
@@ -594,7 +588,7 @@ describe('utils/adb', () => {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
-          readAll: sinon.spy(() => Promise.resolve(new Buffer('\n'))),
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
         },
       });
       const adbUtils = new ADBUtils({adb});
@@ -707,7 +701,7 @@ describe('utils/adb', () => {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
-          readAll: sinon.spy(() => Promise.resolve(new Buffer('\n'))),
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
         },
       });
       const adbUtils = new ADBUtils({adb});
@@ -761,9 +755,7 @@ describe('utils/adb', () => {
         },
         adbkitUtil: {
           readAll: sinon.spy(() => {
-            return Promise.resolve(
-              new Buffer('')
-            );
+            return Promise.resolve(Buffer.from(''));
           }),
         },
       });
@@ -796,9 +788,7 @@ describe('utils/adb', () => {
         },
         adbkitUtil: {
           readAll: sinon.spy(() => {
-            return Promise.resolve(
-              new Buffer('')
-            );
+            return Promise.resolve(Buffer.from(''));
           }),
         },
       });
@@ -837,7 +827,7 @@ describe('utils/adb', () => {
              readAll: sinon.spy(() => {
                // Fake unexpected multiple RDP socket matches.
                return Promise.resolve(
-                 new Buffer(`${fakeUnixSocketFiles}${fakeUnixSocketFiles}`)
+                 Buffer.from(`${fakeUnixSocketFiles}${fakeUnixSocketFiles}`)
                );
              }),
            },
@@ -867,9 +857,7 @@ describe('utils/adb', () => {
         adbkitUtil: {
           readAll: sinon.spy(() => {
             // Fake unexpected multiple RDP socket matches.
-            return Promise.resolve(
-              new Buffer(fakeUnixSocketFiles)
-            );
+            return Promise.resolve(Buffer.from(fakeUnixSocketFiles));
           }),
         },
       });
