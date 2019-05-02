@@ -5,7 +5,6 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import {withTempDir, TempDir} from '../../../src/util/temp-dir';
-import {makeSureItFails} from '../helpers';
 
 
 describe('util.withTempDir', () => {
@@ -17,36 +16,25 @@ describe('util.withTempDir', () => {
     }
   ));
 
-  it('destroys the directory on completion', () => {
-    return withTempDir(
-      (tmpDir) => Promise.resolve(tmpDir.path()))
-      .then((tmpPath) => fs.stat(tmpPath))
-      .then(makeSureItFails())
-      .catch((error) => {
-        assert.match(error.message, /ENOENT.* stat/);
-      });
+  it('destroys the directory on completion', async () => {
+    const tmpPath = await withTempDir((tmpDir) => {
+      return tmpDir.path();
+    });
+    await assert.isRejected(fs.stat(tmpPath), /ENOENT.* stat/);
   });
 
-  it('destroys the directory on error', () => {
-    var tmpPath;
-    var tmpPathExisted = false;
-    return withTempDir(
-      (tmpDir) => {
-        tmpPath = tmpDir.path();
-        return fs.stat(tmpPath)
-          .then(() => {
-            tmpPathExisted = true;
-            throw new Error('simulated error');
-          });
-      })
-      .then(makeSureItFails())
-      .catch(() => {
-        assert.equal(tmpPathExisted, true);
-        return fs.stat(tmpPath);
-      })
-      .catch((error) => {
-        assert.match(error.message, /ENOENT.* stat/);
-      });
+  it('destroys the directory on error', async () => {
+    let tmpPath;
+    let tmpPathExisted = false;
+
+    await assert.isRejected(withTempDir(async (tmpDir) => {
+      tmpPath = tmpDir.path();
+      tmpPathExisted = Boolean(await fs.stat(tmpPath));
+      throw new Error('simulated error');
+    }), 'simulated error');
+
+    assert.equal(tmpPathExisted, true);
+    await assert.isRejected(fs.stat(tmpPath), /ENOENT.* stat/);
   });
 
 });
