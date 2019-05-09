@@ -23,14 +23,40 @@ if (!shell.test('-f', 'package-lock.json')) {
 }
 
 // Collect audit results and split them into blocking and ignored issues.
+function getNpmAuditJSON() {
+  const res = shell.exec(`${npmCmd} audit --json`, {silent: true});
+  if (res.code !== 0) {
+    try {
+      return JSON.parse(res.stdout);
+    } catch (err) {
+      console.error('Error parsing npm audit output:', res.stdout);
+      throw err;
+    }
+  }
+  // npm audit didn't found any security advisories.
+  return null;
+}
 
-const auditRes = shell.exec(`${npmCmd} audit --json`, {silent: true});
 const blockingIssues = [];
 const ignoredIssues = [];
+let auditReport = getNpmAuditJSON();
 
-if (auditRes.code !== 0) {
+if (auditReport) {
   const exceptions = JSON.parse(shell.cat('.nsprc')).exceptions;
-  const auditReport = JSON.parse(auditRes.stdout);
+  if (auditReport.error) {
+    if (auditReport.error.code === 'ENETUNREACH') {
+      console.log('npm was not able to reach the api endpoint:', auditReport.error.summary);
+      console.log('Retrying...');
+      auditReport = getNpmAuditJSON();
+    }
+
+    // If the error code is not ENETUNREACH or it fails again after a single retry
+    // just log the audit error and exit with error code 2.
+    if (auditReport.error) {
+      console.error('npm audit error:', auditReport.error);
+      process.exit(2);
+    }
+  }
 
   for (const advId of Object.keys(auditReport.advisories)) {
     const adv = auditReport.advisories[advId];
