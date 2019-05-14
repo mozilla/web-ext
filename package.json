@@ -73,7 +73,7 @@
     "stream-to-promise": "2.2.0",
     "strip-json-comments": "3.0.1",
     "tmp": "0.1.0",
-    "update-notifier": "2.5.0",
+    "update-notifier": "3.0.0",
     "watchpack": "1.6.0",
     "yargs": "13.2.2",
     "zip-dir": "1.0.2"
