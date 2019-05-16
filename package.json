@@ -75,7 +75,7 @@
     "tmp": "0.1.0",
     "update-notifier": "3.0.0",
     "watchpack": "1.6.0",
-    "yargs": "13.2.2",
+    "yargs": "13.2.4",
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
