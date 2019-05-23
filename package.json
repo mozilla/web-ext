@@ -100,7 +100,7 @@
     "doctoc": "1.4.0",
     "eslint": "5.16.0",
     "eslint-plugin-async-await": "0.0.0",
-    "eslint-plugin-flowtype": "3.9.0",
+    "eslint-plugin-flowtype": "3.9.1",
     "eslint-plugin-import": "2.17.2",
     "flow-bin": "0.97.0",
     "html-entities": "1.2.1",
