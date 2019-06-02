@@ -301,6 +301,7 @@ describe('util/extension-runners', () => {
         onSourceChange: sinon.spy(() => {}),
         ignoreFiles: ['path/to/file', 'path/to/file2'],
         reloadExtension: sinon.spy(() => Promise.resolve()),
+        reloadDelay: new Number(1000),
       };
       return {
         config,
@@ -389,6 +390,7 @@ describe('util/extension-runners', () => {
         sourceDir: '/path/to/extension/source',
         artifactsDir: '/path/to/web-ext-artifacts/',
         ignoreFiles: ['first/file', 'second/file'],
+        reloadDelay: new Number(1000),
       };
       const options = {
         createWatcher: sinon.spy(() => watcher),

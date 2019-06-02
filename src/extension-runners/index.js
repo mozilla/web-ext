@@ -232,13 +232,14 @@ export type WatcherCreatorParams = {|
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
+  reloadDelay: Number
 |};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    reloadExtension, sourceDir, artifactsDir, ignoreFiles,
+    reloadExtension, sourceDir, artifactsDir, ignoreFiles, reloadDelay,
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
@@ -251,6 +252,7 @@ export function defaultWatcherCreator(
     artifactsDir,
     onChange: () => reloadExtension(sourceDir),
     shouldWatchFile: (file) => fileFilter.wantFile(file),
+    reloadDelay,
   });
 }
 
@@ -263,6 +265,8 @@ export type ReloadStrategyParams = {|
   artifactsDir: string,
   ignoreFiles?: Array<string>,
   noInput?: boolean,
+  reloadDelay: Number
+
 |};
 
 export type ReloadStrategyOptions = {|
@@ -297,6 +301,7 @@ export function defaultReloadStrategy(
     sourceDir,
     artifactsDir,
     ignoreFiles,
+    reloadDelay: new Number(1000),
   });
 
   extensionRunner.registerCleanup(() => {

@@ -473,6 +473,11 @@ Example: $0 --help run.
         demandOption: false,
         type: 'boolean',
       },
+      'reload-delay': {
+        describe: 'Delay the reload of extension when source files change',
+        demandOption: false,
+        type: 'number',
+      },
       'pre-install': {
         describe: 'Pre-install the extension into the profile before ' +
                   'startup. This is only needed to support older versions ' +

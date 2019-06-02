@@ -29,6 +29,7 @@ function prepareRun(fakeInstallResult) {
     noReload: true,
     keepProfileChanges: false,
     browserConsole: false,
+    reloadDelay: new Number(1000),
   };
   const options = {
     buildExtension: sinon.spy(() => {}),
@@ -185,6 +186,13 @@ describe('run', () => {
 
     await cmd.run({noReload: true});
     assert.equal(reloadStrategy.called, false);
+  });
+
+  it('Reload Delay', async () => {
+    const cmd = prepareRun();
+    const {reloadDelay} = cmd.argv;
+
+    assert.equal(typeof(reloadDelay), typeof(new Number()));
   });
 
   it('allows to replace manifest parser', async () => {

@@ -32,6 +32,7 @@ export type CmdRunParams = {|
   keepProfileChanges: boolean,
   noInput?: boolean,
   noReload: boolean,
+  reloadDelay: Number,
   preInstall: boolean,
   sourceDir: string,
   startUrl?: Array<string>,
@@ -68,6 +69,7 @@ export default async function run(
     ignoreFiles,
     noInput = false,
     noReload = false,
+    reloadDelay = new Number(1000),
     preInstall = false,
     sourceDir,
     startUrl,
@@ -195,6 +197,7 @@ export default async function run(
       artifactsDir,
       ignoreFiles,
       noInput,
+      reloadDelay,
     });
   }
 
