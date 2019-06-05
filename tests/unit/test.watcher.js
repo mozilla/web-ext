@@ -31,7 +31,7 @@ describe('watcher', () => {
             artifactsDir,
             onChange,
             shouldWatchFile: () => true,
-            reloadDelay: new Number(1000),
+            reloadDelay: 1000,
           });
         })
         .then((watcher) => {

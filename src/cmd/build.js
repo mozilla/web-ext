@@ -242,7 +242,7 @@ export default async function build(
           throw error;
         });
       },
-      reloadDelay: new Number(1000),
+      reloadDelay: 1000,
       shouldWatchFile: (...args) => fileFilter.wantFile(...args),
     });
   }

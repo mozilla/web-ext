@@ -29,7 +29,7 @@ function prepareRun(fakeInstallResult) {
     noReload: true,
     keepProfileChanges: false,
     browserConsole: false,
-    reloadDelay: new Number(1000),
+    reloadDelay,
   };
   const options = {
     buildExtension: sinon.spy(() => {}),
@@ -188,11 +188,12 @@ describe('run', () => {
     assert.equal(reloadStrategy.called, false);
   });
 
-  it('Reload Delay', async () => {
+  it('allow web-ext to wait until a WebExtension build has completed ' +
+     'the building process', async () => {
     const cmd = prepareRun();
     const {reloadDelay} = cmd.argv;
 
-    assert.equal(typeof(reloadDelay), typeof(new Number()));
+    assert.equal(typeof(reloadDelay), number);
   });
 
   it('allows to replace manifest parser', async () => {

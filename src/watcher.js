@@ -19,7 +19,7 @@ export type OnSourceChangeParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile: ShouldWatchFn,
-  reloadDelay: Number
+  reloadDelay: number,
 |};
 
 // NOTE: this fix an issue with flow and default exports (which currently
@@ -39,8 +39,8 @@ export default function onSourceChange({
 
   const executeImmediately = true;
 
-  if (reloadDelay) {
-    onChange = debounce(onChange, reloadDelay, executeImmediately);
+  if (reloadDelay === undefined) {
+    onChange = debounce(onChange, reloadDelay);
   } else {
     onChange = debounce(onChange, 1000, executeImmediately);
   }

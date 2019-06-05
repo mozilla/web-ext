@@ -232,7 +232,7 @@ export type WatcherCreatorParams = {|
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
   createFileFilter?: FileFilterCreatorFn,
-  reloadDelay: Number
+  reloadDelay: number,
 |};
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
@@ -265,7 +265,7 @@ export type ReloadStrategyParams = {|
   artifactsDir: string,
   ignoreFiles?: Array<string>,
   noInput?: boolean,
-  reloadDelay: Number
+  reloadDelay: number,
 
 |};
 
@@ -301,7 +301,6 @@ export function defaultReloadStrategy(
     sourceDir,
     artifactsDir,
     ignoreFiles,
-    reloadDelay: new Number(1000),
   });
 
   extensionRunner.registerCleanup(() => {
