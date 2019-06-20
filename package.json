@@ -109,7 +109,7 @@
     "prettyjson": "1.2.1",
     "shelljs": "0.8.3",
     "sinon": "7.3.2",
-    "webpack": "4.32.2",
+    "webpack": "4.35.0",
     "yauzl": "2.10.0"
   },
   "author": "Kumar McMillan",
