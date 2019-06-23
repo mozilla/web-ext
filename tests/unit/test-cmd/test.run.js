@@ -29,7 +29,6 @@ function prepareRun(fakeInstallResult) {
     noReload: true,
     keepProfileChanges: false,
     browserConsole: false,
-    reloadDelay,
   };
   const options = {
     buildExtension: sinon.spy(() => {}),
@@ -191,9 +190,9 @@ describe('run', () => {
   it('allow web-ext to wait until a WebExtension build has completed ' +
      'the building process', async () => {
     const cmd = prepareRun();
-    const {reloadDelay} = cmd.argv;
+    const {reloadStrategy} = cmd.options;
 
-    assert.equal(typeof(reloadDelay), number);
+    assert.equal(reloadStrategy, {noInput: false});
   });
 
   it('allows to replace manifest parser', async () => {

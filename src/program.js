@@ -474,8 +474,9 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'reload-delay': {
-        describe: 'Allow web-ext to wait until a WebExtension build has ' +
-                  'completed the building process',
+        describe: 'Allow web-ext to wait for a certain period of time ' +
+                  ' duration that was specified, before executing a reload' +
+                  ' command.',
         demandOption: false,
         type: 'number',
       },
