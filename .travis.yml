@@ -56,10 +56,13 @@ script:
 ## (See #1082 for rationale).
 - TEST_PRODUCTION_MODE=1 npm run test-functional
 
+## run functional test suite in "npm legacy bundling mode"
+## (See #1639 for rationale).
+- TEST_PRODUCTION_MODE=1 TEST_LEGACY_BUNDLING=1 npm run test-functional
+
 ## NOTE: remove the custom python path from the npm config, and also
 ## remove production package.json.
 - npm config delete python
-- rm artifacts/production/package.json
 
 after_script: npm run publish-coverage
 
