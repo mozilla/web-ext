@@ -158,22 +158,15 @@ export function makeSureItFails(): Function {
 export function fake<T>(
   original: Object, methods: Object = {}, skipProperties: Array<string> = []
 ): T {
-  var stub = {};
+  const stub = {};
 
   // Provide stubs for all original members:
-  var props = [];
-  var obj = original;
-  while (obj) {
-    props = props.concat(Object.getOwnPropertyNames(obj));
-    obj = Object.getPrototypeOf(obj);
-  }
+  const proto = Object.getPrototypeOf(original);
+  const props = Object.getOwnPropertyNames(original)
+    .concat(Object.getOwnPropertyNames(proto))
+    .filter((key) => !skipProperties.includes(key));
 
-  var proto = Object.getPrototypeOf(original);
   for (const key of props) {
-    if (skipProperties.indexOf(key) >= 0 ||
-       (!original.hasOwnProperty(key) && !proto.hasOwnProperty(key))) {
-      continue;
-    }
     const definition = original[key] || proto[key];
     if (typeof definition === 'function') {
       stub[key] = () => {
