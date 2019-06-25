@@ -148,7 +148,7 @@ export async function defaultPackageCreator(
   const extensionPath = path.join(artifactsDir, packageName);
 
   // Added 'wx' flags to avoid overwriting of existing package.
-  let stream = createWriteStream(extensionPath, {flags: 'wx'});
+  const stream = createWriteStream(extensionPath, {flags: 'wx'});
 
   stream.write(buffer, () => stream.end());
 
@@ -164,9 +164,9 @@ export async function defaultPackageCreator(
         'Use --overwrite-dest to enable overwriting.');
     }
     log.info(`Destination exists, overwriting: ${extensionPath}`);
-    stream = createWriteStream(extensionPath);
-    stream.write(buffer, () => stream.end());
-    await eventToPromise(stream, 'close');
+    const overwriteStream = createWriteStream(extensionPath);
+    overwriteStream.write(buffer, () => overwriteStream.end());
+    await eventToPromise(overwriteStream, 'close');
   }
 
   if (showReadyMessage) {
