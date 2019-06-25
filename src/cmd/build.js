@@ -131,10 +131,12 @@ export async function defaultPackageCreator(
 
   let extensionName: string = manifestData.name;
 
-  if (manifestData.default_locale) {
+  let {default_locale} = manifestData;
+  if (default_locale) {
+    default_locale = default_locale.replace(/-/g, '_');
     const messageFile = path.join(
       sourceDir, '_locales',
-      manifestData.default_locale, 'messages.json'
+      default_locale, 'messages.json'
     );
     log.debug('Manifest declared default_locale, localizing extension name');
     extensionName = await getDefaultLocalizedName({
