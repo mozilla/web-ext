@@ -442,6 +442,7 @@ Example: $0 --help run.
         default: 'firefox-desktop',
         demandOption: false,
         type: 'array',
+        choices: ['firefox-desktop', 'firefox-android'],
       },
       'firefox': {
         alias: ['f', 'firefox-binary'],
