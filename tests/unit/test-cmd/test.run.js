@@ -61,6 +61,7 @@ function prepareRun(fakeInstallResult) {
 describe('run', () => {
   let androidRunnerStub: sinon.SinonStub;
   let desktopRunnerStub: sinon.SinonStub;
+  let chromiumRunnerStub: sinon.SinonStub;
 
   beforeEach(() => {
     androidRunnerStub = sinon.stub(
@@ -72,12 +73,19 @@ describe('run', () => {
       // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
       require('../../../src/extension-runners/firefox-desktop'),
       'FirefoxDesktopExtensionRunner');
+
+    chromiumRunnerStub = sinon.stub(
+      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
+      require('../../../src/extension-runners/chromium'),
+      'ChromiumExtensionRunner');
   });
   afterEach(() => {
     androidRunnerStub.restore();
     androidRunnerStub = undefined;
     desktopRunnerStub.restore();
     desktopRunnerStub = undefined;
+    chromiumRunnerStub.restore();
+    chromiumRunnerStub = undefined;
   });
 
   it('passes a custom Firefox binary when specified', async () => {
@@ -224,6 +232,58 @@ describe('run', () => {
 
        sinon.assert.calledOnce(androidRunnerStub);
        sinon.assert.notCalled(desktopRunnerStub);
+     });
+
+  it('creates a Chromium runner if "chromium" is in target',
+     async () => {
+       const cmd = prepareRun();
+       await cmd.run({target: ['chromium']});
+
+       sinon.assert.calledOnce(chromiumRunnerStub);
+       sinon.assert.notCalled(androidRunnerStub);
+       sinon.assert.notCalled(desktopRunnerStub);
+     });
+
+  it('provides a chromiumBinary option to the Chromium runner',
+     async () => {
+       const fakeChromiumBinary = '/bin/fake-chrome/binary';
+       const cmd = prepareRun();
+       await cmd.run({
+         target: ['chromium'],
+         chromiumBinary: fakeChromiumBinary,
+       });
+
+       sinon.assert.calledWithMatch(
+         chromiumRunnerStub,
+         {
+           chromiumBinary: sinon.match.string,
+         }
+       );
+
+       const {chromiumBinary} = chromiumRunnerStub.firstCall.args[0];
+       assert.equal(chromiumBinary, fakeChromiumBinary,
+                    'Got the expected chromiumBinary option');
+     });
+
+  it('provides a chromiumProfile option to the Chromium runner',
+     async () => {
+       const fakeChromiumProfile = '/fake/chrome/profile';
+       const cmd = prepareRun();
+       await cmd.run({
+         target: ['chromium'],
+         chromiumProfile: fakeChromiumProfile,
+       });
+
+       sinon.assert.calledWithMatch(
+         chromiumRunnerStub,
+         {
+           chromiumProfile: sinon.match.string,
+         }
+       );
+
+       const {chromiumProfile} = chromiumRunnerStub.firstCall.args[0];
+       assert.equal(chromiumProfile, fakeChromiumProfile,
+                    'Got the expected chromiumProfile option');
      });
 
   it('creates multiple extension runners', async () => {

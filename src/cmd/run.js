@@ -44,6 +44,10 @@ export type CmdRunParams = {|
   adbPort?: string,
   adbDevice?: string,
   firefoxApk?: string,
+
+  // Chromium Desktop CLI options.
+  chromiumBinary?: string,
+  chromiumProfile?: string,
 |};
 
 export type CmdRunOptions = {|
@@ -72,13 +76,16 @@ export default async function run(
     sourceDir,
     startUrl,
     target,
+    args,
     // Android CLI options.
     adbBin,
     adbHost,
     adbPort,
     adbDevice,
     firefoxApk,
-    args,
+    // Chromium CLI options.
+    chromiumBinary,
+    chromiumProfile,
   }: CmdRunParams,
   {
     buildExtension = defaultBuildExtension,
@@ -175,6 +182,20 @@ export default async function run(
       params: firefoxAndroidRunnerParams,
     });
     runners.push(firefoxAndroidRunner);
+  }
+
+  if (target && target.includes('chromium')) {
+    const chromiumRunnerParams = {
+      ...commonRunnerParams,
+      chromiumBinary,
+      chromiumProfile,
+    };
+
+    const chromiumRunner = await createExtensionRunner({
+      target: 'chromium',
+      params: chromiumRunnerParams,
+    });
+    runners.push(chromiumRunner);
   }
 
   const extensionRunner = new MultiExtensionRunner({

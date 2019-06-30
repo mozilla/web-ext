@@ -27,6 +27,7 @@ export type ExtensionManifest = {|
   version: string,
   default_locale?: string,
   applications?: ExtensionManifestApplications,
+  permissions?: Array<string>,
 |};
 
 export default async function getValidatedManifest(

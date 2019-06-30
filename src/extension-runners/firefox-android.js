@@ -592,8 +592,7 @@ export class FirefoxAndroidExtensionRunner {
       // $FLOW_FIXME: flow has his own opinions on this method signature.
       srv.listen(0, () => {
         const freeTcpPort = srv.address().port;
-        srv.close();
-        resolve(freeTcpPort);
+        srv.close(() => resolve(freeTcpPort));
       });
     });
   }
