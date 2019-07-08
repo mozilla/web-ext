@@ -166,6 +166,12 @@ export class Program {
 
     const argv = this.yargs.argv;
 
+    // Replacement for the "requiresArg: true" parameter until the following bug
+    // is fixed: https://github.com/yargs/yargs/issues/1098
+    if (argv.ignoreFiles && !argv.ignoreFiles.length) {
+      throw new UsageError('Not enough arguments following: ignore-files');
+    }
+
     const cmd = argv._[0];
 
     const version = getVersion(this.absolutePackageDir);
@@ -348,7 +354,10 @@ Example: $0 --help run.
                 'ignored. (Example: --ignore-files=path/to/first.js ' +
                 'path/to/second.js "**/*.log")',
       demandOption: false,
-      requiresArg: true,
+      // The following option prevents yargs>=11 from parsing multiple values,
+      // so the minimum value requirement is enforced in execute instead.
+      // Upstream bug: https://github.com/yargs/yargs/issues/1098
+      // requiresArg: true,
       type: 'array',
     },
     'no-input': {
