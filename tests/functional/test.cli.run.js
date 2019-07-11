@@ -49,30 +49,18 @@ describe('web-ext run', () => {
          });
        }));
 
-  it('should not accept: --target INVALIDTARGET',
-     () => withTempAddonDir(
-       {addonPath: minimalAddonPath},
-       (srcDir) => {
-         const argv = [
-           'run',
-           '--source-dir', srcDir,
-           '--target', 'firefox-desktop',
-           '--target', 'not-supported',
-           '--target', 'firefox-android',
-         ];
-         const spawnOptions = {
-           env: {
-             PATH: process.env.PATH,
-             addonPath: srcDir,
-           },
-         };
+  it('should not accept: --target INVALIDTARGET', async () => {
+    const argv = [
+      'run',
+      '--target', 'firefox-desktop',
+      '--target', 'not-supported',
+      '--target', 'firefox-android',
+    ];
 
-         const cmd = execWebExt(argv, spawnOptions);
-
-         return cmd.waitForExit.then(({exitCode, stderr}) => {
-           assert.notEqual(exitCode, 0);
-           assert.match(stderr, /Invalid values/);
-           assert.match(stderr, /Given: "not-supported"/);
-         });
-       }));
+    return execWebExt(argv, {}).waitForExit.then(({exitCode, stderr}) => {
+      assert.notEqual(exitCode, 0);
+      assert.match(stderr, /Invalid values/);
+      assert.match(stderr, /Given: "not-supported"/);
+    });
+  });
 });
