@@ -1,5 +1,6 @@
 /* @flow */
 import {describe, it} from 'mocha';
+import {assert} from 'chai';
 
 import {
   minimalAddonPath, fakeFirefoxPath,
@@ -45,6 +46,33 @@ describe('web-ext run', () => {
                stderr,
              });
            }
+         });
+       }));
+
+  it('should not accept: --target INVALIDTARGET',
+     () => withTempAddonDir(
+       {addonPath: minimalAddonPath},
+       (srcDir) => {
+         const argv = [
+           'run',
+           '--source-dir', srcDir,
+           '--target', 'firefox-desktop',
+           '--target', 'not-supported',
+           '--target', 'firefox-android',
+         ];
+         const spawnOptions = {
+           env: {
+             PATH: process.env.PATH,
+             addonPath: srcDir,
+           },
+         };
+
+         const cmd = execWebExt(argv, spawnOptions);
+
+         return cmd.waitForExit.then(({exitCode, stderr}) => {
+           assert.notEqual(exitCode, 0);
+           assert.match(stderr, /Invalid values/);
+           assert.match(stderr, /Given: "not-supported"/);
          });
        }));
 });

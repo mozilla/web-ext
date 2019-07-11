@@ -234,14 +234,6 @@ describe('run', () => {
     sinon.assert.calledOnce(desktopRunnerStub);
   });
 
-  it('will not run extension runner if target is not supported', async () => {
-    const cmd = prepareRun();
-    await cmd.run({target: ['not-supported']});
-
-    sinon.assert.notCalled(androidRunnerStub);
-    sinon.assert.notCalled(desktopRunnerStub);
-  });
-
   it('provides a buildSourceDir method to the Firefox Android runner',
      async () => {
        const cmd = prepareRun();

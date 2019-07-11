@@ -436,8 +436,8 @@ Example: $0 --help run.
     .command('run', 'Run the extension', commands.run, {
       'target': {
         alias: 't',
-        describe: 'The extensions runners to enable (e.g. firefox-desktop, ' +
-                  'firefox-android). Specify this option multiple times to ' +
+        describe: 'The extensions runners to enable. ' +
+                  'Specify this option multiple times to ' +
                   'run against multiple targets.',
         default: 'firefox-desktop',
         demandOption: false,
