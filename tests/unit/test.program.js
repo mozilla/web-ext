@@ -709,6 +709,30 @@ describe('program.main', () => {
 
     sinon.assert.called(logStream.makeVerbose);
   });
+
+  it('requires a parameter after --ignore-files', async () => {
+    const fakeCommands = fake(commands);
+    return execProgram(['build', '--ignore-files'], {commands: fakeCommands})
+      .then(makeSureItFails())
+      .catch((error) => {
+        assert.match(
+          error.message, /Not enough arguments following: ignore-files/);
+      });
+  });
+
+  it('supports multiple parameters after --ignore-files', async () => {
+    const fakeCommands = fake(commands, {
+      build: () => Promise.resolve(),
+    });
+    return execProgram(
+      ['build', '--ignore-files', 'f1', 'f2', '-a', 'xxx', '-i', 'f4', 'f3'],
+      {commands: fakeCommands})
+      .then(() => {
+        const options = fakeCommands.build.firstCall.args[0];
+        assert.deepEqual(options.ignoreFiles, ['f1', 'f2', 'f4', 'f3']);
+        assert.equal(options.artifactsDir, 'xxx');
+      });
+  });
 });
 
 describe('program.defaultVersionGetter', () => {
