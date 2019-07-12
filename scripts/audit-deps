@@ -8,6 +8,7 @@
 // (See https://github.com/npm/npm/issues/20565).
 
 const shell = require('shelljs');
+const stripJsonComments = require('strip-json-comments');
 
 const npmVersion = parseInt(shell.exec('npm --version', {silent: true}).stdout.split('.')[0], 10);
 const npmCmd = npmVersion >= 6 ? 'npm' : 'npx npm@latest';
@@ -42,7 +43,8 @@ const ignoredIssues = [];
 let auditReport = getNpmAuditJSON();
 
 if (auditReport) {
-  const exceptions = JSON.parse(shell.cat('.nsprc')).exceptions;
+  const {exceptions} = JSON.parse(stripJsonComments(shell.cat('.nsprc')));
+
   if (auditReport.error) {
     if (auditReport.error.code === 'ENETUNREACH') {
       console.log('npm was not able to reach the api endpoint:', auditReport.error.summary);
