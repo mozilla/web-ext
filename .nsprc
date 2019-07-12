@@ -1,4 +1,9 @@
 {
   "exceptions": [
+    // Temporarily ignore set-value and mixin-deep advisories,
+    // related to watchpak and webpack dependencies
+    // (https://github.com/mozilla/web-ext/issues/1656).
+    "https://npmjs.com/advisories/1012",
+    "https://npmjs.com/advisories/1013"
   ]
 }
