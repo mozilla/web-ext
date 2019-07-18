@@ -59,7 +59,7 @@
     "es6-error": "4.1.1",
     "event-to-promise": "0.8.0",
     "firefox-profile": "1.2.0",
-    "fx-runner": "1.0.10",
+    "fx-runner": "1.0.11",
     "git-rev-sync": "1.12.0",
     "mkdirp": "0.5.1",
     "multimatch": "4.0.0",
