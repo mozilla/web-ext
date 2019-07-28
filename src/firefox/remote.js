@@ -1,4 +1,6 @@
 /* @flow */
+import net from 'net';
+
 import defaultFirefoxConnector from '@cliqz-oss/node-firefox-connect';
 // RemoteFirefox types and implementation
 import type FirefoxClient from '@cliqz-oss/firefox-client';
@@ -248,4 +250,15 @@ export async function connectWithMaxRetries(
 
   log.debug('Connecting to the remote Firefox debugger');
   return establishConnection();
+}
+
+export function findFreeTcpPort(): Promise<number> {
+  return new Promise((resolve) => {
+    const srv = net.createServer();
+    // $FLOW_FIXME: flow has his own opinions on this method signature.
+    srv.listen(0, () => {
+      const freeTcpPort = srv.address().port;
+      srv.close(() => resolve(freeTcpPort));
+    });
+  });
 }

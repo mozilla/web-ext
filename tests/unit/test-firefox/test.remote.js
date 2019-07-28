@@ -13,6 +13,7 @@ import {
   connect as defaultConnector,
   connectWithMaxRetries,
   RemoteFirefox,
+  findFreeTcpPort,
 } from '../../../src/firefox/remote';
 import {
   fakeFirefoxClient,
@@ -373,6 +374,22 @@ describe('firefox.remote', () => {
         });
     });
 
+  });
+
+  describe('defaultRemotePortFinder', () => {
+
+    function findRemotePort() {
+      return findFreeTcpPort();
+    }
+
+    it('resolves to an open port', () => {
+      sinon.spy(
+        () => Promise.reject(new TCPConnectError()));
+      return findRemotePort()
+        .then((port) => {
+          assert.isNumber(port);
+        });
+    });
   });
 
 });

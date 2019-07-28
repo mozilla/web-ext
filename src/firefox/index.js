@@ -13,10 +13,9 @@ import isDirectory from '../util/is-directory';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors';
 import {getPrefs as defaultPrefGetter} from './preferences';
 import {getManifestId} from '../util/manifest';
+import {findFreeTcpPort as defaultRemotePortFinder} from './remote';
 import {createLogger} from '../util/logger';
-import {connect as defaultFirefoxConnector, REMOTE_PORT} from './remote';
 // Import flow types
-import type {FirefoxConnectorFn} from './remote';
 import type {
   PreferencesAppName,
   PreferencesGetterFn,
@@ -36,48 +35,9 @@ export const defaultFirefoxEnv = {
 
 // defaultRemotePortFinder types and implementation.
 
-export type RemotePortFinderParams = {|
-  portToTry?: number,
-  retriesLeft?: number,
-  connectToFirefox?: FirefoxConnectorFn,
-|};
 
 export type RemotePortFinderFn =
-  (params?: RemotePortFinderParams) => Promise<number>;
-
-export async function defaultRemotePortFinder(
-  {
-    portToTry = REMOTE_PORT,
-    retriesLeft = 10,
-    connectToFirefox = defaultFirefoxConnector,
-  }: RemotePortFinderParams = {}
-): Promise<number> {
-  log.debug(`Checking if remote Firefox port ${portToTry} is available`);
-
-  let client;
-
-  while (retriesLeft >= 0) {
-    try {
-      client = await connectToFirefox(portToTry);
-      log.debug(`Remote Firefox port ${portToTry} is in use ` +
-                `(retries remaining: ${retriesLeft})`);
-    } catch (error) {
-      if (isErrorWithCode('ECONNREFUSED', error)) {
-        // The connection was refused so this port is good to use.
-        return portToTry;
-      }
-
-      throw error;
-    }
-
-    client.disconnect();
-    portToTry++;
-    retriesLeft--;
-  }
-
-  throw new WebExtError('Too many retries on port search');
-}
-
+  () => Promise<number>;
 
 // Declare the needed 'fx-runner' module flow types.
 

@@ -14,14 +14,10 @@ import {withTempDir} from '../../../src/util/temp-dir';
 import {
   basicManifest,
   fixturePath,
-  fake,
   makeSureItFails,
   manifestWithoutApps,
-  TCPConnectError,
   ErrorWithCode,
 } from '../helpers';
-import {RemoteFirefox} from '../../../src/firefox/remote';
-import type {RemotePortFinderParams} from '../../../src/firefox/index';
 
 const {defaultFirefoxEnv} = firefox;
 
@@ -975,76 +971,4 @@ describe('firefox', () => {
 
   });
 
-  describe('defaultRemotePortFinder', () => {
-
-    function findRemotePort({...args}: RemotePortFinderParams = {}) {
-      return firefox.defaultRemotePortFinder({...args});
-    }
-
-    it('resolves to an open port', () => {
-      const connectToFirefox = sinon.spy(
-        () => Promise.reject(new TCPConnectError()));
-      return findRemotePort({connectToFirefox})
-        .then((port) => {
-          assert.isNumber(port);
-        });
-    });
-
-    it('returns a port on first try', () => {
-      const connectToFirefox = sinon.spy(() => new Promise(
-        (resolve, reject) => {
-          reject(
-            new TCPConnectError('first call connection fails - port is free')
-          );
-        }));
-      return findRemotePort({connectToFirefox, retriesLeft: 2})
-        .then((port) => {
-          sinon.assert.calledOnce(connectToFirefox);
-          assert.isNumber(port);
-        });
-    });
-
-    it('cancels search after too many fails', () => {
-      const client = fake(RemoteFirefox.prototype);
-      const connectToFirefox = sinon.spy(() => new Promise(
-        (resolve) => resolve(client)));
-      return findRemotePort({connectToFirefox, retriesLeft: 2})
-        .catch((err) => {
-          assert.equal(err, 'WebExtError: Too many retries on port search');
-          sinon.assert.calledThrice(connectToFirefox);
-        });
-    });
-
-    it('retries port discovery after first failure', () => {
-      const client = fake(RemoteFirefox.prototype);
-      let callCount = 0;
-      const connectToFirefox = sinon.spy(() => {
-        callCount++;
-        return new Promise((resolve, reject) => {
-          if (callCount === 2) {
-            reject(new TCPConnectError('port is free'));
-          } else {
-            resolve(client);
-          }
-        });
-      });
-      return findRemotePort({connectToFirefox, retriesLeft: 2})
-        .then((port) => {
-          assert.isNumber(port);
-          sinon.assert.calledTwice(connectToFirefox);
-        });
-    });
-
-    it('throws on unexpected errors', async () => {
-      const connectToFirefox = sinon.spy(async () => {
-        throw new Error('Unexpected connect error');
-      });
-
-      await assert.isRejected(findRemotePort({connectToFirefox}),
-                              /Unexpected connect error/);
-
-      sinon.assert.calledOnce(connectToFirefox);
-    });
-
-  });
 });

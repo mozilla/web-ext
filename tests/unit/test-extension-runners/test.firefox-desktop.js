@@ -102,7 +102,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     const runnerInstance = new FirefoxDesktopExtensionRunner(params);
     await runnerInstance.run();
 
-    assert.ok(runnerInstance.getName(), 'Firefox Desktop');
+    assert.equal(runnerInstance.getName(), 'Firefox Desktop');
     sinon.assert.calledOnce(remoteFirefox.installTemporaryAddon);
     sinon.assert.calledWithMatch(remoteFirefox.installTemporaryAddon,
                                  params.extensions[0].sourceDir);

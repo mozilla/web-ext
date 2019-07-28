@@ -53,8 +53,9 @@ describe('web-ext run', () => {
     const argv = [
       'run',
       '--target', 'firefox-desktop',
-      '--target', 'not-supported',
       '--target', 'firefox-android',
+      '--target', 'chromium',
+      '--target', 'not-supported',
     ];
 
     return execWebExt(argv, {}).waitForExit.then(({exitCode, stderr}) => {
