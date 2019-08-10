@@ -1,5 +1,5 @@
 /* @flow */
-import opn from 'opn';
+import open from 'open';
 
 import {createLogger} from '../util/logger';
 
@@ -11,14 +11,14 @@ export type DocsParams = {
 }
 
 export type DocsOptions = {
-  openUrl?: typeof opn,
+  openUrl?: typeof open,
 }
 
 export const url = 'https://developer.mozilla.org/en-US/Add-ons' +
   '/WebExtensions/Getting_started_with_web-ext';
 
 export default function docs(
-  params: DocsParams, {openUrl = opn}: DocsOptions = {}
+  params: DocsParams, {openUrl = open}: DocsOptions = {}
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     openUrl(url, (error) => {
