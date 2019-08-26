@@ -175,20 +175,20 @@ export class ChromiumExtensionRunner {
 
     const wssInfo = this.wss.address();
 
-    const bgPage = `(function bgPage(webExtParams) {
+    const bgPage = `(function bgPage() {
       async function getAllDevExtensions() {
-        const [managerExtension, allExtensions] = await Promise.all([
-          new Promise(r => chrome.management.getSelf(r)),
-          new Promise(r => chrome.management.getAll(r)),
-        ]);
+        const allExtensions = await new Promise(
+          r => chrome.management.getAll(r));
 
         return allExtensions.filter((extension) => {
           return extension.installType === "development" &&
-            extension.id !== managerExtension.id;
+            extension.id !== chrome.runtime.id;
         });
       }
 
       const setEnabled = (extensionId, value) =>
+        chrome.runtime.id == extensionId ?
+        new Promise.resolve() :
         new Promise(r => chrome.management.setEnabled(extensionId, value, r));
 
       async function reloadExtension(extensionId) {
