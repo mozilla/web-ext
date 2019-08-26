@@ -13,6 +13,7 @@ import mkdirp from 'mkdirp';
 import {
   LaunchedChrome,
   launch as defaultChromiumLaunch,
+  default as ChromeLauncher,
 } from 'chrome-launcher';
 import WebSocket from 'ws';
 
@@ -103,7 +104,10 @@ export class ChromiumExtensionRunner {
       log.debug(`(chromiumBinary: ${chromiumBinary})`);
     }
 
-    const chromeFlags = [`--load-extension=${extensions}`];
+    const chromeFlags = ChromeLauncher.defaultFlags()
+      .filter((flag) => flag !== '--disable-extensions');
+
+    chromeFlags.push(`--load-extension=${extensions}`);
 
     if (this.params.args) {
       chromeFlags.push(...this.params.args);
@@ -126,6 +130,8 @@ export class ChromiumExtensionRunner {
       chromePath: chromiumBinary,
       chromeFlags,
       startingUrl,
+      // Ignore default flags to keep the extension enabled.
+      ignoreDefaultFlags: true,
     });
 
     this.chromiumInstance.process.once('close', () => {

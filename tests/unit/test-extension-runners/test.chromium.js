@@ -7,6 +7,7 @@ import {describe, it} from 'mocha';
 import deepcopy from 'deepcopy';
 import fs from 'mz/fs';
 import sinon from 'sinon';
+import ChromeLauncher from 'chrome-launcher';
 import WebSocket from 'ws';
 
 import getValidatedManifest from '../../../src/util/manifest';
@@ -23,6 +24,9 @@ import type {
 import {
   consoleStream, // instance is imported to inspect logged messages
 } from '../../../src/util/logger';
+
+const defaultChromeFlags = ChromeLauncher.defaultFlags()
+  .filter((flag) => flag !== '--disable-extensions');
 
 function prepareExtensionRunnerParams({params} = {}) {
   const fakeChromeInstance = {
@@ -59,9 +63,11 @@ describe('util/extension-runners/chromium', async () => {
 
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
+        ...defaultChromeFlags,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
       ],
       startingUrl: undefined,
@@ -219,9 +225,11 @@ describe('util/extension-runners/chromium', async () => {
 
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
       enableExtensions: true,
       chromePath: '/my/custom/chrome-bin',
       chromeFlags: [
+        ...defaultChromeFlags,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
       ],
       startingUrl: undefined,
@@ -242,9 +250,11 @@ describe('util/extension-runners/chromium', async () => {
 
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
+        ...defaultChromeFlags,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         'url2',
         'url3',
@@ -270,9 +280,11 @@ describe('util/extension-runners/chromium', async () => {
 
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
+        ...defaultChromeFlags,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         '--arg1',
         'arg2',
@@ -300,9 +312,11 @@ describe('util/extension-runners/chromium', async () => {
 
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
+        ...defaultChromeFlags,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         '--user-data-dir=/fake/chrome/profile',
       ],
