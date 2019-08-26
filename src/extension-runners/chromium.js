@@ -51,6 +51,7 @@ export class ChromiumExtensionRunner {
   reloadManagerExtension: string;
   wss: WebSocket.Server;
   exiting: boolean;
+  _promiseSetupDone: ?Promise<void>;
 
   constructor(params: ChromiumExtensionRunnerParams) {
     const {
@@ -70,10 +71,18 @@ export class ChromiumExtensionRunner {
     return 'Chromium';
   }
 
+  async run(): Promise<void> {
+    if (!this._promiseSetupDone) {
+      this._promiseSetupDone = this.setupInstance();
+    }
+
+    await this._promiseSetupDone;
+  }
+
   /**
    * Setup the Chromium Profile and run a Chromium instance.
    */
-  async run(): Promise<void> {
+  async setupInstance(): Promise<void> {
     // Start a websocket server on a free localhost TCP port.
     this.wss = new WebSocket.Server({
       port: 0,
@@ -268,6 +277,15 @@ export class ChromiumExtensionRunner {
    */
   async exit(): Promise<void> {
     this.exiting = true;
+
+    // Wait for the setup to complete if the extension runner is already
+    // being started.
+    if (this._promiseSetupDone) {
+      // Ignore initialization errors if any.
+      await this._promiseSetupDone.catch((err) => {
+        log.debug(`ignored setup error on chromium runner shutdown: ${err}`);
+      });
+    }
 
     if (this.chromiumInstance) {
       await this.chromiumInstance.kill();

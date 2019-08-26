@@ -213,6 +213,45 @@ describe('util/extension-runners/chromium', async () => {
        sinon.assert.calledOnce(runnerInstance.exit);
      });
 
+  it('awaits for the async setup to complete before exiting', async () => {
+    const {params} = prepareExtensionRunnerParams({
+      params: {
+        chromiumLaunch: sinon.spy(async () => {
+          throw new Error('Fake chromiumLaunch ERROR');
+        }),
+      },
+    });
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    assert.equal(runnerInstance.getName(), 'Chromium');
+
+    await assert.isRejected(
+      runnerInstance.run(),
+      /Fake chromiumLaunch ERROR/
+    );
+
+    // Clear console stream from previous messages and start recording
+    consoleStream.stopCapturing();
+    consoleStream.flushCapturedLogs();
+    consoleStream.startCapturing();
+    // Make verbose to capture debug logs.
+    consoleStream.makeVerbose();
+
+    // Call exit and then verify that it caught the chromiumLaunch rejection
+    // and logged it as a debug log.
+    await runnerInstance.exit();
+
+    // Retrieve captures logs and stop capturing.
+    const {capturedMessages} = consoleStream;
+    consoleStream.stopCapturing();
+
+    assert.ok(capturedMessages.some(
+      (message) => (
+        message.match('[debug]') &&
+        message.match('ignored setup error on chromium runner shutdown') &&
+        message.match('Fake chromiumLaunch ERROR')
+      )));
+  });
+
   it('does use a custom chromium binary when passed', async () => {
     const {params} = prepareExtensionRunnerParams({
       params: {chromiumBinary: '/my/custom/chrome-bin'},
