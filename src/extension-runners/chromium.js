@@ -223,7 +223,7 @@ export class ChromiumExtensionRunner {
 
     // TODO(rpl): file github issue to improve the chromium extension runner
     // to actually wait for the wssBroadcast to be processed by the connected
-    // client.
+    // client (See https://github.com/mozilla/web-ext/pull/1392#discussion_r231535200).
     this.wssBroadcast({
       type: 'webExtReloadAllExtensions',
     });
