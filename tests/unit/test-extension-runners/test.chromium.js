@@ -1,5 +1,7 @@
 /* @flow */
 
+import EventEmitter from 'events';
+
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
 import deepcopy from 'deepcopy';
@@ -18,6 +20,9 @@ import {
 import type {
   ChromiumExtensionRunnerParams,
 } from '../../../src/extension-runners/chromium';
+import {
+  consoleStream, // instance is imported to inspect logged messages
+} from '../../../src/util/logger';
 
 function prepareExtensionRunnerParams({params} = {}) {
   const fakeChromeInstance = {
@@ -92,6 +97,40 @@ describe('util/extension-runners/chromium', async () => {
     const wsClient = new WebSocket(wsURL);
 
     await new Promise((resolve) => wsClient.on('open', resolve));
+
+    // Clear console stream from previous messages and start recording
+    consoleStream.stopCapturing();
+    consoleStream.flushCapturedLogs();
+    consoleStream.startCapturing();
+    // Make verbose to capture debug logs.
+    consoleStream.makeVerbose();
+
+    // Emit a fake socket object as a new wss connection.
+    const socket = await new Promise((resolve) => {
+      const fakeSocket = new EventEmitter();
+
+      const onFn = fakeSocket.on;
+      // $FLOW_IGNORE: override read-only prop for testing purpose.
+      fakeSocket.on = sinon.spy((...args) => {
+        onFn.apply(fakeSocket, args);
+        resolve(fakeSocket);
+      });
+
+      runnerInstance.wss.emit('connection', fakeSocket);
+    });
+
+    sinon.assert.calledOnce(socket.on);
+    socket.emit('error', new Error('Fake wss socket ERROR'));
+
+    // Retrieve captures logs and stop capturing.
+    const {capturedMessages} = consoleStream;
+    consoleStream.stopCapturing();
+
+    assert.ok(capturedMessages.some(
+      (message) => (
+        message.match('[debug]') &&
+        message.match('Fake wss socket ERROR')
+      )));
 
     const waitForReloadAll = new Promise((resolve) =>
       wsClient.on('message', resolve));
