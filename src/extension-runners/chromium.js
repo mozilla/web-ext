@@ -72,10 +72,8 @@ export class ChromiumExtensionRunner {
   }
 
   async run(): Promise<void> {
-    if (!this._promiseSetupDone) {
-      this._promiseSetupDone = this.setupInstance();
-    }
-
+    // Run should never be called more than once.
+    this._promiseSetupDone = this.setupInstance();
     await this._promiseSetupDone;
   }
 
