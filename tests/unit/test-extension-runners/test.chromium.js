@@ -112,21 +112,18 @@ describe('util/extension-runners/chromium', async () => {
     consoleStream.makeVerbose();
 
     // Emit a fake socket object as a new wss connection.
-    const socket = await new Promise((resolve) => {
-      const fakeSocket = new EventEmitter();
 
-      const onFn = fakeSocket.on;
-      // $FLOW_IGNORE: override read-only prop for testing purpose.
-      fakeSocket.on = sinon.spy((...args) => {
-        onFn.apply(fakeSocket, args);
-        resolve(fakeSocket);
-      });
-
-      runnerInstance.wss.emit('connection', fakeSocket);
+    const fakeSocket = new EventEmitter();
+    const onFn = fakeSocket.on;
+    // $FLOW_IGNORE: override read-only prop for testing purpose.
+    fakeSocket.on = sinon.spy((...args) => {
+      onFn.apply(fakeSocket, args);
     });
 
-    sinon.assert.calledOnce(socket.on);
-    socket.emit('error', new Error('Fake wss socket ERROR'));
+    runnerInstance.wss.emit('connection', fakeSocket);
+
+    sinon.assert.calledOnce(fakeSocket.on);
+    fakeSocket.emit('error', new Error('Fake wss socket ERROR'));
 
     // Retrieve captures logs and stop capturing.
     const {capturedMessages} = consoleStream;
