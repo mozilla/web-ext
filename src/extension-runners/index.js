@@ -14,6 +14,7 @@ import {
 } from '../util/desktop-notifier';
 import type {FirefoxAndroidExtensionRunnerParams} from './firefox-android';
 import type {FirefoxDesktopExtensionRunnerParams} from './firefox-desktop';
+import type {ChromiumExtensionRunnerParams} from './chromium';
 import {createLogger} from '../util/logger';
 import type {FileFilterCreatorFn} from '../util/file-filter';
 import {
@@ -34,6 +35,9 @@ export type ExtensionRunnerConfig = {|
 |} | {|
   target: 'firefox-android',
   params: FirefoxAndroidExtensionRunnerParams,
+|} | {|
+  target: 'chromium',
+  params: ChromiumExtensionRunnerParams,
 |};
 
 export type MultiExtensionRunnerParams = {|
@@ -52,6 +56,11 @@ export async function createExtensionRunner(config: ExtensionRunnerConfig) {
       // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
       const {FirefoxAndroidExtensionRunner} = require('./firefox-android');
       return new FirefoxAndroidExtensionRunner(config.params);
+    }
+    case 'chromium': {
+      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
+      const {ChromiumExtensionRunner} = require('./chromium');
+      return new ChromiumExtensionRunner(config.params);
     }
     default:
       throw new WebExtError(`Unknown target: "${config.target}"`);

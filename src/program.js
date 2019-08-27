@@ -450,7 +450,7 @@ Example: $0 --help run.
         default: 'firefox-desktop',
         demandOption: false,
         type: 'array',
-        choices: ['firefox-desktop', 'firefox-android'],
+        choices: ['firefox-desktop', 'firefox-android', 'chromium'],
       },
       'firefox': {
         alias: ['f', 'firefox-binary'],
@@ -468,6 +468,18 @@ Example: $0 --help run.
                   'can be specified as a directory or a name, such as one ' +
                   'you would see in the Profile Manager. If not specified, ' +
                   'a new temporary profile will be created.',
+        demandOption: false,
+        type: 'string',
+      },
+      'chromium-binary': {
+        describe: 'Path or alias to a Chromium executable such as ' +
+          'google-chrome, google-chrome.exe or opera.exe etc. ' +
+          'If not specified, the default Google Chrome will be used.',
+        demandOption: false,
+        type: 'string',
+      },
+      'chromium-profile': {
+        describe: 'Path to a custom Chromium profile',
         demandOption: false,
         type: 'string',
       },
