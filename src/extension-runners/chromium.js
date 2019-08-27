@@ -234,9 +234,8 @@ export class ChromiumExtensionRunner {
   async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
     const runnerName = this.getName();
 
-    // TODO(rpl): file github issue to improve the chromium extension runner
-    // to actually wait for the wssBroadcast to be processed by the connected
-    // client (See https://github.com/mozilla/web-ext/pull/1392#discussion_r231535200).
+    // TODO(rpl): wait for the wssBroadcast to be processed by the connected
+    // client (https://github.com/mozilla/web-ext/issues/1686).
     this.wssBroadcast({
       type: 'webExtReloadAllExtensions',
     });
@@ -255,9 +254,9 @@ export class ChromiumExtensionRunner {
   async reloadExtensionBySourceDir(
     extensionSourceDir: string // eslint-disable-line no-unused-vars
   ): Promise<Array<ExtensionRunnerReloadResult>> {
-    // TODO(rpl): file github issue to improve the manager extension
-    // to make it able to detect the extension ids assigned to the
-    // target extensions and map it to the extensions source dir.
+    // TODO(rpl): detect the extension ids assigned to the
+    // target extensions and map it to the extensions source dir
+    // (https://github.com/mozilla/web-ext/issues/1687).
     return this.reloadAllExtensions();
   }
 
