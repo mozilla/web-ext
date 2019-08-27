@@ -295,7 +295,6 @@ export class ChromiumExtensionRunner {
       this.wss = null;
     }
 
-
     // Call all the registered cleanup callbacks.
     for (const fn of this.cleanupCallbacks) {
       try {
