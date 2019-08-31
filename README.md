@@ -189,7 +189,7 @@ Read the [contributing section](CONTRIBUTING.md) for how to develop new features
 ### Why do we need a command line tool?
 
 This is a great question and one that we will ask ourselves for each new web-ext
-feature. Most WebExtension functionality is baked into the browsers
+feature. Most WebExtension functionality is backed into the browsers
 themselves but a complimentary command line tool will still be helpful.
 Here is a partial list of examples:
 
