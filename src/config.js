@@ -2,7 +2,7 @@
 import os from 'os';
 import path from 'path';
 
-import requireUncached from 'require-uncached';
+import importFresh from 'import-fresh';
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 
@@ -124,7 +124,7 @@ export function loadJSConfigFile(filePath: string): Object {
     `(resolved to "${resolvedFilePath}")`);
   let configObject;
   try {
-    configObject = requireUncached(resolvedFilePath);
+    configObject = importFresh(resolvedFilePath);
   } catch (error) {
     log.debug('Handling error:', error);
     throw new UsageError(
