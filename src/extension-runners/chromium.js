@@ -151,12 +151,43 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  wssBroadcast(data: Object) {
-    for (const client of this.wss.clients) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(data));
+  async wssBroadcast(data: Object) {
+    return new Promise((resolve) => {
+      const clients = this.wss ? new Set(this.wss.clients) : new Set();
+
+      function cleanWebExtReloadComplete() {
+        const client = this;
+        client.removeEventListener('message', webExtReloadComplete);
+        client.removeEventListener('close', cleanWebExtReloadComplete);
+        clients.delete(client);
       }
-    }
+
+      const webExtReloadComplete = async (message) => {
+        const msg = JSON.parse(message.data);
+
+        if (msg.type === 'webExtReloadExtensionComplete') {
+          for (const client of clients) {
+            cleanWebExtReloadComplete.call(client);
+          }
+          resolve();
+        }
+      };
+
+      for (const client of clients) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.addEventListener('message', webExtReloadComplete);
+          client.addEventListener('close', cleanWebExtReloadComplete);
+
+          client.send(JSON.stringify(data));
+        } else {
+          clients.delete(client);
+        }
+      }
+
+      if (clients.size === 0) {
+        resolve();
+      }
+    });
   }
 
   async createReloadManagerExtension() {
@@ -216,9 +247,8 @@ export class ChromiumExtensionRunner {
         const msg = JSON.parse(evt.data);
         if (msg.type === 'webExtReloadAllExtensions') {
           const devExtensions = await getAllDevExtensions();
-          for (var ext of devExtensions) {
-            reloadExtension(ext.id);
-          }
+          await Promise.all(devExtensions.map(ext => reloadExtension(ext.id)));
+          ws.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
         }
       };
     })()`;
@@ -234,9 +264,7 @@ export class ChromiumExtensionRunner {
   async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
     const runnerName = this.getName();
 
-    // TODO(rpl): wait for the wssBroadcast to be processed by the connected
-    // client (https://github.com/mozilla/web-ext/issues/1686).
-    this.wssBroadcast({
+    await this.wssBroadcast({
       type: 'webExtReloadAllExtensions',
     });
 
