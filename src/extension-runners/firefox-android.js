@@ -5,7 +5,6 @@
  * in a Firefox for Android instance.
  */
 
-
 import path from 'path';
 import readline from 'readline';
 

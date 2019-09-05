@@ -26,7 +26,7 @@ function toRDP(msg) {
 function getPortFromArgs() {
   const index = process.argv.indexOf('-start-debugger-server');
   if (index === -1) {
-    throw new Error('The -start-debugger-server paramter is not present.');
+    throw new Error('The -start-debugger-server parameter is not present.');
   }
   const port = process.argv[index + 1];
   if (isNaN(port)) {

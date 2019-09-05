@@ -378,14 +378,8 @@ describe('firefox.remote', () => {
 
   describe('defaultRemotePortFinder', () => {
 
-    function findRemotePort() {
-      return findFreeTcpPort();
-    }
-
     it('resolves to an open port', () => {
-      sinon.spy(
-        () => Promise.reject(new TCPConnectError()));
-      return findRemotePort()
+      return findFreeTcpPort()
         .then((port) => {
           assert.isNumber(port);
         });
