@@ -83,7 +83,7 @@ export class ChromiumExtensionRunner {
   async setupInstance(): Promise<void> {
     // Start a websocket server on a free localhost TCP port.
     this.wss = new WebSocket.Server({
-      port: 0,
+      port: 6005,
       host: 'localhost',
     });
 
