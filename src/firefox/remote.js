@@ -15,10 +15,6 @@ import {
 
 const log = createLogger(__filename);
 
-// The default port that Firefox's remote debugger will listen on and the
-// client will connect to.
-export const REMOTE_PORT = 6005;
-
 export type FirefoxConnectorFn =
   (port?: number) => Promise<FirefoxClient>;
 
@@ -194,7 +190,7 @@ export type ConnectOptions = {|
 |};
 
 export async function connect(
-  port: number = REMOTE_PORT,
+  port: number,
   {connectToFirefox = defaultFirefoxConnector}: ConnectOptions = {}
 ): Promise<RemoteFirefox> {
   log.debug(`Connecting to Firefox on port ${port}`);

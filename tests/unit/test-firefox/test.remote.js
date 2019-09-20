@@ -26,7 +26,7 @@ describe('firefox.remote', () => {
 
   describe('connect', () => {
 
-    function prepareConnection(port = undefined, options = {}) {
+    function prepareConnection(port = 6005, options = {}) {
       options = {
         connectToFirefox:
           sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
@@ -376,14 +376,38 @@ describe('firefox.remote', () => {
 
   });
 
-  describe('defaultRemotePortFinder', () => {
+  describe('findFreeTcpPort', async () => {
+
+    const port = await findFreeTcpPort();
+
+    function prepareConnection(portNumber = port, options = {}) {
+      options = {
+        connectToFirefox:
+          sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
+        ...options,
+      };
+      const connect = defaultConnector(portNumber, options);
+      return {options, connect};
+    }
 
     it('resolves to an open port', () => {
-      return findFreeTcpPort()
-        .then((port) => {
-          assert.isNumber(port);
-        });
+
+      assert.isNumber(port);
+      assert.isAtLeast(port, 1024);
     });
+
+    it('creates a connection with the resolved port', async () => {
+      const {connect, options} = prepareConnection(port);
+      await connect;
+      assert.equal(options.connectToFirefox.args[0], port);
+    });
+
+    it('resolves to a new port each time', async () => {
+      const newPort = await findFreeTcpPort();
+
+      assert.notStrictEqual(port, newPort);
+    });
+
   });
 
 });

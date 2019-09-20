@@ -22,7 +22,7 @@ function toRDP(msg) {
   return [data.length, ':', data].join('');
 }
 
-// Getting PORT from arguments
+// Get the debugger server port from the cli arguments
 function getPortFromArgs() {
   const index = process.argv.indexOf('-start-debugger-server');
   if (index === -1) {
@@ -33,7 +33,7 @@ function getPortFromArgs() {
     throw new Error(`Value of port must be a number. ${port} is not a number.`);
   }
 
-  return port;
+  return parseInt(port, 10);
 }
 net.createServer(function(socket) {
   socket.on('data', function(data) {
