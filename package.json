@@ -95,7 +95,7 @@
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
     "conventional-changelog-cli": "2.0.23",
-    "copy-dir": "1.1.0",
+    "copy-dir": "1.2.0",
     "coveralls": "3.0.6",
     "cross-env": "6.0.0",
     "deepcopy": "2.0.0",
