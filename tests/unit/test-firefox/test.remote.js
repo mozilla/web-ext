@@ -1,4 +1,6 @@
 /* @flow */
+import net from 'net';
+
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -376,36 +378,38 @@ describe('firefox.remote', () => {
 
   });
 
-  describe('findFreeTcpPort', async () => {
-
-    const port = await findFreeTcpPort();
-
-    function prepareConnection(portNumber = port, options = {}) {
-      options = {
-        connectToFirefox:
-          sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
-        ...options,
-      };
-      const connect = defaultConnector(portNumber, options);
-      return {options, connect};
+  describe('findFreeTcpPort', () => {
+    async function promiseServerOnPort(port): Promise<net.Server> {
+      return new Promise((resolve) => {
+        const srv = net.createServer();
+        srv.listen(port, () => {
+          resolve(srv);
+        });
+      });
     }
 
-    it('resolves to an open port', () => {
-
+    it('resolves to a free tcp port', async () => {
+      const port = await findFreeTcpPort();
       assert.isNumber(port);
+      // Expect a port that is not in the reserved range.
       assert.isAtLeast(port, 1024);
-    });
 
-    it('creates a connection with the resolved port', async () => {
-      const {connect, options} = prepareConnection(port);
-      await connect;
-      assert.equal(options.connectToFirefox.args[0], port);
-    });
+      // The TCP port can be used to successfully start a TCP server.
+      const srv = await promiseServerOnPort(port);
+      assert.equal(srv.address().port, port);
 
-    it('resolves to a new port each time', async () => {
+      // Check that calling tcp port again doesn't return the
+      // previous port (as it is not free anymore).
       const newPort = await findFreeTcpPort();
-
       assert.notStrictEqual(port, newPort);
+      assert.isAtLeast(port, 1024);
+
+      // The new TCP port can be used to successfully start a TCP server.
+      const srv2 = await promiseServerOnPort(newPort);
+      assert.equal(srv2.address().port, newPort);
+
+      srv.close();
+      srv2.close();
     });
 
   });
