@@ -5,7 +5,6 @@
  * in a Firefox for Android instance.
  */
 
-import net from 'net';
 import path from 'path';
 import readline from 'readline';
 
@@ -22,6 +21,7 @@ import {
 import * as defaultFirefoxApp from '../firefox';
 import {
   connectWithMaxRetries as defaultFirefoxConnector,
+  findFreeTcpPort,
 } from '../firefox/remote';
 import {createLogger} from '../util/logger';
 import {isTTY, setRawMode} from '../util/stdin';
@@ -567,7 +567,7 @@ export class FirefoxAndroidExtensionRunner {
 
     log.debug(`RDP Socket File selected: ${this.selectedRDPSocketFile}`);
 
-    const tcpPort = await this.chooseLocalTcpPort();
+    const tcpPort = await findFreeTcpPort();
 
     // Log the choosen tcp port at info level (useful to the user to be able
     // to connect the Firefox DevTools to the Firefox for Android instance).
@@ -584,17 +584,6 @@ export class FirefoxAndroidExtensionRunner {
     );
 
     this.selectedTCPPort = tcpPort;
-  }
-
-  chooseLocalTcpPort(): Promise<number> {
-    return new Promise((resolve) => {
-      const srv = net.createServer();
-      // $FLOW_FIXME: flow has his own opinions on this method signature.
-      srv.listen(0, () => {
-        const freeTcpPort = srv.address().port;
-        srv.close(() => resolve(freeTcpPort));
-      });
-    });
   }
 
   async rdpInstallExtensions() {

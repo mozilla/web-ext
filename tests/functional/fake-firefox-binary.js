@@ -22,7 +22,19 @@ function toRDP(msg) {
   return [data.length, ':', data].join('');
 }
 
-// Start a TCP Server
+// Get the debugger server port from the cli arguments
+function getPortFromArgs() {
+  const index = process.argv.indexOf('-start-debugger-server');
+  if (index === -1) {
+    throw new Error('The -start-debugger-server parameter is not present.');
+  }
+  const port = process.argv[index + 1];
+  if (isNaN(port)) {
+    throw new Error(`Value of port must be a number. ${port} is not a number.`);
+  }
+
+  return parseInt(port, 10);
+}
 net.createServer(function(socket) {
   socket.on('data', function(data) {
     if (String(data) === toRDP(REQUEST_LIST_TABS)) {
@@ -43,4 +55,4 @@ net.createServer(function(socket) {
   });
 
   socket.write(toRDP(REPLY_INITIAL));
-}).listen(6005);
+}).listen(getPortFromArgs());
