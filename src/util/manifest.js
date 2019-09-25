@@ -3,6 +3,7 @@ import path from 'path';
 
 import {fs} from 'mz';
 import parseJSON from 'parse-json';
+import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
 
 import {InvalidManifest} from '../errors';
@@ -44,6 +45,8 @@ export default async function getValidatedManifest(
     throw new InvalidManifest(
       `Could not read manifest.json file at ${manifestFile}: ${error}`);
   }
+
+  manifestContents = stripBom(manifestContents);
 
   let manifestData;
 

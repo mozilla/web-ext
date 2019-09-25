@@ -158,6 +158,17 @@ describe('util/manifest', () => {
       }
     ));
 
+    it('ignore UTF-8 BOM in manifest JSON', () => withTempDir(
+      async (tmpDir) => {
+        const manifestDataWithBOM = `\uFEFF${JSON.stringify(basicManifest)}`;
+        const manifestFile = path.join(tmpDir.path(), 'manifest.json');
+        await fs.writeFile(manifestFile, manifestDataWithBOM);
+        const manifestData = await getValidatedManifest(tmpDir.path());
+
+        assert.deepEqual(manifestData, basicManifest);
+      }
+    ));
+
     it('allows comments in manifest JSON', () =>
       withTempDir(async (tmpDir) => {
         const manifestWithComments = `{

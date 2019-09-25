@@ -4,6 +4,7 @@ import {createWriteStream} from 'fs';
 
 import {fs} from 'mz';
 import parseJSON from 'parse-json';
+import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
 import defaultEventToPromise from 'event-to-promise';
 
@@ -77,6 +78,8 @@ export async function getDefaultLocalizedName(
     throw new UsageError(
       `Error reading messages.json file at ${messageFile}: ${error}`);
   }
+
+  messageContents = stripBom(messageContents);
 
   try {
     messageData = parseJSON(stripJsonComments(messageContents), messageFile);
