@@ -1,3 +1,6 @@
 {
-  "exceptions": []
+  "exceptions": [
+    // TODO (#1173): Remove exception once nyc and conventional-changelog deps have been updated.
+    "https://npmjs.com/advisories/1164"
+  ]
 }
