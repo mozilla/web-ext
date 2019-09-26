@@ -82,10 +82,10 @@ export async function getDefaultLocalizedName(
   messageContents = stripBom(messageContents);
 
   try {
-    messageData = parseJSON(stripJsonComments(messageContents), messageFile);
+    messageData = parseJSON(stripJsonComments(messageContents));
   } catch (error) {
     throw new UsageError(
-      `Error parsing messages.json ${error}`);
+      `Error parsing messages.json file at ${messageFile}: ${error}`);
   }
 
   extensionName = manifestData.name.replace(
