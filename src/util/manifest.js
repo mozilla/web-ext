@@ -51,10 +51,10 @@ export default async function getValidatedManifest(
   let manifestData;
 
   try {
-    manifestData = parseJSON(stripJsonComments(manifestContents), manifestFile);
+    manifestData = parseJSON(stripJsonComments(manifestContents));
   } catch (error) {
     throw new InvalidManifest(
-      `Error parsing manifest.json at ${manifestFile}: ${error}`);
+      `Error parsing manifest.json file at ${manifestFile}: ${error}`);
   }
 
   const errors = [];

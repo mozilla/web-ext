@@ -53,7 +53,7 @@ describe('util/manifest', () => {
     it('reports an error for invalid manifest JSON', () => withTempDir(
       (tmpDir) => {
         const badManifest = `{
-          "name": "I'm an invalid JSON Manifest
+          "name": "I'm an invalid JSON Manifest",,
           "version": "0.0.0"
         }`;
         const manifestFile = path.join(tmpDir.path(), 'manifest.json');
@@ -61,9 +61,14 @@ describe('util/manifest', () => {
           .then(() => getValidatedManifest(tmpDir.path()))
           .then(makeSureItFails())
           .catch(onlyInstancesOf(InvalidManifest, (error) => {
-            assert.match(error.message, /Error parsing manifest\.json at /);
+            assert.match(
+              error.message,
+              /Error parsing manifest\.json file at /
+            );
             assert.include(
-              error.message, 'Unexpected token  in JSON at position 49');
+              error.message,
+              'Unexpected token , in JSON at position 51'
+            );
             assert.include(error.message, manifestFile);
           }));
       }
@@ -195,8 +200,10 @@ describe('util/manifest', () => {
         const promise = getValidatedManifest(tmpDir.path());
 
         const error = await assert.isRejected(promise, InvalidManifest);
-        await assert.isRejected(promise, /Error parsing manifest\.json at /);
-        assert.include(error.message, 'in JSON at position 133');
+        await assert.isRejected(
+          promise,
+          /Error parsing manifest\.json file at .* in JSON at position 133/
+        );
         assert.include(error.message, manifestFile);
       })
     );
