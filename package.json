@@ -66,7 +66,7 @@
     "mkdirp": "0.5.1",
     "multimatch": "4.0.0",
     "mz": "2.7.0",
-    "node-notifier": "5.4.0",
+    "node-notifier": "5.4.3",
     "open": "6.4.0",
     "parse-json": "4.0.0",
     "sign-addon": "0.3.1",
