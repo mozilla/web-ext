@@ -129,6 +129,22 @@ describe('build', () => {
     );
   });
 
+  it('handles UTF-8 BOM in messages.json', () => withTempDir(
+    async (tmpDir) => {
+      const manifestDataWithBOM = '\uFEFF{"name":{"message":"BOM = \uFEFF!"}}';
+      const messageFileName = path.join(tmpDir.path(), 'messages.json');
+      await fs.writeFile(messageFileName, manifestDataWithBOM);
+      const result = await getDefaultLocalizedName({
+        messageFile: messageFileName,
+        manifestData: {
+          name: '__MSG_name__',
+          version: '0.0.1',
+        },
+      });
+      assert.equal(result, 'BOM = \uFEFF!');
+    }
+  ));
+
   it('handles comments in messages.json', () => {
     return withTempDir(
       (tmpDir) => {
