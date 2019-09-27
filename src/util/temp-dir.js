@@ -4,13 +4,13 @@ import {promisify} from 'util';
 import tmp from 'tmp';
 
 import {createLogger} from './logger';
-import {multiArgsPromisedFn} from './promisify';
+import {multiArgsPromisedFn, promisifyCustom} from './promisify';
 
 const log = createLogger(__filename);
 
 export type MakePromiseCallback = (tmpDir: TempDir) => any;
 
-tmp.dir[promisify.custom] = multiArgsPromisedFn(tmp.dir);
+tmp.dir[promisifyCustom] = multiArgsPromisedFn(tmp.dir);
 
 const createTempDir = promisify(tmp.dir);
 

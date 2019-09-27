@@ -180,6 +180,7 @@ describe('firefox.remote', () => {
         const stubResponse = {requestTypes: ['reload']};
         const conn = makeInstance();
 
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.addonRequest = sinon.spy(() => Promise.resolve(stubResponse));
 
         const returnedAddon = await conn.checkForAddonReloading(addon);
@@ -197,6 +198,7 @@ describe('firefox.remote', () => {
         const stubResponse = {requestTypes: ['install']};
         const conn = makeInstance();
 
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.addonRequest = () => Promise.resolve(stubResponse);
 
         await conn.checkForAddonReloading(addon)
@@ -210,6 +212,7 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.addonRequest =
           sinon.spy(() => Promise.resolve({requestTypes: ['reload']}));
         const checkedAddon = await conn.checkForAddonReloading(addon);
@@ -292,9 +295,12 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.getInstalledAddon = sinon.spy(() => Promise.resolve(addon));
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading =
           (addonToCheck) => Promise.resolve(addonToCheck);
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.addonRequest = sinon.spy(() => Promise.resolve({}));
 
         await conn.reloadAddon('some-id');
@@ -311,7 +317,9 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.getInstalledAddon = () => Promise.resolve(addon);
+        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading =
           sinon.spy((addonToCheck) => Promise.resolve(addonToCheck));
 
