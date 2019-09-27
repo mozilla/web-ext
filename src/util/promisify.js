@@ -1,5 +1,13 @@
 /* @flow */
 
+import {promisify} from 'util';
+
+// promisify.custom is missing from the node types know to flow,
+// and it triggers flow-check errors if used directly.
+// By using the value exported here, flow-check passes successfully
+// without using FLOW_IGNORE supress comments.
+export const promisifyCustom = promisify.custom;
+
 /*
  * A small promisify helper to make it easier to customize a
  * function promisified (using the 'util' module available in

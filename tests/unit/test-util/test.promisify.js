@@ -5,7 +5,10 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
-import {multiArgsPromisedFn} from '../../../src/util/promisify';
+import {
+  multiArgsPromisedFn,
+  promisifyCustom,
+} from '../../../src/util/promisify';
 
 describe('nodejs util.promisify', () => {
   it('wraps a nodejs callback-based function into a promised function',
@@ -67,7 +70,7 @@ describe('web-ext util.promisify.multiArgsPromisedFn custom helper', () => {
       }
     });
 
-    fnCallMultiArgs[promisify.custom] = multiArgsPromisedFn(fnCallMultiArgs);
+    fnCallMultiArgs[promisifyCustom] = multiArgsPromisedFn(fnCallMultiArgs);
 
     const promisedFnMultiArgs = promisify(fnCallMultiArgs);
 
