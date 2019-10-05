@@ -28,8 +28,8 @@ const prefsCommon: FirefoxPreferences = {
   // Disable the prompt for allowing connections.
   'devtools.debugger.prompt-connection': false,
 
-  // Turn off platform logging because it is a lot of info.
-  'extensions.logging.enabled': false,
+  // Allow extensions to log messages on browser's console
+  'extensions.logging.enabled': true,
 
   // Disable extension updates and notifications.
   'extensions.checkCompatibility.nightly': false,
