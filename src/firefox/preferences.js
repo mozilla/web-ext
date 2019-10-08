@@ -27,9 +27,11 @@ const prefsCommon: FirefoxPreferences = {
   'devtools.debugger.remote-enabled': true,
   // Disable the prompt for allowing connections.
   'devtools.debugger.prompt-connection': false,
+  // Allow extensions to log messages on browser's console.
+  'devtools.browserconsole.contentMessages': true,
 
-  // Allow extensions to log messages on browser's console
-  'extensions.logging.enabled': true,
+  // Turn off platform logging because it is a lot of info.
+  'extensions.logging.enabled': false,
 
   // Disable extension updates and notifications.
   'extensions.checkCompatibility.nightly': false,
