@@ -73,8 +73,8 @@ version on the command line with this:
 ## Installation from source
 
 You'll need:
-* [Node.js](https://nodejs.org/en/), 8.0.0 or higher
-* [npm](https://www.npmjs.com/), 5.0.0 or higher is recommended
+* [Node.js](https://nodejs.org/en/), 10.0.0 or higher
+* [npm](https://www.npmjs.com/), 5.6.0 or higher is recommended
 
 Optionally, you may like:
 * [nvm](https://github.com/creationix/nvm), which helps manage node versions
