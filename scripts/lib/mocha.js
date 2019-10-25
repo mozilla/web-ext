@@ -4,11 +4,16 @@ const shell = require('shelljs');
 
 const config = require('./config');
 
-// Get the explicit path to mocha (needed to make it find mocha binary on travis windows workers).
-const mochaPath = String(shell.which('mocha'));
+// Get the explicit path (needed on travis windows workers).
+function which(...args) {
+  return String(shell.which(...args));
+}
 
-const runMocha = (args, execMochaOptions = {}) => {
-  const res = spawnSync(mochaPath, args, {
+const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
+  const mochaPath = which('mocha');
+  const binArgs = coverageEnabled ? [mochaPath, ...args] : args;
+  const binPath = coverageEnabled ? which('nyc') : mochaPath;
+  const res = spawnSync(binPath, binArgs, {
     ...execMochaOptions,
     stdio: 'inherit',
   });
@@ -21,8 +26,8 @@ const runMocha = (args, execMochaOptions = {}) => {
   return res.status === 0;
 };
 
-exports.mochaUnit = (execMochaOptions) => {
-  return runMocha(config.mocha.unit, execMochaOptions);
+exports.mochaUnit = (execMochaOptions, coverageEnabled) => {
+  return runMocha(config.mocha.unit, execMochaOptions, coverageEnabled);
 };
 
 exports.mochaFunctional = (execMochaOptions) => {
