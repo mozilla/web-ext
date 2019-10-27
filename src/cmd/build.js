@@ -43,7 +43,8 @@ export type PackageCreatorParams = {|
   fileFilter: FileFilter,
   artifactsDir: string,
   overwriteDest: boolean,
-  showReadyMessage: boolean
+  showReadyMessage: boolean,
+  filename?: string,
 |};
 
 export type LocalizedNameParams = {|
@@ -115,6 +116,7 @@ export async function defaultPackageCreator(
     artifactsDir,
     overwriteDest,
     showReadyMessage,
+    filename,
   }: PackageCreatorParams,
   {
     eventToPromise = defaultEventToPromise,
@@ -132,22 +134,27 @@ export async function defaultPackageCreator(
     filter: (...args) => fileFilter.wantFile(...args),
   });
 
-  let extensionName: string = manifestData.name;
+  let packageName;
+  if (filename) {
+    packageName = `${filename}.zip`;
+  } else {
+    let extensionName: string = manifestData.name;
 
-  let {default_locale} = manifestData;
-  if (default_locale) {
-    default_locale = default_locale.replace(/-/g, '_');
-    const messageFile = path.join(
-      sourceDir, '_locales',
-      default_locale, 'messages.json'
-    );
-    log.debug('Manifest declared default_locale, localizing extension name');
-    extensionName = await getDefaultLocalizedName({
-      messageFile, manifestData,
-    });
+    let {default_locale} = manifestData;
+    if (default_locale) {
+      default_locale = default_locale.replace(/-/g, '_');
+      const messageFile = path.join(
+        sourceDir, '_locales',
+        default_locale, 'messages.json'
+      );
+      log.debug('Manifest declared default_locale, localizing extension name');
+      extensionName = await getDefaultLocalizedName({
+        messageFile, manifestData,
+      });
+    }
+    packageName = safeFileName(
+      `${extensionName}-${manifestData.version}.zip`);
   }
-  const packageName = safeFileName(
-    `${extensionName}-${manifestData.version}.zip`);
   const extensionPath = path.join(artifactsDir, packageName);
 
   // Added 'wx' flags to avoid overwriting of existing package.
@@ -187,6 +194,7 @@ export type BuildCmdParams = {|
   asNeeded?: boolean,
   overwriteDest?: boolean,
   ignoreFiles?: Array<string>,
+  filename?: string,
 |};
 
 export type BuildCmdOptions = {|
@@ -206,6 +214,7 @@ export default async function build(
     asNeeded = false,
     overwriteDest = false,
     ignoreFiles = [],
+    filename,
   }: BuildCmdParams,
   {
     manifestData,
@@ -214,6 +223,7 @@ export default async function build(
       sourceDir,
       artifactsDir,
       ignoreFiles,
+      filename,
     }),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
@@ -231,6 +241,7 @@ export default async function build(
     artifactsDir,
     overwriteDest,
     showReadyMessage,
+    filename,
   });
 
   await prepareArtifactsDir(artifactsDir);

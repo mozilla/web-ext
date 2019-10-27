@@ -381,6 +381,15 @@ Example: $0 --help run.
       default: true,
       type: 'boolean',
     },
+    'filename': {
+      alias: 'f',
+      describe: 'Name of the created extension package.',
+      default: undefined,
+      normalize: true,
+      demandOption: false,
+      requiresArg: false,
+      type: 'string',
+    },
   });
 
   program
