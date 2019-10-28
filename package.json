@@ -15,7 +15,7 @@
     "build": "node scripts/build",
     "start": "node scripts/develop",
     "test": "node scripts/test",
-    "test-coverage": "nyc npm run test",
+    "test-coverage": "node scripts/test --coverage",
     "test-functional": "node scripts/test-functional",
     "publish-coverage": "nyc report --reporter=text-lcov | coveralls",
     "audit-deps": "node ./scripts/audit-deps",

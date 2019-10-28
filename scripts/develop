@@ -11,6 +11,8 @@ const {flowStatus} = require('./lib/flow');
 const {mochaUnit, mochaFunctional} = require('./lib/mocha');
 const webpack = require('./lib/webpack');
 
+const COVERAGE = process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
+
 console.log('Starting flow server...');
 if (!flowStatus()) {
   process.exit(1);
@@ -43,7 +45,7 @@ async function runTasks(changes) {
   }
 
   console.log('\nRunning unit tests');
-  if (!mochaUnit()) {
+  if (!mochaUnit({}, COVERAGE)) {
     notify('mocha unit tests errors');
     return;
   }
