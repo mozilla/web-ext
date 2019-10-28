@@ -223,7 +223,6 @@ export default async function build(
       sourceDir,
       artifactsDir,
       ignoreFiles,
-      filename,
     }),
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,

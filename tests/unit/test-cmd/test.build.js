@@ -72,6 +72,21 @@ describe('build', () => {
     });
   });
 
+  it('gives the correct custom name to an extension', () => {
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+          filename: 'test',
+        })
+          .then((buildResult) => {
+            assert.match(buildResult.extensionPath,
+                         /test\.zip$/);
+          })
+    );
+  });
+
   it('gives the correct name to a localized extension', () => {
     return withTempDir(
       (tmpDir) =>
