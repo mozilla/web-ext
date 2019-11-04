@@ -116,7 +116,9 @@ export default function sign(
         apiSecret,
         apiUrlPrefix,
         apiProxy,
-        timeout,
+        // Backport increased sign-addon timeout (fixed on master
+        // by updating sign-addon dependency to 1.0.0).
+        timeout: typeof timeout === 'number' ? timeout : 900000,
         verbose,
         id,
         xpiPath: buildResult.extensionPath,
