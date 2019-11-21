@@ -323,7 +323,8 @@ Example: $0 --help run.
     .env(envPrefix)
     .version(version)
     .demandCommand(1, 'You must specify a command')
-    .strict();
+    .strict()
+    .recommendCommands();
 
   program.setGlobalOptions({
     'source-dir': {
