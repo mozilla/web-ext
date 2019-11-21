@@ -70,6 +70,15 @@ describe('program.Program', () => {
       }));
   });
 
+  it('recommends matching commands', () => {
+    const program = new Program(['buld']);
+    return execProgram(program)
+      .then(makeSureItFails())
+      .catch(onlyInstancesOf(UsageError, (error) => {
+        assert.match(error.message, /Did you mean build/);
+      }));
+  });
+
   it('exits 1 on a thrown error', () => {
     const fakeProcess = createFakeProcess();
     const program = new Program(['cmd'])
