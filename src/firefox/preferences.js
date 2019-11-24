@@ -55,16 +55,17 @@ const prefsCommon: FirefoxPreferences = {
 
   // Allow unsigned add-ons.
   'xpinstall.signatures.required': false,
+
+  // browser.link.open_newwindow is changed from 3 to 2 in:
+  // https://github.com/saadtazi/firefox-profile-js/blob/cafc793d940a779d280103ae17d02a92de862efc/lib/firefox_profile.js#L32
+  // Restore original value to avoid https://github.com/mozilla/web-ext/issues/1592
+  'browser.link.open_newwindow': 3,
 };
 
 // Prefs specific to Firefox for Android.
 const prefsFennec: FirefoxPreferences = {
   'browser.console.showInPanel': true,
   'browser.firstrun.show.uidiscovery': false,
-  // browser.link.open_newwindow is changed from 3 to 2 in:
-  // https://github.com/saadtazi/firefox-profile-js/blob/cafc793d940a779d280103ae17d02a92de862efc/lib/firefox_profile.js#L32
-  // Restore original value to avoid https://github.com/mozilla/web-ext/issues/1592
-  'browser.link.open_newwindow': 3,
   'devtools.remote.usb.enabled': true,
 };
 
