@@ -1,6 +1,4 @@
 {
   "exceptions": [
-    // Remove this once commitlint and babel have updated handlerbars in their dependencies.
-    "https://npmjs.com/advisories/1300"
   ]
 }
