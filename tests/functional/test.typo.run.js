@@ -1,9 +1,8 @@
 /* @flow */
 import {describe, it} from 'mocha';
+import {assert} from 'chai';
 
-import {
-  withTempDir, execWebExt, reportCommandErrors,
-} from './common';
+import {execWebExt} from './common';
 
 describe('web-ext', () => {
   it('recommends matching command', async () => {
