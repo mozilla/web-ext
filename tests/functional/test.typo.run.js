@@ -6,7 +6,7 @@ import {
 } from './common';
 
 describe('web-ext', () => {
-  it('should not accept: --target INVALIDTARGET', async () => {
+  it('recommends matching command', async () => {
     const argv = ['buld'];
 
     return execWebExt(argv, {}).waitForExit.then(({exitCode, stderr}) => {
