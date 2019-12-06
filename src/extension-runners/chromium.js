@@ -112,7 +112,9 @@ export class ChromiumExtensionRunner {
     }
 
     const chromeFlags = ChromeLauncher.defaultFlags()
-      .filter((flag) => flag !== '--disable-extensions');
+      .filter((flag) => {
+        return flag !== '--disable-extensions' && flag !== '--mute-audio';
+      });
 
     chromeFlags.push(`--load-extension=${extensions}`);
 

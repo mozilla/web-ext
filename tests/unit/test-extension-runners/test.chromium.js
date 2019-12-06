@@ -26,7 +26,9 @@ import {
 } from '../../../src/util/logger';
 
 const defaultChromeFlags = ChromeLauncher.defaultFlags()
-  .filter((flag) => flag !== '--disable-extensions');
+  .filter((flag) => {
+    return flag !== '--disable-extensions' && flag !== '--mute-audio';
+  });
 
 function prepareExtensionRunnerParams({params} = {}) {
   const fakeChromeInstance = {
