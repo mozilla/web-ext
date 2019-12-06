@@ -49,6 +49,19 @@ function prepareExtensionRunnerParams({params} = {}) {
 
 describe('util/extension-runners/chromium', async () => {
 
+  it('uses the expected chrome flags', () => {
+    const expectedFlags = [ // Flags from 11.2
+      '--disable-translate',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--disable-default-apps',
+      '--no-first-run',
+    ];
+
+    assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
+  });
+
   it('installs and runs the extension', async () => {
     const {params, fakeChromeInstance} = prepareExtensionRunnerParams();
     const runnerInstance = new ChromiumExtensionRunner(params);
