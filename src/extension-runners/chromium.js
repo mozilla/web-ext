@@ -40,6 +40,11 @@ const log = createLogger(__filename);
 
 const asyncMkdirp = promisify(mkdirp);
 
+export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags()
+  .filter((flag) => {
+    return flag !== '--disable-extensions' && flag !== '--mute-audio';
+  });
+
 /**
  * Implements an IExtensionRunner which manages a Chromium instance.
  */
@@ -111,10 +116,7 @@ export class ChromiumExtensionRunner {
       log.debug(`(chromiumBinary: ${chromiumBinary})`);
     }
 
-    const chromeFlags = ChromeLauncher.defaultFlags()
-      .filter((flag) => {
-        return flag !== '--disable-extensions' && flag !== '--mute-audio';
-      });
+    const chromeFlags = [...DEFAULT_CHROME_FLAGS];
 
     chromeFlags.push(`--load-extension=${extensions}`);
 
