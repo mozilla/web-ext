@@ -104,7 +104,7 @@
     "eslint": "6.7.2",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "4.5.2",
-    "eslint-plugin-import": "2.18.2",
+    "eslint-plugin-import": "2.19.1",
     "flow-bin": "0.110.1",
     "html-entities": "1.2.1",
     "mocha": "6.2.2",
