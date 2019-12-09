@@ -40,10 +40,13 @@ const log = createLogger(__filename);
 
 const asyncMkdirp = promisify(mkdirp);
 
+const EXCLUDED_CHROME_FLAGS = [
+  '--disable-extensions',
+  '--mute-audio',
+];
+
 export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags()
-  .filter((flag) => {
-    return flag !== '--disable-extensions' && flag !== '--mute-audio';
-  });
+  .filter((flag) => !EXCLUDED_CHROME_FLAGS.includes(flag));
 
 /**
  * Implements an IExtensionRunner which manages a Chromium instance.
