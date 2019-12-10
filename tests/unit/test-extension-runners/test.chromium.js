@@ -7,7 +7,6 @@ import {describe, it} from 'mocha';
 import deepcopy from 'deepcopy';
 import fs from 'mz/fs';
 import sinon from 'sinon';
-import ChromeLauncher from 'chrome-launcher';
 import WebSocket from 'ws';
 
 import getValidatedManifest from '../../../src/util/manifest';
@@ -17,6 +16,7 @@ import {
 } from '../helpers';
 import {
   ChromiumExtensionRunner,
+  DEFAULT_CHROME_FLAGS,
 } from '../../../src/extension-runners/chromium';
 import type {
   ChromiumExtensionRunnerParams,
@@ -24,9 +24,6 @@ import type {
 import {
   consoleStream, // instance is imported to inspect logged messages
 } from '../../../src/util/logger';
-
-const defaultChromeFlags = ChromeLauncher.defaultFlags()
-  .filter((flag) => flag !== '--disable-extensions');
 
 function prepareExtensionRunnerParams({params} = {}) {
   const fakeChromeInstance = {
@@ -52,6 +49,19 @@ function prepareExtensionRunnerParams({params} = {}) {
 
 describe('util/extension-runners/chromium', async () => {
 
+  it('uses the expected chrome flags', () => {
+    const expectedFlags = [ // Flags from 11.2
+      '--disable-translate',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--disable-default-apps',
+      '--no-first-run',
+    ];
+
+    assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
+  });
+
   it('installs and runs the extension', async () => {
     const {params, fakeChromeInstance} = prepareExtensionRunnerParams();
     const runnerInstance = new ChromiumExtensionRunner(params);
@@ -67,7 +77,7 @@ describe('util/extension-runners/chromium', async () => {
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
-        ...defaultChromeFlags,
+        ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
       ],
       startingUrl: undefined,
@@ -260,7 +270,7 @@ describe('util/extension-runners/chromium', async () => {
       enableExtensions: true,
       chromePath: '/my/custom/chrome-bin',
       chromeFlags: [
-        ...defaultChromeFlags,
+        ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
       ],
       startingUrl: undefined,
@@ -285,7 +295,7 @@ describe('util/extension-runners/chromium', async () => {
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
-        ...defaultChromeFlags,
+        ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         'url2',
         'url3',
@@ -315,7 +325,7 @@ describe('util/extension-runners/chromium', async () => {
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
-        ...defaultChromeFlags,
+        ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         '--arg1',
         'arg2',
@@ -347,7 +357,7 @@ describe('util/extension-runners/chromium', async () => {
       enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
-        ...defaultChromeFlags,
+        ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         '--user-data-dir=/fake/chrome/profile',
       ],
