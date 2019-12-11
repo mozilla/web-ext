@@ -48,6 +48,10 @@ const EXCLUDED_CHROME_FLAGS = [
 export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags()
   .filter((flag) => !EXCLUDED_CHROME_FLAGS.includes(flag));
 
+export const EXTRA_CHROME_FLAGS = [
+  '--no-default-browser-check',
+];
+
 /**
  * Implements an IExtensionRunner which manages a Chromium instance.
  */
@@ -119,7 +123,7 @@ export class ChromiumExtensionRunner {
       log.debug(`(chromiumBinary: ${chromiumBinary})`);
     }
 
-    const chromeFlags = [...DEFAULT_CHROME_FLAGS];
+    const chromeFlags = [...DEFAULT_CHROME_FLAGS, ...EXTRA_CHROME_FLAGS];
 
     chromeFlags.push(`--load-extension=${extensions}`);
 

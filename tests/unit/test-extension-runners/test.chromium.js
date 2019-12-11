@@ -17,6 +17,7 @@ import {
 import {
   ChromiumExtensionRunner,
   DEFAULT_CHROME_FLAGS,
+  EXTRA_CHROME_FLAGS,
 } from '../../../src/extension-runners/chromium';
 import type {
   ChromiumExtensionRunnerParams,
@@ -62,6 +63,10 @@ describe('util/extension-runners/chromium', async () => {
     assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
   });
 
+  it('disables the default browser check', () => {
+    assert.include(EXTRA_CHROME_FLAGS, '--no-default-browser-check');
+  });
+
   it('installs and runs the extension', async () => {
     const {params, fakeChromeInstance} = prepareExtensionRunnerParams();
     const runnerInstance = new ChromiumExtensionRunner(params);
@@ -78,6 +83,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        ...EXTRA_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
       ],
       startingUrl: undefined,
@@ -271,6 +277,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: '/my/custom/chrome-bin',
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        ...EXTRA_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
       ],
       startingUrl: undefined,
@@ -296,6 +303,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        ...EXTRA_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         'url2',
         'url3',
@@ -326,6 +334,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        ...EXTRA_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         '--arg1',
         'arg2',
@@ -358,6 +367,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        ...EXTRA_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
         '--user-data-dir=/fake/chrome/profile',
       ],
