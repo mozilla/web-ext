@@ -16,6 +16,7 @@ export type OnChangeFn = () => any;
 
 export type OnSourceChangeParams = {|
   sourceDir: string,
+  watchFile?: string,
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile: ShouldWatchFn,
@@ -30,7 +31,13 @@ declare function exports(params: OnSourceChangeParams): Watchpack;
 export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
 
 export default function onSourceChange(
-  {sourceDir, artifactsDir, onChange, shouldWatchFile}: OnSourceChangeParams
+  {
+    sourceDir,
+    watchFile,
+    artifactsDir,
+    onChange,
+    shouldWatchFile,
+  }: OnSourceChangeParams
 ): Watchpack {
   // TODO: For network disks, we would need to add {poll: true}.
   const watcher = new Watchpack();
@@ -42,13 +49,13 @@ export default function onSourceChange(
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
   });
 
-  log.debug(`Watching for file changes in ${sourceDir}`);
+  log.debug(`Watching for file changes in ${watchFile || sourceDir}`);
 
-  watcher.watch({
-    files: [],
-    directories: [sourceDir],
-    startTime: Date.now(),
-  });
+  watcher.watch([], [sourceDir], Date.now());
+
+  if (watchFile) {
+    watcher.watch([watchFile], [], Date.now());
+  }
 
   // TODO: support interrupting the watcher on Windows.
   // https://github.com/mozilla/web-ext/issues/225

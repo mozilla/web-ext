@@ -34,6 +34,7 @@ export type CmdRunParams = {|
   noReload: boolean,
   preInstall: boolean,
   sourceDir: string,
+  watchFile?: string,
   startUrl?: Array<string>,
   target?: Array<string>,
   args?: Array<string>,
@@ -74,6 +75,7 @@ export default async function run(
     noReload = false,
     preInstall = false,
     sourceDir,
+    watchFile,
     startUrl,
     target,
     args,
@@ -213,6 +215,7 @@ export default async function run(
     reloadStrategy({
       extensionRunner,
       sourceDir,
+      watchFile,
       artifactsDir,
       ignoreFiles,
       noInput,
