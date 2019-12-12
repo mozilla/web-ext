@@ -43,7 +43,12 @@ export default function onSourceChange(
   });
 
   log.debug(`Watching for file changes in ${sourceDir}`);
-  watcher.watch([], [sourceDir], Date.now());
+
+  watcher.watch({
+    files: [],
+    directories: [sourceDir],
+    startTime: Date.now(),
+  });
 
   // TODO: support interrupting the watcher on Windows.
   // https://github.com/mozilla/web-ext/issues/225
