@@ -8,13 +8,24 @@ import sinon from 'sinon';
 import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
 import {withTempDir} from '../../src/util/temp-dir';
 
+type AssertWatchedParams = {
+  watchFile?: string,
+  touchedFile: string,
+}
 
 describe('watcher', () => {
 
-  it('watches for file changes', () => withTempDir(
+  const watchChange = ({
+    watchFile,
+    touchedFile,
+  }: AssertWatchedParams = {}) => withTempDir(
     (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
-      const someFile = path.join(tmpDir.path(), 'foo.txt');
+      const someFile = path.join(tmpDir.path(), touchedFile);
+
+      if (watchFile) {
+        watchFile = path.join(tmpDir.path(), watchFile);
+      }
 
       var resolveChange;
       const whenFilesChanged = new Promise((resolve) => {
@@ -28,6 +39,7 @@ describe('watcher', () => {
         .then(() => {
           return onSourceChange({
             sourceDir: tmpDir.path(),
+            watchFile,
             artifactsDir,
             onChange,
             shouldWatchFile: () => true,
@@ -38,18 +50,47 @@ describe('watcher', () => {
             .then(() => watcher);
         })
         .then((watcher) => {
-          return whenFilesChanged
-            .then(() => {
+          return Promise.race([
+            whenFilesChanged
+              .then(() => {
+                watcher.close();
+                // This delay seems to avoid stat errors from the watcher
+                // which can happen when the temp dir is deleted (presumably
+                // before watcher.close() has removed all listeners).
+                return new Promise((resolve) => {
+                  setTimeout(resolve, 2, onChange);
+                });
+              }),
+            // Time out if no files are changed
+            new Promise((resolve) => setTimeout(() => {
               watcher.close();
-              sinon.assert.calledOnce(onChange);
-              // This delay seems to avoid stat errors from the watcher
-              // which can happen when the temp dir is deleted (presumably
-              // before watcher.close() has removed all listeners).
-              return new Promise((resolve) => setTimeout(resolve, 2));
-            });
+              resolve(onChange);
+            }, 500)),
+          ]);
         });
     }
-  ));
+  );
+
+  it('watches for file changes', () => {
+    watchChange({ touchedFile: 'foo.txt' })
+      .then((onChange) => sinon.assert.calledOnce(onChange));
+  });
+
+  describe('--watch-file option is passed in', () => {
+    it('changes if the watched file is the same as the touched file', () => {
+      return watchChange({
+        watchFile: 'foo.txt',
+        touchedFile: 'foo.txt',
+      }).then((onChange) => sinon.assert.calledOnce(onChange));
+    });
+
+    it('does not change if watched file and touched file are different', () => {
+      return watchChange({
+        watchFile: 'bar.txt',
+        touchedFile: 'foo.txt',
+      }).then((onChange) => sinon.assert.notCalled(onChange));
+    });
+  });
 
   describe('proxyFileChanges', () => {
 
