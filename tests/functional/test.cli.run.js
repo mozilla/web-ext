@@ -11,13 +11,14 @@ const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 
 describe('web-ext run', () => {
 
-  it('should accept: --no-reload --source-dir SRCDIR --firefox FXPATH',
+  it('accepts: --no-reload --watch-file --source-dir SRCDIR --firefox FXPATH',
      () => withTempAddonDir(
        {addonPath: minimalAddonPath},
        (srcDir) => {
          const argv = [
            'run', '--verbose', '--no-reload',
            '--source-dir', srcDir,
+           '--watch-file', srcDir,
            '--firefox', fakeFirefoxPath,
          ];
          const spawnOptions = {

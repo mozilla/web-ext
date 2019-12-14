@@ -58,7 +58,7 @@ function exitKeypressLoop(stdin) {
   }
 }
 
-describe.only('util/extension-runners', () => {
+describe('util/extension-runners', () => {
   describe('createExtensionRunner', () => {
     it('requires a valid target', async () => {
       // $FLOW_IGNORE: Want to pass invalid argument and check the error.
