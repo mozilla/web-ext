@@ -1,9 +1,11 @@
+/* eslint-disable no-console */
 /* @flow */
 import path from 'path';
 
 import {it, describe} from 'mocha';
 import {fs} from 'mz';
 import sinon from 'sinon';
+import {assert} from 'chai';
 
 import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
 import {withTempDir} from '../../src/util/temp-dir';
@@ -35,6 +37,9 @@ describe('watcher', () => {
         resolveChange();
       });
 
+      let watchedFilePath;
+      let watchedDirPath;
+
       return fs.writeFile(someFile, '<contents>')
         .then(() => {
           return onSourceChange({
@@ -46,10 +51,25 @@ describe('watcher', () => {
           });
         })
         .then((watcher) => {
-          return fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000)
-            .then(() => watcher);
+          const watchedFile = watcher.fileWatchers[0];
+          const watchedDir = watcher.dirWatchers[0];
+
+          watchedFilePath = watchedFile && watchedFile.path;
+          watchedDirPath = watchedDir && watchedDir.path;
+
+          return watcher;
         })
         .then((watcher) => {
+          return fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000)
+            .then(() => watcher);
+        }).then((watcher) => {
+          const assertParams = {
+            onChange,
+            watchedFilePath,
+            watchedDirPath,
+            tmpDirPath: tmpDir.path(),
+          };
+
           return Promise.race([
             whenFilesChanged
               .then(() => {
@@ -58,37 +78,65 @@ describe('watcher', () => {
                 // which can happen when the temp dir is deleted (presumably
                 // before watcher.close() has removed all listeners).
                 return new Promise((resolve) => {
-                  setTimeout(resolve, 2, onChange);
+                  setTimeout(resolve, 2, assertParams);
                 });
               }),
             // Time out if no files are changed
             new Promise((resolve) => setTimeout(() => {
               watcher.close();
-              resolve(onChange);
+              resolve(assertParams);
             }, 500)),
           ]);
         });
     }
   );
 
-  it('watches for file changes', () => {
-    watchChange({ touchedFile: 'foo.txt' })
-      .then((onChange) => sinon.assert.calledOnce(onChange));
+  it('watches for changes in the sourceDir', async () => {
+    const {
+      onChange,
+      watchedFilePath,
+      watchedDirPath,
+      tmpDirPath,
+    } = await watchChange({
+      touchedFile: 'foo.txt',
+    });
+
+    sinon.assert.calledOnce(onChange);
+    assert.equal(watchedDirPath, tmpDirPath);
+    assert.isUndefined(watchedFilePath);
   });
 
   describe('--watch-file option is passed in', () => {
-    it('changes if the watched file is the same as the touched file', () => {
-      return watchChange({
+    it('changes if the watched file is touched', async () => {
+      const {
+        onChange,
+        watchedFilePath,
+        watchedDirPath,
+        tmpDirPath,
+      } = await watchChange({
         watchFile: 'foo.txt',
         touchedFile: 'foo.txt',
-      }).then((onChange) => sinon.assert.calledOnce(onChange));
+      });
+
+      sinon.assert.calledOnce(onChange);
+      assert.isUndefined(watchedDirPath);
+      assert.equal(watchedFilePath, path.join(tmpDirPath, 'foo.txt'));
     });
 
-    it('does not change if watched file and touched file are different', () => {
-      return watchChange({
+    it('does not change if watched file is not touched', async () => {
+      const {
+        onChange,
+        watchedFilePath,
+        watchedDirPath,
+        tmpDirPath,
+      } = await watchChange({
         watchFile: 'bar.txt',
         touchedFile: 'foo.txt',
-      }).then((onChange) => sinon.assert.notCalled(onChange));
+      });
+
+      sinon.assert.notCalled(onChange);
+      assert.isUndefined(watchedDirPath);
+      assert.equal(watchedFilePath, path.join(tmpDirPath, 'bar.txt'));
     });
   });
 
