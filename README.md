@@ -199,7 +199,7 @@ Here is a partial list of examples:
 * Integrating with services.
   * Mozilla offers some useful services such as
     [linting](https://github.com/mozilla/addons-linter) and
-    [signing](http://olympia.readthedocs.org/en/latest/topics/api/signing.html)
+    [signing](https://github.com/mozilla/sign-addon)
     extensions.
 
 [web-ext-user-docs]: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext
