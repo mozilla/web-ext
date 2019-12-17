@@ -28,6 +28,7 @@ export type ExtensionManifest = {|
   version: string,
   default_locale?: string,
   applications?: ExtensionManifestApplications,
+  browser_specific_settings?: ExtensionManifestApplications,
   permissions?: Array<string>,
 |};
 
@@ -85,6 +86,20 @@ export default async function getValidatedManifest(
 
 
 export function getManifestId(manifestData: ExtensionManifest): string | void {
-  return manifestData.applications ?
-    manifestData.applications.gecko.id : undefined;
+  if (
+    manifestData.applications &&
+    manifestData.applications.gecko.id
+  ) {
+    return manifestData.applications.gecko.id;
+  }
+
+  if (
+    manifestData.browser_specific_settings &&
+    manifestData.browser_specific_settings.gecko &&
+    manifestData.browser_specific_settings.gecko.id
+  ) {
+    return manifestData.browser_specific_settings.gecko.id;
+  }
+
+  return undefined;
 }
