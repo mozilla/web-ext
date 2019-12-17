@@ -211,14 +211,39 @@ describe('util/manifest', () => {
   });
 
   describe('getManifestId', () => {
+    const id = 'basic-manifest@web-ext-test-suite';
 
-    it('returns a gecko ID', () => {
-      assert.equal(getManifestId(basicManifest),
-                   'basic-manifest@web-ext-test-suite');
+    ['applications', 'browser_specific_settings'].forEach((key) => {
+
+      describe(`with ${key}`, () => {
+
+        it('returns gecko.id if present', () => {
+          assert.equal(getManifestId({
+            ...manifestWithoutApps,
+            [key]: basicManifest.applications,
+          }), id);
+        });
+
+        it('returns undefined when gecko does not exist', () => {
+          assert.equal(
+            getManifestId({
+              ...manifestWithoutApps,
+              [key]: {},
+            }),
+            undefined
+          );
+        });
+
+      });
+
     });
 
-    it('returns undefined when ID is not specified', () => {
-      assert.strictEqual(getManifestId(manifestWithoutApps), undefined);
+    describe('without applications and browser_specific_settings', () => {
+
+      it('returns undefined when ID is not specified', () => {
+        assert.strictEqual(getManifestId(manifestWithoutApps), undefined);
+      });
+
     });
 
   });
