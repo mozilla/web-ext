@@ -15,7 +15,7 @@ const log = createLogger(__filename);
 // getValidatedManifest helper types and implementation
 
 export type ExtensionManifestApplications = {|
-  gecko: {|
+  gecko?: {|
     id?: string,
     strict_min_version?: string,
     strict_max_version?: string,
@@ -28,6 +28,7 @@ export type ExtensionManifest = {|
   version: string,
   default_locale?: string,
   applications?: ExtensionManifestApplications,
+  browser_specific_settings?: ExtensionManifestApplications,
   permissions?: Array<string>,
 |};
 
@@ -85,6 +86,15 @@ export default async function getValidatedManifest(
 
 
 export function getManifestId(manifestData: ExtensionManifest): string | void {
-  return manifestData.applications ?
-    manifestData.applications.gecko.id : undefined;
+  const manifestApps = [
+    manifestData.browser_specific_settings,
+    manifestData.applications,
+  ];
+  for (const apps of manifestApps) {
+    if (apps && apps.gecko && apps.gecko.id) {
+      return apps.gecko.id;
+    }
+  }
+
+  return undefined;
 }
