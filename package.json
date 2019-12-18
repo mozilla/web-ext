@@ -69,7 +69,7 @@
     "node-notifier": "6.0.0",
     "open": "7.0.0",
     "parse-json": "5.0.0",
-    "sign-addon": "2.0.2",
+    "sign-addon": "2.0.3",
     "source-map-support": "0.5.16",
     "stream-to-promise": "2.2.0",
     "strip-bom": "4.0.0",
