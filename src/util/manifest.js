@@ -1,13 +1,13 @@
 /* @flow */
-import path from "path";
+import path from 'path';
 
-import { fs } from "mz";
-import parseJSON from "parse-json";
-import stripBom from "strip-bom";
-import stripJsonComments from "strip-json-comments";
+import { fs } from 'mz';
+import parseJSON from 'parse-json';
+import stripBom from 'strip-bom';
+import stripJsonComments from 'strip-json-comments';
 
-import { InvalidManifest } from "../errors";
-import { createLogger } from "./logger";
+import { InvalidManifest } from '../errors';
+import { createLogger } from './logger';
 
 const log = createLogger(__filename);
 
@@ -34,13 +34,13 @@ export type ExtensionManifest = {|
 export default async function getValidatedManifest(
   sourceDir: string
 ): Promise<ExtensionManifest> {
-  const manifestFile = path.join(sourceDir, "manifest.json");
+  const manifestFile = path.join(sourceDir, 'manifest.json');
   log.debug(`Validating manifest at ${manifestFile}`);
 
   let manifestContents;
 
   try {
-    manifestContents = await fs.readFile(manifestFile, { encoding: "utf-8" });
+    manifestContents = await fs.readFile(manifestFile, { encoding: 'utf-8' });
   } catch (error) {
     throw new InvalidManifest(
       `Could not read manifest.json file at ${manifestFile}: ${error}`
@@ -79,7 +79,7 @@ export default async function getValidatedManifest(
 
   if (errors.length) {
     throw new InvalidManifest(
-      `Manifest at ${manifestFile} is invalid: ${errors.join("; ")}`
+      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`
     );
   }
 
@@ -89,7 +89,7 @@ export default async function getValidatedManifest(
 export function getManifestId(manifestData: ExtensionManifest): string | void {
   return [
     manifestData.applications,
-    manifestData.browser_specific_settings
+    manifestData.browser_specific_settings,
   ].reduce((result, apps) => {
     try {
       // $FLOW_IGNORE: allow thrown error (caught).
