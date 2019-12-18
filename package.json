@@ -95,7 +95,7 @@
     "babel-plugin-istanbul": "5.2.0",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
-    "conventional-changelog-cli": "2.0.28",
+    "conventional-changelog-cli": "2.0.31",
     "copy-dir": "1.2.0",
     "coveralls": "3.0.9",
     "cross-env": "6.0.3",
