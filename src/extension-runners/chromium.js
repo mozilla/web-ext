@@ -90,9 +90,12 @@ export class ChromiumExtensionRunner {
    */
   async setupInstance(): Promise<void> {
     // Start a websocket server on a free localhost TCP port.
-    this.wss = new WebSocket.Server({
-      port: 0,
-      host: 'localhost',
+    this.wss = await new Promise((resolve) => {
+      const server = new WebSocket.Server(
+        {port: 0, host: 'localhost'},
+        // Wait the server to be listening (so that the extension
+        // runner can successfully retrieve server address and port).
+        () => resolve(server));
     });
 
     // Prevent unhandled socket error (e.g. when chrome
