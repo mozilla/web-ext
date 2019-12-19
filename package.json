@@ -3,6 +3,11 @@
   "version": "3.2.0",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
+  "files": [
+    "CODE_OF_CONDUCT.md",
+    "dist/*.js",
+    "src/**"
+  ],
   "engines": {
     "node": ">=10.0.0",
     "npm": ">=5.6.0"
