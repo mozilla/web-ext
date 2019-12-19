@@ -5,11 +5,12 @@ const path = require('path');
 const shell = require('shelljs');
 const tmp = require('tmp');
 
-const config = require('./lib/config');
+const pkg = require('../package.json');
 const {mochaFunctional} = require('./lib/mocha');
 
 shell.set('-e');
 
+const packageFileName = `${pkg.name}-${pkg.version}.tgz`;
 const testProductionMode = process.env.TEST_PRODUCTION_MODE === '1';
 const testLegacyBundling = process.env.TEST_LEGACY_BUNDLING === '1';
 
@@ -23,6 +24,7 @@ shell.exec('npm run build', testProductionMode ? {
 } : {});
 
 if (testProductionMode) {
+  const srcDir = process.cwd();
   const destDir = tmp.tmpNameSync();
   const packageDir = tmp.tmpNameSync();
   const npmInstallOptions = ['--production'];
@@ -42,9 +44,12 @@ if (testProductionMode) {
   shell.echo('\nPreparing web-ext production mode environment...\n');
   shell.rm('-rf', destDir, packageDir);
   shell.mkdir('-p', destDir, packageDir);
-  shell.cp('-rf', config.copy.productionModeAssets.src, packageDir);
+  shell.pushd(packageDir);
+  shell.exec(`npm pack ${srcDir}`);
+  shell.popd();
   shell.pushd(destDir);
-  shell.exec(`npm install ${npmInstallOptions.join(' ')} ${packageDir}`);
+  const pkgPath = path.join(packageDir, packageFileName);
+  shell.exec(`npm install ${npmInstallOptions.join(' ')} ${pkgPath}`);
   shell.popd();
   shell.echo('\nProduction mode environment successfully created.\n');
 }
