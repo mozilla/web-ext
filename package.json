@@ -3,6 +3,11 @@
   "version": "3.2.0",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
+  "files": [
+    "CODE_OF_CONDUCT.md",
+    "dist/*.js",
+    "src/**"
+  ],
   "engines": {
     "node": ">=10.0.0",
     "npm": ">=5.6.0"
@@ -51,7 +56,7 @@
     "@cliqz-oss/firefox-client": "0.3.1",
     "@cliqz-oss/node-firefox-connect": "1.2.1",
     "adbkit": "2.11.1",
-    "addons-linter": "1.18.0",
+    "addons-linter": "1.19.0",
     "bunyan": "1.8.12",
     "camelcase": "5.3.1",
     "chrome-launcher": "0.11.2",
@@ -69,7 +74,7 @@
     "node-notifier": "6.0.0",
     "open": "7.0.0",
     "parse-json": "5.0.0",
-    "sign-addon": "2.0.2",
+    "sign-addon": "2.0.4",
     "source-map-support": "0.5.16",
     "stream-to-promise": "2.2.0",
     "strip-bom": "4.0.0",
@@ -77,7 +82,7 @@
     "tmp": "0.1.0",
     "update-notifier": "3.0.1",
     "watchpack": "1.6.0",
-    "ws": "7.2.0",
+    "ws": "7.2.1",
     "yargs": "13.3.0",
     "zip-dir": "1.0.2"
   },
@@ -95,7 +100,7 @@
     "babel-plugin-istanbul": "5.2.0",
     "chai": "4.2.0",
     "chai-as-promised": "7.1.1",
-    "conventional-changelog-cli": "2.0.28",
+    "conventional-changelog-cli": "2.0.31",
     "copy-dir": "1.2.0",
     "coveralls": "3.0.9",
     "cross-env": "6.0.3",
@@ -112,7 +117,7 @@
     "prettyjson": "1.2.1",
     "shelljs": "0.8.3",
     "sinon": "7.5.0",
-    "webpack": "4.41.2",
+    "webpack": "4.41.4",
     "yauzl": "2.10.0"
   },
   "author": "Kumar McMillan",

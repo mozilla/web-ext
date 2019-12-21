@@ -1,12 +1,2 @@
-# OSX
-.DS_Store
-
-# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
-.cache
-
-# Build artifacts.
-npm-debug.log
-dist/tests.js*
-artifacts/*
-coverage/*
+# The files to be included in the npm package are listed in the package.json file,
+# in the `files` property (See https://docs.npmjs.com/files/package.json#files).
