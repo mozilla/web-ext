@@ -78,13 +78,11 @@ export class Program {
     this.absolutePackageDir = absolutePackageDir;
     this.verboseEnabled = false;
     this.shouldExitProgram = true;
+
     this.yargs = yargsInstance;
-
-    // The following yargs configuration option is needed to fix #304.
     this.yargs.parserConfiguration({
-      'boolean-negation': false,
+      'boolean-negation': true,
     });
-
     this.yargs.strict();
 
     this.commands = {};
@@ -148,6 +146,34 @@ export class Program {
     this.verboseEnabled = true;
   }
 
+  // Retrieve the yargs argv object and apply any further fix needed
+  // on the output of the yargs options parsing.
+  getArguments(): Object {
+    const argv = this.yargs.argv;
+
+    // Yargs boolean options doesn't define the no* counterpart
+    // with negate-boolean on Yargs 15. Define as expected by the
+    // web-ext execute method.
+    if (argv.configDiscovery != null) {
+      argv.noConfigDiscovery = !argv.configDiscovery;
+    }
+    if (argv.reload != null) {
+      argv.noReload = !argv.reload;
+    }
+
+    // Replacement for the "requiresArg: true" parameter until the following bug
+    // is fixed: https://github.com/yargs/yargs/issues/1098
+    if (argv.ignoreFiles && !argv.ignoreFiles.length) {
+      throw new UsageError('Not enough arguments following: ignore-files');
+    }
+
+    if (argv.startUrl && !argv.startUrl.length) {
+      throw new UsageError('Not enough arguments following: start-url');
+    }
+
+    return argv;
+  }
+
   async execute(
     {
       checkForUpdates = defaultUpdateChecker,
@@ -164,13 +190,7 @@ export class Program {
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
 
-    const argv = this.yargs.argv;
-
-    // Replacement for the "requiresArg: true" parameter until the following bug
-    // is fixed: https://github.com/yargs/yargs/issues/1098
-    if (argv.ignoreFiles && !argv.ignoreFiles.length) {
-      throw new UsageError('Not enough arguments following: ignore-files');
-    }
+    const argv = this.getArguments();
 
     const cmd = argv._[0];
 
@@ -196,10 +216,7 @@ export class Program {
 
       const configFiles = [];
 
-      // Because of an issue with yargs special handling for '--no-' option prefix (See #306)
-      // we need to look explicitly for the options  --config-discovery and --no-config-discovery
-      // (See #1307).
-      if (argv.configDiscovery && !argv.noConfigDiscovery) {
+      if (argv.configDiscovery) {
         log.debug(
           'Discovering config files. ' +
           'Set --no-config-discovery to disable');
@@ -490,9 +507,11 @@ Example: $0 --help run.
         demandOption: false,
         type: 'boolean',
       },
-      'no-reload': {
-        describe: 'Do not reload the extension when source files change',
+      'reload': {
+        describe: 'Reload the extension when source files change.' +
+          'Disable with --no-reload.',
         demandOption: false,
+        default: true,
         type: 'boolean',
       },
       'pre-install': {
@@ -516,7 +535,6 @@ Example: $0 --help run.
         alias: ['u', 'url'],
         describe: 'Launch firefox at specified page',
         demandOption: false,
-        requiresArg: true,
         type: 'array',
       },
       'browser-console': {
