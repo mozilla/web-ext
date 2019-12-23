@@ -443,19 +443,30 @@ describe('program.main', () => {
       });
   });
 
-  it('passes the url of a firefox binary when specified', () => {
+  it('passes the url of a firefox binary when specified', async () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
-    return execProgram(
-      ['run', '--start-url', 'www.example.com'],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          {startUrl: ['www.example.com']}
-        );
-      });
+    const opts = {commands: fakeCommands};
+
+    await execProgram(['run', '--start-url', 'www.example.com'], opts);
+    sinon.assert.calledWithMatch(fakeCommands.run, {
+      startUrl: ['www.example.com'],
+    });
+
+    // Repeat test with multiple urls.
+    await execProgram(
+      ['run', '--start-url', 'www.example.com', 'www.example2.com'],
+      opts
+    );
+    sinon.assert.calledWithMatch(fakeCommands.run, {
+      startUrl: ['www.example.com', 'www.example2.com'],
+    });
+
+    await assert.isRejected(
+      execProgram(['run', '--start-url'], opts),
+      /Not enough arguments following: start-url/
+    );
   });
 
   it('opens browser console when --browser-console is specified', () => {
