@@ -50,13 +50,18 @@ function prepareExtensionRunnerParams({params} = {}) {
 describe('util/extension-runners/chromium', async () => {
 
   it('uses the expected chrome flags', () => {
-    const expectedFlags = [ // Flags from 11.2
-      '--disable-translate',
+    // Flags from chrome-launcher v0.12.0
+    const expectedFlags = [
+      '--disable-features=TranslateUI',
+      '--disable-component-extensions-with-background-pages',
       '--disable-background-networking',
       '--disable-sync',
       '--metrics-recording-only',
       '--disable-default-apps',
       '--no-first-run',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-background-timer-throttling',
     ];
 
     assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
