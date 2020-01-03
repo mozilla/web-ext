@@ -56,10 +56,7 @@ export default function onSourceChange(
   const watchedDirs = [];
   const watchedFiles = [];
 
-  // eslint-disable-next-line no-console
-  console.log('this should print');
   if (watchFile) {
-
     if (fs.existsSync(watchFile) && !fs.lstatSync(watchFile).isFile()) {
       throw new UsageError(`"${watchFile}" cannot be passed` +
         ' into the --watch-file option.');
