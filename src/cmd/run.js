@@ -114,8 +114,8 @@ export default async function run(
     fs.existsSync(watchFile) &&
     fs.lstatSync(watchFile).isDirectory()
   ) {
-    throw new UsageError(`The directory "${watchFile}" cannot be
-      passed into the --watch-file option.`);
+    throw new UsageError(`The directory "${watchFile}" cannot be ` +
+      'passed into the --watch-file option.');
   }
 
   // Create an alias for --pref since it has been transformed into an

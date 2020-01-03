@@ -56,6 +56,28 @@ describe('web-ext run', () => {
          });
        }));
 
+  it('should not accept: --watch-file <directory>', () => withTempAddonDir(
+    {addonPath: minimalAddonPath},
+    (srcDir) => {
+      const watchedFile = path.join(srcDir, 'watchedFile.txt');
+      fs.writeFileSync(watchedFile);
+
+      const argv = [
+        'run', '--verbose', '--no-reload',
+        '--watch-file', srcDir,
+      ];
+
+      return execWebExt(argv, {}).waitForExit.then(({exitCode, stdout}) => {
+        assert.notEqual(exitCode, 0);
+        // eslint-disable-next-line no-console
+        console.log(stdout);
+        assert.match(
+          stdout,
+          /The directory .+ cannot be passed into the --watch-file option./
+        );
+      });
+    }));
+
   it('should not accept: --target INVALIDTARGET', async () => {
     const argv = [
       'run',
