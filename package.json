@@ -83,7 +83,7 @@
     "update-notifier": "4.0.0",
     "watchpack": "1.6.0",
     "ws": "7.2.1",
-    "yargs": "15.0.2",
+    "yargs": "15.1.0",
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
