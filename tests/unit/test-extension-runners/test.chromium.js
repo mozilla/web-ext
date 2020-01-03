@@ -3,7 +3,7 @@
 import EventEmitter from 'events';
 
 import {assert} from 'chai';
-import {describe, it} from 'mocha';
+import {describe, it, beforeEach, afterEach} from 'mocha';
 import deepcopy from 'deepcopy';
 import fs from 'mz/fs';
 import sinon from 'sinon';
@@ -50,13 +50,18 @@ function prepareExtensionRunnerParams({params} = {}) {
 describe('util/extension-runners/chromium', async () => {
 
   it('uses the expected chrome flags', () => {
-    const expectedFlags = [ // Flags from 11.2
-      '--disable-translate',
+    // Flags from chrome-launcher v0.12.0
+    const expectedFlags = [
+      '--disable-features=TranslateUI',
+      '--disable-component-extensions-with-background-pages',
       '--disable-background-networking',
       '--disable-sync',
       '--metrics-recording-only',
       '--disable-default-apps',
       '--no-first-run',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-background-timer-throttling',
     ];
 
     assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
@@ -140,8 +145,13 @@ describe('util/extension-runners/chromium', async () => {
         message.match('Fake wss socket ERROR')
       )));
 
+    const reload = (client, resolve, data) => {
+      client.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
+      resolve(data);
+    };
+
     const waitForReloadAll = new Promise((resolve) =>
-      wsClient.on('message', resolve));
+      wsClient.on('message', (data) => reload(wsClient, resolve, data)));
     await runnerInstance.reloadAllExtensions();
     assert.deepEqual(JSON.parse(await waitForReloadAll),
                      {type: 'webExtReloadAllExtensions'});
@@ -149,7 +159,7 @@ describe('util/extension-runners/chromium', async () => {
     // TODO(rpl): change this once we improve the manager extension to be able
     // to reload a single extension.
     const waitForReloadOne = new Promise((resolve) =>
-      wsClient.on('message', resolve));
+      wsClient.on('message', (data) => reload(wsClient, resolve, data)));
     await runnerInstance.reloadExtensionBySourceDir('/fake/sourceDir');
     assert.deepEqual(JSON.parse(await waitForReloadOne),
                      {type: 'webExtReloadAllExtensions'});
@@ -160,9 +170,15 @@ describe('util/extension-runners/chromium', async () => {
     await new Promise((resolve) => wsClient2.on('open', resolve));
     wsClient.close();
 
+    const waitForReloadClient2 = new Promise((resolve) =>
+      wsClient2.on('message', (data) => reload(wsClient2, resolve, data)));
+
     await runnerInstance.reloadAllExtensions();
+    assert.deepEqual(JSON.parse(await waitForReloadClient2),
+                     {type: 'webExtReloadAllExtensions'});
+
     const waitForReloadAllAgain = new Promise((resolve) =>
-      wsClient2.on('message', resolve));
+      wsClient2.on('message', (data) => reload(wsClient2, resolve, data)));
     await runnerInstance.reloadAllExtensions();
     assert.deepEqual(JSON.parse(await waitForReloadAllAgain),
                      {type: 'webExtReloadAllExtensions'});
@@ -367,4 +383,77 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.exit();
   });
 
+  describe('reloadAllExtensions', () => {
+    let runnerInstance;
+    let wsClient: WebSocket;
+
+    beforeEach(async () => {
+      const {params} = prepareExtensionRunnerParams();
+      runnerInstance = new ChromiumExtensionRunner(params);
+      await runnerInstance.run();
+    });
+
+    const connectClient = async () => {
+      const wssInfo = runnerInstance.wss.address();
+      const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
+      wsClient = new WebSocket(wsURL);
+      await new Promise((resolve) => wsClient.on('open', resolve));
+    };
+
+    afterEach(async () => {
+      if (wsClient && (wsClient.readyState === WebSocket.OPEN)) {
+        wsClient.close();
+        wsClient = null;
+      }
+      await runnerInstance.exit();
+    });
+
+    it('does not resolve before complete message from client', async () => {
+      let reloadMessage = false;
+      await connectClient();
+
+      wsClient.on('message', (message) => {
+        const msg = JSON.parse(message);
+
+        if (msg.type === 'webExtReloadAllExtensions') {
+          assert.equal(reloadMessage, false);
+
+          setTimeout(() => {
+            const respondMsg = JSON.stringify({
+              type: 'webExtReloadExtensionComplete',
+            });
+            wsClient.send(respondMsg);
+            reloadMessage = true;
+          }, 333);
+        }
+      });
+
+      await runnerInstance.reloadAllExtensions();
+      assert.equal(reloadMessage, true);
+    });
+
+    it('resolve when any client send complete message', async () => {
+      await connectClient();
+      wsClient.on('message', () => {
+        const msg = JSON.stringify({type: 'webExtReloadExtensionComplete'});
+        wsClient.send(msg);
+      });
+      await runnerInstance.reloadAllExtensions();
+    });
+
+    it('resolve when all client disconnect', async () => {
+      await connectClient();
+      await new Promise((resolve) => {
+        wsClient.on('close', () => {
+          resolve(runnerInstance.reloadAllExtensions());
+        });
+        wsClient.close();
+      });
+      wsClient = null;
+    });
+
+    it('resolve when not client connected', async () => {
+      await runnerInstance.reloadAllExtensions();
+    });
+  });
 });
