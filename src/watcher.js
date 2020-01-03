@@ -51,11 +51,16 @@ export default function onSourceChange(
 
   log.debug(`Watching for file changes in ${watchFile || sourceDir}`);
 
-  watcher.watch([], [sourceDir], Date.now());
+  const watchedDirs = [];
+  const watchedFiles = [];
 
   if (watchFile) {
-    watcher.watch([watchFile], [], Date.now());
+    watchedFiles.push(watchFile);
+  } else {
+    watchedDirs.push(sourceDir);
   }
+
+  watcher.watch(watchedFiles, watchedDirs, Date.now());
 
   // TODO: support interrupting the watcher on Windows.
   // https://github.com/mozilla/web-ext/issues/225
