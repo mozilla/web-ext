@@ -1,6 +1,10 @@
 /* @flow */
+import path from 'path';
+
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
+import { fs } from 'mz';
+import { tempdir } from 'shelljs';
 
 import {
   minimalAddonPath, fakeFirefoxPath,
@@ -15,10 +19,13 @@ describe('web-ext run', () => {
      () => withTempAddonDir(
        {addonPath: minimalAddonPath},
        (srcDir) => {
+         const watchedFile = path.join(srcDir, 'watchedFile.txt');
+         fs.writeFileSync(watchedFile);
+
          const argv = [
            'run', '--verbose', '--no-reload',
            '--source-dir', srcDir,
-           '--watch-file', srcDir,
+           '--watch-file', watchedFile,
            '--firefox', fakeFirefoxPath,
          ];
          const spawnOptions = {
