@@ -9,6 +9,7 @@ import {assert} from 'chai';
 
 import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
 import {withTempDir} from '../../src/util/temp-dir';
+import { makeSureItFails } from './helpers';
 
 type AssertWatchedParams = {
   watchFile?: string,
@@ -137,6 +138,18 @@ describe('watcher', () => {
       sinon.assert.notCalled(onChange);
       assert.isUndefined(watchedDirPath);
       assert.equal(watchedFilePath, path.join(tmpDirPath, 'bar.txt'));
+    });
+
+    it('throws error if a non-file is passed into --watch-file', () => {
+      watchChange({
+        watchFile: '/',
+        touchedFile: 'foo.txt',
+      }).then(makeSureItFails()).catch((error) => {
+        assert.match(
+          error.message,
+          /.+ cannot be passed into the --watch-file option./,
+        );
+      });
     });
   });
 

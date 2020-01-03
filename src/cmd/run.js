@@ -1,6 +1,4 @@
 /* @flow */
-import {fs} from 'mz';
-
 import defaultBuildExtension from './build';
 import {
   showDesktopNotification as defaultDesktopNotifications,
@@ -18,7 +16,6 @@ import {
 } from '../extension-runners';
 // Import objects that are only used as Flow types.
 import type {FirefoxPreferences} from '../firefox/preferences';
-import { UsageError } from '../errors';
 
 const log = createLogger(__filename);
 
@@ -107,15 +104,6 @@ export default async function run(
     log.info('Disabled auto-reloading because it\'s not possible with ' +
              '--pre-install');
     noReload = true;
-  }
-
-  if (
-    watchFile &&
-    fs.existsSync(watchFile) &&
-    fs.lstatSync(watchFile).isDirectory()
-  ) {
-    throw new UsageError(`The directory "${watchFile}" cannot be ` +
-      'passed into the --watch-file option.');
   }
 
   // Create an alias for --pref since it has been transformed into an

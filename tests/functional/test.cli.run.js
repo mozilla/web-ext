@@ -59,19 +59,24 @@ describe('web-ext run', () => {
   it('should not accept: --watch-file <directory>', () => withTempAddonDir(
     {addonPath: minimalAddonPath},
     (srcDir) => {
-      const watchedFile = path.join(srcDir, 'watchedFile.txt');
-      fs.writeFileSync(watchedFile);
-
       const argv = [
-        'run', '--verbose', '--no-reload',
+        'run', '--verbose',
+        '--source-dir', srcDir,
         '--watch-file', srcDir,
+        '--firefox', fakeFirefoxPath,
       ];
 
-      return execWebExt(argv, {}).waitForExit.then(({exitCode, stdout}) => {
-        assert.notEqual(exitCode, 0);
+      const spawnOptions = {
+        env: {
+          PATH: process.env.PATH,
+          addonPath: srcDir,
+        },
+      };
+
+      return execWebExt(argv, spawnOptions).waitForExit.then(({stdout}) => {
         assert.match(
           stdout,
-          /The directory .+ cannot be passed into the --watch-file option./
+          /.+ cannot be passed into the --watch-file option./
         );
       });
     }));

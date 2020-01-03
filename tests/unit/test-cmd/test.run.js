@@ -11,7 +11,6 @@ import {
   FakeExtensionRunner,
   getFakeFirefox,
   getFakeRemoteFirefox,
-  makeSureItFails,
 } from '../helpers';
 import {createLogger} from '../../../src/util/logger';
 
@@ -172,20 +171,6 @@ describe('run', () => {
     assert.equal(args.sourceDir, sourceDir);
     assert.equal(args.artifactsDir, artifactsDir);
     assert.equal(args.watchFile, watchFile);
-  });
-
-  it('throws a usage error if a directory is passed into --watch-file', () => {
-    const cmd = prepareRun();
-
-    const watchFile = fixturePath('minimal-web-ext');
-
-    cmd.run({noReload: false, watchFile })
-      .then(makeSureItFails()).catch((error) => {
-        assert.match(
-          error.message,
-          /The directory .+ cannot be passed into the --watch-file option./
-        );
-      });
   });
 
   it('can disable input in the reload strategy', async () => {
