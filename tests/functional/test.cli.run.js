@@ -69,8 +69,6 @@ describe('web-ext run', () => {
 
       return execWebExt(argv, {}).waitForExit.then(({exitCode, stdout}) => {
         assert.notEqual(exitCode, 0);
-        // eslint-disable-next-line no-console
-        console.log(stdout);
         assert.match(
           stdout,
           /The directory .+ cannot be passed into the --watch-file option./
