@@ -4,7 +4,6 @@ import path from 'path';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import { fs } from 'mz';
-import { tempdir } from 'shelljs';
 
 import {
   minimalAddonPath, fakeFirefoxPath,
