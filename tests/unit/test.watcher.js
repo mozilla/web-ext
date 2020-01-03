@@ -141,7 +141,7 @@ describe('watcher', () => {
     });
 
     it('throws error if a non-file is passed into --watch-file', () => {
-      watchChange({
+      return watchChange({
         watchFile: '/',
         touchedFile: 'foo.txt',
       }).then(makeSureItFails()).catch((error) => {
