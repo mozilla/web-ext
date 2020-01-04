@@ -58,8 +58,8 @@ export default function onSourceChange(
 
   if (watchFile) {
     if (fs.existsSync(watchFile) && !fs.lstatSync(watchFile).isFile()) {
-      throw new UsageError(`"${watchFile}" cannot be passed` +
-        ' into the --watch-file option.');
+      throw new UsageError('Invalid --watch-file value: ' +
+        `"${watchFile}" is not a file.`);
     }
 
     watchedFiles.push(watchFile);

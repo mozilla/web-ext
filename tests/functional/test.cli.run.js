@@ -76,7 +76,7 @@ describe('web-ext run', () => {
       return execWebExt(argv, spawnOptions).waitForExit.then(({stdout}) => {
         assert.match(
           stdout,
-          /.+ cannot be passed into the --watch-file option./
+          /Invalid --watch-file value: .+ is not a file./
         );
       });
     }));

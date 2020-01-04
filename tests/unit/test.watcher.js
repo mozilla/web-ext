@@ -147,7 +147,7 @@ describe('watcher', () => {
       }).then(makeSureItFails()).catch((error) => {
         assert.match(
           error.message,
-          /.+ cannot be passed into the --watch-file option./,
+          /Invalid --watch-file value: .+ is not a file./
         );
       });
     });
