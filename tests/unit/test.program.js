@@ -484,6 +484,24 @@ describe('program.main', () => {
       });
   });
 
+  it('calls run with a watched file', () => {
+    const watchFile = 'path/to/fake/file.txt';
+
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+
+    return execProgram(
+      ['run', '--watch-file', watchFile],
+      {commands: fakeCommands})
+      .then(() => {
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          {watchFile}
+        );
+      });
+  });
+
   it('converts custom preferences into an object', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),

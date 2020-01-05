@@ -237,6 +237,7 @@ export class MultiExtensionRunner {
 export type WatcherCreatorParams = {|
   reloadExtension: (string) => void,
   sourceDir: string,
+  watchFile?: string,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
@@ -247,7 +248,7 @@ export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    reloadExtension, sourceDir, artifactsDir, ignoreFiles,
+    reloadExtension, sourceDir, watchFile, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
@@ -257,6 +258,7 @@ export function defaultWatcherCreator(
   );
   return onSourceChange({
     sourceDir,
+    watchFile,
     artifactsDir,
     onChange: () => reloadExtension(sourceDir),
     shouldWatchFile: (file) => fileFilter.wantFile(file),
@@ -269,6 +271,7 @@ export function defaultWatcherCreator(
 export type ReloadStrategyParams = {|
   extensionRunner: IExtensionRunner,
   sourceDir: string,
+  watchFile?: string,
   artifactsDir: string,
   ignoreFiles?: Array<string>,
   noInput?: boolean,
@@ -287,6 +290,7 @@ export function defaultReloadStrategy(
     ignoreFiles,
     noInput = false,
     sourceDir,
+    watchFile,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
@@ -304,6 +308,7 @@ export function defaultReloadStrategy(
       extensionRunner.reloadExtensionBySourceDir(watchedSourceDir);
     },
     sourceDir,
+    watchFile,
     artifactsDir,
     ignoreFiles,
   });

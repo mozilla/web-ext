@@ -1,7 +1,9 @@
 /* @flow */
+import {fs} from 'mz';
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
+import { UsageError } from './errors';
 import {createLogger} from './util/logger';
 
 
@@ -16,6 +18,7 @@ export type OnChangeFn = () => any;
 
 export type OnSourceChangeParams = {|
   sourceDir: string,
+  watchFile?: string,
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile: ShouldWatchFn,
@@ -30,7 +33,13 @@ declare function exports(params: OnSourceChangeParams): Watchpack;
 export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
 
 export default function onSourceChange(
-  {sourceDir, artifactsDir, onChange, shouldWatchFile}: OnSourceChangeParams
+  {
+    sourceDir,
+    watchFile,
+    artifactsDir,
+    onChange,
+    shouldWatchFile,
+  }: OnSourceChangeParams
 ): Watchpack {
   // TODO: For network disks, we would need to add {poll: true}.
   const watcher = new Watchpack();
@@ -42,8 +51,23 @@ export default function onSourceChange(
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
   });
 
-  log.debug(`Watching for file changes in ${sourceDir}`);
-  watcher.watch([], [sourceDir], Date.now());
+  log.debug(`Watching for file changes in ${watchFile || sourceDir}`);
+
+  const watchedDirs = [];
+  const watchedFiles = [];
+
+  if (watchFile) {
+    if (fs.existsSync(watchFile) && !fs.lstatSync(watchFile).isFile()) {
+      throw new UsageError('Invalid --watch-file value: ' +
+        `"${watchFile}" is not a file.`);
+    }
+
+    watchedFiles.push(watchFile);
+  } else {
+    watchedDirs.push(sourceDir);
+  }
+
+  watcher.watch(watchedFiles, watchedDirs, Date.now());
 
   // TODO: support interrupting the watcher on Windows.
   // https://github.com/mozilla/web-ext/issues/225

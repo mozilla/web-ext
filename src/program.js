@@ -514,6 +514,13 @@ Example: $0 --help run.
         default: true,
         type: 'boolean',
       },
+      'watch-file': {
+        describe: 'Reload the extension only when the contents of this' +
+                  'file changes. This is useful if you use a custom' +
+                  ' build process for your extension',
+        demandOption: false,
+        type: 'string',
+      },
       'pre-install': {
         describe: 'Pre-install the extension into the profile before ' +
                   'startup. This is only needed to support older versions ' +
