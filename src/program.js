@@ -83,7 +83,8 @@ export class Program {
     this.yargs.parserConfiguration({
       'boolean-negation': true,
     });
-    this.yargs.strict();
+    // TODO: remove false when https://github.com/yargs/yargs/issues/873 is fixed
+    this.yargs.strict(false);
 
     this.commands = {};
     this.options = {};
@@ -105,7 +106,8 @@ export class Program {
         // web-ext lint ./src/path/to/file.js
         .demandCommand(0, 0, undefined,
                        'This command does not take any arguments')
-        .strict()
+        // TODO: remove false when https://github.com/yargs/yargs/issues/873 is fixed
+        .strict(false)
         .exitProcess(this.shouldExitProgram)
         // Calling env() will be unnecessary after
         // https://github.com/yargs/yargs/issues/486 is fixed
@@ -340,7 +342,8 @@ Example: $0 --help run.
     .env(envPrefix)
     .version(version)
     .demandCommand(1, 'You must specify a command')
-    .strict()
+    // TODO: remove false when https://github.com/yargs/yargs/issues/873 is fixed
+    .strict(false)
     .recommendCommands();
 
   program.setGlobalOptions({
