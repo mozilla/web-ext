@@ -118,6 +118,7 @@
     "shelljs": "0.8.3",
     "sinon": "8.1.1",
     "webpack": "4.41.6",
+    "webpack-node-externals": "1.7.2",
     "yauzl": "2.10.0"
   },
   "author": "Kumar McMillan",
