@@ -13,6 +13,16 @@ Object.keys(require('./package.json').dependencies)
     nodeModules[mod] = 'commonjs ' + mod;
   });
 
+// Allow use of importing parts of an external module, without bundling them.
+function nodeModulesExternalsHandler(context, request, callback) {
+  var mod = request.split('/', 1)[0];
+  if (Object.prototype.hasOwnProperty.call(nodeModules, mod)) {
+    callback(null, 'commonjs ' + request);
+    return;
+  }
+  callback();
+}
+
 var rules = [
   {
     exclude: /(node_modules|bower_components)/,
@@ -39,7 +49,10 @@ module.exports = {
   module: {
     rules,
   },
-  externals: nodeModules,
+  externals: [
+    nodeModules,
+    nodeModulesExternalsHandler,
+  ],
   plugins: [
     new webpack.BannerPlugin({
       banner: 'require("source-map-support").install();',
