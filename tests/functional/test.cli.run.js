@@ -32,6 +32,14 @@ describe('web-ext run', () => {
              PATH: process.env.PATH,
              EXPECTED_MESSAGE,
              addonPath: srcDir,
+             // Add an environment var unrelated to the executed command to
+             // ensure we do clear the environment vars from them before
+             // yargs is validation the detected cli and env options.
+             // (See #793).
+             WEB_EXT_API_KEY: 'fake-api-key',
+             // Also include an environment var that misses the '_' separator
+             // between envPrefix and option name.
+             WEB_EXTAPI_SECRET: 'fake-secret',
            },
          };
 

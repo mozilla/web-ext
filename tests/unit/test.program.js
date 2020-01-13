@@ -317,6 +317,60 @@ describe('program.Program', () => {
         sinon.assert.notCalled(checkForUpdates);
       });
   });
+
+  it('does remove environment vars unsupported by the selected command',
+     async () => {
+       const handlerRun = spy();
+       const handlerSpy = spy();
+       const program = new Program(['run', '--another-run-option=from-cli']);
+       const fakeEnv = {
+         WEB_EXT_RUN_OPTION: 'from-env',
+         WEB_EXT_VERBOSE: 'true',
+         WEB_EXT_SIGN_OPTION: 'from-env',
+         // Also include some environment vars that miss the '_' separator
+         // between envPrefix and option name.
+         WEB_EXTANOTHER_RUN_OPTION: 'from-env',
+         WEB_EXTANOTHER_SIGN_OPTION: 'from-env',
+       };
+       program.setGlobalOptions({
+         verbose: {
+           type: 'boolean',
+           demandOption: false,
+           default: false,
+         },
+       });
+       program.command('run', 'some command', handlerRun, {
+         'run-option': {
+           demandOption: true,
+           type: 'string',
+         },
+         'another-run-option': {
+           demandOption: true,
+           default: 'from-default',
+           type: 'string',
+         },
+       });
+       program.command('sign', 'another command', handlerSpy, {
+         'sign-option': {
+           demandOption: true,
+           default: 'from-default',
+           type: 'string',
+         },
+         'another-sign-option': {
+           demandOption: true,
+           default: 'from-default',
+           type: 'string',
+         },
+       });
+
+       // $FLOW_IGNORE: override systemProcess for testing purpose.
+       program.cleanupProcessEnvConfigs({env: fakeEnv});
+       assert.deepEqual(fakeEnv, {
+         WEB_EXT_RUN_OPTION: 'from-env',
+         WEB_EXTANOTHER_RUN_OPTION: 'from-env',
+         WEB_EXT_VERBOSE: 'true',
+       });
+     });
 });
 
 

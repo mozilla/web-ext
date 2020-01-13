@@ -4,8 +4,10 @@ import path from 'path';
 import {readFileSync} from 'fs';
 
 import camelCase from 'camelcase';
+import decamelize from 'decamelize';
 import git from 'git-rev-sync';
 import yargs from 'yargs';
+import { Parser as yargsParser } from 'yargs/yargs';
 
 import defaultCommands from './cmd';
 import {UsageError} from './errors';
@@ -53,6 +55,7 @@ export class Program {
   shouldExitProgram: boolean;
   verboseEnabled: boolean;
   options: Object;
+  programArgv: Array<string>;
 
   constructor(
     argv: ?Array<string>,
@@ -65,6 +68,7 @@ export class Program {
     // NOTE: process.argv.slice(2) removes the path to node and web-ext
     // executables from the process.argv array.
     argv = argv || process.argv.slice(2);
+    this.programArgv = argv;
 
     // NOTE: always initialize yargs explicitly with the package dir
     // to avoid side-effects due to yargs looking for its configuration
@@ -174,6 +178,31 @@ export class Program {
     return argv;
   }
 
+  // Remove WEB_EXT_* environment vars that are not a global cli options
+  // or an option supported by the current command (See #793).
+  cleanupProcessEnvConfigs(systemProcess: typeof process) {
+    const cmd = yargsParser(this.programArgv)._[0];
+    const env = systemProcess.env || {};
+    const toOptionKey = (k) => decamelize(
+      camelCase(k.replace(envPrefix, '')), '-'
+    );
+
+    if (cmd) {
+      Object.keys(env)
+        .filter((k) => k.startsWith(envPrefix))
+        .forEach((k) => {
+          const optKey = toOptionKey(k);
+          const globalOpt = this.options[optKey];
+          const cmdOpt = this.options[cmd] && this.options[cmd][optKey];
+
+          if (!globalOpt && !cmdOpt) {
+            log.debug(`Environment ${k} not supported by web-ext ${cmd}`);
+            delete env[k];
+          }
+        });
+    }
+  }
+
   async execute(
     {
       checkForUpdates = defaultUpdateChecker,
@@ -190,6 +219,7 @@ export class Program {
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
 
+    this.cleanupProcessEnvConfigs(systemProcess);
     const argv = this.getArguments();
 
     const cmd = argv._[0];
