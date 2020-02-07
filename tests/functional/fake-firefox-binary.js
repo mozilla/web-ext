@@ -55,4 +55,4 @@ net.createServer(function(socket) {
   });
 
   socket.write(toRDP(REPLY_INITIAL));
-}).listen(getPortFromArgs());
+}).listen(getPortFromArgs(), '127.0.0.1');
