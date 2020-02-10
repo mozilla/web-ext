@@ -113,6 +113,7 @@ function prepareSelectedDeviceAndAPKParams(
     ])),
     discoverInstalledFirefoxAPKs: sinon.spy(() => Promise.resolve([
       'org.mozilla.fennec', 'org.mozilla.firefox',
+      'org.mozilla.fenix', 'org.mozilla.fenix.nightly',
     ])),
     getAndroidVersionNumber: sinon.spy(() => Promise.resolve(20)),
     amForceStopAPK: sinon.spy(() => Promise.resolve()),
@@ -681,7 +682,7 @@ describe('util/extension-runners/firefox-android', () => {
            return Promise.reject(new WebExtError('fake timeout'));
          });
 
-         params.firefoxAndroidTimeout = 0;
+         params.adbDiscoveryTimeout = 0;
 
          let actualError;
 
@@ -922,6 +923,93 @@ describe('util/extension-runners/firefox-android', () => {
 
       consoleStream.stopCapturing();
     });
+
+    it(
+      'does disable fennec compatibility mode if apk name includes .fenix',
+      async () => {
+        const {params} = prepareSelectedDeviceAndAPKParams();
+        const testCases = [
+          {
+            params: {firefoxApk: 'org.mozilla.firefox'},
+            fennecCompatibilityMode: true,
+          },
+          {
+            params: {firefoxApk: 'org.mozilla.fenix'},
+            fennecCompatibilityMode: false,
+          },
+          {
+            params: {firefoxApk: 'org.mozilla.fenix.nightly'},
+            fennecCompatibilityMode: false,
+          },
+          {
+            params: {
+              firefoxApk: 'org.mozilla.fenix',
+              fennecMode: true,
+            },
+            fennecCompatibilityMode: true,
+          },
+          {
+            params: {
+              firefoxApk: 'org.mozilla.fennec',
+              fennecMode: false,
+            },
+            fennecCompatibilityMode: false,
+          },
+        ];
+        for (const testCase of testCases) {
+          const runner = new FirefoxAndroidExtensionRunner({
+            ...params,
+            ...testCase.params,
+          });
+          assert.equal(
+            runner.fennecCompatibilityMode,
+            testCase.fennecCompatibilityMode,
+            `Got expected fennecCompatibilityMode for ${
+              JSON.stringify(testCase)
+            }`
+          );
+        }
+      }
+    );
+
+    it(
+      'does only require READ_EXTERNAL_STORAGE on fennec mode disabled',
+      async () => {
+        const {params, fakeADBUtils} = prepareSelectedDeviceAndAPKParams();
+        params.firefoxApk = 'org.mozilla.fenix';
+        fakeADBUtils.getAndroidVersionNumber = async () => 23;
+
+        const runner = new FirefoxAndroidExtensionRunner(params);
+        await runner.run();
+        sinon.assert.calledWithMatch(
+          fakeADBUtils.ensureRequiredAPKRuntimePermissions,
+          'emulator-1', 'org.mozilla.fenix', [
+            'android.permission.READ_EXTERNAL_STORAGE',
+          ]
+        );
+      }
+    );
+
+    it(
+      'does tell user to enable Remote Debugging when running Fenix',
+      async () => {
+        const {params, fakeADBUtils} = prepareSelectedDeviceAndAPKParams();
+        params.firefoxApk = 'org.mozilla.fenix.nightly';
+        fakeADBUtils.getAndroidVersionNumber = async () => 23;
+
+        consoleStream.startCapturing();
+        const runner = new FirefoxAndroidExtensionRunner(params);
+        await runner.run();
+
+        assert.match(
+          consoleStream.capturedMessages.join('\n'),
+          /Make sure to enable "Remote Debugging via USB"/
+        );
+
+        consoleStream.flushCapturedLogs();
+        consoleStream.stopCapturing();
+      }
+    );
 
   });
 

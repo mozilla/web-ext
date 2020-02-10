@@ -70,8 +70,9 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   adbHost?: string,
   adbPort?: string,
   adbDevice?: string,
+  adbDiscoveryTimeout?: number,
   firefoxApk?: string,
-  firefoxAndroidTimeout?: number,
+  fennecMode?: boolean,
 
   // Injected Dependencies.
   firefoxApp: typeof defaultFirefoxApp,
@@ -141,7 +142,10 @@ export class FirefoxAndroidExtensionRunner {
     // pretty slow, we can run the following 3 steps in parallel to speed up
     // it a bit.
     await Promise.all([
-      // Start Firefox for Android instance on the created profile.
+      // Start Firefox for Android instance if not started yet.
+      // (Fennec would run in an temporary profile and so it is explicitly
+      // stopped, Fenix runs on its usual profile and so it may be already
+      // running).
       this.adbStartSelectedPackage(),
 
       // Build and push to devices all the extension xpis
@@ -268,6 +272,21 @@ export class FirefoxAndroidExtensionRunner {
   }
 
   // Private helper methods.
+
+  get fennecCompatibilityMode() {
+    if (this.params.fennecMode != null) {
+      return this.params.fennecMode;
+    }
+
+    const firefoxApk =
+      this.selectedFirefoxApk || this.params.firefoxApk;
+
+    if (firefoxApk && firefoxApk.includes('.fenix')) {
+      return false;
+    }
+
+    return true;
+  }
 
   getDeviceProfileDir(): string {
     return `${this.selectedArtifactsDir}/profile`;
@@ -409,11 +428,22 @@ export class FirefoxAndroidExtensionRunner {
     // Runtime permission needed to be able to run Firefox on a temporarily created profile
     // on android versions >= 23 (Android Marshmallow, which is the first version where
     // these permissions are optional and have to be granted explicitly).
-    await adbUtils.ensureRequiredAPKRuntimePermissions(
-      selectedAdbDevice, selectedFirefoxApk, [
-        'android.permission.READ_EXTERNAL_STORAGE',
+    const requiredPermissions = [
+      'android.permission.READ_EXTERNAL_STORAGE',
+    ];
+
+    if (this.fennecCompatibilityMode) {
+      // For Fennec, also require the WRITE_EXTERNAL_STORAGE permission,
+      // needed to allow Fennec to use the temporary profile created
+      // on the sdcard (on the contrary we do not use a temporary profile
+      // for Fenix, and so the READ_EXTERNAL_STORAGE is enough to be able
+      // to access the xpi file uploaded on the android device).
+      requiredPermissions.push(
         'android.permission.WRITE_EXTERNAL_STORAGE',
-      ]
+      );
+    }
+    await adbUtils.ensureRequiredAPKRuntimePermissions(
+      selectedAdbDevice, selectedFirefoxApk, requiredPermissions
     );
   }
 
@@ -464,7 +494,9 @@ export class FirefoxAndroidExtensionRunner {
 
     log.info(`Starting ${selectedFirefoxApk}...`);
 
-    log.debug(`Using profile ${deviceProfileDir}`);
+    if (this.fennecCompatibilityMode) {
+      log.debug(`Using profile ${deviceProfileDir}`);
+    }
 
     await adbUtils.startFirefoxAPK(
       selectedAdbDevice, selectedFirefoxApk, deviceProfileDir
@@ -516,7 +548,7 @@ export class FirefoxAndroidExtensionRunner {
       selectedAdbDevice,
       selectedFirefoxApk,
       params: {
-        firefoxAndroidTimeout,
+        adbDiscoveryTimeout,
       },
     } = this;
 
@@ -530,8 +562,8 @@ export class FirefoxAndroidExtensionRunner {
       unixSocketDiscoveryMaxTime,
     } = FirefoxAndroidExtensionRunner;
 
-    if (typeof firefoxAndroidTimeout === 'number') {
-      unixSocketDiscoveryMaxTime = firefoxAndroidTimeout;
+    if (typeof adbDiscoveryTimeout === 'number') {
+      unixSocketDiscoveryMaxTime = adbDiscoveryTimeout;
     }
 
     const handleCtrlC = (str, key) => {
@@ -550,6 +582,16 @@ export class FirefoxAndroidExtensionRunner {
     }
 
     try {
+      let msg = `Waiting for ${selectedFirefoxApk} Remote Debugging Server...`;
+      if (!this.fennecCompatibilityMode) {
+        msg += (
+          '\nMake sure to enable "Remote Debugging via USB" ' +
+          'from Settings -> Developer Tools if it is not yet enabled.'
+        );
+      }
+
+      log.info(`\n${msg}\n`);
+
       // Got a debugger socket file to connect.
       this.selectedRDPSocketFile = (
         await adbUtils.discoverRDPUnixSocket(

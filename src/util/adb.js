@@ -118,7 +118,8 @@ export default class ADBUtils {
         // Match any package name that starts with the package name of a Firefox for Android browser.
         return (
           line.startsWith('org.mozilla.fennec') ||
-            line.startsWith('org.mozilla.firefox')
+          line.startsWith('org.mozilla.fenix') ||
+          line.startsWith('org.mozilla.firefox')
         );
       });
   }

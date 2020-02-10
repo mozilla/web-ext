@@ -612,6 +612,12 @@ Example: $0 --help run.
         type: 'string',
         requiresArg: true,
       },
+      'adb-discovery-timeout': {
+        describe: 'Number of milliseconds to wait before giving up',
+        demandOption: false,
+        type: 'number',
+        requiresArg: true,
+      },
       'firefox-apk': {
         describe: (
           'Run a specific Firefox for Android APK. ' +
@@ -620,6 +626,14 @@ Example: $0 --help run.
         demandOption: false,
         type: 'string',
         requiresArg: true,
+      },
+      'fennec-mode': {
+        describe: (
+          'Control the APK as a Fennec-based browser (defaults to true, ' +
+          'set to false if the APK is a geckoview-based browser)'
+        ),
+        demandOption: false,
+        type: 'boolean',
       },
     })
     .command('lint', 'Validate the extension source', commands.lint, {

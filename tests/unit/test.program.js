@@ -816,6 +816,21 @@ describe('program.main', () => {
         assert.equal(options.artifactsDir, 'xxx');
       });
   });
+
+  it(
+    'does disable fennec compatibility mode with --fennec-mode=false',
+    async () => {
+      const fakeCommands = fake(commands, {
+        build: () => Promise.resolve(),
+      });
+      await execProgram(
+        ['run', '--fennec-mode', 'false', '-t', 'firefox-android'],
+        {commands: fakeCommands}
+      );
+      const options = fakeCommands.run.firstCall.args[0];
+      assert.equal(options.fennecMode, false);
+    }
+  );
 });
 
 describe('program.defaultVersionGetter', () => {

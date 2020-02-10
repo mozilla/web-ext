@@ -231,9 +231,13 @@ describe('run', () => {
   it('creates a Firefox Android runner if "firefox-android" is in target',
      async () => {
        const cmd = prepareRun();
-       await cmd.run({target: ['firefox-android']});
+       await cmd.run({target: ['firefox-android'], fennecMode: false});
 
        sinon.assert.calledOnce(androidRunnerStub);
+       assert.equal(
+         androidRunnerStub.firstCall.args[0].fennecMode,
+         false,
+       );
        sinon.assert.notCalled(desktopRunnerStub);
      });
 
