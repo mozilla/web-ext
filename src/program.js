@@ -627,10 +627,17 @@ Example: $0 --help run.
         type: 'string',
         requiresArg: true,
       },
+      'firefox-apk-component': {
+        describe:
+          'Run a specific Android Component (defaults to <firefox-apk>/.App)',
+        demandOption: false,
+        type: 'string',
+        requiresArg: true,
+      },
       'fennec-mode': {
         describe: (
           'Control the APK as a Fennec-based browser (defaults to true, ' +
-          'set to false if the APK is a geckoview-based browser)'
+          'set to false if the APK is a GeckoView-based browser)'
         ),
         demandOption: false,
         type: 'boolean',

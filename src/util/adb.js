@@ -119,6 +119,7 @@ export default class ADBUtils {
         return (
           line.startsWith('org.mozilla.fennec') ||
           line.startsWith('org.mozilla.fenix') ||
+          line.startsWith('org.mozilla.geckoview') ||
           line.startsWith('org.mozilla.firefox')
         );
       });
@@ -250,7 +251,11 @@ export default class ADBUtils {
   }
 
   async startFirefoxAPK(
-    deviceId: string, apk: string, deviceProfileDir: string
+    deviceId: string,
+    apk: string,
+    apkComponent: ?string,
+    fennecCompatibilityMode: boolean,
+    deviceProfileDir: string,
   ): Promise<void> {
     const {adbClient} = this;
 
@@ -258,17 +263,24 @@ export default class ADBUtils {
       `Starting ${apk} with profile ${deviceProfileDir} on ${deviceId}`
     );
 
+    const extras = [];
+
+    if (fennecCompatibilityMode) {
+      extras.push({
+        key: 'args',
+        value: `-profile ${deviceProfileDir}`,
+      });
+    }
+
+    const component = apkComponent ?
+      `${apk}/.${apkComponent}` : `${apk}/.App`;
+
     await wrapADBCall(async () => {
       await adbClient.startActivity(deviceId, {
         wait: true,
         action: 'android.activity.MAIN',
-        component: `${apk}/.App`,
-        extras: [
-          {
-            key: 'args',
-            value: `-profile ${deviceProfileDir}`,
-          },
-        ],
+        component,
+        extras,
       });
     });
   }

@@ -46,6 +46,7 @@ export type CmdRunParams = {|
   adbDevice?: string,
   adbDiscoveryTimeout?: number,
   firefoxApk?: string,
+  firefoxApkComponent?: string,
   fennecMode?: boolean,
 
   // Chromium Desktop CLI options.
@@ -88,6 +89,7 @@ export default async function run(
     adbDevice,
     adbDiscoveryTimeout,
     firefoxApk,
+    firefoxApkComponent,
     fennecMode,
     // Chromium CLI options.
     chromiumBinary,
@@ -159,6 +161,7 @@ export default async function run(
       browserConsole,
       preInstall,
       firefoxApk,
+      firefoxApkComponent,
       adbDevice,
       adbHost,
       adbPort,

@@ -72,6 +72,7 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   adbDevice?: string,
   adbDiscoveryTimeout?: number,
   firefoxApk?: string,
+  firefoxApkComponent?: string,
   fennecMode?: boolean,
 
   // Injected Dependencies.
@@ -281,7 +282,8 @@ export class FirefoxAndroidExtensionRunner {
     const firefoxApk =
       this.selectedFirefoxApk || this.params.firefoxApk;
 
-    if (firefoxApk && firefoxApk.includes('.fenix')) {
+    if (firefoxApk && (firefoxApk.includes('.fenix') ||
+        firefoxApk.includes('.geckoview'))) {
       return false;
     }
 
@@ -430,18 +432,9 @@ export class FirefoxAndroidExtensionRunner {
     // these permissions are optional and have to be granted explicitly).
     const requiredPermissions = [
       'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
     ];
 
-    if (this.fennecCompatibilityMode) {
-      // For Fennec, also require the WRITE_EXTERNAL_STORAGE permission,
-      // needed to allow Fennec to use the temporary profile created
-      // on the sdcard (on the contrary we do not use a temporary profile
-      // for Fenix, and so the READ_EXTERNAL_STORAGE is enough to be able
-      // to access the xpi file uploaded on the android device).
-      requiredPermissions.push(
-        'android.permission.WRITE_EXTERNAL_STORAGE',
-      );
-    }
     await adbUtils.ensureRequiredAPKRuntimePermissions(
       selectedAdbDevice, selectedFirefoxApk, requiredPermissions
     );
@@ -488,6 +481,9 @@ export class FirefoxAndroidExtensionRunner {
       adbUtils,
       selectedFirefoxApk,
       selectedAdbDevice,
+      params: {
+        firefoxApkComponent,
+      },
     } = this;
 
     const deviceProfileDir = this.getDeviceProfileDir();
@@ -499,7 +495,11 @@ export class FirefoxAndroidExtensionRunner {
     }
 
     await adbUtils.startFirefoxAPK(
-      selectedAdbDevice, selectedFirefoxApk, deviceProfileDir
+      selectedAdbDevice,
+      selectedFirefoxApk,
+      firefoxApkComponent,
+      this.fennecCompatibilityMode,
+      deviceProfileDir,
     );
   }
 

@@ -343,6 +343,7 @@ describe('util/extension-runners/firefox-android', () => {
          sinon.assert.calledWithMatch(
            fakeADBUtils.startFirefoxAPK,
            'emulator-1', 'org.mozilla.firefox',
+           undefined, true,
            runnerInstance.getDeviceProfileDir()
          );
 
@@ -351,6 +352,25 @@ describe('util/extension-runners/firefox-android', () => {
            fakeADBUtils.startFirefoxAPK
          );
        });
+
+    it('does run a specific apk component if specific', async () => {
+      const {
+        params, fakeADBUtils,
+      } = prepareSelectedDeviceAndAPKParams();
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner({
+        ...params,
+        fennecMode: false,
+        firefoxApkComponent: 'CustomView',
+      });
+      await runnerInstance.run();
+      sinon.assert.calledWithMatch(
+        fakeADBUtils.startFirefoxAPK,
+        'emulator-1', 'org.mozilla.firefox',
+        'CustomView', false,
+        runnerInstance.getDeviceProfileDir()
+      );
+    });
 
     it('supports custom prefs via --pref', async () => {
       const fakeFirefoxApp = {
@@ -969,24 +989,6 @@ describe('util/extension-runners/firefox-android', () => {
             }`
           );
         }
-      }
-    );
-
-    it(
-      'does only require READ_EXTERNAL_STORAGE on fennec mode disabled',
-      async () => {
-        const {params, fakeADBUtils} = prepareSelectedDeviceAndAPKParams();
-        params.firefoxApk = 'org.mozilla.fenix';
-        fakeADBUtils.getAndroidVersionNumber = async () => 23;
-
-        const runner = new FirefoxAndroidExtensionRunner(params);
-        await runner.run();
-        sinon.assert.calledWithMatch(
-          fakeADBUtils.ensureRequiredAPKRuntimePermissions,
-          'emulator-1', 'org.mozilla.fenix', [
-            'android.permission.READ_EXTERNAL_STORAGE',
-          ]
-        );
       }
     );
 
