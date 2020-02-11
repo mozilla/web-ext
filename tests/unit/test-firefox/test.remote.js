@@ -390,7 +390,8 @@ describe('firefox.remote', () => {
     async function promiseServerOnPort(port): Promise<net.Server> {
       return new Promise((resolve) => {
         const srv = net.createServer();
-        srv.listen(port, () => {
+        // $FLOW_FIXME: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290
+        srv.listen(port, '127.0.0.1', () => {
           resolve(srv);
         });
       });

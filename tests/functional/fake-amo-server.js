@@ -51,7 +51,7 @@ http.createServer(function(req, res) {
   } else {
     process.exit(1);
   }
-}).listen(8989, () => {
+}).listen(8989, '127.0.0.1', () => {
   process.stdout.write('listening');
   process.stdout.uncork();
 });
