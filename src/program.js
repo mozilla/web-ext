@@ -612,11 +612,24 @@ Example: $0 --help run.
         type: 'string',
         requiresArg: true,
       },
+      'adb-discovery-timeout': {
+        describe: 'Number of milliseconds to wait before giving up',
+        demandOption: false,
+        type: 'number',
+        requiresArg: true,
+      },
       'firefox-apk': {
         describe: (
           'Run a specific Firefox for Android APK. ' +
           'Example: org.mozilla.fennec_aurora'
         ),
+        demandOption: false,
+        type: 'string',
+        requiresArg: true,
+      },
+      'firefox-apk-component': {
+        describe:
+          'Run a specific Android Component (defaults to <firefox-apk>/.App)',
         demandOption: false,
         type: 'string',
         requiresArg: true,

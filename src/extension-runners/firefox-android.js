@@ -70,8 +70,9 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   adbHost?: string,
   adbPort?: string,
   adbDevice?: string,
+  adbDiscoveryTimeout?: number,
   firefoxApk?: string,
-  firefoxAndroidTimeout?: number,
+  firefoxApkComponent?: string,
 
   // Injected Dependencies.
   firefoxApp: typeof defaultFirefoxApp,
@@ -141,7 +142,10 @@ export class FirefoxAndroidExtensionRunner {
     // pretty slow, we can run the following 3 steps in parallel to speed up
     // it a bit.
     await Promise.all([
-      // Start Firefox for Android instance on the created profile.
+      // Start Firefox for Android instance if not started yet.
+      // (Fennec would run in an temporary profile and so it is explicitly
+      // stopped, Fenix runs on its usual profile and so it may be already
+      // running).
       this.adbStartSelectedPackage(),
 
       // Build and push to devices all the extension xpis
@@ -409,11 +413,13 @@ export class FirefoxAndroidExtensionRunner {
     // Runtime permission needed to be able to run Firefox on a temporarily created profile
     // on android versions >= 23 (Android Marshmallow, which is the first version where
     // these permissions are optional and have to be granted explicitly).
+    const requiredPermissions = [
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+    ];
+
     await adbUtils.ensureRequiredAPKRuntimePermissions(
-      selectedAdbDevice, selectedFirefoxApk, [
-        'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE',
-      ]
+      selectedAdbDevice, selectedFirefoxApk, requiredPermissions
     );
   }
 
@@ -458,16 +464,22 @@ export class FirefoxAndroidExtensionRunner {
       adbUtils,
       selectedFirefoxApk,
       selectedAdbDevice,
+      params: {
+        firefoxApkComponent,
+      },
     } = this;
 
     const deviceProfileDir = this.getDeviceProfileDir();
 
     log.info(`Starting ${selectedFirefoxApk}...`);
 
-    log.debug(`Using profile ${deviceProfileDir}`);
+    log.debug(`Using profile ${deviceProfileDir} (ignored by Fenix)`);
 
     await adbUtils.startFirefoxAPK(
-      selectedAdbDevice, selectedFirefoxApk, deviceProfileDir
+      selectedAdbDevice,
+      selectedFirefoxApk,
+      firefoxApkComponent,
+      deviceProfileDir,
     );
   }
 
@@ -516,7 +528,7 @@ export class FirefoxAndroidExtensionRunner {
       selectedAdbDevice,
       selectedFirefoxApk,
       params: {
-        firefoxAndroidTimeout,
+        adbDiscoveryTimeout,
       },
     } = this;
 
@@ -530,8 +542,8 @@ export class FirefoxAndroidExtensionRunner {
       unixSocketDiscoveryMaxTime,
     } = FirefoxAndroidExtensionRunner;
 
-    if (typeof firefoxAndroidTimeout === 'number') {
-      unixSocketDiscoveryMaxTime = firefoxAndroidTimeout;
+    if (typeof adbDiscoveryTimeout === 'number') {
+      unixSocketDiscoveryMaxTime = adbDiscoveryTimeout;
     }
 
     const handleCtrlC = (str, key) => {
@@ -550,6 +562,14 @@ export class FirefoxAndroidExtensionRunner {
     }
 
     try {
+      const msg = (
+        `Waiting for ${selectedFirefoxApk} Remote Debugging Server...` +
+        '\nMake sure to enable "Remote Debugging via USB" ' +
+        'from Settings -> Developer Tools if it is not yet enabled.'
+      );
+
+      log.info(`\n${msg}\n`);
+
       // Got a debugger socket file to connect.
       this.selectedRDPSocketFile = (
         await adbUtils.discoverRDPUnixSocket(

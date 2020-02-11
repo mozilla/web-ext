@@ -113,6 +113,7 @@ function prepareSelectedDeviceAndAPKParams(
     ])),
     discoverInstalledFirefoxAPKs: sinon.spy(() => Promise.resolve([
       'org.mozilla.fennec', 'org.mozilla.firefox',
+      'org.mozilla.fenix', 'org.mozilla.fenix.nightly',
     ])),
     getAndroidVersionNumber: sinon.spy(() => Promise.resolve(20)),
     amForceStopAPK: sinon.spy(() => Promise.resolve()),
@@ -336,12 +337,15 @@ describe('util/extension-runners/firefox-android', () => {
 
          sinon.assert.calledWithMatch(
            fakeADBUtils.amForceStopAPK,
-           'emulator-1', 'org.mozilla.firefox'
+           'emulator-1',
+           'org.mozilla.firefox'
          );
 
          sinon.assert.calledWithMatch(
            fakeADBUtils.startFirefoxAPK,
-           'emulator-1', 'org.mozilla.firefox',
+           'emulator-1',
+           'org.mozilla.firefox',
+           undefined,
            runnerInstance.getDeviceProfileDir()
          );
 
@@ -350,6 +354,25 @@ describe('util/extension-runners/firefox-android', () => {
            fakeADBUtils.startFirefoxAPK
          );
        });
+
+    it('does run a specific apk component if specific', async () => {
+      const {
+        params, fakeADBUtils,
+      } = prepareSelectedDeviceAndAPKParams();
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner({
+        ...params,
+        firefoxApkComponent: 'CustomView',
+      });
+      await runnerInstance.run();
+      sinon.assert.calledWithMatch(
+        fakeADBUtils.startFirefoxAPK,
+        'emulator-1',
+        'org.mozilla.firefox',
+        'CustomView',
+        runnerInstance.getDeviceProfileDir()
+      );
+    });
 
     it('supports custom prefs via --pref', async () => {
       const fakeFirefoxApp = {
@@ -681,7 +704,7 @@ describe('util/extension-runners/firefox-android', () => {
            return Promise.reject(new WebExtError('fake timeout'));
          });
 
-         params.firefoxAndroidTimeout = 0;
+         params.adbDiscoveryTimeout = 0;
 
          let actualError;
 
@@ -922,6 +945,27 @@ describe('util/extension-runners/firefox-android', () => {
 
       consoleStream.stopCapturing();
     });
+
+    it(
+      'does tell user to enable Remote Debugging when running Fenix',
+      async () => {
+        const {params, fakeADBUtils} = prepareSelectedDeviceAndAPKParams();
+        params.firefoxApk = 'org.mozilla.fenix.nightly';
+        fakeADBUtils.getAndroidVersionNumber = async () => 23;
+
+        consoleStream.startCapturing();
+        const runner = new FirefoxAndroidExtensionRunner(params);
+        await runner.run();
+
+        assert.match(
+          consoleStream.capturedMessages.join('\n'),
+          /Make sure to enable "Remote Debugging via USB"/
+        );
+
+        consoleStream.flushCapturedLogs();
+        consoleStream.stopCapturing();
+      }
+    );
 
   });
 

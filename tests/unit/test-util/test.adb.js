@@ -676,7 +676,9 @@ describe('utils/adb', () => {
         testFn: (adbUtils) => {
           return adbUtils.startFirefoxAPK(
             'device1',
-            'org.mozilla.firefox_mybuild', '/fake/custom/profile/path'
+            'org.mozilla.firefox_mybuild',
+            undefined, // firefoxApkComponent
+            '/fake/custom/profile/path'
           );
         },
       });
@@ -695,7 +697,43 @@ describe('utils/adb', () => {
       );
     });
 
-    it('starts the given Firefox APK on a custom profile', async () => {
+    it('starts Firefox APK on a custom profile (only used by Fennec)',
+       async () => {
+         const adb = getFakeADBKit({
+           adbClient: {
+             startActivity: sinon.spy(() => Promise.resolve()),
+           },
+           adbkitUtil: {
+             readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+           },
+         });
+         const adbUtils = new ADBUtils({adb});
+
+         const promiseCompatibilityMode = adbUtils.startFirefoxAPK(
+           'device1',
+           'org.mozilla.firefox_mybuild',
+           undefined, // firefoxApkComponent
+           '/fake/custom/profile/path',
+         );
+
+         await assert.isFulfilled(promiseCompatibilityMode);
+
+         const expectedAdbParams = {
+           action: 'android.activity.MAIN',
+           component: 'org.mozilla.firefox_mybuild/.App',
+           extras: [{
+             key: 'args',
+             value: '-profile /fake/custom/profile/path',
+           }],
+           wait: true,
+         };
+
+         sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+         sinon.assert.calledWithMatch(
+           adb.fakeADBClient.startActivity, 'device1', expectedAdbParams);
+       });
+
+    it('starts a given APK component', async () => {
       const adb = getFakeADBKit({
         adbClient: {
           startActivity: sinon.spy(() => Promise.resolve()),
@@ -707,7 +745,10 @@ describe('utils/adb', () => {
       const adbUtils = new ADBUtils({adb});
 
       const promise = adbUtils.startFirefoxAPK(
-        'device1', 'org.mozilla.firefox_mybuild', '/fake/custom/profile/path'
+        'device1',
+        'org.mozilla.geckoview_example',
+        'GeckoViewActivity', // firefoxApkComponent
+        '/fake/custom/profile/path',
       );
 
       await assert.isFulfilled(promise);
@@ -716,7 +757,7 @@ describe('utils/adb', () => {
       sinon.assert.calledWithMatch(
         adb.fakeADBClient.startActivity, 'device1', {
           action: 'android.activity.MAIN',
-          component: 'org.mozilla.firefox_mybuild/.App',
+          component: 'org.mozilla.geckoview_example/.GeckoViewActivity',
           extras: [{
             key: 'args',
             value: '-profile /fake/custom/profile/path',
@@ -724,6 +765,7 @@ describe('utils/adb', () => {
           wait: true,
         }
       );
+
     });
   });
 
