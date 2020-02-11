@@ -233,13 +233,11 @@ describe('run', () => {
        const cmd = prepareRun();
        await cmd.run({
          target: ['firefox-android'],
-         fennecMode: false,
          firefoxApkComponent: 'CustomView',
        });
 
        sinon.assert.calledOnce(androidRunnerStub);
        const options = androidRunnerStub.firstCall.args[0];
-       assert.equal(options.fennecMode, false);
        assert.equal(options.firefoxApkComponent, 'CustomView');
        sinon.assert.notCalled(desktopRunnerStub);
      });

@@ -73,7 +73,6 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   adbDiscoveryTimeout?: number,
   firefoxApk?: string,
   firefoxApkComponent?: string,
-  fennecMode?: boolean,
 
   // Injected Dependencies.
   firefoxApp: typeof defaultFirefoxApp,
@@ -273,22 +272,6 @@ export class FirefoxAndroidExtensionRunner {
   }
 
   // Private helper methods.
-
-  get fennecCompatibilityMode() {
-    if (this.params.fennecMode != null) {
-      return this.params.fennecMode;
-    }
-
-    const firefoxApk =
-      this.selectedFirefoxApk || this.params.firefoxApk;
-
-    if (firefoxApk && (firefoxApk.includes('.fenix') ||
-        firefoxApk.includes('.geckoview'))) {
-      return false;
-    }
-
-    return true;
-  }
 
   getDeviceProfileDir(): string {
     return `${this.selectedArtifactsDir}/profile`;
@@ -490,15 +473,12 @@ export class FirefoxAndroidExtensionRunner {
 
     log.info(`Starting ${selectedFirefoxApk}...`);
 
-    if (this.fennecCompatibilityMode) {
-      log.debug(`Using profile ${deviceProfileDir}`);
-    }
+    log.debug(`Using profile ${deviceProfileDir} (ignored by Fenix)`);
 
     await adbUtils.startFirefoxAPK(
       selectedAdbDevice,
       selectedFirefoxApk,
       firefoxApkComponent,
-      this.fennecCompatibilityMode,
       deviceProfileDir,
     );
   }
@@ -582,13 +562,11 @@ export class FirefoxAndroidExtensionRunner {
     }
 
     try {
-      let msg = `Waiting for ${selectedFirefoxApk} Remote Debugging Server...`;
-      if (!this.fennecCompatibilityMode) {
-        msg += (
-          '\nMake sure to enable "Remote Debugging via USB" ' +
-          'from Settings -> Developer Tools if it is not yet enabled.'
-        );
-      }
+      const msg = (
+        `Waiting for ${selectedFirefoxApk} Remote Debugging Server...` +
+        '\nMake sure to enable "Remote Debugging via USB" ' +
+        'from Settings -> Developer Tools if it is not yet enabled.'
+      );
 
       log.info(`\n${msg}\n`);
 

@@ -634,14 +634,6 @@ Example: $0 --help run.
         type: 'string',
         requiresArg: true,
       },
-      'fennec-mode': {
-        describe: (
-          'Control the APK as a Fennec-based browser (defaults to true, ' +
-          'set to false if the APK is a GeckoView-based browser)'
-        ),
-        demandOption: false,
-        type: 'boolean',
-      },
     })
     .command('lint', 'Validate the extension source', commands.lint, {
       'output': {

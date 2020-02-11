@@ -818,21 +818,6 @@ describe('program.main', () => {
   });
 
   it(
-    'does disable fennec compatibility mode with --fennec-mode=false',
-    async () => {
-      const fakeCommands = fake(commands, {
-        build: () => Promise.resolve(),
-      });
-      await execProgram(
-        ['run', '--fennec-mode', 'false', '-t', 'firefox-android'],
-        {commands: fakeCommands}
-      );
-      const options = fakeCommands.run.firstCall.args[0];
-      assert.equal(options.fennecMode, false);
-    }
-  );
-
-  it(
     'does pass a custom apk component with --firefox-apk-component',
     async () => {
       const fakeCommands = fake(commands, {

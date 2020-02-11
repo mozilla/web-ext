@@ -254,23 +254,21 @@ export default class ADBUtils {
     deviceId: string,
     apk: string,
     apkComponent: ?string,
-    fennecCompatibilityMode: boolean,
     deviceProfileDir: string,
   ): Promise<void> {
     const {adbClient} = this;
 
     log.debug(
-      `Starting ${apk} with profile ${deviceProfileDir} on ${deviceId}`
+      `Starting ${apk} on ${deviceId}`
     );
 
-    const extras = [];
-
-    if (fennecCompatibilityMode) {
-      extras.push({
-        key: 'args',
-        value: `-profile ${deviceProfileDir}`,
-      });
-    }
+    // Fenix does ignore the -profile parameter, on the contrary Fennec
+    // would run using the given path as the profile to be used during
+    // this execution.
+    const extras = [{
+      key: 'args',
+      value: `-profile ${deviceProfileDir}`,
+    }];
 
     const component = apkComponent ?
       `${apk}/.${apkComponent}` : `${apk}/.App`;

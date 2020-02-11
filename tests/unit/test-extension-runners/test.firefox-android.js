@@ -337,13 +337,15 @@ describe('util/extension-runners/firefox-android', () => {
 
          sinon.assert.calledWithMatch(
            fakeADBUtils.amForceStopAPK,
-           'emulator-1', 'org.mozilla.firefox'
+           'emulator-1',
+           'org.mozilla.firefox'
          );
 
          sinon.assert.calledWithMatch(
            fakeADBUtils.startFirefoxAPK,
-           'emulator-1', 'org.mozilla.firefox',
-           undefined, true,
+           'emulator-1',
+           'org.mozilla.firefox',
+           undefined,
            runnerInstance.getDeviceProfileDir()
          );
 
@@ -360,14 +362,14 @@ describe('util/extension-runners/firefox-android', () => {
 
       const runnerInstance = new FirefoxAndroidExtensionRunner({
         ...params,
-        fennecMode: false,
         firefoxApkComponent: 'CustomView',
       });
       await runnerInstance.run();
       sinon.assert.calledWithMatch(
         fakeADBUtils.startFirefoxAPK,
-        'emulator-1', 'org.mozilla.firefox',
-        'CustomView', false,
+        'emulator-1',
+        'org.mozilla.firefox',
+        'CustomView',
         runnerInstance.getDeviceProfileDir()
       );
     });
@@ -943,54 +945,6 @@ describe('util/extension-runners/firefox-android', () => {
 
       consoleStream.stopCapturing();
     });
-
-    it(
-      'does disable fennec compatibility mode if apk name includes .fenix',
-      async () => {
-        const {params} = prepareSelectedDeviceAndAPKParams();
-        const testCases = [
-          {
-            params: {firefoxApk: 'org.mozilla.firefox'},
-            fennecCompatibilityMode: true,
-          },
-          {
-            params: {firefoxApk: 'org.mozilla.fenix'},
-            fennecCompatibilityMode: false,
-          },
-          {
-            params: {firefoxApk: 'org.mozilla.fenix.nightly'},
-            fennecCompatibilityMode: false,
-          },
-          {
-            params: {
-              firefoxApk: 'org.mozilla.fenix',
-              fennecMode: true,
-            },
-            fennecCompatibilityMode: true,
-          },
-          {
-            params: {
-              firefoxApk: 'org.mozilla.fennec',
-              fennecMode: false,
-            },
-            fennecCompatibilityMode: false,
-          },
-        ];
-        for (const testCase of testCases) {
-          const runner = new FirefoxAndroidExtensionRunner({
-            ...params,
-            ...testCase.params,
-          });
-          assert.equal(
-            runner.fennecCompatibilityMode,
-            testCase.fennecCompatibilityMode,
-            `Got expected fennecCompatibilityMode for ${
-              JSON.stringify(testCase)
-            }`
-          );
-        }
-      }
-    );
 
     it(
       'does tell user to enable Remote Debugging when running Fenix',

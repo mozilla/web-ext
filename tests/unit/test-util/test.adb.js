@@ -678,7 +678,6 @@ describe('utils/adb', () => {
             'device1',
             'org.mozilla.firefox_mybuild',
             undefined, // firefoxApkComponent
-            true, // fennecCompatibilityMode
             '/fake/custom/profile/path'
           );
         },
@@ -698,7 +697,7 @@ describe('utils/adb', () => {
       );
     });
 
-    it('starts Firefox APK on a custom profile on fennecCompatibilityMode',
+    it('starts Firefox APK on a custom profile (only used by Fennec)',
        async () => {
          const adb = getFakeADBKit({
            adbClient: {
@@ -714,7 +713,6 @@ describe('utils/adb', () => {
            'device1',
            'org.mozilla.firefox_mybuild',
            undefined, // firefoxApkComponent
-           true, // fennecCompatibilityMode
            '/fake/custom/profile/path',
          );
 
@@ -733,27 +731,6 @@ describe('utils/adb', () => {
          sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
          sinon.assert.calledWithMatch(
            adb.fakeADBClient.startActivity, 'device1', expectedAdbParams);
-
-         adb.fakeADBClient.startActivity.resetHistory();
-
-         const promise = adbUtils.startFirefoxAPK(
-           'device1',
-           'org.mozilla.firefox_mybuild',
-           undefined, // firefoxApkComponent
-           false, // fennecCompatibilityMode
-           '/fake/custom/profile/path',
-         );
-
-         await assert.isFulfilled(promise);
-
-         sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
-         sinon.assert.calledWithMatch(
-           adb.fakeADBClient.startActivity, 'device1', {
-             ...expectedAdbParams,
-             extras: [],
-           }
-         );
-
        });
 
     it('starts a given APK component', async () => {
@@ -771,7 +748,6 @@ describe('utils/adb', () => {
         'device1',
         'org.mozilla.geckoview_example',
         'GeckoViewActivity', // firefoxApkComponent
-        false, // fennecCompatibilityMode
         '/fake/custom/profile/path',
       );
 
@@ -782,7 +758,10 @@ describe('utils/adb', () => {
         adb.fakeADBClient.startActivity, 'device1', {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.geckoview_example/.GeckoViewActivity',
-          extras: [],
+          extras: [{
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          }],
           wait: true,
         }
       );
