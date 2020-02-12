@@ -1,5 +1,4 @@
 language: node_js
-sudo: false
 
 os:
 - linux
@@ -11,13 +10,13 @@ node_js:
 
 # Skip node_js 6 on travis windows workers (as it often fails because
 # travis fails to init the node_js 6 environment).
-matrix:
+jobs:
   fast_finish: true
+
   exclude:
   - node_js: '10'
     os: windows
 
-jobs:
   include:
   - stage: npm audit and lint github PR title
     ## Keep this in sync with the last version listed in the node_js property.
