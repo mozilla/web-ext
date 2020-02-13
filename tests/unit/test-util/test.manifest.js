@@ -225,7 +225,7 @@ describe('util/manifest', () => {
       assert.equal(getManifestId(basicManifest), id);
     });
 
-    it('returns browser specific gecko ID (browser_specific_settings.gecko.id)', () => {
+    it('returns browser_specific_settings.gecko.id', () => {
       assert.equal(
         getManifestId({
           ...basicManifest,
