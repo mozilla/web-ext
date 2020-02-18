@@ -2,26 +2,10 @@
 var path = require('path');
 
 var webpack = require('webpack');
-
-var nodeModules = {};
-
 // Do not bundle any external module, because those are explicitly added as
 // "dependencies" in package.json. Bundling them anyway could result in bugs
 // like https://github.com/mozilla/web-ext/issues/1629
-Object.keys(require('./package.json').dependencies)
-  .forEach(function(mod) {
-    nodeModules[mod] = 'commonjs ' + mod;
-  });
-
-// Allow use of importing parts of an external module, without bundling them.
-function nodeModulesExternalsHandler(context, request, callback) {
-  var mod = request.split('/', 1)[0];
-  if (Object.prototype.hasOwnProperty.call(nodeModules, mod)) {
-    callback(null, 'commonjs ' + request);
-    return;
-  }
-  callback();
-}
+var nodeExternals = require('webpack-node-externals');
 
 var rules = [
   {
@@ -50,8 +34,11 @@ module.exports = {
     rules,
   },
   externals: [
-    nodeModules,
-    nodeModulesExternalsHandler,
+    nodeExternals({
+      modulesFromFile: {
+        include: ['dependencies'],
+      },
+    }),
   ],
   plugins: [
     new webpack.BannerPlugin({
