@@ -24,6 +24,9 @@ import type {
 import {
   consoleStream, // instance is imported to inspect logged messages
 } from '../../../src/util/logger';
+import {
+  WebExtError,
+} from '../../../src/errors';
 
 function prepareExtensionRunnerParams({params} = {}) {
   const fakeChromeInstance = {
@@ -107,9 +110,53 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.exit();
   });
 
+  it('get extensions info throw "reload manager"', async () => {
+    const {params} = prepareExtensionRunnerParams();
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    sinon.spy(runnerInstance, 'setupExtensionIds');
+    await runnerInstance.run();
+    sinon.assert.calledOnce(runnerInstance.setupExtensionIds);
+
+    const wssInfo = runnerInstance.wss.address();
+    const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
+    const wsClient = new WebSocket(wsURL);
+
+    await new Promise((resolve) => wsClient.on('open', resolve));
+
+    const {name, version} = basicManifest;
+    const infoResult = (client, resolve, data) => {
+      client.send(JSON.stringify({
+        type: 'extensionsInfoResult',
+        extensions: [{
+          name,
+          version,
+          id: basicManifest.applications.gecko.id,
+        }],
+      }));
+      resolve(data);
+    };
+
+    const waitForExtensionsInfo = new Promise((resolve) =>
+      wsClient.on('message', (data) => infoResult(wsClient, resolve, data)));
+    assert.equal(runnerInstance.reloadableExtensions.size, 0);
+    await runnerInstance.setupExtensionIds();
+    assert.deepEqual(JSON.parse(await waitForExtensionsInfo),
+                     {type: 'getExtensionsInfo'});
+    assert.equal(runnerInstance.reloadableExtensions.size, 1);
+
+    await runnerInstance.exit();
+  });
 
   it('controls the "reload manager" from a websocket server', async () => {
-    const {params} = prepareExtensionRunnerParams();
+    const reloadableExtensions = new Map();
+    const extId = basicManifest.applications.gecko.id;
+    reloadableExtensions.set('/fake/sourceDir', extId);
+
+    const {params} = prepareExtensionRunnerParams({
+      params: {
+        reloadableExtensions,
+      },
+    });
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
@@ -156,13 +203,11 @@ describe('util/extension-runners/chromium', async () => {
     assert.deepEqual(JSON.parse(await waitForReloadAll),
                      {type: 'webExtReloadAllExtensions'});
 
-    // TODO(rpl): change this once we improve the manager extension to be able
-    // to reload a single extension.
     const waitForReloadOne = new Promise((resolve) =>
       wsClient.on('message', (data) => reload(wsClient, resolve, data)));
     await runnerInstance.reloadExtensionBySourceDir('/fake/sourceDir');
-    assert.deepEqual(JSON.parse(await waitForReloadOne),
-                     {type: 'webExtReloadAllExtensions'});
+    assert.deepEqual(JSON.parse(await waitForReloadOne).type,
+                     'webExtReloadExtension');
 
     // Verify that if one websocket connection gets closed, a second websocket
     // connection still receives the control messages.
@@ -182,6 +227,27 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.reloadAllExtensions();
     assert.deepEqual(JSON.parse(await waitForReloadAllAgain),
                      {type: 'webExtReloadAllExtensions'});
+
+    await runnerInstance.exit();
+  });
+
+  it('reloadExtensionBySourceDir handle when cant map sourceDir', async () => {
+    const {params} = prepareExtensionRunnerParams();
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    async function assertReloadError(messageMatch) {
+      await runnerInstance.reloadExtensionBySourceDir('/fake/sourceDir')
+        .catch((result) => result)
+        .then((result) => {
+          const error = result[0].reloadError;
+          assert.instanceOf(error, WebExtError);
+          assert.match(error && error.message, /Extension not reloadable:/);
+          assert.match(error && error.message, messageMatch);
+        });
+    }
+
+    await assertReloadError(/no extensionId/);
 
     await runnerInstance.exit();
   });

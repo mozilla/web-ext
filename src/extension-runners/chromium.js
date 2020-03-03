@@ -23,6 +23,9 @@ import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
 } from './base';
+import {
+  WebExtError,
+} from '../errors';
 
 type ChromiumSpecificRunnerParams = {|
    chromiumBinary?: string,
@@ -30,10 +33,15 @@ type ChromiumSpecificRunnerParams = {|
    chromiumLaunch?: typeof defaultChromiumLaunch,
 |};
 
+type ReloadableExtensionParams = {|
+  reloadableExtensions?: Map<string, string>,
+|};
+
 export type ChromiumExtensionRunnerParams = {|
   ...ExtensionRunnerParams,
   // Chromium desktop CLI params.
   ...ChromiumSpecificRunnerParams,
+  ...ReloadableExtensionParams,
 |};
 
 const log = createLogger(__filename);
@@ -60,14 +68,17 @@ export class ChromiumExtensionRunner {
   wss: WebSocket.Server;
   exiting: boolean;
   _promiseSetupDone: ?Promise<void>;
+  reloadableExtensions: Map<string, string>;
 
   constructor(params: ChromiumExtensionRunnerParams) {
     const {
       chromiumLaunch = defaultChromiumLaunch,
+      reloadableExtensions,
     } = params;
     this.params = params;
     this.chromiumLaunch = chromiumLaunch;
     this.cleanupCallbacks = new Set();
+    this.reloadableExtensions = reloadableExtensions || new Map();
   }
 
   // Method exported from the IExtensionRunner interface.
@@ -159,11 +170,15 @@ export class ChromiumExtensionRunner {
         this.exit();
       }
     });
+
+    await this.setupExtensionIds();
   }
 
   async wssBroadcast(data: Object) {
     return new Promise((resolve) => {
       const clients = this.wss ? new Set(this.wss.clients) : new Set();
+      const reloadableExtensions = this.reloadableExtensions;
+      const paramsExtensions = this.params.extensions;
 
       function cleanWebExtReloadComplete() {
         const client = this;
@@ -178,6 +193,15 @@ export class ChromiumExtensionRunner {
         if (msg.type === 'webExtReloadExtensionComplete') {
           for (const client of clients) {
             cleanWebExtReloadComplete.call(client);
+          }
+          resolve();
+        }
+
+        if (msg.type === 'extensionsInfoResult') {
+          for (let i = 0; i < msg.extensions.length; i++) {
+            const { sourceDir } = paramsExtensions[i];
+            const { id } = msg.extensions[i];
+            reloadableExtensions.set(sourceDir, id);
           }
           resolve();
         }
@@ -260,6 +284,21 @@ export class ChromiumExtensionRunner {
           await Promise.all(devExtensions.map(ext => reloadExtension(ext.id)));
           ws.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
         }
+
+        if (msg.type === 'webExtReloadExtension') {
+          await reloadExtension(msg.extensionId);
+          ws.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
+        }
+
+        if (msg.type === 'getExtensionsInfo') {
+          const devExtensions = await getAllDevExtensions();
+          ws.send(
+            JSON.stringify({
+              type: 'extensionsInfoResult',
+              extensions: devExtensions
+            })
+          );
+        }
       };
     })()`;
 
@@ -290,12 +329,41 @@ export class ChromiumExtensionRunner {
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
   async reloadExtensionBySourceDir(
-    extensionSourceDir: string // eslint-disable-line no-unused-vars
+    extensionSourceDir: string
   ): Promise<Array<ExtensionRunnerReloadResult>> {
-    // TODO(rpl): detect the extension ids assigned to the
-    // target extensions and map it to the extensions source dir
-    // (https://github.com/mozilla/web-ext/issues/1687).
-    return this.reloadAllExtensions();
+    function reloadError(name) {
+      return [{
+        sourceDir: extensionSourceDir,
+        reloadError: new WebExtError(
+          `Extension not reloadable:
+            no ${name} has been mapped to "${extensionSourceDir}"`
+        ),
+        runnerName,
+      }];
+    }
+
+    const runnerName = this.getName();
+
+    const extensionId = this.reloadableExtensions.get(extensionSourceDir);
+    if (!extensionId) {
+      return reloadError('extensionId');
+    }
+
+    await this.wssBroadcast({
+      type: 'webExtReloadExtension',
+      extensionId,
+    });
+
+    return [{runnerName, sourceDir: extensionSourceDir}];
+  }
+
+  /**
+   *  send message to addon manager to setup reloadableExtensionIds Map
+   */
+  async setupExtensionIds() {
+    await this.wssBroadcast({
+      type: 'getExtensionsInfo',
+    });
   }
 
   /**
