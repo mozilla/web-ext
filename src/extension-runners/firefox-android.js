@@ -128,6 +128,12 @@ export class FirefoxAndroidExtensionRunner {
       adbBin, adbHost, adbPort,
     });
 
+    const {
+      adbUtils,
+      selectedAdbDevice,
+      selectedArtifactsDir,
+    } = this;
+
     await this.adbDevicesDiscoveryAndSelect();
     await this.apkPackagesDiscoveryAndSelect();
     await this.adbCheckRuntimePermissions();
@@ -141,6 +147,19 @@ export class FirefoxAndroidExtensionRunner {
     // NOTE: running Firefox for Android on the Android Emulator can be
     // pretty slow, we can run the following 3 steps in parallel to speed up
     // it a bit.
+    if (selectedArtifactsDir) {
+      log.debug('Cleaning up artifacts directory on the Android device...');
+      await adbUtils.clearArtifactsDir(selectedAdbDevice);
+    }
+
+    // Call all the registered cleanup callbacks.
+    for (const fn of this.cleanupCallbacks) {
+      try {
+        fn();
+      } catch (error) {
+        log.error(error);
+      }
+    }
     await Promise.all([
       // Start Firefox for Android instance if not started yet.
       // (Fennec would run in an temporary profile and so it is explicitly
