@@ -137,7 +137,13 @@ export class FirefoxAndroidExtensionRunner {
     // artifacts and temporary directory on the selected device, and
     // push the profile preferences to the remote profile dir.
     await this.adbPrepareProfileDir();
-
+    for (const fn of this.cleanupCallbacks) {
+        try {
+          fn();
+        } catch (error) {
+          log.error(error);
+        }
+      }
     // NOTE: running Firefox for Android on the Android Emulator can be
     // pretty slow, we can run the following 3 steps in parallel to speed up
     // it a bit.
