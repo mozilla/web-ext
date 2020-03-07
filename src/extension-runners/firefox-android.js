@@ -128,12 +128,6 @@ export class FirefoxAndroidExtensionRunner {
       adbBin, adbHost, adbPort,
     });
 
-    const {
-      adbUtils,
-      selectedAdbDevice,
-      selectedArtifactsDir,
-    } = this;
-
     await this.adbDevicesDiscoveryAndSelect();
     await this.apkPackagesDiscoveryAndSelect();
     await this.adbCheckRuntimePermissions();
@@ -147,7 +141,6 @@ export class FirefoxAndroidExtensionRunner {
     // NOTE: running Firefox for Android on the Android Emulator can be
     // pretty slow, we can run the following 3 steps in parallel to speed up
     // it a bit.
-    
     // Call all the registered cleanup callbacks.
     for (const fn of this.cleanupCallbacks) {
       try {
