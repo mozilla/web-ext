@@ -147,11 +147,7 @@ export class FirefoxAndroidExtensionRunner {
     // NOTE: running Firefox for Android on the Android Emulator can be
     // pretty slow, we can run the following 3 steps in parallel to speed up
     // it a bit.
-    if (selectedArtifactsDir) {
-      log.debug('Cleaning up artifacts directory on the Android device...');
-      await adbUtils.clearArtifactsDir(selectedAdbDevice);
-    }
-
+    
     // Call all the registered cleanup callbacks.
     for (const fn of this.cleanupCallbacks) {
       try {
