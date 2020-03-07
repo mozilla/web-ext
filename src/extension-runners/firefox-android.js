@@ -128,6 +128,15 @@ export class FirefoxAndroidExtensionRunner {
       adbBin, adbHost, adbPort,
     });
 
+    // Call all the registered cleanup callbacks.
+    for (const fn of this.cleanupCallbacks) {
+      try {
+        fn();
+      } catch (error) {
+        log.error(error);
+      }
+    }
+
     await this.adbDevicesDiscoveryAndSelect();
     await this.apkPackagesDiscoveryAndSelect();
     await this.adbCheckRuntimePermissions();
