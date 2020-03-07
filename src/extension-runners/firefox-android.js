@@ -132,7 +132,13 @@ export class FirefoxAndroidExtensionRunner {
     await this.apkPackagesDiscoveryAndSelect();
     await this.adbCheckRuntimePermissions();
     await this.adbForceStopSelectedPackage();
-
+    for (const fn of this.cleanupCallbacks) {
+      try {
+        fn();
+      } catch (error) {
+        log.error(error);
+      }
+    }
     // Create profile prefs (with enabled remote RDP server), prepare the
     // artifacts and temporary directory on the selected device, and
     // push the profile preferences to the remote profile dir.
