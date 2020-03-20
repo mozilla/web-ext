@@ -58,6 +58,7 @@ describe('util/extension-runners/chromium', async () => {
       '--disable-sync',
       '--metrics-recording-only',
       '--disable-default-apps',
+      '--no-default-browser-check',
       '--no-first-run',
       '--disable-backgrounding-occluded-windows',
       '--disable-renderer-backgrounding',

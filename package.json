@@ -59,7 +59,7 @@
     "addons-linter": "1.20.0",
     "bunyan": "1.8.12",
     "camelcase": "5.3.1",
-    "chrome-launcher": "0.12.0",
+    "chrome-launcher": "0.13.0",
     "debounce": "1.2.0",
     "decamelize": "3.2.0",
     "es6-error": "4.1.1",
