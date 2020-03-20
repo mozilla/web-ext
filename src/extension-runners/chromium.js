@@ -6,10 +6,9 @@
  */
 
 import path from 'path';
-import {promisify} from 'util';
 
 import {fs} from 'mz';
-import mkdirp from 'mkdirp';
+import asyncMkdirp from 'mkdirp';
 import {
   LaunchedChrome,
   launch as defaultChromiumLaunch,
@@ -37,8 +36,6 @@ export type ChromiumExtensionRunnerParams = {|
 |};
 
 const log = createLogger(__filename);
-
-const asyncMkdirp = promisify(mkdirp);
 
 const EXCLUDED_CHROME_FLAGS = [
   '--disable-extensions',
