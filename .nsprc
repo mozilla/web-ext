@@ -1,4 +1,7 @@
 {
   "exceptions": [
+    // minimist sec adv (due to @commitlint/cli dev dependency,
+    // and chrome-launcher dependency on an older mkdirp release).
+    "https://npmjs.com/advisories/1179"
   ]
 }
