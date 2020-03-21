@@ -130,6 +130,9 @@ function prepareSelectedDeviceAndAPKParams(
     startFirefoxAPK: sinon.spy(() => Promise.resolve()),
     setupForward: sinon.spy(() => Promise.resolve()),
     clearArtifactsDir: sinon.spy(() => Promise.resolve()),
+    checkOrCleanArtifacts: sinon.spy(
+      () => Promise.resolve(true)
+    ),
     setUserAbortDiscovery: sinon.spy(() => {}),
     ensureRequiredAPKRuntimePermissions: sinon.spy(() => Promise.resolve()),
     ...adbOverrides,
@@ -356,6 +359,79 @@ describe('util/extension-runners/firefox-android', () => {
            fakeADBUtils.startFirefoxAPK
          );
        });
+
+    it('check for older artifacts', async () => {
+      const adbOverrides = {
+        getOrCreateArtifactsDir: sinon.spy(
+          () => Promise.resolve('/sdcard/web-ext-dir')
+        ),
+      };
+      const overriddenProperties = {
+        params: {
+          adbDevice: 'emulator-1',
+          firefoxApk: 'org.mozilla.firefox',
+          buildSourceDir: sinon.spy(() => Promise.resolve({
+            extensionPath: fakeBuiltExtensionPath,
+          })),
+          adbCleanArtifacts: false,
+        },
+      };
+      const {
+        params, fakeADBUtils,
+      } = prepareSelectedDeviceAndAPKParams(
+        overriddenProperties, adbOverrides
+      );
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+
+      sinon.assert.calledWithMatch(
+        fakeADBUtils.checkOrCleanArtifacts,
+        'emulator-1',
+        false,
+      );
+
+      sinon.assert.callOrder(
+        fakeADBUtils.amForceStopAPK,
+        fakeADBUtils.checkOrCleanArtifacts
+      );
+    });
+    it('remove plausible older artifacts', async () => {
+      const adbOverrides = {
+        getOrCreateArtifactsDir: sinon.spy(
+          () => Promise.resolve('/sdcard/web-ext-dir')
+        ),
+      };
+      const overriddenProperties = {
+        params: {
+          adbDevice: 'emulator-1',
+          firefoxApk: 'org.mozilla.firefox',
+          buildSourceDir: sinon.spy(() => Promise.resolve({
+            extensionPath: fakeBuiltExtensionPath,
+          })),
+          adbCleanArtifacts: true,
+        },
+      };
+      const {
+        params, fakeADBUtils,
+      } = prepareSelectedDeviceAndAPKParams(
+        overriddenProperties, adbOverrides
+      );
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+
+      sinon.assert.calledWithMatch(
+        fakeADBUtils.checkOrCleanArtifacts,
+        'emulator-1',
+        true,
+      );
+
+      sinon.assert.callOrder(
+        fakeADBUtils.amForceStopAPK,
+        fakeADBUtils.checkOrCleanArtifacts
+      );
+    });
 
     it('does run a specific apk component if specific', async () => {
       const {

@@ -8,6 +8,8 @@ import {
 } from '../errors';
 import {createLogger} from '../util/logger';
 
+const DEVICE_DIR_BASE = '/sdcard';
+const ARTIFACTS_DIR_PREFIX = '/web-ext-artifacts';
 const log = createLogger(__filename);
 
 export type ADBUtilsParams = {|
@@ -195,7 +197,7 @@ export default class ADBUtils {
       return artifactsDir;
     }
 
-    artifactsDir = `/sdcard/web-ext-artifacts-${Date.now()}`;
+    artifactsDir = `${DEVICE_DIR_BASE}${ARTIFACTS_DIR_PREFIX}-${Date.now()}`;
 
     const testDirOut = (await this.runShellCommand(
       deviceId, `test -d ${artifactsDir} ; echo $?`
@@ -213,6 +215,44 @@ export default class ADBUtils {
     this.artifactsDirMap.set(deviceId, artifactsDir);
 
     return artifactsDir;
+  }
+
+  async checkOrCleanArtifacts(
+    deviceId: string, remove?: boolean
+  ): Promise<boolean> {
+    const {adbClient} = this;
+
+    let found = false;
+    log.debug('Finding older artifacts');
+
+    return wrapADBCall(async () => {
+      const files = await adbClient.readdir(deviceId, DEVICE_DIR_BASE);
+
+      for (const file of files) {
+        if (!file.isDirectory() ||
+              !file.name.startsWith('web-ext-artifacts-')) {
+          continue;
+        }
+
+        if (!remove) {
+          return true;
+        }
+
+        found = true;
+
+        const artifactsDir = `${DEVICE_DIR_BASE}/${file.name}`;
+
+        log.debug(
+          `Removing ${artifactsDir} artifacts directory on ${deviceId} device`
+        );
+
+        await this.runShellCommand(deviceId, [
+          'rm', '-rf', artifactsDir,
+        ]);
+      }
+
+      return found;
+    });
   }
 
   async clearArtifactsDir(deviceId: string): Promise<void> {
