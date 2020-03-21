@@ -618,6 +618,11 @@ Example: $0 --help run.
         type: 'number',
         requiresArg: true,
       },
+      'adb-clean-artifacts': {
+        describe: 'Remove old artifact directories from the adb device',
+        demandOption: false,
+        type: 'boolean',
+      },
       'firefox-apk': {
         describe: (
           'Run a specific Firefox for Android APK. ' +
