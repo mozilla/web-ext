@@ -71,6 +71,7 @@ export type FirefoxAndroidExtensionRunnerParams = {|
   adbPort?: string,
   adbDevice?: string,
   adbDiscoveryTimeout?: number,
+  adbCleanArtifacts?: boolean,
   firefoxApk?: string,
   firefoxApkComponent?: string,
 
@@ -384,6 +385,30 @@ export class FirefoxAndroidExtensionRunner {
     await adbUtils.amForceStopAPK(selectedAdbDevice, selectedFirefoxApk);
   }
 
+  async adbOldArtifactsDir(removeArtifacts?: boolean) {
+    const {
+      adbUtils,
+      selectedAdbDevice,
+    } = this;
+
+    const foundDirectories = await adbUtils.checkOrCleanArtifacts(
+      selectedAdbDevice, removeArtifacts
+    );
+
+    if (!foundDirectories) {
+      return;
+    }
+    if (removeArtifacts) {
+      log.info('Old web-ext artifacts have been found and removed ' +
+              `from ${selectedAdbDevice} device`);
+    } else {
+      log.warn(
+        `Old artifacts directories have been found on ${selectedAdbDevice} ` +
+        'device. Use --adb-clean-artifacts to remove them automatically.'
+      );
+    }
+  }
+
   async adbCheckRuntimePermissions() {
     const {
       adbUtils,
@@ -440,6 +465,9 @@ export class FirefoxAndroidExtensionRunner {
       app: 'fennec',
       customPrefs,
     });
+
+    //Checking for older artifacts
+    await this.adbOldArtifactsDir(this.params.adbCleanArtifacts);
 
     // Choose a artifacts dir name for the assets pushed to the
     // Android device.

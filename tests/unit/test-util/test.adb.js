@@ -64,6 +64,7 @@ function getFakeADBKit(
       return [];
     }),
     shell: sinon.spy(() => Promise.resolve('')),
+    readdir: sinon.spy(() => Promise.resolve([])),
     startActivity: sinon.spy(() => {}),
     forward: sinon.spy(() => {}),
     push: sinon.spy(() => {
@@ -620,6 +621,75 @@ describe('utils/adb', () => {
 
          sinon.assert.notCalled(adb.fakeADBClient.shell);
        });
+  });
+
+  describe('checkOrCleanArtifacts', () => {
+    const artifactDir = `web-ext-artifacts-${Date.now()}`;
+    function makeFakeArtifact(artifactName, isDirectory) {
+      return {
+        name: artifactName,
+        isDirectory: () => {
+          return isDirectory;
+        },
+      };
+    }
+    const files = [
+      makeFakeArtifact(artifactDir.concat('fake-dir1'), true),
+      makeFakeArtifact(artifactDir.concat('fake-dir2'), true),
+      makeFakeArtifact(artifactDir.concat('fake-file1'), false),
+      makeFakeArtifact('not-web-ext-artifacts-dir', true),
+    ];
+
+    it('checks old artifacts', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          readdir: sinon.spy(() => Promise.resolve(files)),
+          shell: sinon.spy(() => Promise.resolve('')),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('1\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const promise = adbUtils.checkOrCleanArtifacts('device1', false);
+      const result = await assert.isFulfilled(promise);
+      assert.equal(result, true);
+
+      sinon.assert.calledOnce(adb.fakeADBClient.readdir);
+      //While checking of files shell shoudln't be called
+      sinon.assert.notCalled(adb.fakeADBClient.shell);
+    });
+
+    it('removes plausible artifacts directory', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          readdir: sinon.spy(() => Promise.resolve(files)),
+          shell: sinon.spy(() => Promise.resolve('')),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('1\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+      const artifactDirFullPath1 = `/sdcard/${artifactDir}fake-dir1`;
+      const artifactDirFullPath2 = `/sdcard/${artifactDir}fake-dir2`;
+
+      const promise = adbUtils.checkOrCleanArtifacts('device1', true);
+      const result = await assert.isFulfilled(promise);
+      assert.equal(result, true);
+
+      sinon.assert.calledOnce(adb.fakeADBClient.readdir);
+      sinon.assert.calledTwice(adb.fakeADBClient.shell);
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.shell, 'device1',
+        ['rm', '-rf', artifactDirFullPath1]
+      );
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.shell, 'device1',
+        ['rm', '-rf', artifactDirFullPath2]
+      );
+    });
   });
 
   describe('pushFile', () => {
