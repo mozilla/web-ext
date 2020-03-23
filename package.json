@@ -103,7 +103,7 @@
     "conventional-changelog-cli": "2.0.31",
     "copy-dir": "1.2.0",
     "coveralls": "3.0.11",
-    "cross-env": "7.0.0",
+    "cross-env": "7.0.2",
     "deepcopy": "2.0.0",
     "doctoc": "1.4.0",
     "eslint": "6.8.0",
