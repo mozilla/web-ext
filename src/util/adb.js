@@ -120,7 +120,8 @@ export default class ADBUtils {
           line.startsWith('org.mozilla.fennec') ||
           line.startsWith('org.mozilla.fenix') ||
           line.startsWith('org.mozilla.geckoview') ||
-          line.startsWith('org.mozilla.firefox')
+          line.startsWith('org.mozilla.firefox') ||
+          line.startsWith('org.mozilla.reference.browser')
         );
       });
   }
