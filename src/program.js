@@ -400,7 +400,9 @@ Example: $0 --help run.
       alias: 'i',
       describe: 'A list of glob patterns to define which files should be ' +
                 'ignored. (Example: --ignore-files=path/to/first.js ' +
-                'path/to/second.js "**/*.log")',
+                'path/to/second.js "**/*.log") Or using negation for files' +
+                '(Example: --ignore-files=path/to/first.js ' +
+                'path/to/second.js "!manifest.json")',
       demandOption: false,
       // The following option prevents yargs>=11 from parsing multiple values,
       // so the minimum value requirement is enforced in execute instead.
