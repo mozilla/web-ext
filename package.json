@@ -113,7 +113,7 @@
     "flow-bin": "0.110.1",
     "html-entities": "1.2.1",
     "mocha": "7.1.1",
-    "nyc": "15.0.0",
+    "nyc": "15.0.1",
     "prettyjson": "1.2.1",
     "shelljs": "0.8.3",
     "sinon": "9.0.1",
