@@ -23,6 +23,11 @@ const prefsCommon: FirefoxPreferences = {
   // Allow debug output via dump to be printed to the system console
   'browser.dom.window.dump.enabled': true,
 
+  // From:
+  // https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/internals/preferences.html#data-choices-notification
+  // This is the data submission master kill switch. If disabled, no policy is shown or upload takes place, ever.
+  'datareporting.policy.dataSubmissionEnabled': false,
+
   // Allow remote connections to the debugger.
   'devtools.debugger.remote-enabled': true,
   // Disable the prompt for allowing connections.
