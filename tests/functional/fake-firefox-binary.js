@@ -3,8 +3,8 @@
 const net = require('net');
 
 const REPLY_INITIAL = {from: 'root'};
-const REQUEST_LIST_TABS = {to: 'root', type: 'listTabs'};
-const REPLY_LIST_TABS = {from: 'root', addonsActor: 'fakeAddonsActor'};
+const REQUEST_ACTORS = {to: 'root', type: 'getRoot'};
+const REPLY_ACTORS = {from: 'root', addonsActor: 'fakeAddonsActor'};
 const REQUEST_INSTALL_ADDON = {
   to: 'fakeAddonsActor',
   type: 'installTemporaryAddon',
@@ -37,8 +37,8 @@ function getPortFromArgs() {
 }
 net.createServer(function(socket) {
   socket.on('data', function(data) {
-    if (String(data) === toRDP(REQUEST_LIST_TABS)) {
-      socket.write(toRDP(REPLY_LIST_TABS));
+    if (String(data) === toRDP(REQUEST_ACTORS)) {
+      socket.write(toRDP(REPLY_ACTORS));
     } else if (String(data) === toRDP(REQUEST_INSTALL_ADDON)) {
       socket.write(toRDP(REPLY_INSTALL_ADDON));
 

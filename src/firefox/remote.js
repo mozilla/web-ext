@@ -86,27 +86,50 @@ export class RemoteFirefox {
     });
   }
 
+  getAddonsActor(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      // getRoot should work since Firefox 55 (bug 1352157).
+      this.client.request('getRoot', (err, actors) => {
+        if (!err) {
+          if (actors.addonsActor) {
+            resolve(actors.addonsActor);
+          } else {
+            reject(new RemoteTempInstallNotSupported(
+              'This version of Firefox does not provide an add-ons actor for ' +
+              'remote installation.'));
+          }
+          return;
+        }
+        log.debug(`Falling back to listTabs because getRoot failed: ${err}`);
+        // Fallback to listTabs otherwise, Firefox 49 - 77 (bug 1618691).
+        this.client.request('listTabs', (error, tabsResponse) => {
+          if (error) {
+            return reject(new WebExtError(
+              `Remote Firefox: listTabs() error: ${error}`));
+          }
+          // addonsActor was added to listTabs in Firefox 49 (bug 1273183).
+          if (!tabsResponse.addonsActor) {
+            log.debug(
+              'listTabs returned a falsey addonsActor: ' +
+              `${tabsResponse.addonsActor}`);
+            return reject(new RemoteTempInstallNotSupported(
+              'This is an older version of Firefox that does not provide an ' +
+              'add-ons actor for remote installation. Try Firefox 49 or ' +
+              'higher.'));
+          }
+          resolve(tabsResponse.addonsActor);
+        });
+      });
+    });
+  }
+
   installTemporaryAddon(
     addonPath: string
   ): Promise<FirefoxRDPResponseAddon> {
     return new Promise((resolve, reject) => {
-      this.client.request('listTabs', (error, tabsResponse) => {
-        if (error) {
-          return reject(new WebExtError(
-            `Remote Firefox: listTabs() error: ${error}`));
-        }
-        if (!tabsResponse.addonsActor) {
-          log.debug(
-            'listTabs returned a falsey addonsActor: ' +
-            `${tabsResponse.addonsActor}`);
-          return reject(new RemoteTempInstallNotSupported(
-            'This is an older version of Firefox that does not provide an ' +
-            'add-ons actor for remote installation. Try Firefox 49 or ' +
-            'higher.'));
-        }
-
+      this.getAddonsActor().then((addonsActor) => {
         this.client.client.makeRequest({
-          to: tabsResponse.addonsActor,
+          to: addonsActor,
           type: 'installTemporaryAddon',
           addonPath,
         }, (installResponse) => {
@@ -120,7 +143,7 @@ export class RemoteFirefox {
           log.info(`Installed ${addonPath} as a temporary add-on`);
           resolve(installResponse);
         });
-      });
+      }).catch(reject);
     });
   }
 
