@@ -225,9 +225,9 @@ describe('firefox.remote', () => {
 
     describe('installTemporaryAddon', () => {
 
-      it('throws listTabs errors', async () => {
+      it('throws getRoot errors', async () => {
         const client = fakeFirefoxClient({
-          // listTabs response:
+          // listTabs and getRoot response:
           requestError: new Error('some listTabs error'),
         });
         const conn = makeInstance(client);
@@ -236,24 +236,33 @@ describe('firefox.remote', () => {
           .catch(onlyInstancesOf(WebExtError, (error) => {
             assert.match(error.message, /some listTabs error/);
           }));
+
+        // When getRoot fails, a fallback to listTabs is expected.
+        sinon.assert.calledTwice(client.request);
+        sinon.assert.calledWith(client.request, 'getRoot');
+        sinon.assert.calledWith(client.request, 'listTabs');
       });
 
       it('fails when there is no add-ons actor', async () => {
         const client = fakeFirefoxClient({
-          // A listTabs response that does not contain addonsActor.
+          // A getRoot and listTabs response that does not contain addonsActor.
           requestResult: {},
         });
         const conn = makeInstance(client);
         await conn.installTemporaryAddon('/path/to/addon')
           .then(makeSureItFails())
           .catch(onlyInstancesOf(RemoteTempInstallNotSupported, (error) => {
-            assert.match(error.message, /does not provide an add-ons actor/);
+            assert.match(
+              error.message,
+              /This version of Firefox does not provide an add-ons actor/);
           }));
+        sinon.assert.calledOnce(client.request);
+        sinon.assert.calledWith(client.request, 'getRoot');
       });
 
       it('lets you install an add-on temporarily', async () => {
         const client = fakeFirefoxClient({
-          // listTabs response:
+          // getRoot response:
           requestResult: {
             addonsActor: 'addons1.actor.conn',
           },
@@ -265,6 +274,58 @@ describe('firefox.remote', () => {
         const conn = makeInstance(client);
         const response = await conn.installTemporaryAddon('/path/to/addon');
         assert.equal(response.addon.id, 'abc123@temporary-addon');
+
+        // When called without error, there should not be any fallback.
+        sinon.assert.calledOnce(client.request);
+        sinon.assert.calledWith(client.request, 'getRoot');
+      });
+
+      it('falls back to listTabs when getRoot is unavailable', async () => {
+        const client = fakeFirefoxClient({
+          // installTemporaryAddon response:
+          makeRequestResult: {
+            addon: {id: 'abc123@temporary-addon'},
+          },
+        });
+        client.request = sinon.stub();
+        // Sample response from Firefox 49.
+        client.request.withArgs('getRoot').callsArgWith(1, {
+          error: 'unrecognizedPacketType',
+          message: 'Actor root does not recognize the packet type getRoot',
+        });
+        client.request.withArgs('listTabs').callsArgWith(1, undefined, {
+          addonsActor: 'addons1.actor.conn',
+        });
+        const conn = makeInstance(client);
+        const response = await conn.installTemporaryAddon('/path/to/addon');
+        assert.equal(response.addon.id, 'abc123@temporary-addon');
+
+        sinon.assert.calledTwice(client.request);
+        sinon.assert.calledWith(client.request, 'getRoot');
+        sinon.assert.calledWith(client.request, 'listTabs');
+      });
+
+      it('fails when getRoot and listTabs both fail', async () => {
+        const client = fakeFirefoxClient();
+        client.request = sinon.stub();
+        // Sample response from Firefox 48.
+        client.request.withArgs('getRoot').callsArgWith(1, {
+          error: 'unrecognizedPacketType',
+          message: 'Actor root does not recognize the packet type getRoot',
+        });
+        client.request.withArgs('listTabs').callsArgWith(1, undefined, {});
+        const conn = makeInstance(client);
+        await conn.installTemporaryAddon('/path/to/addon')
+          .then(makeSureItFails())
+          .catch(onlyInstancesOf(RemoteTempInstallNotSupported, (error) => {
+            assert.match(
+              error.message,
+              /does not provide an add-ons actor.*Try Firefox 49/);
+          }));
+
+        sinon.assert.calledTwice(client.request);
+        sinon.assert.calledWith(client.request, 'getRoot');
+        sinon.assert.calledWith(client.request, 'listTabs');
       });
 
       it('throws install errors', async () => {
