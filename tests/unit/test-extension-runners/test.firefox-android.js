@@ -114,6 +114,7 @@ function prepareSelectedDeviceAndAPKParams(
     discoverInstalledFirefoxAPKs: sinon.spy(() => Promise.resolve([
       'org.mozilla.fennec', 'org.mozilla.firefox',
       'org.mozilla.fenix', 'org.mozilla.fenix.nightly',
+      'org.mozilla.reference.browser',
     ])),
     getAndroidVersionNumber: sinon.spy(() => Promise.resolve(20)),
     amForceStopAPK: sinon.spy(() => Promise.resolve()),
