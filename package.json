@@ -102,7 +102,7 @@
     "chai-as-promised": "7.1.1",
     "conventional-changelog-cli": "2.0.31",
     "copy-dir": "1.2.0",
-    "coveralls": "3.0.13",
+    "coveralls": "3.0.14",
     "cross-env": "7.0.2",
     "deepcopy": "2.0.0",
     "doctoc": "1.4.0",
