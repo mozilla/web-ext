@@ -1,4 +1,6 @@
 {
   "exceptions": [
+    // yargs-parser sec adv (due to @commitlint/cli dev dependency).
+    "https://npmjs.com/advisories/1500"
   ]
 }
