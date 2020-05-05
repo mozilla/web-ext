@@ -1,5 +1,6 @@
 /* @flow */
 import {describe, it} from 'mocha';
+import {assert} from 'chai';
 
 import {
   minimalAddonPath, withTempAddonDir, execWebExt, reportCommandErrors,
@@ -20,6 +21,17 @@ describe('web-ext build', () => {
              stderr,
            });
          }
+       });
+     })
+  );
+
+  it('throws an error on multiple -n',
+     () => withTempAddonDir({addonPath: minimalAddonPath}, (srcDir, tmpDir) => {
+       const argv = ['build', '-n', 'foo', '-n', 'bar'];
+       const cmd = execWebExt(argv, {cwd: tmpDir});
+       return cmd.waitForExit.then(({exitCode, stderr}) => {
+         assert.notEqual(exitCode, 0);
+         assert.match(stderr, /Multiple --filename\/-n option are not allowed/);
        });
      })
   );

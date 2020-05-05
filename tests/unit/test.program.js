@@ -8,7 +8,12 @@ import sinon, {spy} from 'sinon';
 import {assert} from 'chai';
 
 import {applyConfigToArgv} from '../../src/config';
-import {defaultVersionGetter, main, Program} from '../../src/program';
+import {
+  defaultVersionGetter,
+  main,
+  Program,
+  throwUsageErrorIfArray,
+} from '../../src/program';
 import commands from '../../src/cmd';
 import {
   onlyInstancesOf,
@@ -856,5 +861,14 @@ describe('program.defaultVersionGetter', () => {
     const testBuildEnv = {globalEnv: 'development'};
     assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
                  commit);
+  });
+});
+
+describe('program.throwUsageErrorIfArray', () => {
+  const errorMessage = 'This is the expected error message';
+  const innerFn = throwUsageErrorIfArray(errorMessage);
+
+  it('throws UsageError on array', () => {
+    assert.throws(() => innerFn(['foo', 'bar']), UsageError, errorMessage);
   });
 });
