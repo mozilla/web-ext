@@ -342,6 +342,15 @@ type MainParams = {
   runOptions?: Object,
 }
 
+export function throwUsageErrorIfArray(errorMessage: string): any {
+  return (value: any): any => {
+    if (Array.isArray(value)) {
+      throw new UsageError(errorMessage);
+    }
+    return value;
+  };
+}
+
 export function main(
   absolutePackageDir: string,
   {
@@ -428,6 +437,18 @@ Example: $0 --help run.
       demandOption: false,
       default: true,
       type: 'boolean',
+    },
+    'filename': {
+      alias: 'n',
+      describe: 'Name of the created extension package file.',
+      default: undefined,
+      normalize: false,
+      demandOption: false,
+      requiresArg: true,
+      type: 'string',
+      coerce: throwUsageErrorIfArray(
+        'Multiple --filename/-n option are not allowed'
+      ),
     },
   });
 

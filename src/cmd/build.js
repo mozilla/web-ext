@@ -24,6 +24,7 @@ import type {ExtensionManifest} from '../util/manifest';
 import type {FileFilterCreatorFn} from '../util/file-filter';
 
 const log = createLogger(__filename);
+const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';
 
 
 export function safeFileName(name: string): string {
@@ -43,7 +44,8 @@ export type PackageCreatorParams = {|
   fileFilter: FileFilter,
   artifactsDir: string,
   overwriteDest: boolean,
-  showReadyMessage: boolean
+  showReadyMessage: boolean,
+  filename?: string,
 |};
 
 export type LocalizedNameParams = {|
@@ -104,6 +106,55 @@ export async function getDefaultLocalizedName(
   return Promise.resolve(extensionName);
 }
 
+// https://stackoverflow.com/a/22129960
+export function getStringPropertyValue(
+  prop: string,
+  obj: Object,
+): string {
+  const properties = prop.split('.');
+  const value = properties.reduce((prev, curr) => prev && prev[curr], obj);
+  if (!['string', 'number'].includes(typeof value)) {
+    throw new UsageError(
+      `Manifest key "${prop}" is missing or has an invalid type: ${value}`
+    );
+  }
+  const stringValue = `${value}`;
+  if (!stringValue.length) {
+    throw new UsageError(`Manifest key "${prop}" value is an empty string`);
+  }
+  return stringValue;
+}
+
+function getPackageNameFromTemplate(
+  filenameTemplate: string,
+  manifestData: ExtensionManifest
+): string {
+  const packageName = filenameTemplate.replace(
+    /{([A-Za-z0-9._]+?)}/g,
+    (match, manifestProperty) => {
+      return getStringPropertyValue(manifestProperty, manifestData);
+    }
+  );
+
+  // Validate the resulting packageName string, after interpolating the manifest property
+  // specified in the template string.
+  const parsed = path.parse(packageName);
+  if (parsed.dir) {
+    throw new UsageError(
+      `Invalid filename template "${filenameTemplate}". ` +
+      `Filename "${packageName}" should not contain a path`
+    );
+  }
+  if (!['.zip', '.xpi'].includes(parsed.ext)) {
+    throw new UsageError(
+      `Invalid filename template "${filenameTemplate}". ` +
+      `Filename "${packageName}" should have a zip or xpi extension`
+    );
+  }
+
+  return packageName;
+}
+
 export type PackageCreatorFn =
     (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
 
@@ -115,6 +166,7 @@ export async function defaultPackageCreator(
     artifactsDir,
     overwriteDest,
     showReadyMessage,
+    filename = DEFAULT_FILENAME_TEMPLATE,
   }: PackageCreatorParams,
   {
     eventToPromise = defaultEventToPromise,
@@ -132,7 +184,7 @@ export async function defaultPackageCreator(
     filter: (...args) => fileFilter.wantFile(...args),
   });
 
-  let extensionName: string = manifestData.name;
+  let filenameTemplate = filename;
 
   let {default_locale} = manifestData;
   if (default_locale) {
@@ -142,12 +194,16 @@ export async function defaultPackageCreator(
       default_locale, 'messages.json'
     );
     log.debug('Manifest declared default_locale, localizing extension name');
-    extensionName = await getDefaultLocalizedName({
+    const extensionName = await getDefaultLocalizedName({
       messageFile, manifestData,
     });
+    // allow for a localized `{name}`, without mutating `manifestData`
+    filenameTemplate = filenameTemplate.replace(/{name}/g, extensionName);
   }
+
   const packageName = safeFileName(
-    `${extensionName}-${manifestData.version}.zip`);
+    getPackageNameFromTemplate(filenameTemplate, manifestData)
+  );
   const extensionPath = path.join(artifactsDir, packageName);
 
   // Added 'wx' flags to avoid overwriting of existing package.
@@ -187,6 +243,7 @@ export type BuildCmdParams = {|
   asNeeded?: boolean,
   overwriteDest?: boolean,
   ignoreFiles?: Array<string>,
+  filename?: string,
 |};
 
 export type BuildCmdOptions = {|
@@ -206,6 +263,7 @@ export default async function build(
     asNeeded = false,
     overwriteDest = false,
     ignoreFiles = [],
+    filename = DEFAULT_FILENAME_TEMPLATE,
   }: BuildCmdParams,
   {
     manifestData,
@@ -231,6 +289,7 @@ export default async function build(
     artifactsDir,
     overwriteDest,
     showReadyMessage,
+    filename,
   });
 
   await prepareArtifactsDir(artifactsDir);
