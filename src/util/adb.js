@@ -275,7 +275,7 @@ export default class ADBUtils {
 
     if (!apkComponent) {
       component = `${apk}/.App`;
-    } else if (apkComponent.includes(".")) {
+    } else if (apkComponent.includes('.')) {
       component = `${apk}/${apkComponent}`;
     } else if (apkComponent) {
       component = `${apk}/.${apkComponent}`;
