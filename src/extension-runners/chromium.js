@@ -127,8 +127,12 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(...this.params.args);
     }
 
+    let userDataDir = false;
     if (this.params.chromiumProfile) {
-      chromeFlags.push(`--user-data-dir=${this.params.chromiumProfile}`);
+      const pathParts = path.parse(this.params.chromiumProfile);
+      const profileDir = pathParts.base;
+      chromeFlags.push(`--profile-directory=${profileDir}`);
+      userDataDir = pathParts.dir || false;
     }
 
     let startingUrl;
@@ -144,6 +148,7 @@ export class ChromiumExtensionRunner {
       chromePath: chromiumBinary,
       chromeFlags,
       startingUrl,
+      userDataDir,
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
     });

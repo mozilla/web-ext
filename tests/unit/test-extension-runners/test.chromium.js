@@ -356,10 +356,10 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.exit();
   });
 
-  it('does pass a user-data-dir flag to chrome', async () => {
+  it('does pass a profile-directory flag to chrome', async () => {
     const {params} = prepareExtensionRunnerParams({
       params: {
-        chromiumProfile: '/fake/chrome/profile',
+        chromiumProfile: 'profile',
       },
     });
 
@@ -373,10 +373,40 @@ describe('util/extension-runners/chromium', async () => {
       ignoreDefaultFlags: true,
       enableExtensions: true,
       chromePath: undefined,
+      userDataDir: false,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-        '--user-data-dir=/fake/chrome/profile',
+        '--profile-directory=profile',
+      ],
+      startingUrl: undefined,
+    });
+
+    await runnerInstance.exit();
+  });
+
+  it('does pass user-data-dir and profile-directory flags', async () => {
+    const {params} = prepareExtensionRunnerParams({
+      params: {
+        chromiumProfile: '/fake/chrome/profile/',
+      },
+    });
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    const {reloadManagerExtension} = runnerInstance;
+
+    sinon.assert.calledOnce(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
+      enableExtensions: true,
+      chromePath: undefined,
+      userDataDir: '/fake/chrome',
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+        '--profile-directory=profile',
       ],
       startingUrl: undefined,
     });
