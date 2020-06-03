@@ -12,7 +12,7 @@
       "modules": true,
       "restParams": true,
       "spread": true
-    },
+    }
   },
   "plugins": [
     "async-await",
@@ -22,7 +22,7 @@
   "settings": {
     "flowtype": {
       "onlyFilesWithFlowAnnotation": true
-    },
+    }
   },
   "env": {
     "node": true,
@@ -84,7 +84,7 @@
     "no-implicit-coercion": [2, {
       "boolean": true,
       "number": true,
-      "string": true,
+      "string": true
     }],
     "no-irregular-whitespace": 2,
     "no-iterator": 2,
@@ -180,6 +180,6 @@
       "newlines-between": "always"
     }],
     // This ensures a new line after all import statements.
-    "import/newline-after-import": 2,
+    "import/newline-after-import": 2
   }
 }
