@@ -277,10 +277,8 @@ export default class ADBUtils {
       component = `${apk}/.App`;
     } else if (apkComponent.includes('.')) {
       component = `${apk}/${apkComponent}`;
-    } else if (apkComponent) {
-      component = `${apk}/.${apkComponent}`;
     } else {
-      component = `${apk}/.App`;
+      component = `${apk}/.${apkComponent}`;
     }
 
     await wrapADBCall(async () => {
