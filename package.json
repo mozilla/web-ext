@@ -24,7 +24,7 @@
     "test-functional": "node scripts/test-functional",
     "publish-coverage": "nyc report --reporter=text-lcov | coveralls",
     "audit-deps": "node ./scripts/audit-deps",
-    "changelog": "conventional-changelog -p angular -u",
+    "changelog": "npx conventional-changelog-cli -p angular -u",
     "changelog-lint": "commitlint --from master",
     "changelog-lint-from-stdin": "commitlint",
     "travis-pr-title-lint": "node ./scripts/travis-pr-title-lint",
