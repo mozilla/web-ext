@@ -15,7 +15,7 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 ## Documentation
 
 * [Getting started with web-ext][web-ext-user-docs]
-* [Command reference](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference)
+* [Command reference](https://extensionworkshop.com/documentation/develop/web-ext-command-reference)
 
 Here are the commands you can run. Click on each one for detailed documentation or use `--help` on the command line, such as `web-ext build --help`.
 
