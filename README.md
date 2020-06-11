@@ -19,15 +19,15 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 Here are the commands you can run. Click on each one for detailed documentation or use `--help` on the command line, such as `web-ext build --help`.
 
-* [`run`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext-run)
+* [`run`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-run)
   * Run the extension
-* [`lint`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext-lint)
+* [`lint`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-lint)
   * Validate the extension source
-* [`sign`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext-sign)
+* [`sign`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-sign)
   * Sign the extension so it can be installed in Firefox
-* [`build`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext-build)
+* [`build`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-build)
   * Create an extension package from source
-* [`docs`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/web-ext_command_reference#web-ext-docs)
+* [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-docs)
   * Open the `web-ext` documentation in a browser
 
 ## Installation from npm
