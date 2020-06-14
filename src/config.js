@@ -113,6 +113,8 @@ export function applyConfigToArgv({
         `Calling coerce() on configured value for ${option}`);
       newArgv[option] = coerce(newArgv[option]);
     }
+
+    newArgv[decamelizedOptName] = newArgv[option];
   }
   return newArgv;
 }
