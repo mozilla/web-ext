@@ -5,9 +5,11 @@ import EventEmitter from 'events';
 import {assert} from 'chai';
 import {describe, it, beforeEach, afterEach} from 'mocha';
 import deepcopy from 'deepcopy';
-import fs from 'mz/fs';
+import fs from 'fs-extra';
 import sinon from 'sinon';
 import WebSocket from 'ws';
+import mock from 'mock-fs';
+import { Launcher } from 'chrome-launcher';
 
 import getValidatedManifest from '../../../src/util/manifest';
 import {
@@ -356,36 +358,10 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.exit();
   });
 
-  it('does pass a profile-directory flag to chrome', async () => {
-    const {params} = prepareExtensionRunnerParams({
-      params: {
-        chromiumProfile: 'profile',
-      },
-    });
+  it('does pass user-data-dir flag to chrome', async () => {
 
-    const runnerInstance = new ChromiumExtensionRunner(params);
-    await runnerInstance.run();
+    mock({}); // empty file system
 
-    const {reloadManagerExtension} = runnerInstance;
-
-    sinon.assert.calledOnce(params.chromiumLaunch);
-    sinon.assert.calledWithMatch(params.chromiumLaunch, {
-      ignoreDefaultFlags: true,
-      enableExtensions: true,
-      chromePath: undefined,
-      userDataDir: false,
-      chromeFlags: [
-        ...DEFAULT_CHROME_FLAGS,
-        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-        '--profile-directory=profile',
-      ],
-      startingUrl: undefined,
-    });
-
-    await runnerInstance.exit();
-  });
-
-  it('does pass user-data-dir and profile-directory flags', async () => {
     const {params} = prepareExtensionRunnerParams({
       params: {
         chromiumProfile: '/fake/chrome/profile/',
@@ -402,16 +378,123 @@ describe('util/extension-runners/chromium', async () => {
       ignoreDefaultFlags: true,
       enableExtensions: true,
       chromePath: undefined,
-      userDataDir: '/fake/chrome',
+      userDataDir: '/fake/chrome/profile/',
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-        '--profile-directory=profile',
       ],
       startingUrl: undefined,
     });
 
     await runnerInstance.exit();
+
+    mock.restore();
+  });
+
+  it('does pass existing user-data-dir and profile-directory flag' +
+    ' to chrome', async () => {
+
+    mock({
+      'path/userDataDir': {
+        'Local State': {},
+        'Default': {},
+        'profile': {
+          'Secure Preferences': {},
+        },
+      },
+    }); // empty file system
+
+    const {params} = prepareExtensionRunnerParams({
+      params: {
+        chromiumProfile: 'path/userDataDir/profile',
+        keepProfileChanges: true,
+      },
+    });
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    const {reloadManagerExtension} = runnerInstance;
+
+    sinon.assert.calledOnce(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
+      enableExtensions: true,
+      chromePath: undefined,
+      userDataDir: 'path/userDataDir',
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+        '--profile-directory=\'profile\'',
+      ],
+      startingUrl: undefined,
+    });
+
+    await runnerInstance.exit();
+
+    mock.restore();
+  });
+
+  it('throws an error on profile in invalid user-data-dir', async () => {
+
+    mock({
+      'path/profile/Secure Preferences': {},
+    });
+
+    const {params} = prepareExtensionRunnerParams({
+      params: {
+        chromiumProfile: 'path/profile',
+        keepProfileChanges: true,
+      },
+    });
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+
+    assert.isRejected(runnerInstance.run(), /not in a user-data-dir/);
+
+    await runnerInstance.exit();
+
+    mock.restore();
+  });
+
+  it('does copy the profile and pass user-data-dir and profile-directory' +
+    ' flags', async () => {
+
+    mock({
+      'path/profile/Secure Preferences': {},
+    });
+
+    const {params} = prepareExtensionRunnerParams({
+      params: {
+        chromiumProfile: 'path/profile',
+      },
+    });
+
+    sinon.stub(Launcher.prototype, 'makeTmpDir').returns('tempDir');
+    sinon.stub(fs, 'copySync');
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    const {reloadManagerExtension} = runnerInstance;
+
+    sinon.assert.calledOnce(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
+      enableExtensions: true,
+      chromePath: undefined,
+      userDataDir: 'tempDir',
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+        '--profile-directory=\'profile\'',
+      ],
+      startingUrl: undefined,
+    });
+
+    await runnerInstance.exit();
+
+    mock.restore();
   });
 
   describe('reloadAllExtensions', () => {
