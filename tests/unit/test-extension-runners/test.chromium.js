@@ -63,6 +63,7 @@ describe('util/extension-runners/chromium', async () => {
       '--disable-backgrounding-occluded-windows',
       '--disable-renderer-backgrounding',
       '--disable-background-timer-throttling',
+      '--force-fieldtrials=*BackgroundTracing/default/',
     ];
 
     assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
