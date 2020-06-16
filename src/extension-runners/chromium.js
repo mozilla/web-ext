@@ -10,9 +10,8 @@ import path from 'path';
 import {fs} from 'mz';
 import asyncMkdirp from 'mkdirp';
 import {
-  LaunchedChrome,
+  Launcher as ChromeLauncher,
   launch as defaultChromiumLaunch,
-  default as ChromeLauncher,
 } from 'chrome-launcher';
 import WebSocket from 'ws';
 
@@ -51,7 +50,7 @@ export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags()
 export class ChromiumExtensionRunner {
   cleanupCallbacks: Set<Function>;
   params: ChromiumExtensionRunnerParams;
-  chromiumInstance: LaunchedChrome;
+  chromiumInstance: ChromeLauncher;
   chromiumLaunch: typeof defaultChromiumLaunch;
   reloadManagerExtension: string;
   wss: WebSocket.Server;
