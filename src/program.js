@@ -153,7 +153,20 @@ export class Program {
   // Retrieve the yargs argv object and apply any further fix needed
   // on the output of the yargs options parsing.
   getArguments(): Object {
+    // To support looking up required parameters via config files, we need to
+    // temporarily disable the requiredArguments validation. Otherwise yargs
+    // would exit early. Validation is enforced by the checkRequiredArguments()
+    // method, after reading configuration files.
+    //
+    // This is an undocumented internal API of yargs! Unit tests to avoid
+    // regressions are located at: tests/functional/test.cli.sign.js
+    //
+    // Replace hack if possible:  https://github.com/mozilla/web-ext/issues/1930
+    const validationInstance = this.yargs.getValidationInstance();
+    const { requiredArguments } = validationInstance;
+    validationInstance.requiredArguments = () => {};
     const argv = this.yargs.argv;
+    validationInstance.requiredArguments = requiredArguments;
 
     // Yargs boolean options doesn't define the no* counterpart
     // with negate-boolean on Yargs 15. Define as expected by the
@@ -176,6 +189,15 @@ export class Program {
     }
 
     return argv;
+  }
+
+  // getArguments() disables validation of required parameters, to allow us to
+  // read parameters from config files first. Before the program continues, it
+  // must call checkRequiredArguments() to ensure that required parameters are
+  // defined (in the CLI or in a config file).
+  checkRequiredArguments(adjustedArgv: Object): void {
+    const validationInstance = this.yargs.getValidationInstance();
+    validationInstance.requiredArguments(adjustedArgv);
   }
 
   // Remove WEB_EXT_* environment vars that are not a global cli options
@@ -286,6 +308,8 @@ export class Program {
         // Ensure that the verbose is enabled when specified in a config file.
         this.enableVerboseMode(logStream, version);
       }
+
+      this.checkRequiredArguments(adjustedArgv);
 
       await runCommand(adjustedArgv, {shouldExitProgram});
 
