@@ -120,7 +120,7 @@ You are able to execute command functions without any argument validation. If yo
 // or...
 import webExt from 'web-ext';
 
-webExt.cmd.run({
+webExt.default.cmd.run({
   // These are command options derived from their CLI conterpart.
   // In this example, --source-dir is specified as sourceDir.
   firefox: '/path/to/Firefox-executable',
@@ -144,20 +144,20 @@ webExt.cmd.run({
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
 
 ```js
-webExt.util.logger.consoleStream.makeVerbose();
-webExt.cmd.run({sourceDir: './src'}, {shouldExitProgram: false});
+webExt.default.util.logger.consoleStream.makeVerbose();
+webExt.default.cmd.run({sourceDir: './src'}, {shouldExitProgram: false});
 ```
 
 You can also disable the use of standard input:
 
 ```js
-webExt.cmd.run({noInput: true}, {shouldExitProgram: false});
+webExt.default.cmd.run({noInput: true}, {shouldExitProgram: false});
 ```
 
 `web-ext` is designed for WebExtensions but you can try disabling manifest validation to work with legacy extensions. This is not officially supported.
 
 ```js
-webExt.cmd.run(
+webExt.default.cmd.run(
   {sourceDir: './src'},
   {
     getValidatedManifest: () => ({
