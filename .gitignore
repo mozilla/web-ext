@@ -12,6 +12,3 @@ node_modules
 dist/*
 artifacts/*
 coverage/*
-
-# IDE
-.idea/*
