@@ -271,8 +271,14 @@ export default class ADBUtils {
       value: `-profile ${deviceProfileDir}`,
     }];
 
-    const component = apkComponent ?
-      `${apk}/.${apkComponent}` : `${apk}/.App`;
+    if (!apkComponent) {
+      apkComponent = '.App';
+    } else if (!apkComponent.includes('.')) {
+      apkComponent = `.${apkComponent}`;
+    }
+    // if `apkComponent` starts with a '.', then adb will expand
+    // the following to: `${apk}/${apk}.${apkComponent}`
+    const component = `${apk}/${apkComponent}`;
 
     await wrapADBCall(async () => {
       await adbClient.startActivity(deviceId, {
