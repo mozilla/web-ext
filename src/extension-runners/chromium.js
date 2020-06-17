@@ -10,23 +10,24 @@ import path from 'path';
 import fs from 'fs-extra';
 import asyncMkdirp from 'mkdirp';
 import {
-  default as ChromeLauncher,
+  LaunchedChrome,
   launch as defaultChromiumLaunch,
-  LaunchedChrome, Launcher,
+  default as ChromeLauncher,
 } from 'chrome-launcher';
 import WebSocket from 'ws';
 
-import { createLogger } from '../util/logger';
-import { TempDir } from '../util/temp-dir';
+import {createLogger} from '../util/logger';
+import {TempDir} from '../util/temp-dir';
 import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
 } from './base';
+import isDirectory from '../util/is-directory';
 
 type ChromiumSpecificRunnerParams = {|
-  chromiumBinary?: string,
-  chromiumProfile?: string,
-  chromiumLaunch?: typeof defaultChromiumLaunch,
+   chromiumBinary?: string,
+   chromiumProfile?: string,
+   chromiumLaunch?: typeof defaultChromiumLaunch,
 |};
 
 export type ChromiumExtensionRunnerParams = {|
@@ -82,6 +83,71 @@ export class ChromiumExtensionRunner {
     await this._promiseSetupDone;
   }
 
+  static async isUserDataDir(dirCandidate: string): Promise<boolean> {
+    const localStateCandidate = path.join(dirCandidate, 'Local State');
+    const defaultCandidate = path.join(dirCandidate, 'Default');
+    // Local State and Default are typical for the user-data-dir
+    return await isDirectory(localStateCandidate)
+      && await isDirectory(defaultCandidate);
+  }
+
+  static async isProfileDir(dirCandidate: string): Promise<boolean> {
+    const securePreferencesCandidate = path.join(
+      dirCandidate,
+      'Secure Preferences');
+    //Secure Preferences is typical for a profile dir
+    return await isDirectory(securePreferencesCandidate);
+  }
+
+  static async getProfileParts(params: any): Promise<{
+    userDataDir: (string | false),
+    profileDirName: (string | false)
+  }> {
+    const chromiumProfile = params.chromiumProfile;
+    if (!chromiumProfile) {
+      return {
+        userDataDir: false,
+        profileDirName: false,
+      };
+    }
+
+    const isProfileDirAndNotUserData =
+      await ChromiumExtensionRunner.isProfileDir(chromiumProfile)
+      && !await ChromiumExtensionRunner.isUserDataDir(chromiumProfile);
+
+    if (!isProfileDirAndNotUserData) {
+      return {
+        userDataDir: chromiumProfile,
+        profileDirName: false,
+      };
+    }
+
+    const { dir: parentDir, base: profileDirName } =
+      path.parse(chromiumProfile);
+    let userDataDir: string;
+    if (params.keepProfileChanges) {
+      if (!await ChromiumExtensionRunner.isUserDataDir(parentDir)) {
+        throw new Error('The profile you provided is not in a ' +
+          'user-data-dir. The changes cannot be kept. Please either ' +
+          'remove --keep-profile-changes or use a profile in a ' +
+          'user-data-dir directory');
+      }
+      userDataDir = parentDir;
+    } else {
+      // the user provided an existing profile directory but doesn't want
+      // the changes to be kept. we copy this directory to a temporary
+      // user data dir.
+      const tmpDir = new TempDir();
+      await tmpDir.create();
+      userDataDir = tmpDir.path();
+      await tmpDir.remove();
+    }
+    return {
+      userDataDir,
+      profileDirName,
+    };
+  }
+
   /**
    * Setup the Chromium Profile and run a Chromium instance.
    */
@@ -108,7 +174,7 @@ export class ChromiumExtensionRunner {
 
     // Start chrome pointing it to a given profile dir
     const extensions = [this.reloadManagerExtension].concat(
-      this.params.extensions.map(({sourceDir}) => sourceDir),
+      this.params.extensions.map(({sourceDir}) => sourceDir)
     ).join(',');
 
     const {chromiumBinary} = this.params;
@@ -127,58 +193,21 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(...this.params.args);
     }
 
-    function isUserDataDir(dirCandidate: string): boolean {
-      const localStateCandidate = path.join(dirCandidate, 'Local State');
-      const defaultCandidate = path.join(dirCandidate, 'Default');
-      // Local State and Default are typical for the user-data-dir
-      return fs.pathExistsSync(localStateCandidate)
-        && fs.pathExistsSync(defaultCandidate);
+    const profileParts =
+      await ChromiumExtensionRunner.getProfileParts(this.params);
 
+    if (profileParts.userDataDir
+      && profileParts.profileDirName
+      && !this.params.keepProfileChanges
+    ) {
+      // copy profile dir to this temp user data dir.
+      fs.copySync(this.params.chromiumProfile, path.join(
+        profileParts.userDataDir,
+        profileParts.profileDirName));
     }
 
-    function isProfileDir(dirCandidate: string): boolean {
-      const securePreferencesCandidate = path.join(
-        dirCandidate,
-        'Secure Preferences');
-      //Secure Preferences is typical for a profile dir
-      return fs.pathExistsSync(securePreferencesCandidate);
-    }
-
-    let userDataDir = false;
-    const chromiumProfile = this.params.chromiumProfile;
-    if (chromiumProfile) {
-      const isProfileDirAndNotUserData =
-        fs.pathExistsSync(chromiumProfile)
-        && isProfileDir(chromiumProfile)
-        && !isUserDataDir(chromiumProfile);
-
-      if (isProfileDirAndNotUserData) {
-        const pathParts = path.parse(chromiumProfile);
-        const profileDirName = pathParts.base;
-        if (this.params.keepProfileChanges) {
-          // now check if the parent dir is a user-data-dir
-          if (!isUserDataDir(pathParts.dir)) {
-            throw new Error('The profile you provided is not in a ' +
-              'user-data-dir. The changes cannot be kept. Please either ' +
-              'remove --keep-profile-changes or use a profile in a ' +
-              'user-data-dir directory');
-          }
-          userDataDir = pathParts.dir;
-
-        } else {
-          // the user provided an existing profile directory but doesn't want
-          // the changes to be kept. we copy this directory to a temporary
-          // user data dir.
-          userDataDir = Launcher.prototype.makeTmpDir();
-          // copy profile dir to this temp user data dir.
-          fs.copySync(chromiumProfile, path.join(
-            userDataDir,
-            profileDirName));
-        }
-        chromeFlags.push(`--profile-directory='${profileDirName}'`);
-      } else {
-        userDataDir = chromiumProfile;
-      }
+    if (profileParts.profileDirName) {
+      chromeFlags.push(`--profile-directory=${profileParts.profileDirName}`);
     }
 
     let startingUrl;
@@ -194,7 +223,7 @@ export class ChromiumExtensionRunner {
       chromePath: chromiumBinary,
       chromeFlags,
       startingUrl,
-      userDataDir,
+      userDataDir: profileParts.userDataDir,
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
     });
@@ -255,7 +284,7 @@ export class ChromiumExtensionRunner {
 
     const extPath = path.join(
       tmpDir.path(),
-      `reload-manager-extension-${Date.now()}`,
+      `reload-manager-extension-${Date.now()}`
     );
 
     log.debug(`Creating reload-manager-extension in ${extPath}`);
@@ -272,7 +301,7 @@ export class ChromiumExtensionRunner {
         background: {
           scripts: ['bg.js'],
         },
-      }),
+      })
     );
 
     const wssInfo = this.wss.address();
@@ -338,7 +367,7 @@ export class ChromiumExtensionRunner {
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
   async reloadExtensionBySourceDir(
-    extensionSourceDir: string, // eslint-disable-line no-unused-vars
+    extensionSourceDir: string // eslint-disable-line no-unused-vars
   ): Promise<Array<ExtensionRunnerReloadResult>> {
     // TODO(rpl): detect the extension ids assigned to the
     // target extensions and map it to the extensions source dir
