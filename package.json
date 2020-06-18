@@ -3,10 +3,16 @@
   "version": "4.3.0",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
+  "exports": {
+    "import": "./index.mjs",
+    "require": "./dist/web-ext.js"
+  },
   "files": [
     "CODE_OF_CONDUCT.md",
+    "README.md",
     "dist/*.js",
-    "src/**"
+    "src/**",
+    "index.mjs"
   ],
   "engines": {
     "node": ">=10.0.0",

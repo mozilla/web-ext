@@ -14,7 +14,7 @@ module.exports = {
   },
   eslint: {
     files: [
-      '.', './src/**/*.js', './tests/**/*.js', './scripts/**',
+      '.', './index.mjs', './src/**/*.js', './tests/**/*.js', './scripts/**',
     ],
   },
   mocha: {
