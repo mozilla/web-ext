@@ -18,6 +18,8 @@ export const webExt = process.env.TEST_WEB_EXT_BIN ?
   path.join(projectDir, 'bin', 'web-ext');
 export const fixturesDir = path.join(functionalTestsDir, '..', 'fixtures');
 export const minimalAddonPath = path.join(fixturesDir, 'minimal-web-ext');
+export const fixtureEsmImport = path.join(fixturesDir, 'import-as-esm');
+export const fixtureCjsRequire = path.join(fixturesDir, 'require-as-cjs');
 export const fakeFirefoxPath = path.join(
   functionalTestsDir,
   process.platform === 'win32' ?
