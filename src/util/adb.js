@@ -7,6 +7,7 @@ import {
   WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
+import {browserList} from '../firefox/package-identifiers';
 
 const log = createLogger(__filename);
 
@@ -116,13 +117,13 @@ export default class ADBUtils {
           return line === firefoxApk;
         }
         // Match any package name that starts with the package name of a Firefox for Android browser.
-        return (
-          line.startsWith('org.mozilla.fennec') ||
-          line.startsWith('org.mozilla.fenix') ||
-          line.startsWith('org.mozilla.geckoview') ||
-          line.startsWith('org.mozilla.firefox') ||
-          line.startsWith('org.mozilla.reference.browser')
-        );
+        for (const browser of browserList) {
+          if (line.startsWith(browser)) {
+            return true;
+          }
+        }
+
+        return false;
       });
   }
 
@@ -271,14 +272,17 @@ export default class ADBUtils {
       value: `-profile ${deviceProfileDir}`,
     }];
 
-    if (!apkComponent) {
-      apkComponent = '.App';
-    } else if (!apkComponent.includes('.')) {
-      apkComponent = `.${apkComponent}`;
+    let browserName;
+
+    for (const browser of browserList) {
+      if (apk.startsWith(browser)) {
+        browserName = browser;
+        break;
+      }
     }
-    // if `apkComponent` starts with a '.', then adb will expand
-    // the following to: `${apk}/${apk}.${apkComponent}`
-    const component = `${apk}/${apkComponent}`;
+
+    const component = apkComponent && browserName ?
+      `${apk}/${browserName}.${apkComponent}` : `${apk}/.App`;
 
     await wrapADBCall(async () => {
       await adbClient.startActivity(deviceId, {

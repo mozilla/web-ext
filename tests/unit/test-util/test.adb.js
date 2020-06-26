@@ -733,7 +733,7 @@ describe('utils/adb', () => {
            adb.fakeADBClient.startActivity, 'device1', expectedAdbParams);
        });
 
-    it('starts a given APK component without a period', async () => {
+    it('starts a given APK component on an android build', async () => {
       const adb = getFakeADBKit({
         adbClient: {
           startActivity: sinon.spy(() => Promise.resolve()),
@@ -757,7 +757,8 @@ describe('utils/adb', () => {
       sinon.assert.calledWithMatch(
         adb.fakeADBClient.startActivity, 'device1', {
           action: 'android.activity.MAIN',
-          component: 'org.mozilla.geckoview_example/.GeckoViewActivity',
+          component: 'org.mozilla.geckoview_example/' +
+            'org.mozilla.geckoview_example.GeckoViewActivity',
           extras: [{
             key: 'args',
             value: '-profile /fake/custom/profile/path',
@@ -767,7 +768,7 @@ describe('utils/adb', () => {
       );
     });
 
-    it('starts a given APK component with a period', async () => {
+    it('starts a given APK component on an android build variant', async () => {
       const adb = getFakeADBKit({
         adbClient: {
           startActivity: sinon.spy(() => Promise.resolve()),
@@ -780,8 +781,8 @@ describe('utils/adb', () => {
 
       const promise = adbUtils.startFirefoxAPK(
         'device1',
-        'org.mozilla.geckoview_example',
-        'org.mozilla.geckoview_example.GeckoViewActivity', // firefoxApkComponent
+        'org.mozilla.geckoview_example.release',
+        'GeckoViewActivity', // firefoxApkComponent
         '/fake/custom/profile/path',
       );
 
@@ -791,7 +792,7 @@ describe('utils/adb', () => {
       sinon.assert.calledWithMatch(
         adb.fakeADBClient.startActivity, 'device1', {
           action: 'android.activity.MAIN',
-          component: 'org.mozilla.geckoview_example/' +
+          component: 'org.mozilla.geckoview_example.release/' +
             'org.mozilla.geckoview_example.GeckoViewActivity',
           extras: [{
             key: 'args',
