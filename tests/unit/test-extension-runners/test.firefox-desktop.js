@@ -285,6 +285,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     assert.equal(install.asProxy, true);
     assert.equal(install.manifestData.applications.gecko.id,
                  manifestData.applications &&
+                 manifestData.applications.gecko &&
                  manifestData.applications.gecko.id);
     assert.deepEqual(install.profile, fakeProfile);
     // This needs to be the source of the extension.

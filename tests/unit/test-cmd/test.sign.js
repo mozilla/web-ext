@@ -279,7 +279,7 @@ describe('sign', () => {
             apiSecret: stubs.signingConfig.apiSecret,
             apiUrlPrefix: stubs.signingConfig.apiUrlPrefix,
             downloadDir: artifactsDir,
-            id: applications.gecko.id,
+            id: applications.gecko && applications.gecko.id,
             timeout: stubs.signingConfig.timeout,
             version: stubs.preValidatedManifest.version,
             xpiPath: stubs.buildResult.extensionPath,
