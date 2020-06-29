@@ -1,15 +1,16 @@
 /* @flow */
 import path from 'path';
 
-import { fs } from 'mz';
+import {fs} from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
 
-import { InvalidManifest } from '../errors';
-import { createLogger } from './logger';
+import {InvalidManifest} from '../errors';
+import {createLogger} from './logger';
 
 const log = createLogger(__filename);
+
 
 // getValidatedManifest helper types and implementation
 
@@ -18,8 +19,8 @@ export type ExtensionManifestApplications = {|
     id?: string,
     strict_min_version?: string,
     strict_max_version?: string,
-    update_url?: string
-  |}
+    update_url?: string,
+  |},
 |};
 
 export type ExtensionManifest = {|
@@ -28,7 +29,7 @@ export type ExtensionManifest = {|
   default_locale?: string,
   applications?: ExtensionManifestApplications,
   browser_specific_settings?: ExtensionManifestApplications,
-  permissions?: Array<string>
+  permissions?: Array<string>,
 |};
 
 export default async function getValidatedManifest(
@@ -40,11 +41,10 @@ export default async function getValidatedManifest(
   let manifestContents;
 
   try {
-    manifestContents = await fs.readFile(manifestFile, { encoding: 'utf-8' });
+    manifestContents = await fs.readFile(manifestFile, {encoding: 'utf-8'});
   } catch (error) {
     throw new InvalidManifest(
-      `Could not read manifest.json file at ${manifestFile}: ${error}`
-    );
+      `Could not read manifest.json file at ${manifestFile}: ${error}`);
   }
 
   manifestContents = stripBom(manifestContents);
@@ -55,8 +55,7 @@ export default async function getValidatedManifest(
     manifestData = parseJSON(stripJsonComments(manifestContents));
   } catch (error) {
     throw new InvalidManifest(
-      `Error parsing manifest.json file at ${manifestFile}: ${error}`
-    );
+      `Error parsing manifest.json file at ${manifestFile}: ${error}`);
   }
 
   const errors = [];
@@ -79,23 +78,23 @@ export default async function getValidatedManifest(
 
   if (errors.length) {
     throw new InvalidManifest(
-      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`
-    );
+      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`);
   }
 
   return manifestData;
 }
 
+
 export function getManifestId(manifestData: ExtensionManifest): string | void {
-  return [
-    manifestData.applications,
+  const manifestApps = [
     manifestData.browser_specific_settings,
-  ].reduce((result, apps) => {
-    try {
-      // $FLOW_IGNORE: allow thrown error (caught).
-      return result || apps.gecko.id;
-    } catch (err) {
-      return result;
+    manifestData.applications,
+  ];
+  for (const apps of manifestApps) {
+    if (apps && apps.gecko && apps.gecko.id) {
+      return apps.gecko.id;
     }
-  }, undefined);
+  }
+
+  return undefined;
 }
