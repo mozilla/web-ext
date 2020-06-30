@@ -26,6 +26,8 @@ import {
   consoleStream, // instance is imported to inspect logged messages
 } from '../../../src/util/logger';
 import { TempDir, withTempDir } from '../../../src/util/temp-dir';
+import fileExists from '../../../src/util/file-exists';
+import isDirectory from '../../../src/util/is-directory';
 
 function prepareExtensionRunnerParams({params} = {}) {
   const fakeChromeInstance = {
@@ -358,6 +360,22 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.exit();
   });
 
+  it('does use a random user-data-dir', async () => {
+
+    const {params} = prepareExtensionRunnerParams({
+      params: {},
+    });
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      userDataDir: null,
+    });
+
+    await runnerInstance.exit();
+  });
+
   it('does pass a user-data-dir flag to chrome', async () => withTempDir(
     async (tmpDir) => {
 
@@ -367,8 +385,12 @@ describe('util/extension-runners/chromium', async () => {
         },
       });
 
+      const spy = sinon.spy(TempDir.prototype, 'path');
+
       const runnerInstance = new ChromiumExtensionRunner(params);
       await runnerInstance.run();
+
+      const usedTempPath = spy.returnValues[2];
 
       const {reloadManagerExtension} = runnerInstance;
 
@@ -377,7 +399,7 @@ describe('util/extension-runners/chromium', async () => {
         ignoreDefaultFlags: true,
         enableExtensions: true,
         chromePath: undefined,
-        userDataDir: tmpDir.path(),
+        userDataDir: usedTempPath,
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
           `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
@@ -386,7 +408,7 @@ describe('util/extension-runners/chromium', async () => {
       });
 
       await runnerInstance.exit();
-
+      spy.restore();
     })
   );
 
@@ -394,10 +416,11 @@ describe('util/extension-runners/chromium', async () => {
     ' to chrome', async () => withTempDir(
     async (tmpDir) => {
       const tmpPath = tmpDir.path();
-      fs.mkdirsSync(path.join(tmpPath, 'userDataDir/Local State'));
-      fs.mkdirsSync(path.join(tmpPath, 'userDataDir/Default'));
-      fs.mkdirsSync(path.join(
-        tmpPath, 'userDataDir/profile/Secure Preferences'));
+      await fs.mkdirsSync(path.join(tmpPath, 'userDataDir/Default'));
+      await fs.outputFile(path.join(tmpPath, 'userDataDir/Local State'), '');
+      await fs.mkdirs(path.join(tmpPath, 'userDataDir/profile'));
+      await fs.outputFile(path.join(
+        tmpPath, 'userDataDir/profile/Secure Preferences'), '');
 
       const {params} = prepareExtensionRunnerParams({
         params: {
@@ -420,7 +443,7 @@ describe('util/extension-runners/chromium', async () => {
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
           `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-          '--profile-directory=profile',
+          '--profile-directory="profile"',
         ],
         startingUrl: undefined,
       });
@@ -430,11 +453,95 @@ describe('util/extension-runners/chromium', async () => {
     })
   );
 
+  it('does support some special chars in profile-directory flag',
+     async () => withTempDir(
+       async (tmpDir) => {
+         const tmpPath = tmpDir.path();
+         // supported to test: [ _-]
+         // not supported by Chromium: [ßäé]
+         const profileDirName = ' profile _-\' ';
+         await fs.mkdirs(path.join(tmpPath, 'userDataDir/Default'));
+         await fs.outputFile(path.join(tmpPath, 'userDataDir/Local State'), '');
+         await fs.mkdirs(path.join(tmpPath, 'userDataDir', profileDirName));
+         await fs.outputFile(path.join(
+           tmpPath, 'userDataDir', profileDirName, 'Secure Preferences'), '');
+
+         const {params} = prepareExtensionRunnerParams({
+           params: {
+             chromiumProfile: path.join(tmpPath, 'userDataDir', profileDirName),
+             keepProfileChanges: true,
+           },
+         });
+
+         const runnerInstance = new ChromiumExtensionRunner(params);
+         await runnerInstance.run();
+
+         const {reloadManagerExtension} = runnerInstance;
+
+         sinon.assert.calledOnce(params.chromiumLaunch);
+         sinon.assert.calledWithMatch(params.chromiumLaunch, {
+           ignoreDefaultFlags: true,
+           enableExtensions: true,
+           chromePath: undefined,
+           userDataDir: path.join(tmpPath, 'userDataDir'),
+           chromeFlags: [
+             ...DEFAULT_CHROME_FLAGS,
+             `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+             `--profile-directory="${profileDirName}"`,
+           ],
+           startingUrl: undefined,
+         });
+
+         await runnerInstance.exit();
+
+       })
+  );
+
+  it('does recognize a UserData dir', async () => withTempDir(
+    async (tmpDir) => {
+
+      const tmpPath = tmpDir.path();
+      await fs.mkdirs(path.join(tmpPath, 'Default'));
+      await fs.outputFile(path.join(tmpPath, 'Local State'), '');
+
+      assert.isTrue(await fileExists(path.join(tmpPath, 'Local State')));
+      assert.isTrue(await isDirectory(path.join(tmpPath, 'Default')));
+      assert.isTrue(await ChromiumExtensionRunner.isUserDataDir(tmpPath));
+
+    }),
+  );
+
+  it('does reject a UserData dir with Local State dir', async () => withTempDir(
+    async (tmpDir) => {
+
+      const tmpPath = tmpDir.path();
+      await fs.mkdirs(path.join(tmpPath, 'Default'));
+      await fs.mkdirs(path.join(tmpPath, 'Local State'));
+
+      assert.isFalse(await ChromiumExtensionRunner.isUserDataDir(tmpPath));
+
+    }),
+  );
+
+  it('does reject a UserData dir with Default file', async () => withTempDir(
+    async (tmpDir) => {
+
+      const tmpPath = tmpDir.path();
+      await fs.mkdirs(path.join(tmpPath, 'Local State'));
+      await fs.outputFile(path.join(tmpPath, 'Default'), '');
+
+      assert.isFalse(await ChromiumExtensionRunner.isUserDataDir(tmpPath));
+
+    }),
+  );
+
   it('throws an error on profile in invalid user-data-dir',
      async () => withTempDir(async (tmpDir) => {
        const tmpPath = tmpDir.path();
-       fs.mkdirsSync(path.join(
-         tmpPath, 'userDataDir/profile'));
+       await fs.mkdirs(
+         path.join(tmpPath, 'userDataDir/profile'));
+       await fs.outputFile(path.join(
+         tmpPath, 'userDataDir/profile/Secure Preferences'), '');
 
        const {params} = prepareExtensionRunnerParams({
          params: {
@@ -445,9 +552,8 @@ describe('util/extension-runners/chromium', async () => {
 
        const runnerInstance = new ChromiumExtensionRunner(params);
 
-       assert.isRejected(runnerInstance.run(), /not in a user-data-dir/);
+       await assert.isRejected(runnerInstance.run(), /not in a user-data-dir/);
 
-       await runnerInstance.exit();
      })
   );
 
@@ -455,7 +561,10 @@ describe('util/extension-runners/chromium', async () => {
     ' flags', async () => withTempDir(async (tmpDir) => {
 
     const tmpPath = tmpDir.path();
-    fs.mkdirsSync(path.join(tmpPath, 'userDataDir/profile/Secure Preferences'));
+    await fs.mkdirs(
+      path.join(tmpPath, 'userDataDir/profile'));
+    await fs.outputFile(path.join(
+      tmpPath, 'userDataDir/profile/Secure Preferences'), '');
 
     const {params} = prepareExtensionRunnerParams({
       params: {
@@ -481,12 +590,13 @@ describe('util/extension-runners/chromium', async () => {
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-        '--profile-directory=profile',
+        '--profile-directory="profile"',
       ],
       startingUrl: undefined,
     });
 
     await runnerInstance.exit();
+    spy.restore();
   })
   );
 
