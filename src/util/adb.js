@@ -7,7 +7,7 @@ import {
   WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
-import {browserList} from '../firefox/package-identifiers';
+import packageIdentifiers from '../firefox/package-identifiers';
 
 const log = createLogger(__filename);
 
@@ -117,7 +117,7 @@ export default class ADBUtils {
           return line === firefoxApk;
         }
         // Match any package name that starts with the package name of a Firefox for Android browser.
-        for (const browser of browserList) {
+        for (const browser of packageIdentifiers) {
           if (line.startsWith(browser)) {
             return true;
           }
@@ -272,17 +272,25 @@ export default class ADBUtils {
       value: `-profile ${deviceProfileDir}`,
     }];
 
-    let browserName;
-
-    for (const browser of browserList) {
-      if (apk.startsWith(browser)) {
-        browserName = browser;
+    for (const browser of packageIdentifiers) {
+      if (apk.startsWith(browser) && apkComponent) {
+        if (apk !== browser && !apkComponent.includes('.')) {
+          apkComponent = `${browser}.${apkComponent}`;
+        }
+        // if 'geckoview_example' has been found, leave the
+        // loop, before it checks 'geckoview'
         break;
       }
     }
 
-    const component = apkComponent && browserName ?
-      `${apk}/${browserName}.${apkComponent}` : `${apk}/.App`;
+    if (!apkComponent) {
+      apkComponent = '.App';
+    } else if (!apkComponent.includes('.')) {
+      apkComponent = `.${apkComponent}`;
+    }
+    // if `apkComponent` starts with a '.', then adb will expand
+    // the following to: `${apk}/${apk}.${apkComponent}`
+    const component = `${apk}/${apkComponent}`;
 
     await wrapADBCall(async () => {
       await adbClient.startActivity(deviceId, {

@@ -1,6 +1,6 @@
 /* @flow */
 
-export const browserList = [
+export default [
   'org.mozilla.fennec',
   'org.mozilla.fenix',
   'org.mozilla.geckoview_example',
