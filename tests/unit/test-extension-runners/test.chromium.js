@@ -443,7 +443,7 @@ describe('util/extension-runners/chromium', async () => {
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
           `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-          '--profile-directory="profile"',
+          '--profile-directory=profile',
         ],
         startingUrl: undefined,
       });
@@ -487,7 +487,7 @@ describe('util/extension-runners/chromium', async () => {
            chromeFlags: [
              ...DEFAULT_CHROME_FLAGS,
              `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-             `--profile-directory="${profileDirName}"`,
+             `--profile-directory=${profileDirName}`,
            ],
            startingUrl: undefined,
          });
@@ -590,7 +590,7 @@ describe('util/extension-runners/chromium', async () => {
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-        '--profile-directory="profile"',
+        '--profile-directory=profile',
       ],
       startingUrl: undefined,
     });

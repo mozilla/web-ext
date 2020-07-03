@@ -214,7 +214,7 @@ export class ChromiumExtensionRunner {
     }
 
     if (profileDirName) {
-      chromeFlags.push(`--profile-directory="${profileDirName}"`);
+      chromeFlags.push(`--profile-directory=${profileDirName}`);
     }
 
     let startingUrl;
