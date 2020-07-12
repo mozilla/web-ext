@@ -43,7 +43,8 @@ const ignoredIssues = [];
 let auditReport = getNpmAuditJSON();
 
 if (auditReport) {
-  const {exceptions} = JSON.parse(stripJsonComments(shell.cat('.nsprc')));
+  const cmdres = shell.cat('.nsprc');
+  const {exceptions} = JSON.parse(stripJsonComments(cmdres.stdout));
 
   if (auditReport.error) {
     if (auditReport.error.code === 'ENETUNREACH') {
