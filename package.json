@@ -93,7 +93,7 @@
     "@babel/preset-env": "7.7.7",
     "@babel/preset-flow": "7.7.4",
     "@babel/register": "7.7.7",
-    "@commitlint/cli": "8.3.5",
+    "@commitlint/cli": "9.1.1",
     "@commitlint/config-conventional": "8.3.4",
     "babel-eslint": "10.0.3",
     "babel-loader": "8.0.6",
