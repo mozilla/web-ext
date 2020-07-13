@@ -72,7 +72,7 @@
     "multimatch": "4.0.0",
     "mz": "2.7.0",
     "node-notifier": "6.0.0",
-    "open": "7.0.0",
+    "open": "7.0.4",
     "parse-json": "5.0.0",
     "sign-addon": "2.0.5",
     "source-map-support": "0.5.19",
