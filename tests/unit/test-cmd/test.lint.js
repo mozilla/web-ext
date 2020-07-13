@@ -25,14 +25,14 @@ describe('lint', () => {
       createLinter,
       runLinter,
       lint: (params = {}, options = {}) => {
-        return defaultLintCommand({
-          sourceDir: '/fake/source/dir',
-          ...params,
-        }, {
+        const mergedArgs = {sourceDir: '/fake/source/dir', ...params};
+        const mergedOpts = {
           createLinter,
           createFileFilter,
           ...options,
-        });
+        };
+        // $FlowIgnore: allow use of inexact object literal for testing purpose.
+        return defaultLintCommand(mergedArgs, mergedOpts);
       },
     };
   }

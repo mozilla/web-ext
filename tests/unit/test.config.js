@@ -955,6 +955,7 @@ describe('config', () => {
 
   describe('discoverConfigFiles', () => {
     function _discoverConfigFiles(params = {}) {
+      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return discoverConfigFiles({
         // By default, do not look in the real home directory.
         getHomeDir: () => '/not-a-directory',

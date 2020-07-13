@@ -34,6 +34,7 @@ describe('firefox.remote', () => {
           sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
         ...options,
       };
+      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       const connect = defaultConnector(port, options);
       return {options, connect};
     }
@@ -398,6 +399,7 @@ describe('firefox.remote', () => {
   describe('connectWithMaxRetries', () => {
 
     function firefoxClient(opt = {}, deps) {
+      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return connectWithMaxRetries({
         maxRetries: 0, retryInterval: 1, port: 6005, ...opt,
       }, deps);
