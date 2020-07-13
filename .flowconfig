@@ -5,8 +5,6 @@
 [options]
 module.system=node
 log.file=./artifacts/flow.log
-suppress_comment= \\(.\\|\n\\)*\\$FLOW_FIXME
-suppress_comment= \\(.\\|\n\\)*\\$FLOW_IGNORE 
 
 [ignore]
 <PROJECT_ROOT>/dist/.*

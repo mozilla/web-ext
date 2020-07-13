@@ -78,7 +78,7 @@ describe('logger', () => {
     it('does not log debug packets unless verbose', () => {
       const log = new ConsoleStream({verbose: false});
       const localProcess = fakeProcess();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet({level: bunyan.DEBUG}), {localProcess});
       sinon.assert.notCalled(localProcess.stdout.write);
     });
@@ -86,7 +86,7 @@ describe('logger', () => {
     it('does not log trace packets unless verbose', () => {
       const log = new ConsoleStream({verbose: false});
       const localProcess = fakeProcess();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet({level: bunyan.TRACE}), {localProcess});
       sinon.assert.notCalled(localProcess.stdout.write);
     });
@@ -94,7 +94,7 @@ describe('logger', () => {
     it('logs debug packets when verbose', () => {
       const log = new ConsoleStream({verbose: true});
       const localProcess = fakeProcess();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet({level: bunyan.DEBUG}), {localProcess});
       sinon.assert.called(localProcess.stdout.write);
     });
@@ -102,7 +102,7 @@ describe('logger', () => {
     it('logs trace packets when verbose', () => {
       const log = new ConsoleStream({verbose: true});
       const localProcess = fakeProcess();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet({level: bunyan.TRACE}), {localProcess});
       sinon.assert.called(localProcess.stdout.write);
     });
@@ -110,10 +110,10 @@ describe('logger', () => {
     it('logs info packets when verbose or not', () => {
       const log = new ConsoleStream({verbose: false});
       const localProcess = fakeProcess();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet({level: bunyan.INFO}), {localProcess});
       log.makeVerbose();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet({level: bunyan.INFO}), {localProcess});
       sinon.assert.callCount(localProcess.stdout.write, 2);
     });
@@ -123,10 +123,10 @@ describe('logger', () => {
       const localProcess = fakeProcess();
 
       log.startCapturing();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet({msg: 'message'}), {localProcess});
       sinon.assert.notCalled(localProcess.stdout.write);
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
       sinon.assert.calledWith(localProcess.stdout.write, 'message\n');
     });
@@ -136,14 +136,14 @@ describe('logger', () => {
       let localProcess = fakeProcess();
 
       log.startCapturing();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet(), {localProcess});
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
 
       // Make sure there is nothing more to flush.
       localProcess = fakeProcess();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
       sinon.assert.notCalled(localProcess.stdout.write);
     });
@@ -153,12 +153,12 @@ describe('logger', () => {
       let localProcess = fakeProcess();
 
       log.startCapturing();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet(), {localProcess});
       sinon.assert.notCalled(localProcess.stdout.write);
 
       log.stopCapturing();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.write(packet(), {localProcess});
       sinon.assert.callCount(localProcess.stdout.write, 1);
 
@@ -167,7 +167,7 @@ describe('logger', () => {
       log.startCapturing();
       log.write(packet());
       localProcess = fakeProcess();
-      // $FLOW_IGNORE: fake process for testing reasons.
+      // $FlowIgnore: fake process for testing reasons.
       log.flushCapturedLogs({localProcess});
       sinon.assert.callCount(localProcess.stdout.write, 1);
     });

@@ -68,7 +68,7 @@ function getFakeADBKit(
     forward: sinon.spy(() => {}),
     push: sinon.spy(() => {
       const originalOn = fakeTransfer.on.bind(fakeTransfer);
-      // $FLOW_IGNORE: ignore flow errors on this testing hack
+      // $FlowIgnore: ignore flow errors on this testing hack
       fakeTransfer.on = (event, cb) => {
         originalOn(event, cb);
         fakeTransfer.emit('end');
@@ -94,7 +94,7 @@ function getFakeADBKit(
 function createSpawnADBErrorSpy() {
   return sinon.spy(() => {
     const fakeADBError = new Error('spawn adb');
-    // $FLOW_FIXME: reuse ErrorWithCode from other tests
+    // $FlowFixMe: reuse ErrorWithCode from other tests
     fakeADBError.code = 'ENOENT';
     return Promise.reject(fakeADBError);
   });
