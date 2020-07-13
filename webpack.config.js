@@ -36,7 +36,7 @@ module.exports = {
   externals: [
     nodeExternals({
       modulesFromFile: {
-        include: ['dependencies'],
+        excludeFromBundle: ['dependencies'],
       },
     }),
   ],
