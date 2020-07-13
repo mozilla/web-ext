@@ -57,7 +57,7 @@
     "@cliqz-oss/node-firefox-connect": "1.2.1",
     "adbkit": "2.11.1",
     "addons-linter": "1.26.0",
-    "bunyan": "1.8.12",
+    "bunyan": "1.8.14",
     "camelcase": "6.0.0",
     "chrome-launcher": "0.13.3",
     "debounce": "1.2.0",
