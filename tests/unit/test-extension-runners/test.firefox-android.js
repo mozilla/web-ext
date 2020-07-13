@@ -74,7 +74,7 @@ function prepareExtensionRunnerParams({
   });
   remoteFirefox.client = fakeRemoteFirefoxClient;
 
-  // $FLOW_IGNORE: allow overriden params for testing purpose.
+  // $FlowIgnore: allow overriden params for testing purpose.
   const runnerParams: FirefoxAndroidExtensionRunnerParams = {
     extensions: [{
       sourceDir: '/fake/sourceDir',
@@ -930,7 +930,7 @@ describe('util/extension-runners/firefox-android', () => {
       ];
 
       for (const testCase of optionsWarningTestCases) {
-        // $FLOW_IGNORE: allow overriden params for testing purpose.
+        // $FlowIgnore: allow overriden params for testing purpose.
         new FirefoxAndroidExtensionRunner({ // eslint-disable-line no-new
           ...params,
           ...(testCase.params),

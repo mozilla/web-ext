@@ -61,7 +61,7 @@ function exitKeypressLoop(stdin) {
 describe('util/extension-runners', () => {
   describe('createExtensionRunner', () => {
     it('requires a valid target', async () => {
-      // $FLOW_IGNORE: Want to pass invalid argument and check the error.
+      // $FlowIgnore: Want to pass invalid argument and check the error.
       const promise = createExtensionRunner({});
       await assert.isRejected(promise, /Unknown target: "undefined"/);
     });

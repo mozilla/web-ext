@@ -26,7 +26,7 @@ describe('webExt', () => {
     for (const cmd of ['run', 'lint', 'build', 'sign', 'docs']) {
       it(`lazily loads cmd/${cmd}`, async () => {
         // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-        // $FLOW_IGNORE: non-literal require used only in tests.
+        // $FlowIgnore: non-literal require used only in tests.
         const cmdModule = require(`../../src/cmd/${cmd}`);
         stub = sinon.stub(cmdModule, 'default');
 
