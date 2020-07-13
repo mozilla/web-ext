@@ -74,7 +74,7 @@
     "node-notifier": "7.0.1",
     "open": "7.0.4",
     "parse-json": "5.0.0",
-    "sign-addon": "2.0.5",
+    "sign-addon": "2.0.6",
     "source-map-support": "0.5.19",
     "strip-bom": "4.0.0",
     "strip-json-comments": "3.1.1",
