@@ -95,6 +95,7 @@ function prepareExtensionRunnerParams({
       return Promise.resolve(remoteFirefox);
     }),
     desktopNotifications: sinon.spy(() => {}),
+    // $FlowIgnore: Allow to mock stdin with an EventEmitter for testing purpose.
     stdin: new EventEmitter(),
     ...(params || {}),
   };
@@ -930,11 +931,9 @@ describe('util/extension-runners/firefox-android', () => {
       ];
 
       for (const testCase of optionsWarningTestCases) {
-        // $FlowIgnore: allow overriden params for testing purpose.
-        new FirefoxAndroidExtensionRunner({ // eslint-disable-line no-new
-          ...params,
-          ...(testCase.params),
-        });
+        const runnerOptions = {...params, ...(testCase.params)};
+        // $FlowIgnore: allow use of inexact object literal for testing purpose.
+        new FirefoxAndroidExtensionRunner(runnerOptions); // eslint-disable-line no-new
 
         assert.match(
           consoleStream.capturedMessages[0],

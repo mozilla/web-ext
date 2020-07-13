@@ -103,6 +103,7 @@ describe('firefox', () => {
         ...args
       }: RunFirefoxOptions = {},
     ) {
+      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),
