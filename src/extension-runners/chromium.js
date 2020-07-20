@@ -193,6 +193,7 @@ export class ChromiumExtensionRunner {
       // the changes to be kept. we copy this directory to a temporary
       // user data dir.
       const tmpDir = new TempDir();
+      // TODO: Remove tmpDir - https://github.com/mozilla/web-ext/issues/1957
       await tmpDir.create();
       const tmpDirPath = tmpDir.path();
 
