@@ -561,6 +561,8 @@ describe('util/extension-runners/chromium', async () => {
 
        await assert.isRejected(runnerInstance.run(), /not in a user-data-dir/);
 
+       await runnerInstance.exit();
+
      })
   );
 
