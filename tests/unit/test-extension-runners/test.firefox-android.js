@@ -130,9 +130,7 @@ function prepareSelectedDeviceAndAPKParams(
     startFirefoxAPK: sinon.spy(() => Promise.resolve()),
     setupForward: sinon.spy(() => Promise.resolve()),
     clearArtifactsDir: sinon.spy(() => Promise.resolve()),
-    checkOrCleanArtifacts: sinon.spy(
-      () => Promise.resolve(true)
-    ),
+    detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(true)),
     setUserAbortDiscovery: sinon.spy(() => {}),
     ensureRequiredAPKRuntimePermissions: sinon.spy(() => Promise.resolve()),
     ...adbOverrides,
@@ -360,11 +358,12 @@ describe('util/extension-runners/firefox-android', () => {
          );
        });
 
-    it('check for older artifacts', async () => {
+    it('does check for existing artifacts dirs', async () => {
       const adbOverrides = {
         getOrCreateArtifactsDir: sinon.spy(
           () => Promise.resolve('/sdcard/web-ext-dir')
         ),
+        detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(false)),
       };
       const overriddenProperties = {
         params: {
@@ -373,7 +372,7 @@ describe('util/extension-runners/firefox-android', () => {
           buildSourceDir: sinon.spy(() => Promise.resolve({
             extensionPath: fakeBuiltExtensionPath,
           })),
-          adbCleanArtifacts: false,
+          adbRemoveOldArtifacts: false,
         },
       };
       const {
@@ -386,21 +385,26 @@ describe('util/extension-runners/firefox-android', () => {
       await runnerInstance.run();
 
       sinon.assert.calledWithMatch(
-        fakeADBUtils.checkOrCleanArtifacts,
+        fakeADBUtils.detectOrRemoveOldArtifacts,
         'emulator-1',
         false,
       );
 
+      // Ensure the old artifacts are checked or removed after stopping the
+      // apk and before creating the new artifacts dir.
       sinon.assert.callOrder(
         fakeADBUtils.amForceStopAPK,
-        fakeADBUtils.checkOrCleanArtifacts
+        fakeADBUtils.detectOrRemoveOldArtifacts,
+        fakeADBUtils.getOrCreateArtifactsDir
       );
     });
-    it('remove plausible older artifacts', async () => {
+
+    it('does optionally remove older artifacts dirs', async () => {
       const adbOverrides = {
         getOrCreateArtifactsDir: sinon.spy(
           () => Promise.resolve('/sdcard/web-ext-dir')
         ),
+        detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(true)),
       };
       const overriddenProperties = {
         params: {
@@ -409,7 +413,7 @@ describe('util/extension-runners/firefox-android', () => {
           buildSourceDir: sinon.spy(() => Promise.resolve({
             extensionPath: fakeBuiltExtensionPath,
           })),
-          adbCleanArtifacts: true,
+          adbRemoveOldArtifacts: true,
         },
       };
       const {
@@ -422,14 +426,17 @@ describe('util/extension-runners/firefox-android', () => {
       await runnerInstance.run();
 
       sinon.assert.calledWithMatch(
-        fakeADBUtils.checkOrCleanArtifacts,
+        fakeADBUtils.detectOrRemoveOldArtifacts,
         'emulator-1',
         true,
       );
 
+      // Ensure the old artifacts are checked or removed after stopping the
+      // apk and before creating the new artifacts dir.
       sinon.assert.callOrder(
         fakeADBUtils.amForceStopAPK,
-        fakeADBUtils.checkOrCleanArtifacts
+        fakeADBUtils.detectOrRemoveOldArtifacts,
+        fakeADBUtils.getOrCreateArtifactsDir
       );
     });
 

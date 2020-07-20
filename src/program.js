@@ -663,8 +663,8 @@ Example: $0 --help run.
         type: 'number',
         requiresArg: true,
       },
-      'adb-clean-artifacts': {
-        describe: 'Remove old artifact directories from the adb device',
+      'adb-remove-old-artifacts': {
+        describe: 'Remove old artifacts directories from the adb device',
         demandOption: false,
         type: 'boolean',
       },
