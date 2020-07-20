@@ -8,8 +8,9 @@ import {
 } from '../errors';
 import {createLogger} from '../util/logger';
 
-const DEVICE_DIR_BASE = '/sdcard';
-const ARTIFACTS_DIR_PREFIX = '/web-ext-artifacts';
+export const DEVICE_DIR_BASE = '/sdcard/';
+export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
+
 const log = createLogger(__filename);
 
 export type ADBUtilsParams = {|
@@ -197,7 +198,7 @@ export default class ADBUtils {
       return artifactsDir;
     }
 
-    artifactsDir = `${DEVICE_DIR_BASE}${ARTIFACTS_DIR_PREFIX}-${Date.now()}`;
+    artifactsDir = `${DEVICE_DIR_BASE}${ARTIFACTS_DIR_PREFIX}${Date.now()}`;
 
     const testDirOut = (await this.runShellCommand(
       deviceId, `test -d ${artifactsDir} ; echo $?`
@@ -217,38 +218,38 @@ export default class ADBUtils {
     return artifactsDir;
   }
 
-  async checkOrCleanArtifacts(
-    deviceId: string, remove?: boolean
+  async detectOrRemoveOldArtifacts(
+    deviceId: string, removeArtifactDirs?: boolean = false
   ): Promise<boolean> {
     const {adbClient} = this;
 
-    let found = false;
-    log.debug('Finding older artifacts');
+    log.debug('Checking adb device for existing web-ext artifacts dirs');
 
     return wrapADBCall(async () => {
       const files = await adbClient.readdir(deviceId, DEVICE_DIR_BASE);
+      let found = false;
 
       for (const file of files) {
         if (!file.isDirectory() ||
-              !file.name.startsWith('web-ext-artifacts-')) {
+            !file.name.startsWith(ARTIFACTS_DIR_PREFIX)) {
           continue;
         }
 
-        if (!remove) {
+        // Return earlier if we only need to warn the user that some
+        // existing artifacts dirs have been found on the adb device.
+        if (!removeArtifactDirs) {
           return true;
         }
 
         found = true;
 
-        const artifactsDir = `${DEVICE_DIR_BASE}/${file.name}`;
+        const artifactsDir = `${DEVICE_DIR_BASE}${file.name}`;
 
         log.debug(
-          `Removing ${artifactsDir} artifacts directory on ${deviceId} device`
+          `Removing artifacts directory ${artifactsDir} from device ${deviceId}`
         );
 
-        await this.runShellCommand(deviceId, [
-          'rm', '-rf', artifactsDir,
-        ]);
+        await this.runShellCommand(deviceId, ['rm', '-rf', artifactsDir]);
       }
 
       return found;
@@ -269,9 +270,7 @@ export default class ADBUtils {
       `Removing ${artifactsDir} artifacts directory on ${deviceId} device`
     );
 
-    await this.runShellCommand(deviceId, [
-      'rm', '-rf', artifactsDir,
-    ]);
+    await this.runShellCommand(deviceId, ['rm', '-rf', artifactsDir]);
   }
 
   async pushFile(
