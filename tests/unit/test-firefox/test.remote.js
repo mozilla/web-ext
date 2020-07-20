@@ -34,6 +34,7 @@ describe('firefox.remote', () => {
           sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
         ...options,
       };
+      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       const connect = defaultConnector(port, options);
       return {options, connect};
     }
@@ -180,7 +181,7 @@ describe('firefox.remote', () => {
         const stubResponse = {requestTypes: ['reload']};
         const conn = makeInstance();
 
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest = sinon.spy(() => Promise.resolve(stubResponse));
 
         const returnedAddon = await conn.checkForAddonReloading(addon);
@@ -198,7 +199,7 @@ describe('firefox.remote', () => {
         const stubResponse = {requestTypes: ['install']};
         const conn = makeInstance();
 
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest = () => Promise.resolve(stubResponse);
 
         await conn.checkForAddonReloading(addon)
@@ -212,7 +213,7 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest =
           sinon.spy(() => Promise.resolve({requestTypes: ['reload']}));
         const checkedAddon = await conn.checkForAddonReloading(addon);
@@ -356,12 +357,12 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.getInstalledAddon = sinon.spy(() => Promise.resolve(addon));
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading =
           (addonToCheck) => Promise.resolve(addonToCheck);
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest = sinon.spy(() => Promise.resolve({}));
 
         await conn.reloadAddon('some-id');
@@ -378,9 +379,9 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.getInstalledAddon = () => Promise.resolve(addon);
-        // $FLOW_IGNORE: allow overwrite not writable property for testing purpose.
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading =
           sinon.spy((addonToCheck) => Promise.resolve(addonToCheck));
 
@@ -398,6 +399,7 @@ describe('firefox.remote', () => {
   describe('connectWithMaxRetries', () => {
 
     function firefoxClient(opt = {}, deps) {
+      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return connectWithMaxRetries({
         maxRetries: 0, retryInterval: 1, port: 6005, ...opt,
       }, deps);
@@ -451,7 +453,7 @@ describe('firefox.remote', () => {
     async function promiseServerOnPort(port): Promise<net.Server> {
       return new Promise((resolve) => {
         const srv = net.createServer();
-        // $FLOW_FIXME: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290
+        // $FlowFixMe: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290
         srv.listen(port, '127.0.0.1', () => {
           resolve(srv);
         });

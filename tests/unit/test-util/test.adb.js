@@ -68,7 +68,7 @@ function getFakeADBKit(
     forward: sinon.spy(() => {}),
     push: sinon.spy(() => {
       const originalOn = fakeTransfer.on.bind(fakeTransfer);
-      // $FLOW_IGNORE: ignore flow errors on this testing hack
+      // $FlowIgnore: ignore flow errors on this testing hack
       fakeTransfer.on = (event, cb) => {
         originalOn(event, cb);
         fakeTransfer.emit('end');
@@ -94,7 +94,7 @@ function getFakeADBKit(
 function createSpawnADBErrorSpy() {
   return sinon.spy(() => {
     const fakeADBError = new Error('spawn adb');
-    // $FLOW_FIXME: reuse ErrorWithCode from other tests
+    // $FlowFixMe: reuse ErrorWithCode from other tests
     fakeADBError.code = 'ENOENT';
     return Promise.reject(fakeADBError);
   });
@@ -733,7 +733,7 @@ describe('utils/adb', () => {
            adb.fakeADBClient.startActivity, 'device1', expectedAdbParams);
        });
 
-    it('starts a given APK component', async () => {
+    it('starts a given APK component without a period', async () => {
       const adb = getFakeADBKit({
         adbClient: {
           startActivity: sinon.spy(() => Promise.resolve()),
@@ -765,7 +765,41 @@ describe('utils/adb', () => {
           wait: true,
         }
       );
+    });
 
+    it('starts a given APK component with a period', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          startActivity: sinon.spy(() => Promise.resolve()),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const promise = adbUtils.startFirefoxAPK(
+        'device1',
+        'org.mozilla.geckoview_example',
+        'org.mozilla.geckoview_example.GeckoViewActivity', // firefoxApkComponent
+        '/fake/custom/profile/path',
+      );
+
+      await assert.isFulfilled(promise);
+
+      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.startActivity, 'device1', {
+          action: 'android.activity.MAIN',
+          component: 'org.mozilla.geckoview_example/' +
+            'org.mozilla.geckoview_example.GeckoViewActivity',
+          extras: [{
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          }],
+          wait: true,
+        }
+      );
     });
   });
 

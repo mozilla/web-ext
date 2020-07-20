@@ -7,7 +7,7 @@ import {promisify} from 'util';
 // By using the value exported here, flow-check passes successfully
 // using a single FLOW_IGNORE suppress comment.
 
-// $FLOW_IGNORE: promisify.custom is missing in flow type signatures.
+// $FlowIgnore: promisify.custom is missing in flow type signatures.
 export const promisifyCustom = promisify.custom;
 
 /*
