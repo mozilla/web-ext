@@ -416,7 +416,7 @@ describe('util/extension-runners/chromium', async () => {
     ' to chrome', async () => withTempDir(
     async (tmpDir) => {
       const tmpPath = tmpDir.path();
-      await fs.mkdirsSync(path.join(tmpPath, 'userDataDir/Default'));
+      await fs.mkdirs(path.join(tmpPath, 'userDataDir/Default'));
       await fs.outputFile(path.join(tmpPath, 'userDataDir/Local State'), '');
       await fs.mkdirs(path.join(tmpPath, 'userDataDir/profile'));
       await fs.outputFile(path.join(
@@ -504,8 +504,6 @@ describe('util/extension-runners/chromium', async () => {
       await fs.mkdirs(path.join(tmpPath, 'Default'));
       await fs.outputFile(path.join(tmpPath, 'Local State'), '');
 
-      assert.isTrue(await fileExists(path.join(tmpPath, 'Local State')));
-      assert.isTrue(await isDirectory(path.join(tmpPath, 'Default')));
       assert.isTrue(await ChromiumExtensionRunner.isUserDataDir(tmpPath));
 
     }),
@@ -516,6 +514,7 @@ describe('util/extension-runners/chromium', async () => {
 
       const tmpPath = tmpDir.path();
       await fs.mkdirs(path.join(tmpPath, 'Default'));
+      // Local State should be a file
       await fs.mkdirs(path.join(tmpPath, 'Local State'));
 
       assert.isFalse(await ChromiumExtensionRunner.isUserDataDir(tmpPath));
@@ -528,6 +527,7 @@ describe('util/extension-runners/chromium', async () => {
 
       const tmpPath = tmpDir.path();
       await fs.mkdirs(path.join(tmpPath, 'Local State'));
+      // Default should be a directory
       await fs.outputFile(path.join(tmpPath, 'Default'), '');
 
       assert.isFalse(await ChromiumExtensionRunner.isUserDataDir(tmpPath));
@@ -540,6 +540,7 @@ describe('util/extension-runners/chromium', async () => {
        const tmpPath = tmpDir.path();
        await fs.mkdirs(
          path.join(tmpPath, 'userDataDir/profile'));
+       // the userDataDir is missing a file Local State to be validated as such
        await fs.outputFile(path.join(
          tmpPath, 'userDataDir/profile/Secure Preferences'), '');
 
@@ -594,6 +595,10 @@ describe('util/extension-runners/chromium', async () => {
       ],
       startingUrl: undefined,
     });
+
+    assert.isTrue(await isDirectory(path.join(usedTempPath, 'profile')));
+    assert.isTrue(await fileExists(path.join(
+      usedTempPath, 'profile/Secure Preferences')));
 
     await runnerInstance.exit();
     spy.restore();
