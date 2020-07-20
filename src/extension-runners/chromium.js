@@ -205,10 +205,7 @@ export class ChromiumExtensionRunner {
           profileDirName),
         );
       } else {
-        await fs.copy(path.join(
-          userDataDir), path.join(
-          tmpDirPath),
-        );
+        await fs.copy(userDataDir, tmpDirPath);
       }
       userDataDir = tmpDirPath;
     }
