@@ -367,14 +367,19 @@ describe('util/extension-runners/chromium', async () => {
       params: {},
     });
 
+    const spy = sinon.spy(TempDir.prototype, 'path');
+
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
+    const usedTempPath = spy.returnValues[2];
+
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
-      userDataDir: null,
+      userDataDir: usedTempPath,
     });
 
     await runnerInstance.exit();
+    spy.restore();
   });
 
   it('does pass a user-data-dir flag to chrome', async () => withTempDir(

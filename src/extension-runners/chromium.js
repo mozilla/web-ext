@@ -187,16 +187,15 @@ export class ChromiumExtensionRunner {
           'remove --keep-profile-changes or use a profile in a ' +
           'user-data-dir directory');
       }
-    } else if (userDataDir) {
+    } else if (!this.params.keepProfileChanges) {
       // the user provided an existing profile directory but doesn't want
       // the changes to be kept. we copy this directory to a temporary
       // user data dir.
       const tmpDir = new TempDir();
-      // TODO: Remove tmpDir - https://github.com/mozilla/web-ext/issues/1957
       await tmpDir.create();
       const tmpDirPath = tmpDir.path();
 
-      if (profileDirName) {
+      if (userDataDir && profileDirName) {
         // copy profile dir to this temp user data dir.
         await fs.copy(path.join(
           userDataDir,
@@ -204,7 +203,7 @@ export class ChromiumExtensionRunner {
           tmpDirPath,
           profileDirName),
         );
-      } else {
+      } else if (userDataDir) {
         await fs.copy(userDataDir, tmpDirPath);
       }
       userDataDir = tmpDirPath;
