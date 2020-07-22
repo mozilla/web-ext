@@ -311,22 +311,23 @@ export default class ADBUtils {
       value: `-profile ${deviceProfileDir}`,
     }];
 
-    for (const browser of packageIdentifiers) {
-      if (apk.startsWith(browser) && apkComponent) {
-        if (apk !== browser && !apkComponent.includes('.')) {
-          apkComponent = `${browser}.${apkComponent}`;
-        }
-        // if 'geckoview_example' has been found, leave the
-        // loop, before it checks 'geckoview'
-        break;
-      }
-    }
-
     if (!apkComponent) {
       apkComponent = '.App';
     } else if (!apkComponent.includes('.')) {
       apkComponent = `.${apkComponent}`;
     }
+
+    // if `apk` is a browser package or the `apk` has a
+    // browser package prefix: prepend the package identifier
+    // before `apkComponent`
+    if (apkComponent.startsWith('.')) {
+      for (const browser of packageIdentifiers) {
+        if (apk.startsWith(`${browser}.`)) {
+          apkComponent = browser + apkComponent;
+        }
+      }
+    }
+
     // if `apkComponent` starts with a '.', then adb will expand
     // the following to: `${apk}/${apk}.${apkComponent}`
     const component = `${apk}/${apkComponent}`;
