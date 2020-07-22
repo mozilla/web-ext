@@ -51,10 +51,9 @@ function prepareRun(fakeInstallResult) {
   return {
     argv,
     options,
-    run: (customArgv = {}, customOpt = {}) => run(
-      {...argv, ...customArgv},
-      {...options, ...customOpt}
-    ),
+    run: (customArgv = {}, customOpt = {}) =>
+      // $FlowIgnore: allow use of inexact object literal for testing purpose.
+      run({...argv, ...customArgv}, {...options, ...customOpt}),
   };
 }
 
@@ -129,7 +128,9 @@ describe('run', () => {
       firefoxBinary: runOptions.firefox,
       customPrefs: runOptions.pref,
     };
+    // $FlowIgnore: Allow deleting properties for testing purpose.
     delete expectedRunnerParams.firefox;
+    // $FlowIgnore: Allow deleting properties for testing purpose.
     delete expectedRunnerParams.pref;
 
     assert.deepEqual({

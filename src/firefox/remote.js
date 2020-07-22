@@ -274,7 +274,7 @@ export async function connectWithMaxRetries(
 export function findFreeTcpPort(): Promise<number> {
   return new Promise((resolve) => {
     const srv = net.createServer();
-    // $FLOW_FIXME: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290
+    // $FlowFixMe: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290
     srv.listen(0, '127.0.0.1', () => {
       const freeTcpPort = srv.address().port;
       srv.close(() => resolve(freeTcpPort));

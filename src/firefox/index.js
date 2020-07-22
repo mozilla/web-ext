@@ -50,7 +50,9 @@ export type FirefoxRunnerParams = {|
   'listen': number,
   'binary-args'?: Array<string> | string,
   'env'?: {
-    [key: string]: string
+    // This match the flowtype signature for process.env (and prevent flow
+    // from complaining about differences between their type signature)
+    [key: string]: string | void
   },
   'verbose'?: boolean,
 |};

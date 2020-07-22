@@ -154,7 +154,7 @@ export function makeSureItFails(): Function {
  *
  */
 
-// $FLOW_IGNORE: fake can return any kind of object and fake a defined set of methods for testing.
+// $FlowIgnore: fake can return any kind of object and fake a defined set of methods for testing.
 export function fake<T>(
   original: Object, methods: Object = {}, skipProperties: Array<string> = []
 ): T {
@@ -189,7 +189,7 @@ export function fake<T>(
     stub[key] = sinon.spy(stub[key]);
   });
 
-  // $FLOW_IGNORE: fake can return any kind of object for testing.
+  // $FlowIgnore: fake can return any kind of object for testing.
   return stub;
 }
 
@@ -349,6 +349,6 @@ class FakeStdin extends stream.Readable {
 }
 
 export function createFakeStdin(): tty.ReadStream {
-  // $FLOW_IGNORE: flow complains that the return value is incompatible with tty.ReadStream
+  // $FlowIgnore: flow complains that the return value is incompatible with tty.ReadStream
   return new FakeStdin();
 }

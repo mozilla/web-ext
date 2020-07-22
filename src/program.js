@@ -663,6 +663,11 @@ Example: $0 --help run.
         type: 'number',
         requiresArg: true,
       },
+      'adb-remove-old-artifacts': {
+        describe: 'Remove old artifacts directories from the adb device',
+        demandOption: false,
+        type: 'boolean',
+      },
       'firefox-apk': {
         describe: (
           'Run a specific Firefox for Android APK. ' +

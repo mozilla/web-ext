@@ -3,14 +3,17 @@
 import EventEmitter from 'events';
 
 import chai from 'chai';
-import {describe, it} from 'mocha';
+import {afterEach, describe, it} from 'mocha';
 import sinon from 'sinon';
 
 import {
   UsageError,
   WebExtError,
 } from '../../../src/errors';
-import ADBUtils from '../../../src/util/adb';
+import ADBUtils, {
+  ARTIFACTS_DIR_PREFIX,
+  DEVICE_DIR_BASE,
+} from '../../../src/util/adb';
 
 const fakeADBPackageList = `
 package:org.mozilla.fennec
@@ -64,11 +67,12 @@ function getFakeADBKit(
       return [];
     }),
     shell: sinon.spy(() => Promise.resolve('')),
+    readdir: sinon.spy(() => Promise.resolve([])),
     startActivity: sinon.spy(() => {}),
     forward: sinon.spy(() => {}),
     push: sinon.spy(() => {
       const originalOn = fakeTransfer.on.bind(fakeTransfer);
-      // $FLOW_IGNORE: ignore flow errors on this testing hack
+      // $FlowIgnore: ignore flow errors on this testing hack
       fakeTransfer.on = (event, cb) => {
         originalOn(event, cb);
         fakeTransfer.emit('end');
@@ -94,7 +98,7 @@ function getFakeADBKit(
 function createSpawnADBErrorSpy() {
   return sinon.spy(() => {
     const fakeADBError = new Error('spawn adb');
-    // $FLOW_FIXME: reuse ErrorWithCode from other tests
+    // $FlowFixMe: reuse ErrorWithCode from other tests
     fakeADBError.code = 'ENOENT';
     return Promise.reject(fakeADBError);
   });
@@ -620,6 +624,96 @@ describe('utils/adb', () => {
 
          sinon.assert.notCalled(adb.fakeADBClient.shell);
        });
+  });
+
+  describe('detectOrRemoveOldArtifacts', () => {
+    function createFakeReaddirFile(artifactName: string, isDirectory: boolean) {
+      return {
+        name: artifactName,
+        isDirectory: () => {
+          return isDirectory;
+        },
+      };
+    }
+
+    const filesNotArtifactsDirs = [
+      createFakeReaddirFile('not-an-artifact-dir1', true),
+      createFakeReaddirFile('not-a-dir2', false),
+    ];
+
+    const filesArtifactsDirs = [
+      createFakeReaddirFile(`${ARTIFACTS_DIR_PREFIX}1`, true),
+      createFakeReaddirFile(`${ARTIFACTS_DIR_PREFIX}2`, true),
+    ];
+
+    const allFiles = [...filesNotArtifactsDirs, ...filesArtifactsDirs];
+
+    const sb = sinon.createSandbox();
+    const adbkitSpies = {
+      adbClient: {
+        readdir: sb.spy(() => Promise.resolve([])),
+        shell: sb.spy(() => Promise.resolve('')),
+      },
+      adbkitUtil: {
+        readAll: sb.spy(() => Promise.resolve(Buffer.from('1\n'))),
+      },
+    };
+
+    // Reset the fakeADBClient spies after each test case.
+    afterEach(() => sb.reset());
+
+    it('does detect old artifacts directories', async () => {
+      const adb = getFakeADBKit(adbkitSpies);
+      const adbUtils = new ADBUtils({adb});
+      const fakeADB = adb.fakeADBClient;
+
+      fakeADB.readdir = sb.spy(async () => filesNotArtifactsDirs);
+
+      await assert.becomes(
+        adbUtils.detectOrRemoveOldArtifacts('device1', false),
+        false,
+        'Expected to return false when no old artifacts dirs have been found'
+      );
+      sinon.assert.calledOnce(fakeADB.readdir);
+      sinon.assert.calledWith(fakeADB.readdir, 'device1', DEVICE_DIR_BASE);
+      // Expect adbkit shell to never be called when no artifacts have been found.
+      sinon.assert.notCalled(fakeADB.shell);
+
+      adb.fakeADBClient.readdir = sb.spy(async () => allFiles);
+
+      await assert.becomes(
+        adbUtils.detectOrRemoveOldArtifacts('device1', false),
+        true,
+        'Expected to return true when old artifacts dirs have been found'
+      );
+      sinon.assert.notCalled(fakeADB.shell);
+    });
+
+    it('does optionally remove artifacts directories', async () => {
+      const adb = getFakeADBKit(adbkitSpies);
+      const adbUtils = new ADBUtils({adb});
+
+      adb.fakeADBClient.readdir = sb.spy(async () => allFiles);
+
+      await assert.becomes(
+        adbUtils.detectOrRemoveOldArtifacts('device1', true),
+        true,
+        'Expected to return true when old artifacts dirs have been found'
+      );
+
+      sinon.assert.calledOnce(adb.fakeADBClient.readdir);
+      assert.equal(
+        adb.fakeADBClient.shell.callCount,
+        filesArtifactsDirs.length,
+      );
+
+      for (const fakeFile of filesArtifactsDirs) {
+        sinon.assert.calledWithMatch(
+          adb.fakeADBClient.shell, 'device1',
+          ['rm', '-rf', `${DEVICE_DIR_BASE}${fakeFile.name}`]
+        );
+      }
+    });
   });
 
   describe('pushFile', () => {

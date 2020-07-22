@@ -61,7 +61,7 @@ function exitKeypressLoop(stdin) {
 describe('util/extension-runners', () => {
   describe('createExtensionRunner', () => {
     it('requires a valid target', async () => {
-      // $FLOW_IGNORE: Want to pass invalid argument and check the error.
+      // $FlowIgnore: Want to pass invalid argument and check the error.
       const promise = createExtensionRunner({});
       await assert.isRejected(promise, /Unknown target: "undefined"/);
     });
@@ -306,6 +306,7 @@ describe('util/extension-runners', () => {
       return {
         config,
         createWatcher: (customConfig = {}) => {
+          // $FlowIgnore: allow use of inexact object literal for testing purpose.
           return defaultWatcherCreator({...config, ...customConfig});
         },
       };
@@ -403,9 +404,10 @@ describe('util/extension-runners', () => {
         watcher,
         extensionRunner,
         reloadStrategy: async (argOverride = {}, optOverride = {}) => {
-          return defaultReloadStrategy(
-            {...args, ...argOverride},
-            {...options, ...optOverride});
+          const mergedArgs = {...args, ...argOverride};
+          const mergedOpts = {...options, ...optOverride};
+          // $FlowIgnore: allow use of inexact object literal for testing purpose.
+          return defaultReloadStrategy(mergedArgs, mergedOpts);
         },
       };
     }

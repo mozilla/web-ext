@@ -52,7 +52,7 @@ function prepareExtensionRunnerParams({
   });
   const firefoxProcess = new StubChildProcess();
 
-  // $FLOW_IGNORE: allow overriden params for testing purpose.
+  // $FlowIgnore: allow overriden params for testing purpose.
   const runnerParams: FirefoxDesktopExtensionRunnerParams = {
     extensions: [{
       sourceDir: '/fake/sourceDir',
@@ -279,7 +279,7 @@ describe('util/extension-runners/firefox-desktop', () => {
         extensionPath: sourceDir,
       })
     );
-    // $FLOW_IGNORE: ignored 'property not found' on sinon spy.
+    // $FlowIgnore: ignored 'property not found' on sinon spy.
     const install = params.firefoxApp.installExtension.firstCall.args[0];
 
     assert.equal(install.asProxy, true);

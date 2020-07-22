@@ -29,6 +29,9 @@ module.exports = {
     path: path.join(__dirname, 'dist'),
     filename: 'web-ext.js',
     libraryTarget: 'commonjs2',
+    // Force webpack bundled module to export the content
+    // of the default export.
+    libraryExport: 'default',
   },
   module: {
     rules,
@@ -36,7 +39,7 @@ module.exports = {
   externals: [
     nodeExternals({
       modulesFromFile: {
-        include: ['dependencies'],
+        excludeFromBundle: ['dependencies'],
       },
     }),
   ],

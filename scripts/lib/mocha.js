@@ -13,6 +13,13 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
   const mochaPath = which('mocha');
   const binArgs = coverageEnabled ? [mochaPath, ...args] : args;
   const binPath = coverageEnabled ? which('nyc') : mochaPath;
+
+  if (process.env.MOCHA_TIMEOUT) {
+    const {MOCHA_TIMEOUT} = process.env;
+    binArgs.push('--timeout', MOCHA_TIMEOUT);
+    shell.echo(`\nSetting mocha timeout from env var: ${MOCHA_TIMEOUT}\n`);
+  }
+
   const res = spawnSync(binPath, binArgs, {
     ...execMochaOptions,
     stdio: 'inherit',
