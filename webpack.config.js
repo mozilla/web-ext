@@ -39,7 +39,12 @@ module.exports = {
   externals: [
     nodeExternals({
       modulesFromFile: {
-        excludeFromBundle: ['dependencies'],
+        // We shouldn't bundle devDependencies. E.g. git-rev-sync would be
+        // bundled if we omitted "devDependencies" from this list, which is
+        // undesired because the branch is never reached on production, so it
+        // is intentionally part of devDependencies to avoid the unnecessary
+        // dependency and bundling on production.
+        excludeFromBundle: ['dependencies', 'devDependencies'],
       },
     }),
   ],
