@@ -4,6 +4,7 @@
 
 [options]
 module.system=node
+esproposal.optional_chaining=enable
 log.file=./artifacts/flow.log
 
 [ignore]

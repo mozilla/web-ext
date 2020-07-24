@@ -213,7 +213,7 @@ describe('util/manifest', () => {
   describe('getManifestId', () => {
     const id = 'basic-manifest@web-ext-test-suite';
 
-    ['applications', 'browser_specific_settings'].forEach((key) => {
+    ['applications', 'browser_specific_settings'].forEach((key: string) => {
 
       describe(`with ${key}`, () => {
 
@@ -234,6 +234,35 @@ describe('util/manifest', () => {
           );
         });
 
+      });
+
+    });
+
+    describe('with both applications and browser_specific_settings', () => {
+      const bssId = 'id@from-bss-prop';
+      const appId = 'id@from-app-prop';
+
+      it('does prefer bss if it includes a gecko object', () => {
+        assert.equal(getManifestId({
+          ...manifestWithoutApps,
+          browser_specific_settings: {gecko: {id: bssId}},
+          applications: {gecko: {id: appId}},
+        }), bssId);
+
+        // This test that we are matching what Firefox does in this scenario.
+        assert.equal(getManifestId({
+          ...manifestWithoutApps,
+          browser_specific_settings: {gecko: {}},
+          applications: {gecko: {id: appId}},
+        }), undefined);
+      });
+
+      it('does fallback to applications if bss.gecko is undefined', () => {
+        assert.equal(getManifestId({
+          ...manifestWithoutApps,
+          browser_specific_settings: {},
+          applications: {gecko: {id: appId}},
+        }), appId);
       });
 
     });
