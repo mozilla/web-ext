@@ -2,7 +2,7 @@
 import path from 'path';
 
 import {fs} from 'mz';
-import defaultAddonSigner from 'sign-addon';
+import {signAddon as defaultAddonSigner} from 'sign-addon';
 
 import defaultBuilder from './build';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
