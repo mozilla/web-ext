@@ -1,6 +1,9 @@
 {
   "exceptions": [
     // yargs-parser sec adv (due to @commitlint/cli dev dependency).
-    "https://npmjs.com/advisories/1500"
+    "https://npmjs.com/advisories/1500",
+
+    // dot-prop sec adv (due to @commitlint/cli dev dependency).
+    "https://npmjs.com/advisories/1213"
   ]
 }
