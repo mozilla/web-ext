@@ -116,7 +116,7 @@ Aside from [using web-ext on the command line][web-ext-user-docs], you may wish 
 You are able to execute command functions without any argument validation. If you want to execute `web-ext run` you would do so like this:
 
 ```js
-// const webExt = require('web-ext').default;
+// const webExt = require('web-ext');
 // or...
 import webExt from 'web-ext';
 
