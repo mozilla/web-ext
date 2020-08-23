@@ -211,14 +211,68 @@ describe('util/manifest', () => {
   });
 
   describe('getManifestId', () => {
+    const id = 'basic-manifest@web-ext-test-suite';
 
-    it('returns a gecko ID', () => {
-      assert.equal(getManifestId(basicManifest),
-                   'basic-manifest@web-ext-test-suite');
+    ['applications', 'browser_specific_settings'].forEach((key: string) => {
+
+      describe(`with ${key}`, () => {
+
+        it('returns gecko.id if present', () => {
+          assert.equal(getManifestId({
+            ...manifestWithoutApps,
+            [key]: basicManifest.applications,
+          }), id);
+        });
+
+        it('returns undefined when gecko does not exist', () => {
+          assert.equal(
+            getManifestId({
+              ...manifestWithoutApps,
+              [key]: {},
+            }),
+            undefined
+          );
+        });
+
+      });
+
     });
 
-    it('returns undefined when ID is not specified', () => {
-      assert.strictEqual(getManifestId(manifestWithoutApps), undefined);
+    describe('with both applications and browser_specific_settings', () => {
+      const bssId = 'id@from-bss-prop';
+      const appId = 'id@from-app-prop';
+
+      it('does prefer bss if it includes a gecko object', () => {
+        assert.equal(getManifestId({
+          ...manifestWithoutApps,
+          browser_specific_settings: {gecko: {id: bssId}},
+          applications: {gecko: {id: appId}},
+        }), bssId);
+
+        // This test that we are matching what Firefox does in this scenario.
+        assert.equal(getManifestId({
+          ...manifestWithoutApps,
+          browser_specific_settings: {gecko: {}},
+          applications: {gecko: {id: appId}},
+        }), undefined);
+      });
+
+      it('does fallback to applications if bss.gecko is undefined', () => {
+        assert.equal(getManifestId({
+          ...manifestWithoutApps,
+          browser_specific_settings: {},
+          applications: {gecko: {id: appId}},
+        }), appId);
+      });
+
+    });
+
+    describe('without applications and browser_specific_settings', () => {
+
+      it('returns undefined when ID is not specified', () => {
+        assert.strictEqual(getManifestId(manifestWithoutApps), undefined);
+      });
+
     });
 
   });

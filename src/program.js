@@ -5,7 +5,6 @@ import {readFileSync} from 'fs';
 
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
-import git from 'git-rev-sync';
 import yargs from 'yargs';
 import { Parser as yargsParser } from 'yargs/yargs';
 
@@ -353,6 +352,11 @@ export function defaultVersionGetter(
     return JSON.parse(packageData).version;
   } else {
     log.debug('Getting version from the git revision');
+    // This branch is only reached during development.
+    // git-rev-sync is in devDependencies, and lazily imported using require.
+    // This also avoids logspam from https://github.com/mozilla/web-ext/issues/1916
+    // eslint-disable-next-line import/no-extraneous-dependencies
+    const git = require('git-rev-sync');
     return `${git.branch(absolutePackageDir)}-${git.long(absolutePackageDir)}`;
   }
 }
