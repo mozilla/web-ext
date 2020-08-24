@@ -322,7 +322,7 @@ export default class ADBUtils {
     // before `apkComponent`
     if (apkComponent.startsWith('.')) {
       for (const browser of packageIdentifiers) {
-        if (apk.startsWith(`${browser}.`)) {
+        if (apk === browser || apk.startsWith(`${browser}.`)) {
           apkComponent = browser + apkComponent;
         }
       }

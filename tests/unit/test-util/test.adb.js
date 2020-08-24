@@ -851,7 +851,8 @@ describe('utils/adb', () => {
       sinon.assert.calledWithMatch(
         adb.fakeADBClient.startActivity, 'device1', {
           action: 'android.activity.MAIN',
-          component: 'org.mozilla.geckoview_example/.GeckoViewActivity',
+          component: 'org.mozilla.geckoview_example' +
+            '/org.mozilla.geckoview_example.GeckoViewActivity',
           extras: [{
             key: 'args',
             value: '-profile /fake/custom/profile/path',
