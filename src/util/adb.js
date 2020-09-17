@@ -7,6 +7,7 @@ import {
   WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
+import packageIdentifiers from '../firefox/package-identifiers';
 
 export const DEVICE_DIR_BASE = '/sdcard/';
 export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
@@ -119,13 +120,13 @@ export default class ADBUtils {
           return line === firefoxApk;
         }
         // Match any package name that starts with the package name of a Firefox for Android browser.
-        return (
-          line.startsWith('org.mozilla.fennec') ||
-          line.startsWith('org.mozilla.fenix') ||
-          line.startsWith('org.mozilla.geckoview') ||
-          line.startsWith('org.mozilla.firefox') ||
-          line.startsWith('org.mozilla.reference.browser')
-        );
+        for (const browser of packageIdentifiers) {
+          if (line.startsWith(browser)) {
+            return true;
+          }
+        }
+
+        return false;
       });
   }
 
@@ -315,6 +316,18 @@ export default class ADBUtils {
     } else if (!apkComponent.includes('.')) {
       apkComponent = `.${apkComponent}`;
     }
+
+    // if `apk` is a browser package or the `apk` has a
+    // browser package prefix: prepend the package identifier
+    // before `apkComponent`
+    if (apkComponent.startsWith('.')) {
+      for (const browser of packageIdentifiers) {
+        if (apk === browser || apk.startsWith(`${browser}.`)) {
+          apkComponent = browser + apkComponent;
+        }
+      }
+    }
+
     // if `apkComponent` starts with a '.', then adb will expand
     // the following to: `${apk}/${apk}.${apkComponent}`
     const component = `${apk}/${apkComponent}`;

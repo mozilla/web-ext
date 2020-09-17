@@ -851,7 +851,8 @@ describe('utils/adb', () => {
       sinon.assert.calledWithMatch(
         adb.fakeADBClient.startActivity, 'device1', {
           action: 'android.activity.MAIN',
-          component: 'org.mozilla.geckoview_example/.GeckoViewActivity',
+          component: 'org.mozilla.geckoview_example' +
+            '/org.mozilla.geckoview_example.GeckoViewActivity',
           extras: [{
             key: 'args',
             value: '-profile /fake/custom/profile/path',
@@ -887,6 +888,147 @@ describe('utils/adb', () => {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.geckoview_example/' +
             'org.mozilla.geckoview_example.GeckoViewActivity',
+          extras: [{
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          }],
+          wait: true,
+        }
+      );
+    });
+
+    it('starts a given APK component on fenix.nightly', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          startActivity: sinon.spy(() => Promise.resolve()),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const promise = adbUtils.startFirefoxAPK(
+        'device1',
+        'org.mozilla.fenix.nightly',
+        'HomeActivity', // firefoxApkComponent
+        '/fake/custom/profile/path',
+      );
+
+      await assert.isFulfilled(promise);
+
+      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.startActivity, 'device1', {
+          action: 'android.activity.MAIN',
+          component: 'org.mozilla.fenix.nightly/' +
+            'org.mozilla.fenix.HomeActivity',
+          extras: [{
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          }],
+          wait: true,
+        }
+      );
+    });
+
+    it('starts without specifying an APK component', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          startActivity: sinon.spy(() => Promise.resolve()),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const promise = adbUtils.startFirefoxAPK(
+        'device1',
+        'org.mozilla.geckoview_example',
+        undefined, // firefoxApkComponent
+        '/fake/custom/profile/path',
+      );
+
+      await assert.isFulfilled(promise);
+
+      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.startActivity, 'device1', {
+          action: 'android.activity.MAIN',
+          component: 'org.mozilla.geckoview_example/' +
+            'org.mozilla.geckoview_example.App',
+          extras: [{
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          }],
+          wait: true,
+        }
+      );
+    });
+
+    it('starts a fully-qualified APK component on the build-variant: ' +
+      'fenix.nightly', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          startActivity: sinon.spy(() => Promise.resolve()),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const promise = adbUtils.startFirefoxAPK(
+        'device1',
+        'org.mozilla.fenix.nightly',
+        'org.mozilla.fenix.HomeActivity', // firefoxApkComponent
+        '/fake/custom/profile/path',
+      );
+
+      await assert.isFulfilled(promise);
+
+      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.startActivity, 'device1', {
+          action: 'android.activity.MAIN',
+          component: 'org.mozilla.fenix.nightly/' +
+            'org.mozilla.fenix.HomeActivity',
+          extras: [{
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          }],
+          wait: true,
+        }
+      );
+    });
+
+    it('starts a given APK component that begins with a period', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          startActivity: sinon.spy(() => Promise.resolve()),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const promise = adbUtils.startFirefoxAPK(
+        'device1',
+        'org.mozilla.fenix.nightly',
+        '.HomeActivity', // firefoxApkComponent
+        '/fake/custom/profile/path',
+      );
+
+      await assert.isFulfilled(promise);
+
+      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.startActivity, 'device1', {
+          action: 'android.activity.MAIN',
+          component: 'org.mozilla.fenix.nightly/' +
+            'org.mozilla.fenix.HomeActivity',
           extras: [{
             key: 'args',
             value: '-profile /fake/custom/profile/path',
