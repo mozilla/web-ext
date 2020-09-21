@@ -70,7 +70,7 @@
     "decamelize": "4.0.0",
     "es6-error": "4.1.1",
     "event-to-promise": "0.8.0",
-    "firefox-profile": "2.0.0",
+    "firefox-profile": "4.0.0",
     "fs-extra": "9.0.1",
     "fx-runner": "1.0.13",
     "import-fresh": "3.2.1",
