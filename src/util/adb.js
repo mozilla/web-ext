@@ -1,5 +1,5 @@
 /* @flow */
-import defaultADB from 'adbkit';
+import defaultADB from '@devicefarmer/adbkit';
 
 import {
   isErrorWithCode,
