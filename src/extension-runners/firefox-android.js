@@ -584,7 +584,7 @@ export class FirefoxAndroidExtensionRunner {
     try {
       const msg = (
         `Waiting for ${selectedFirefoxApk} Remote Debugging Server...` +
-        '\n\nMake sure to enable "Remote Debugging via USB" ' +
+        '\nMake sure to enable "Remote Debugging via USB" ' +
         'from Settings -> Developer Tools if it is not yet enabled.'
       );
 
