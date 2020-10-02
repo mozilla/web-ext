@@ -593,7 +593,7 @@ export class FirefoxAndroidExtensionRunner {
       // Got a debugger socket file to connect.
       this.selectedRDPSocketFile = (
         await adbUtils.discoverRDPUnixSocket(
-          selectedAdbDevice, selectedFirefoxApk, msg, {
+          selectedAdbDevice, selectedFirefoxApk, {
             maxDiscoveryTime: unixSocketDiscoveryMaxTime,
             retryInterval: unixSocketDiscoveryRetryInterval,
           }
