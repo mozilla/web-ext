@@ -355,7 +355,7 @@ export default class ADBUtils {
     const discoveryStartedAt = Date.now();
 
     while (rdpUnixSockets.length === 0) {
-      log.info(`\n${msg}\n`);
+      log.info(`\n\x1b[93m${msg}\x1b[39m\n`);
       
       if (this.userAbortDiscovery) {
         throw new UsageError(
