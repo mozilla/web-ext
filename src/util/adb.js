@@ -347,7 +347,7 @@ export default class ADBUtils {
   }
 
   async discoverRDPUnixSocket(
-    deviceId: string, apk: string,
+    deviceId: string, apk: string, msg: string,
     {maxDiscoveryTime, retryInterval}: DiscoveryParams = {}
   ): Promise<string> {
     let rdpUnixSockets = [];
@@ -355,6 +355,8 @@ export default class ADBUtils {
     const discoveryStartedAt = Date.now();
 
     while (rdpUnixSockets.length === 0) {
+      log.info(`\n${msg}\n`);
+      
       if (this.userAbortDiscovery) {
         throw new UsageError(
           'Exiting Firefox Remote Debugging socket discovery on user request'

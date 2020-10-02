@@ -584,7 +584,7 @@ export class FirefoxAndroidExtensionRunner {
     try {
       const msg = (
         `Waiting for ${selectedFirefoxApk} Remote Debugging Server...` +
-        '\nMake sure to enable "Remote Debugging via USB" ' +
+        '\n\nMake sure to enable "Remote Debugging via USB" ' +
         'from Settings -> Developer Tools if it is not yet enabled.'
       );
 
@@ -593,7 +593,7 @@ export class FirefoxAndroidExtensionRunner {
       // Got a debugger socket file to connect.
       this.selectedRDPSocketFile = (
         await adbUtils.discoverRDPUnixSocket(
-          selectedAdbDevice, selectedFirefoxApk, {
+          selectedAdbDevice, selectedFirefoxApk, msg, {
             maxDiscoveryTime: unixSocketDiscoveryMaxTime,
             retryInterval: unixSocketDiscoveryRetryInterval,
           }
