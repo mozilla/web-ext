@@ -347,12 +347,17 @@ export default class ADBUtils {
   }
 
   async discoverRDPUnixSocket(
-    deviceId: string, apk: string, msg: string,
+    deviceId: string, apk: string,
     {maxDiscoveryTime, retryInterval}: DiscoveryParams = {}
   ): Promise<string> {
     let rdpUnixSockets = [];
 
     const discoveryStartedAt = Date.now();
+    const msg = (
+      `Waiting for ${apk} Remote Debugging Server...` +
+      '\nMake sure to enable "Remote Debugging via USB" ' +
+      'from Settings -> Developer Tools if it is not yet enabled.'
+    );
 
     while (rdpUnixSockets.length === 0) {
       log.info(`\n\x1b[93m${msg}\x1b[39m\n`);
