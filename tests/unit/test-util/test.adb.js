@@ -14,6 +14,9 @@ import ADBUtils, {
   ARTIFACTS_DIR_PREFIX,
   DEVICE_DIR_BASE,
 } from '../../../src/util/adb';
+import {
+  consoleStream, // instance is imported to inspect logged messages
+} from '../../../src/util/logger';
 
 const fakeADBPackageList = `
 package:org.mozilla.fennec
@@ -1120,13 +1123,50 @@ describe('utils/adb', () => {
       await assert.isRejected(
         promise, 'Timeout while waiting for the Android Firefox Debugger Socket'
       );
-
       sinon.assert.called(adb.fakeADBClient.shell);
       sinon.assert.alwaysCalledWithMatch(
         adb.fakeADBClient.shell,
         'device1',
         ['cat', '/proc/net/unix']
       );
+    });
+
+    it('informs the user if remote debugging is not enabled', async () => {
+      const adb = getFakeADBKit({
+        adbClient: {
+          shell: sinon.spy(() => Promise.resolve('')),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => {
+            return Promise.resolve(Buffer.from(''));
+          }),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+
+      const maxDiscoveryTime = 50;
+      const retryInterval = 10;
+
+      consoleStream.stopCapturing();
+      consoleStream.flushCapturedLogs();
+      consoleStream.startCapturing();
+      consoleStream.makeVerbose();
+
+      const promise = adbUtils.discoverRDPUnixSocket(
+        'device1', 'org.mozilla.firefox_mybuild', {
+          maxDiscoveryTime,
+          retryInterval,
+        }
+      );
+      const {capturedMessages} = consoleStream;
+
+      assert.ok(capturedMessages.some(
+        (message) => (
+          message.match('[debug]') &&
+          message.match('Make sure to enable "Remote Debugging via USB')
+        )));
+      await assert.isRejected(promise, WebExtError);
+      consoleStream.stopCapturing();
     });
 
     it('rejects a WebExtError if more than one RDP socket have been found',
