@@ -1123,7 +1123,7 @@ describe('utils/adb', () => {
       await assert.isRejected(
         promise, 'Timeout while waiting for the Android Firefox Debugger Socket'
       );
-      
+
       sinon.assert.called(adb.fakeADBClient.shell);
       sinon.assert.alwaysCalledWithMatch(
         adb.fakeADBClient.shell,
