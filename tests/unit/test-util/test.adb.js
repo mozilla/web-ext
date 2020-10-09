@@ -1132,7 +1132,7 @@ describe('utils/adb', () => {
       );
     });
 
-    it('reminds the user to enable remote debugging', async () => {
+    it('reminds the user to enable remote_debugging', async () => {
       const adb = getFakeADBKit({
         adbClient: {
           shell: sinon.spy(() => Promise.resolve('')),
