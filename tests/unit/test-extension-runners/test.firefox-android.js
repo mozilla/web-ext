@@ -1029,27 +1029,6 @@ describe('util/extension-runners/firefox-android', () => {
       consoleStream.stopCapturing();
     });
 
-    it(
-      'does tell user to enable Remote Debugging when running Fenix',
-      async () => {
-        const {params, fakeADBUtils} = prepareSelectedDeviceAndAPKParams();
-        params.firefoxApk = 'org.mozilla.fenix.nightly';
-        fakeADBUtils.getAndroidVersionNumber = async () => 23;
-
-        consoleStream.startCapturing();
-        const runner = new FirefoxAndroidExtensionRunner(params);
-        await runner.run();
-
-        assert.match(
-          consoleStream.capturedMessages.join('\n'),
-          /Make sure to enable "Remote Debugging via USB"/
-        );
-
-        consoleStream.flushCapturedLogs();
-        consoleStream.stopCapturing();
-      }
-    );
-
   });
 
 });

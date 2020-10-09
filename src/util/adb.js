@@ -353,8 +353,14 @@ export default class ADBUtils {
     let rdpUnixSockets = [];
 
     const discoveryStartedAt = Date.now();
+    const msg = (
+      `Waiting for ${apk} Remote Debugging Server...` +
+      '\nMake sure to enable "Remote Debugging via USB" ' +
+      'from Settings -> Developer Tools if it is not yet enabled.'
+    );
 
     while (rdpUnixSockets.length === 0) {
+      log.info(msg);
       if (this.userAbortDiscovery) {
         throw new UsageError(
           'Exiting Firefox Remote Debugging socket discovery on user request'
