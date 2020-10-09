@@ -360,7 +360,7 @@ export default class ADBUtils {
     );
 
     while (rdpUnixSockets.length === 0) {
-      log.info(`\n${msg}\n`);
+      log.info(msg);
       if (this.userAbortDiscovery) {
         throw new UsageError(
           'Exiting Firefox Remote Debugging socket discovery on user request'

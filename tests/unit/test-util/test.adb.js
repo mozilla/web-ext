@@ -1131,7 +1131,7 @@ describe('utils/adb', () => {
       );
     });
 
-    it('informs the user if remote debugging is not enabled', async () => {
+    it('reminds the user to enable remote debugging', async () => {
       const adb = getFakeADBKit({
         adbClient: {
           shell: sinon.spy(() => Promise.resolve('')),
@@ -1144,29 +1144,25 @@ describe('utils/adb', () => {
       });
       const adbUtils = new ADBUtils({adb});
 
-      const maxDiscoveryTime = 50;
-      const retryInterval = 10;
-
-      consoleStream.stopCapturing();
       consoleStream.flushCapturedLogs();
-      consoleStream.startCapturing();
       consoleStream.makeVerbose();
+      consoleStream.startCapturing();
 
       const promise = adbUtils.discoverRDPUnixSocket(
         'device1', 'org.mozilla.firefox_mybuild', {
-          maxDiscoveryTime,
-          retryInterval,
+          maxDiscoveryTime: 50, retryInterval: 10,
         }
       );
-      const {capturedMessages} = consoleStream;
-
-      assert.ok(capturedMessages.some(
-        (message) => (
-          message.match('[debug]') &&
-          message.match('Make sure to enable "Remote Debugging via USB')
-        )));
       await assert.isRejected(promise, WebExtError);
+
+      const {capturedMessages} = consoleStream;
+      const foundMessage = capturedMessages.find((message) =>
+        message.includes('Make sure to enable "Remote Debugging via USB'));
+
       consoleStream.stopCapturing();
+
+      assert.ok(foundMessage);
+      assert.ok(foundMessage && foundMessage.includes('[info]'));
     });
 
     it('rejects a WebExtError if more than one RDP socket have been found',
