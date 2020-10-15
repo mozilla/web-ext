@@ -19,7 +19,7 @@ describe('web-ext run', () => {
        {addonPath: minimalAddonPath},
        (srcDir) => {
          const watchedFile = path.join(srcDir, 'watchedFile.txt');
-         fs.writeFileSync(watchedFile);
+         fs.writeFileSync(watchedFile, '');
 
          const argv = [
            'run', '--verbose', '--no-reload',
