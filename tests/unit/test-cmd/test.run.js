@@ -58,9 +58,9 @@ function prepareRun(fakeInstallResult) {
 }
 
 describe('run', () => {
-  let androidRunnerStub: sinon.SinonStub;
-  let desktopRunnerStub: sinon.SinonStub;
-  let chromiumRunnerStub: sinon.SinonStub;
+  let androidRunnerStub: any;
+  let desktopRunnerStub: any;
+  let chromiumRunnerStub: any;
 
   beforeEach(() => {
     androidRunnerStub = sinon.stub(

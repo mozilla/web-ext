@@ -73,7 +73,7 @@ export class FirefoxDesktopExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName() {
+  getName(): string {
     return 'Firefox Desktop';
   }
 

@@ -14,8 +14,8 @@ export type DocsOptions = {
   openUrl?: typeof open,
 }
 
-export const url = 'https://developer.mozilla.org/en-US/Add-ons' +
-  '/WebExtensions/Getting_started_with_web-ext';
+// eslint-disable-next-line max-len
+export const url = 'https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/';
 
 export default function docs(
   params: DocsParams, {openUrl = open}: DocsOptions = {}

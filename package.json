@@ -12,7 +12,8 @@
     "README.md",
     "dist/*.js",
     "src/**",
-    "index.mjs"
+    "index.mjs",
+    "flow-typed/*.js"
   ],
   "engines": {
     "node": ">=10.0.0",

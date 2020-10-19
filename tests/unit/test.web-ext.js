@@ -18,7 +18,7 @@ describe('webExt', () => {
   });
 
   describe('exposes commands', () => {
-    let stub: sinon.Stub;
+    let stub: any;
     afterEach(() => {
       stub.restore();
       stub = undefined;

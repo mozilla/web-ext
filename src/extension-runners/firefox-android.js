@@ -89,9 +89,9 @@ export type FirefoxAndroidExtensionRunnerParams = {|
  */
 export class FirefoxAndroidExtensionRunner {
   // Wait 3s before the next unix socket discovery loop.
-  static unixSocketDiscoveryRetryInterval = 3 * 1000;
+  static unixSocketDiscoveryRetryInterval: number = 3 * 1000;
   // Wait for at most 3 minutes before giving up.
-  static unixSocketDiscoveryMaxTime = 3 * 60 * 1000;
+  static unixSocketDiscoveryMaxTime: number = 3 * 60 * 1000;
 
   params: FirefoxAndroidExtensionRunnerParams;
   adbUtils: DefaultADBUtils;
@@ -168,7 +168,7 @@ export class FirefoxAndroidExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName() {
+  getName(): string {
     return 'Firefox Android';
   }
 

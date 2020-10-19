@@ -7,7 +7,7 @@ import {createLogger} from './logger';
 
 const log = createLogger(__filename);
 
-const defaultAsyncFsAccess = fs.access.bind(fs);
+const defaultAsyncFsAccess: typeof fs.access = fs.access.bind(fs);
 
 type PrepareArtifactsDirOptions = {
   asyncMkdirp?: typeof defaultAsyncMkdirp,
