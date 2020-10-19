@@ -111,6 +111,13 @@ describe('util/extension-runners/chromium', async () => {
     assert.deepEqual(managerExtManifest.permissions, ['management', 'tabs']);
 
     await runnerInstance.exit();
+
+    // Test that `createReloadManagerExtension` does throw if the instance exited
+    // and its `wss` property has been already nullified.
+    assert.isRejected(
+      runnerInstance.createReloadManagerExtension(),
+      /WebSocketServer closed/,
+    ) ;
   });
 
 
