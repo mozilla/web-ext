@@ -359,7 +359,10 @@ export function defaultReloadStrategy(
           setRawMode(stdin, true);
         } else if (keyPressed.name === 'r') {
           log.debug('Reloading installed extensions on user request');
-          extensionRunner.reloadAllExtensions();
+          await extensionRunner.reloadAllExtensions().catch((err) => {
+            log.warn(`\nError reloading extension: ${err}`);
+            log.debug(`Reloading extension error stack: ${err.stack}`);
+          });
         }
       }
 

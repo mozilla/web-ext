@@ -536,7 +536,7 @@ describe('util/extension-runners', () => {
          const {extensionRunner, reloadStrategy} = prepare({
            stubExtensionRunner: {
              reloadAllExtensions: sinon.spy(
-               () => Promise.reject(Error('fake reload error'))
+               () => Promise.reject(new Error('fake reload error'))
              ),
            },
          });
@@ -544,20 +544,38 @@ describe('util/extension-runners', () => {
          const fakeStdin = createFakeStdin();
          sinon.spy(fakeStdin, 'setRawMode');
 
-         try {
-           await reloadStrategy({}, {stdin: fakeStdin});
-           // Wait for one tick for reloadStrategy's keypress processing loop
-           // to be ready.
-           await Promise.resolve();
+         // Stub the `fakeStdin.once` method to be able to wait
+         // once a promise resolved when the reloadStrategy method
+         // did call `stdin.once('keypress', ...)`.
+         const fakeStdinOnce = fakeStdin.once;
+         sinon.stub(fakeStdin, 'once');
+         fakeStdin.once.callsFake((...args) => {
+           if (args[0] === 'keypress') {
+             fakeStdin.emit('once-keypress-called');
+           }
+           return fakeStdinOnce.apply(fakeStdin, args);
+         });
 
+         const promiseWaitKeypress = () => new Promise((resolve) => {
+           fakeStdin.once('once-keypress-called', resolve);
+         });
+
+         try {
+           let onceWaitKeypress = promiseWaitKeypress();
+           await reloadStrategy({}, {stdin: fakeStdin});
+           await onceWaitKeypress;
+
+           onceWaitKeypress = promiseWaitKeypress();
            fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-           // Wait for one tick to give reloadStrategy the chance to handle
-           // the keypress event.
-           await Promise.resolve();
+           await onceWaitKeypress;
+
            sinon.assert.called(fakeStdin.setRawMode);
            sinon.assert.calledOnce(extensionRunner.reloadAllExtensions);
+
+           onceWaitKeypress = promiseWaitKeypress();
            fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-           await Promise.resolve();
+           await onceWaitKeypress;
+
            sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
          } finally {
            exitKeypressLoop(fakeStdin);
