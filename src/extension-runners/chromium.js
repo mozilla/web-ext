@@ -158,9 +158,20 @@ export class ChromiumExtensionRunner {
       this.params.extensions.map(({sourceDir}) => sourceDir)
     ).join(',');
 
-    const {chromiumBinary} = this.params;
-
     log.debug('Starting Chromium instance...');
+
+    const {chromiumBinary} = this.params;
+    const url = this.params.startUrl;
+    if (url && !Array.isArray(url) && url.startsWith('chrome://')) {
+      //send message to reloadManagerExtension
+      const chromeUrl = url;
+      let wsClient: WebSocket;
+      const forwardUrlMsg = JSON.stringify({
+        url: chromeUrl,
+        type: 'webExtReloadExtensionComplete',
+      });
+      wsClient.send(forwardUrlMsg);
+    }
 
     if (chromiumBinary) {
       log.debug(`(chromiumBinary: ${chromiumBinary})`);
