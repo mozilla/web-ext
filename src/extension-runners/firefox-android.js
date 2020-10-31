@@ -115,6 +115,9 @@ export class FirefoxAndroidExtensionRunner {
     // Print warning for not currently supported options (e.g. preInstall,
     // cloned profiles, browser console).
     this.printIgnoredParamsWarnings();
+
+    // Avoid crashing web-ext by calling too many reloads at the same time
+    this.is_reloading = false;
   }
 
   async run(): Promise<void> {
@@ -220,7 +223,11 @@ export class FirefoxAndroidExtensionRunner {
 
     try {
       await this.buildAndPushExtension(extensionSourceDir);
-      await this.remoteFirefox.reloadAddon(addonId);
+      if (!this.is_reloading) {
+        this.is_reloading = true;
+        await this.remoteFirefox.reloadAddon(addonId);
+        this.is_reloading = false;
+      }
     } catch (error) {
       return [{
         sourceDir: extensionSourceDir,
