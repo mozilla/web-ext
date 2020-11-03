@@ -10,7 +10,6 @@ import {
   connectWithMaxRetries as defaultFirefoxClient,
 } from '../firefox/remote';
 import {createLogger} from '../util/logger';
-import {WebExtError} from '../errors';
 import defaultGetValidatedManifest from '../util/manifest';
 import {
   createExtensionRunner,
@@ -31,7 +30,7 @@ export type CmdRunParams = {|
   pref?: FirefoxPreferences,
   firefox: string,
   firefoxProfile?: string,
-  profileCreateNew?: boolean,
+  profileCreateIfMissing?: boolean,
   ignoreFiles?: Array<string>,
   keepProfileChanges: boolean,
   noInput?: boolean,
@@ -76,7 +75,7 @@ export default async function run(
     pref,
     firefox,
     firefoxProfile,
-    profileCreateNew,
+    profileCreateIfMissing,
     keepProfileChanges = false,
     ignoreFiles,
     noInput = false,
@@ -124,10 +123,10 @@ export default async function run(
 
   const profileDir = firefoxProfile || chromiumProfile;
 
-  if (profileCreateNew && profileDir) {
+  if (profileCreateIfMissing && profileDir) {
     const isDir = fs.existsSync(profileDir);
     if (isDir) {
-      throw new WebExtError(`Directory ${profileDir} already exists.`);
+      log.info(`Profile directory ${profileDir} already exists`);
     } else {
       log.info(`Profile directory not found. Creating directory ${profileDir}`);
       fs.mkdirSync(profileDir);

@@ -346,7 +346,7 @@ describe('run', () => {
 
          await cmd.run({
            firefoxProfile,
-           profileCreateNew: true,
+           profileCreateIfMissing: true,
          });
 
          sinon.assert.calledWith(fs.mkdirSync, firefoxProfile);
@@ -364,7 +364,7 @@ describe('run', () => {
          await cmd.run({
            chromiumProfile,
            target: 'chromium',
-           profileCreateNew: true,
+           profileCreateIfMissing: true,
          });
 
          sinon.assert.calledWith(fs.mkdirSync, chromiumProfile);
@@ -373,42 +373,51 @@ describe('run', () => {
        }
     );
 
-    it('throws error when firefox profile directory already exists',
+    it('Uses profile directory when firefox profile directory already exists',
        async () => {
          sinon.stub(fs, 'existsSync').returns(true);
-         const firefoxProfile = '/pretend/path/to/Firefox/profile';
+         const fakeFirefoxProfile = '/pretend/path/to/Firefox/profile';
          const cmd = prepareRun();
 
-         const promise = cmd.run({
-           firefoxProfile,
-           profileCreateNew: true,
+         await cmd.run({
+           firefoxProfile: fakeFirefoxProfile,
+           profileCreateIfMissing: true,
          });
 
-         await assert.isRejected(
-           promise,
-           `Directory ${firefoxProfile} already exists.`
-         );
+         sinon.assert.calledOnce(desktopRunnerStub);
+         const firefoxProfile = desktopRunnerStub
+           .firstCall
+           .args[0]
+           .profilePath;
+         assert.equal(firefoxProfile, fakeFirefoxProfile,
+                      'Got the expected firefoxProfile option');
 
          fs.existsSync.restore();
        }
     );
 
-    it('throws error when chromium profile directory already exists',
+    it('Uses profile directory when chromium profile directory already exists',
        async () => {
          sinon.stub(fs, 'existsSync').returns(true);
-         const chromiumProfile = '/pretend/path/to/chromium/profile';
+         const fakeChromiumProfile = '/pretend/path/to/chromium/profile';
          const cmd = prepareRun();
 
-         const promise = cmd.run({
-           chromiumProfile,
+         await cmd.run({
+           chromiumProfile: fakeChromiumProfile,
            target: 'chromium',
-           profileCreateNew: true,
+           profileCreateIfMissing: true,
          });
 
-         await assert.isRejected(
-           promise,
-           `Directory ${chromiumProfile} already exists.`
+         sinon.assert.calledWithMatch(
+           chromiumRunnerStub,
+           {
+             chromiumProfile: sinon.match.string,
+           }
          );
+
+         const {chromiumProfile} = chromiumRunnerStub.firstCall.args[0];
+         assert.equal(chromiumProfile, fakeChromiumProfile,
+                      'Got the expected chromiumProfile option');
 
          fs.existsSync.restore();
        }

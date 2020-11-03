@@ -580,10 +580,8 @@ Example: $0 --help run.
         demandOption: false,
         type: 'string',
       },
-      'profile-create-new': {
-        describe: 'Create directory if the profile directory specified by ' +
-                  'the -p option doesn\'t already exist. If it already ' +
-                  'exists, an error will be thrown.',
+      'profile-create-if-missing': {
+        describe: 'Create the profile directory if it does not already exist',
         demandOption: false,
         type: 'boolean',
       },
