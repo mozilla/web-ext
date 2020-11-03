@@ -581,9 +581,9 @@ Example: $0 --help run.
         type: 'string',
       },
       'profile-create-new': {
-        describe: 'Create a new profile in the directory specified by the ' +
-                  '-p option if it doesn\'t already exist. If it already ' +
-                  'exists, an error will be shown.',
+        describe: 'Create directory if the profile directory specified by ' +
+                  'the -p option doesn\'t already exist. If it already ' +
+                  'exists, an error will be thrown.',
         demandOption: false,
         type: 'boolean',
       },

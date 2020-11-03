@@ -329,44 +329,89 @@ describe('run', () => {
      }
   );
 
-  it('creates dir when profile doesn\'t exist using profile-create-new',
-     async () => {
-       sinon.stub(fs, 'existsSync').returns(false);
-       sinon.stub(fs, 'mkdirSync');
+  describe('profile-create-new option', () => {
+    beforeEach(() => {
+      sinon.stub(fs, 'mkdirSync');
+    });
 
-       const firefoxProfile = '/pretend/path/to/Firefox/profile';
-       const cmd = prepareRun();
+    afterEach(() => {
+      fs.mkdirSync.restore();
+    });
 
-       await cmd.run({
-         firefoxProfile,
-         profileCreateNew: true,
-       });
+    it('creates dir when firefox profile doesn\'t exist',
+       async () => {
+         sinon.stub(fs, 'existsSync').returns(false);
+         const firefoxProfile = '/pretend/path/to/Firefox/profile';
+         const cmd = prepareRun();
 
-       sinon.assert.calledWith(fs.mkdirSync, firefoxProfile);
+         await cmd.run({
+           firefoxProfile,
+           profileCreateNew: true,
+         });
 
-       fs.existsSync.restore();
-       fs.mkdirSync.restore();
-     }
-  );
+         sinon.assert.calledWith(fs.mkdirSync, firefoxProfile);
 
-  it('throws error when profile dir already exists using profile-create-new',
-     async () => {
-       sinon.stub(fs, 'existsSync').returns(true);
+         fs.existsSync.restore();
+       }
+    );
 
-       const firefoxProfile = '/pretend/path/to/Firefox/profile';
-       const cmd = prepareRun();
+    it('creates dir when chromium profile doesn\'t exist',
+       async () => {
+         sinon.stub(fs, 'existsSync').returns(false);
+         const chromiumProfile = '/pretend/path/to/Chromium/profile';
+         const cmd = prepareRun();
 
-       const promise = cmd.run({
-         firefoxProfile,
-         profileCreateNew: true,
-       });
+         await cmd.run({
+           chromiumProfile,
+           target: 'chromium',
+           profileCreateNew: true,
+         });
 
-       await assert.isRejected(
-         promise,
-         `Directory ${firefoxProfile} already exists.`
-       );
+         sinon.assert.calledWith(fs.mkdirSync, chromiumProfile);
 
-       fs.existsSync.restore();
-     }
-  );
+         fs.existsSync.restore();
+       }
+    );
+
+    it('throws error when firefox profile directory already exists',
+       async () => {
+         sinon.stub(fs, 'existsSync').returns(true);
+         const firefoxProfile = '/pretend/path/to/Firefox/profile';
+         const cmd = prepareRun();
+
+         const promise = cmd.run({
+           firefoxProfile,
+           profileCreateNew: true,
+         });
+
+         await assert.isRejected(
+           promise,
+           `Directory ${firefoxProfile} already exists.`
+         );
+
+         fs.existsSync.restore();
+       }
+    );
+
+    it('throws error when chromium profile directory already exists',
+       async () => {
+         sinon.stub(fs, 'existsSync').returns(true);
+         const chromiumProfile = '/pretend/path/to/chromium/profile';
+         const cmd = prepareRun();
+
+         const promise = cmd.run({
+           chromiumProfile,
+           target: 'chromium',
+           profileCreateNew: true,
+         });
+
+         await assert.isRejected(
+           promise,
+           `Directory ${chromiumProfile} already exists.`
+         );
+
+         fs.existsSync.restore();
+       }
+    );
+  });
 });
