@@ -580,6 +580,13 @@ Example: $0 --help run.
         demandOption: false,
         type: 'string',
       },
+      'profile-create-new': {
+        describe: 'Create a new profile in the directory specified by the ' +
+                  '-p option if it doesn\'t already exist. If it already ' +
+                  'exists, an error will be shown.',
+        demandOption: false,
+        type: 'boolean',
+      },
       'keep-profile-changes': {
         describe: 'Run Firefox directly in custom profile. Any changes to ' +
                   'the profile will be saved.',

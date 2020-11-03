@@ -1,6 +1,7 @@
 /* @flow */
 import path from 'path';
 
+import { fs } from 'mz';
 import {afterEach, beforeEach, describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -325,5 +326,47 @@ describe('run', () => {
            sourceDir: '/fake/source/dir',
          },
        );
-     });
+     }
+  );
+
+  it('creates dir when profile doesn\'t exist using profile-create-new',
+     async () => {
+       sinon.stub(fs, 'existsSync').returns(false);
+       sinon.stub(fs, 'mkdirSync');
+
+       const firefoxProfile = '/pretend/path/to/Firefox/profile';
+       const cmd = prepareRun();
+
+       await cmd.run({
+         firefoxProfile,
+         profileCreateNew: true,
+       });
+
+       sinon.assert.calledWith(fs.mkdirSync, firefoxProfile);
+
+       fs.existsSync.restore();
+       fs.mkdirSync.restore();
+     }
+  );
+
+  it('throws error when profile dir already exists using profile-create-new',
+     async () => {
+       sinon.stub(fs, 'existsSync').returns(true);
+
+       const firefoxProfile = '/pretend/path/to/Firefox/profile';
+       const cmd = prepareRun();
+
+       const promise = cmd.run({
+         firefoxProfile,
+         profileCreateNew: true,
+       });
+
+       await assert.isRejected(
+         promise,
+         `Directory ${firefoxProfile} already exists.`
+       );
+
+       fs.existsSync.restore();
+     }
+  );
 });
