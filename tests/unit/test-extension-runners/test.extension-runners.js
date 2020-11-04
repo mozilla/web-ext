@@ -549,16 +549,17 @@ describe('util/extension-runners', () => {
          // did call `stdin.once('keypress', ...)`.
          const fakeStdinOnce = fakeStdin.once;
          sinon.stub(fakeStdin, 'once');
-         fakeStdin.once.callsFake((...args) => {
-           if (args[0] === 'keypress') {
-             fakeStdin.emit('once-keypress-called');
-           }
-           return fakeStdinOnce.apply(fakeStdin, args);
-         });
 
-         const promiseWaitKeypress = () => new Promise((resolve) => {
-           fakeStdin.once('once-keypress-called', resolve);
-         });
+         function promiseWaitKeypress() {
+           return new Promise((resolve) => {
+             fakeStdin.once.callsFake((...args) => {
+               if (args[0] === 'keypress') {
+                 resolve();
+               }
+               return fakeStdinOnce.apply(fakeStdin, args);
+             });
+           });
+         }
 
          try {
            let onceWaitKeypress = promiseWaitKeypress();
