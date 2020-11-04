@@ -331,11 +331,11 @@ describe('run', () => {
 
   describe('profile-create-new option', () => {
     beforeEach(() => {
-      sinon.stub(fs, 'mkdirSync');
+      sinon.stub(fs, 'mkdir');
     });
 
     afterEach(() => {
-      fs.mkdirSync.restore();
+      fs.mkdir.restore();
     });
 
     it('creates dir when firefox profile doesn\'t exist',
@@ -349,7 +349,7 @@ describe('run', () => {
            profileCreateIfMissing: true,
          });
 
-         sinon.assert.calledWith(fs.mkdirSync, firefoxProfile);
+         sinon.assert.calledWith(fs.mkdir, firefoxProfile);
 
          fs.existsSync.restore();
        }
@@ -367,7 +367,7 @@ describe('run', () => {
            profileCreateIfMissing: true,
          });
 
-         sinon.assert.calledWith(fs.mkdirSync, chromiumProfile);
+         sinon.assert.calledWith(fs.mkdir, chromiumProfile);
 
          fs.existsSync.restore();
        }

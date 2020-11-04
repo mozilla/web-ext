@@ -129,7 +129,7 @@ export default async function run(
       log.info(`Profile directory ${profileDir} already exists`);
     } else {
       log.info(`Profile directory not found. Creating directory ${profileDir}`);
-      fs.mkdirSync(profileDir);
+      await fs.mkdir(profileDir);
     }
   }
 
