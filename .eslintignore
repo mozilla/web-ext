@@ -1,4 +1,5 @@
 dist/
 coverage/
 artifacts/
+flow-typed/
 commitlint.config.js

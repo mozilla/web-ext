@@ -45,7 +45,9 @@ export type MultiExtensionRunnerParams = {|
   desktopNotifications: typeof defaultDesktopNotifications,
 |};
 
-export async function createExtensionRunner(config: ExtensionRunnerConfig) {
+export async function createExtensionRunner(
+  config: ExtensionRunnerConfig
+): Promise<IExtensionRunner> {
   switch (config.target) {
     case 'firefox-desktop': {
       // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
@@ -86,7 +88,7 @@ export class MultiExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName() {
+  getName(): string {
     return 'Multi Extension Runner';
   }
 

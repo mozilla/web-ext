@@ -43,7 +43,7 @@ const EXCLUDED_CHROME_FLAGS = [
   '--mute-audio',
 ];
 
-export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags()
+export const DEFAULT_CHROME_FLAGS: Array<string> = ChromeLauncher.defaultFlags()
   .filter((flag) => !EXCLUDED_CHROME_FLAGS.includes(flag));
 
 /**
@@ -52,10 +52,10 @@ export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags()
 export class ChromiumExtensionRunner {
   cleanupCallbacks: Set<Function>;
   params: ChromiumExtensionRunnerParams;
-  chromiumInstance: ChromeLauncher;
+  chromiumInstance: ?ChromeLauncher;
   chromiumLaunch: typeof defaultChromiumLaunch;
   reloadManagerExtension: string;
-  wss: WebSocket.Server;
+  wss: ?WebSocket.Server;
   exiting: boolean;
   _promiseSetupDone: ?Promise<void>;
 
@@ -73,7 +73,7 @@ export class ChromiumExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName() {
+  getName(): string {
     return 'Chromium';
   }
 
@@ -241,7 +241,7 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  async wssBroadcast(data: Object) {
+  async wssBroadcast(data: Object): Promise<void> {
     return new Promise((resolve) => {
       const clients = this.wss ? new Set(this.wss.clients) : new Set();
 
@@ -280,7 +280,7 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  async createReloadManagerExtension() {
+  async createReloadManagerExtension(): Promise<string> {
     const tmpDir = new TempDir();
     await tmpDir.create();
     this.registerCleanup(() => tmpDir.remove());
@@ -307,6 +307,7 @@ export class ChromiumExtensionRunner {
       })
     );
 
+    // $FlowIgnore: this method is only called right after creating the server and so wss should be defined.
     const wssInfo = this.wss.address();
 
     const bgPage = `(function bgPage() {
@@ -408,7 +409,8 @@ export class ChromiumExtensionRunner {
     }
 
     if (this.wss) {
-      await new Promise((resolve) => this.wss.close(resolve));
+      await new Promise((resolve) =>
+        this.wss ? this.wss.close(resolve) : resolve());
       this.wss = null;
     }
 

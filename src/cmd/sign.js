@@ -15,7 +15,8 @@ import type {ExtensionManifest} from '../util/manifest';
 
 const log = createLogger(__filename);
 
-const defaultAsyncFsReadFile = fs.readFile.bind(fs);
+const defaultAsyncFsReadFile: (string) => Promise<Buffer> =
+  fs.readFile.bind(fs);
 
 export const extensionIdFile = '.web-extension-id';
 

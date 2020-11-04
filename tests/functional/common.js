@@ -11,21 +11,25 @@ import * as tmpDirUtils from '../../src/util/temp-dir';
 export const withTempDir = tmpDirUtils.withTempDir;
 
 
-export const functionalTestsDir = path.resolve(__dirname);
-export const projectDir = path.join(functionalTestsDir, '..', '..');
-export const webExt = process.env.TEST_WEB_EXT_BIN ?
+export const functionalTestsDir: string = path.resolve(__dirname);
+export const projectDir: string = path.join(functionalTestsDir, '..', '..');
+export const webExt: string = process.env.TEST_WEB_EXT_BIN ?
   path.resolve(process.env.TEST_WEB_EXT_BIN) :
   path.join(projectDir, 'bin', 'web-ext');
-export const fixturesDir = path.join(functionalTestsDir, '..', 'fixtures');
-export const minimalAddonPath = path.join(fixturesDir, 'minimal-web-ext');
-export const fixtureEsmImport = path.join(fixturesDir, 'import-as-esm');
-export const fixtureCjsRequire = path.join(fixturesDir, 'require-as-cjs');
-export const fakeFirefoxPath = path.join(
+export const fixturesDir: string =
+  path.join(functionalTestsDir, '..', 'fixtures');
+export const minimalAddonPath: string =
+  path.join(fixturesDir, 'minimal-web-ext');
+export const fixtureEsmImport: string =
+  path.join(fixturesDir, 'import-as-esm');
+export const fixtureCjsRequire: string =
+  path.join(fixturesDir, 'require-as-cjs');
+export const fakeFirefoxPath: string = path.join(
   functionalTestsDir,
   process.platform === 'win32' ?
     'fake-firefox-binary.bat' : 'fake-firefox-binary.js'
 );
-export const fakeServerPath = path.join(
+export const fakeServerPath: string = path.join(
   functionalTestsDir, 'fake-amo-server.js'
 );
 

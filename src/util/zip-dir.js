@@ -3,4 +3,7 @@ import {promisify} from 'util';
 
 import zipDirModule from 'zip-dir';
 
-export const zipDir = promisify(zipDirModule);
+type PromisedZipDir =
+  (sourceDir: string, { filter(...any): boolean }) => Promise<Buffer>;
+
+export const zipDir: PromisedZipDir = promisify(zipDirModule);
