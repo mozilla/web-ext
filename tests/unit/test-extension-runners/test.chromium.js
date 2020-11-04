@@ -111,13 +111,6 @@ describe('util/extension-runners/chromium', async () => {
     assert.deepEqual(managerExtManifest.permissions, ['management', 'tabs']);
 
     await runnerInstance.exit();
-
-    // Test that `createReloadManagerExtension` does throw if the instance exited
-    // and its `wss` property has been already nullified.
-    assert.isRejected(
-      runnerInstance.createReloadManagerExtension(),
-      /WebSocketServer closed/,
-    ) ;
   });
 
 
@@ -635,6 +628,7 @@ describe('util/extension-runners/chromium', async () => {
       if (!runnerInstance.wss) {
         throw new Error('WebSocker server is not running');
       }
+      // $FlowIgnore: if runnerInstance.wss would be unexpectedly undefined the test case will fail.
       const wssInfo = runnerInstance.wss.address();
       const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
       wsClient = new WebSocket(wsURL);
