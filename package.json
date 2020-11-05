@@ -121,7 +121,7 @@
     "nyc": "15.1.0",
     "prettyjson": "1.2.1",
     "shelljs": "0.8.4",
-    "sinon": "9.2.0",
+    "sinon": "9.2.1",
     "webpack": "4.44.2",
     "webpack-node-externals": "2.5.2",
     "yauzl": "2.10.0"
