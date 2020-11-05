@@ -57,8 +57,8 @@
     "opera"
   ],
   "dependencies": {
-    "@babel/polyfill": "7.11.5",
-    "@babel/runtime": "7.11.2",
+    "@babel/polyfill": "7.12.1",
+    "@babel/runtime": "7.12.5",
     "@cliqz-oss/firefox-client": "0.3.1",
     "@cliqz-oss/node-firefox-connect": "1.2.1",
     "@devicefarmer/adbkit": "2.11.3",
@@ -92,12 +92,12 @@
     "zip-dir": "1.0.2"
   },
   "devDependencies": {
-    "@babel/core": "7.11.6",
-    "@babel/plugin-proposal-class-properties": "7.10.4",
-    "@babel/plugin-transform-runtime": "7.11.5",
-    "@babel/preset-env": "7.11.5",
-    "@babel/preset-flow": "7.10.4",
-    "@babel/register": "7.11.5",
+    "@babel/core": "7.12.3",
+    "@babel/plugin-proposal-class-properties": "7.12.1",
+    "@babel/plugin-transform-runtime": "7.12.1",
+    "@babel/preset-env": "7.12.1",
+    "@babel/preset-flow": "7.12.1",
+    "@babel/register": "7.12.1",
     "@commitlint/cli": "11.0.0",
     "@commitlint/config-conventional": "11.0.0",
     "babel-eslint": "10.1.0",
