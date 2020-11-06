@@ -326,101 +326,91 @@ describe('run', () => {
            sourceDir: '/fake/source/dir',
          },
        );
-     }
-  );
+     });
 
   describe('profile-create-new option', () => {
     beforeEach(() => {
       sinon.stub(fs, 'mkdir');
+      sinon.stub(fs, 'existsSync');
     });
 
     afterEach(() => {
       fs.mkdir.restore();
+      fs.existsSync.restore();
     });
 
-    it('creates dir when firefox profile doesn\'t exist',
-       async () => {
-         sinon.stub(fs, 'existsSync').returns(false);
-         const firefoxProfile = '/pretend/path/to/Firefox/profile';
-         const cmd = prepareRun();
+    const fakeFirefoxProfile = '/pretend/path/to/Firefox/profile';
+    const fakeChromiumProfile = '/pretend/path/to/Chromium/profile';
 
-         await cmd.run({
-           firefoxProfile,
-           profileCreateIfMissing: true,
-         });
+    async function testCreateProfileIfMissing(
+      existsSyncReturnValue,
+      runParams,
+      expectedProfile
+    ) {
+      fs.existsSync.returns(existsSyncReturnValue);
+      const cmd = prepareRun();
 
-         sinon.assert.calledWith(fs.mkdir, firefoxProfile);
+      await cmd.run(runParams);
 
-         fs.existsSync.restore();
-       }
-    );
+      if (existsSyncReturnValue) {
+        sinon.assert.notCalled(fs.mkdir);
+      } else {
+        sinon.assert.calledWith(fs.mkdir, expectedProfile);
+      }
 
-    it('creates dir when chromium profile doesn\'t exist',
-       async () => {
-         sinon.stub(fs, 'existsSync').returns(false);
-         const chromiumProfile = '/pretend/path/to/Chromium/profile';
-         const cmd = prepareRun();
+      if (expectedProfile === fakeFirefoxProfile) {
+        sinon.assert.calledOnce(desktopRunnerStub);
+        const firefoxProfile = desktopRunnerStub
+          .firstCall
+          .args[0]
+          .profilePath;
+        assert.equal(firefoxProfile, fakeFirefoxProfile,
+                     'Got the expected firefoxProfile option');
+      } else {
+        sinon.assert.calledOnce(chromiumRunnerStub);
 
-         await cmd.run({
-           chromiumProfile,
-           target: 'chromium',
-           profileCreateIfMissing: true,
-         });
+        const {chromiumProfile} = chromiumRunnerStub.firstCall.args[0];
+        assert.equal(chromiumProfile, fakeChromiumProfile,
+                     'Got the expected chromiumProfile option');
+      }
+    }
 
-         sinon.assert.calledWith(fs.mkdir, chromiumProfile);
-
-         fs.existsSync.restore();
-       }
-    );
-
-    it('Uses profile directory when firefox profile directory already exists',
-       async () => {
-         sinon.stub(fs, 'existsSync').returns(true);
-         const fakeFirefoxProfile = '/pretend/path/to/Firefox/profile';
-         const cmd = prepareRun();
-
-         await cmd.run({
+    it('creates dir when firefox profile does not exist',
+       async () => testCreateProfileIfMissing(
+         false, {
            firefoxProfile: fakeFirefoxProfile,
            profileCreateIfMissing: true,
-         });
-
-         sinon.assert.calledOnce(desktopRunnerStub);
-         const firefoxProfile = desktopRunnerStub
-           .firstCall
-           .args[0]
-           .profilePath;
-         assert.equal(firefoxProfile, fakeFirefoxProfile,
-                      'Got the expected firefoxProfile option');
-
-         fs.existsSync.restore();
-       }
+         }, fakeFirefoxProfile
+       )
     );
 
-    it('Uses profile directory when chromium profile directory already exists',
-       async () => {
-         sinon.stub(fs, 'existsSync').returns(true);
-         const fakeChromiumProfile = '/pretend/path/to/chromium/profile';
-         const cmd = prepareRun();
-
-         await cmd.run({
+    it('creates dir when chromium profile does not exist',
+       async () => testCreateProfileIfMissing(
+         false, {
            chromiumProfile: fakeChromiumProfile,
            target: 'chromium',
            profileCreateIfMissing: true,
-         });
+         }, fakeChromiumProfile
+       )
+    );
 
-         sinon.assert.calledWithMatch(
-           chromiumRunnerStub,
-           {
-             chromiumProfile: sinon.match.string,
-           }
-         );
+    it('uses the given firefox profile directory if it does exist',
+       async () => testCreateProfileIfMissing(
+         true, {
+           firefoxProfile: fakeFirefoxProfile,
+           profileCreateIfMissing: true,
+         }, fakeFirefoxProfile
+       )
+    );
 
-         const {chromiumProfile} = chromiumRunnerStub.firstCall.args[0];
-         assert.equal(chromiumProfile, fakeChromiumProfile,
-                      'Got the expected chromiumProfile option');
-
-         fs.existsSync.restore();
-       }
+    it('uses the given chromium profile directory if it does exist',
+       async () => testCreateProfileIfMissing(
+         true, {
+           chromiumProfile: fakeChromiumProfile,
+           target: 'chromium',
+           profileCreateIfMissing: true,
+         }, fakeChromiumProfile
+       )
     );
   });
 });
