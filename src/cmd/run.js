@@ -1,4 +1,6 @@
 /* @flow */
+import { fs } from 'mz';
+
 import defaultBuildExtension from './build';
 import {
   showDesktopNotification as defaultDesktopNotifications,
@@ -28,6 +30,7 @@ export type CmdRunParams = {|
   pref?: FirefoxPreferences,
   firefox: string,
   firefoxProfile?: string,
+  profileCreateIfMissing?: boolean,
   ignoreFiles?: Array<string>,
   keepProfileChanges: boolean,
   noInput?: boolean,
@@ -72,6 +75,7 @@ export default async function run(
     pref,
     firefox,
     firefoxProfile,
+    profileCreateIfMissing,
     keepProfileChanges = false,
     ignoreFiles,
     noInput = false,
@@ -116,6 +120,18 @@ export default async function run(
   // object containing one or more preferences.
   const customPrefs = pref;
   const manifestData = await getValidatedManifest(sourceDir);
+
+  const profileDir = firefoxProfile || chromiumProfile;
+
+  if (profileCreateIfMissing && profileDir) {
+    const isDir = fs.existsSync(profileDir);
+    if (isDir) {
+      log.info(`Profile directory ${profileDir} already exists`);
+    } else {
+      log.info(`Profile directory not found. Creating directory ${profileDir}`);
+      await fs.mkdir(profileDir);
+    }
+  }
 
   const runners = [];
 

@@ -1,6 +1,7 @@
 /* @flow */
 import path from 'path';
 
+import { fs } from 'mz';
 import {afterEach, beforeEach, describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -326,4 +327,84 @@ describe('run', () => {
          },
        );
      });
+
+  describe('profile-create-new option', () => {
+    beforeEach(() => {
+      sinon.stub(fs, 'mkdir');
+      sinon.stub(fs, 'existsSync');
+    });
+
+    afterEach(() => {
+      fs.mkdir.restore();
+      fs.existsSync.restore();
+    });
+
+    const fakeProfile = '/pretend/path/to/profile';
+
+    async function testCreateProfileIfMissing(
+      expectProfileExists,
+      runParams
+    ) {
+      fs.existsSync.returns(expectProfileExists);
+      const cmd = prepareRun();
+
+      await cmd.run(runParams);
+
+      if (expectProfileExists) {
+        sinon.assert.notCalled(fs.mkdir);
+      } else {
+        sinon.assert.calledWith(fs.mkdir, fakeProfile);
+      }
+
+      if (runParams.target === 'chromium') {
+        sinon.assert.calledOnce(chromiumRunnerStub);
+
+        const {chromiumProfile} = chromiumRunnerStub.firstCall.args[0];
+        assert.equal(chromiumProfile, fakeProfile,
+                     'Got the expected chromiumProfile option');
+      } else {
+        sinon.assert.calledOnce(desktopRunnerStub);
+        const firefoxProfile = desktopRunnerStub
+          .firstCall
+          .args[0]
+          .profilePath;
+        assert.equal(firefoxProfile, fakeProfile,
+                     'Got the expected firefoxProfile option');
+      }
+    }
+
+    it('creates dir when firefox profile does not exist',
+       async () => testCreateProfileIfMissing(
+         false, {
+           firefoxProfile: fakeProfile,
+           profileCreateIfMissing: true,
+         })
+    );
+
+    it('creates dir when chromium profile does not exist',
+       async () => testCreateProfileIfMissing(
+         false, {
+           chromiumProfile: fakeProfile,
+           target: 'chromium',
+           profileCreateIfMissing: true,
+         })
+    );
+
+    it('uses the given firefox profile directory if it does exist',
+       async () => testCreateProfileIfMissing(
+         true, {
+           firefoxProfile: fakeProfile,
+           profileCreateIfMissing: true,
+         })
+    );
+
+    it('uses the given chromium profile directory if it does exist',
+       async () => testCreateProfileIfMissing(
+         true, {
+           chromiumProfile: fakeProfile,
+           target: 'chromium',
+           profileCreateIfMissing: true,
+         })
+    );
+  });
 });
