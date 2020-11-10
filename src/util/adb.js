@@ -7,7 +7,8 @@ import {
   WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
-import packageIdentifiers from '../firefox/package-identifiers';
+import packageIdentifiers, { defaultApkComponents }
+  from '../firefox/package-identifiers';
 
 export const DEVICE_DIR_BASE = '/sdcard/';
 export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
@@ -312,7 +313,11 @@ export default class ADBUtils {
     }];
 
     if (!apkComponent) {
-      apkComponent = '.App';
+      if (defaultApkComponents[apk]) {
+        apkComponent = defaultApkComponents[apk];
+      } else {
+        apkComponent = '.App';
+      }
     } else if (!apkComponent.includes('.')) {
       apkComponent = `.${apkComponent}`;
     }
