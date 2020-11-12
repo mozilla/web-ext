@@ -952,7 +952,7 @@ describe('utils/adb', () => {
       const promise = adbUtils.startFirefoxAPK(
         'device1',
         apkName,
-        firefoxApkComponent, // firefoxApkComponent
+        firefoxApkComponent,
         '/fake/custom/profile/path',
       );
 
