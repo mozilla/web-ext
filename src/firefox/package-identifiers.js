@@ -8,3 +8,7 @@ export default [
   'org.mozilla.firefox',
   'org.mozilla.reference.browser',
 ];
+
+export const defaultApkComponents = {
+  'org.mozilla.reference.browser': '.BrowserActivity',
+};

@@ -935,6 +935,52 @@ describe('utils/adb', () => {
       );
     });
 
+    async function testReferenceBrowserApkComponent(
+      firefoxApkComponent?: string, expectedApkComponent: string
+    ) {
+      const adb = getFakeADBKit({
+        adbClient: {
+          startActivity: sinon.spy(() => Promise.resolve()),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({adb});
+      const apkName = 'org.mozilla.reference.browser';
+      const component = `${apkName}/${apkName}.${expectedApkComponent}`;
+      const promise = adbUtils.startFirefoxAPK(
+        'device1',
+        apkName,
+        firefoxApkComponent,
+        '/fake/custom/profile/path',
+      );
+
+      await assert.isFulfilled(promise);
+      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledWithMatch(
+        adb.fakeADBClient.startActivity, 'device1', {
+          action: 'android.activity.MAIN',
+          component,
+          extras: [{
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          }],
+          wait: true,
+        }
+      );
+    }
+
+    it('start reference browser without APK component', () => {
+      return testReferenceBrowserApkComponent(undefined, 'BrowserActivity');
+    });
+
+    it('start reference browser with custom APK component', () => {
+      return testReferenceBrowserApkComponent(
+        'CustomActivity', 'CustomActivity'
+      );
+    });
+
     it('starts without specifying an APK component', async () => {
       const adb = getFakeADBKit({
         adbClient: {
