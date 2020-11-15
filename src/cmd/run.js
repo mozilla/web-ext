@@ -11,6 +11,7 @@ import {
 } from '../firefox/remote';
 import {createLogger} from '../util/logger';
 import defaultGetValidatedManifest from '../util/manifest';
+import {UsageError} from '../../src/errors';
 import {
   createExtensionRunner,
   defaultReloadStrategy,
@@ -131,6 +132,11 @@ export default async function run(
       log.info(`Profile directory not found. Creating directory ${profileDir}`);
       await fs.mkdir(profileDir);
     }
+  } else if (profileCreateIfMissing) {
+    throw new UsageError(
+      '--profile-create-if-missing should be paired ' +
+      'with --firefox-profile or --chromium-profile'
+    );
   }
 
   const runners = [];
