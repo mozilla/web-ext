@@ -865,6 +865,16 @@ describe('program.main', () => {
         fakeCommands.run.resetHistory();
       });
     }
+
+    it('does set noInput to undefined if --no-input is not specified',
+       async () => {
+         fakeCommands.run.resetHistory();
+         await execProgram(['run'], { commands: fakeCommands });
+         sinon.assert.calledWithMatch(
+           fakeCommands.run,
+           {noInput: undefined}
+         );
+       });
   });
 
 });
