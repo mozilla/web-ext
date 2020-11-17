@@ -841,6 +841,32 @@ describe('program.main', () => {
     }
   );
 
+  describe('--no-input', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+
+    const testCases = [
+      ['--no-input', {noInput: true}],
+      ['--no-input=false', {noInput: false}],
+      ['--no-input=true', {noInput: true}],
+      ['--input', {noInput: false}],
+      ['--input=false', {noInput: true}],
+      ['--input=true', {noInput: false}],
+    ];
+
+    for (const [cliArg, expectedParsed] of testCases) {
+      it(`does parse ${cliArg} into the expected command options`, async () => {
+        await execProgram(['run', cliArg], {commands: fakeCommands});
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          expectedParsed
+        );
+        fakeCommands.run.resetHistory();
+      });
+    }
+  });
+
 });
 
 describe('program.defaultVersionGetter', () => {

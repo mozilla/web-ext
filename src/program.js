@@ -177,6 +177,15 @@ export class Program {
       argv.noReload = !argv.reload;
     }
 
+    // Yargs doesn't accept --no-input as a valid option if there isn't a
+    // --input option defined to be negated, to fix that the --input is
+    // defined and hidden from the yargs help output and we define here
+    // the negated argument name that we expect to be set in the parsed
+    // arguments (and fix https://github.com/mozilla/web-ext/issues/1860).
+    if (argv.input != null) {
+      argv.noInput = !argv.input;
+    }
+
     // Replacement for the "requiresArg: true" parameter until the following bug
     // is fixed: https://github.com/yargs/yargs/issues/1098
     if (argv.ignoreFiles && !argv.ignoreFiles.length) {
@@ -447,6 +456,13 @@ Example: $0 --help run.
     },
     'no-input': {
       describe: 'Disable all features that require standard input',
+      type: 'boolean',
+      demandOption: false,
+    },
+    'input': {
+      // This option is defined to make yargs to accept the --no-input
+      // defined above, but we hide it from the yargs help output.
+      hidden: true,
       type: 'boolean',
       demandOption: false,
     },
