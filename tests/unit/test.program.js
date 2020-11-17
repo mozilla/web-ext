@@ -853,28 +853,20 @@ describe('program.main', () => {
       ['--input', {noInput: false}],
       ['--input=false', {noInput: true}],
       ['--input=true', {noInput: false}],
+      ['-v', {noInput: undefined}],
     ];
 
-    for (const [cliArg, expectedParsed] of testCases) {
-      it(`does parse ${cliArg} into the expected command options`, async () => {
-        await execProgram(['run', cliArg], {commands: fakeCommands});
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          expectedParsed
-        );
-        fakeCommands.run.resetHistory();
-      });
+    for (const [cliArg, expected] of testCases) {
+      it(`does parse "${cliArg}" cli argument as ${JSON.stringify(expected)}`,
+         async () => {
+           await execProgram(['run', cliArg], {commands: fakeCommands});
+           sinon.assert.calledWithMatch(
+             fakeCommands.run,
+             expected
+           );
+           fakeCommands.run.resetHistory();
+         });
     }
-
-    it('does set noInput to undefined if --no-input is not specified',
-       async () => {
-         fakeCommands.run.resetHistory();
-         await execProgram(['run'], { commands: fakeCommands });
-         sinon.assert.calledWithMatch(
-           fakeCommands.run,
-           {noInput: undefined}
-         );
-       });
   });
 
 });
