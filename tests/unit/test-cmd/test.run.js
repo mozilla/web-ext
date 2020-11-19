@@ -416,7 +416,7 @@ describe('run', () => {
          await assert.isRejected(promise, UsageError);
          await assert.isRejected(
            promise,
-           /should be paired with --firefox-profile or --chromium-profile/
+           /requires --firefox-profile or --chromium-profile/
          );
        });
   });

@@ -127,8 +127,8 @@ export default async function run(
   if (profileCreateIfMissing) {
     if (!profileDir) {
       throw new UsageError(
-        '--profile-create-if-missing should be paired ' +
-        'with --firefox-profile or --chromium-profile'
+        '--profile-create-if-missing requires ' +
+        '--firefox-profile or --chromium-profile'
       );
     }
     const isDir = fs.existsSync(profileDir);
