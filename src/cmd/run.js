@@ -11,6 +11,7 @@ import {
 } from '../firefox/remote';
 import {createLogger} from '../util/logger';
 import defaultGetValidatedManifest from '../util/manifest';
+import {UsageError} from '../../src/errors';
 import {
   createExtensionRunner,
   defaultReloadStrategy,
@@ -123,7 +124,13 @@ export default async function run(
 
   const profileDir = firefoxProfile || chromiumProfile;
 
-  if (profileCreateIfMissing && profileDir) {
+  if (profileCreateIfMissing) {
+    if (!profileDir) {
+      throw new UsageError(
+        '--profile-create-if-missing requires ' +
+        '--firefox-profile or --chromium-profile'
+      );
+    }
     const isDir = fs.existsSync(profileDir);
     if (isDir) {
       log.info(`Profile directory ${profileDir} already exists`);

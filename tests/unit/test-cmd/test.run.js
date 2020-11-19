@@ -7,6 +7,7 @@ import {assert} from 'chai';
 import sinon from 'sinon';
 
 import run from '../../../src/cmd/run';
+import {UsageError} from '../../../src/errors';
 import {
   fixturePath,
   FakeExtensionRunner,
@@ -406,5 +407,17 @@ describe('run', () => {
            profileCreateIfMissing: true,
          })
     );
+
+    it('throws error when used without firefox-profile or chromium-profile',
+       async () => {
+         const cmd = prepareRun();
+         const promise = cmd.run({ profileCreateIfMissing: true });
+
+         await assert.isRejected(promise, UsageError);
+         await assert.isRejected(
+           promise,
+           /requires --firefox-profile or --chromium-profile/
+         );
+       });
   });
 });
