@@ -124,7 +124,13 @@ export default async function run(
 
   const profileDir = firefoxProfile || chromiumProfile;
 
-  if (profileCreateIfMissing && profileDir) {
+  if (profileCreateIfMissing) {
+    if (!profileDir) {
+      throw new UsageError(
+        '--profile-create-if-missing should be paired ' +
+        'with --firefox-profile or --chromium-profile'
+      );
+    }
     const isDir = fs.existsSync(profileDir);
     if (isDir) {
       log.info(`Profile directory ${profileDir} already exists`);
@@ -132,11 +138,6 @@ export default async function run(
       log.info(`Profile directory not found. Creating directory ${profileDir}`);
       await fs.mkdir(profileDir);
     }
-  } else if (profileCreateIfMissing) {
-    throw new UsageError(
-      '--profile-create-if-missing should be paired ' +
-      'with --firefox-profile or --chromium-profile'
-    );
   }
 
   const runners = [];

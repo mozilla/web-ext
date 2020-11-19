@@ -411,17 +411,11 @@ describe('run', () => {
     it('throws error when used without firefox-profile or chromium-profile',
        async () => {
          const cmd = prepareRun();
+         const promise = cmd.run({ profileCreateIfMissing: true });
 
-         let actualError = null;
-         try {
-           await cmd.run({ profileCreateIfMissing: true });
-         } catch (error) {
-           actualError = error;
-         }
-
-         assert.instanceOf(actualError, UsageError);
-         assert.match(
-           actualError && actualError.message,
+         await assert.isRejected(promise, UsageError);
+         await assert.isRejected(
+           promise,
            /should be paired with --firefox-profile or --chromium-profile/
          );
        });
