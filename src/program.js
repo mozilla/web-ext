@@ -616,7 +616,7 @@ Example: $0 --help run.
       },
       'watch-file': {
         describe: 'Reload the extension only when the contents of this' +
-                  'file changes. This is useful if you use a custom' +
+                  ' file changes. This is useful if you use a custom' +
                   ' build process for your extension',
         demandOption: false,
         type: 'string',
