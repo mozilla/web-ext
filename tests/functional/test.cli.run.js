@@ -34,7 +34,7 @@ describe('web-ext run', () => {
            '--source-dir', srcDir,
            '--watch-file', watchedFile,
            '--firefox', fakeFirefoxPath,
-           '--watch-ignored', watchIgnoredArr,
+           '--watch-ignored', ...watchIgnoredArr,
            '--watch-ignored', watchIgnoredFile,
          ];
          const spawnOptions = {
