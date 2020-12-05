@@ -207,3 +207,48 @@ describe('watcher', () => {
   });
 
 });
+
+describe('--watch-ignored is passed in', () => {
+  it('does not change if ignored file is touched', () =>
+    withTempDir(async (tmpDir) => {
+      const debounceTime = 10;
+      const onChange = sinon.spy();
+      const tmpPath = tmpDir.path();
+      const files = ['foo.txt', 'bar.txt', 'foobar.txt'].map(
+        (filePath) => path.join(tmpPath, filePath)
+      );
+
+      const watcher = onSourceChange({
+        sourceDir: tmpPath,
+        artifactsDir: path.join(tmpPath, 'web-ext-artifacts'),
+        onChange,
+        watchIgnored: ['foo.txt'].map(
+          (filePath) => path.join(tmpPath, filePath)
+        ),
+        shouldWatchFile: () => true,
+        debounceTime,
+      });
+
+      async function waitDebounce() {
+        await new Promise((resolve) => setTimeout(resolve, debounceTime * 2));
+      }
+
+      // Verify foo.txt is being ignored.
+      await fs.writeFile(files[0], '<content>');
+      sinon.assert.notCalled(onChange);
+
+      // Verify that the other two files are not be ignored.
+      await fs.writeFile(files[1], '<content>');
+      await waitDebounce();
+      sinon.assert.calledOnce(onChange);
+
+      await fs.writeFile(files[2], '<content>');
+      await waitDebounce();
+      sinon.assert.calledTwice(onChange);
+
+      watcher.close();
+      // Leave watcher.close some time to complete its cleanup before withTempDir will remove the
+      // test directory.
+      await waitDebounce();
+    }));
+});
