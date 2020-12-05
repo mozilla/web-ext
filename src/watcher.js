@@ -23,7 +23,7 @@ export type OnSourceChangeParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile: ShouldWatchFn,
-  debouceTime: number,
+  debounceTime: number,
 |};
 
 // NOTE: this fix an issue with flow and default exports (which currently
@@ -55,6 +55,7 @@ export default function onSourceChange(
 
   watcher.on('change', (filePath) => {
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
+    console.log('Hello');
   });
 
   log.debug(`Watching for file changes in ${watchFile || sourceDir}`);
