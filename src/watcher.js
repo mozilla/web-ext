@@ -23,7 +23,7 @@ export type OnSourceChangeParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile: ShouldWatchFn,
-  debounceTime: number,
+  debounceTime?: number,
 |};
 
 // NOTE: this fix an issue with flow and default exports (which currently
