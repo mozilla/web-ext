@@ -55,7 +55,6 @@ export default function onSourceChange(
 
   watcher.on('change', (filePath) => {
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
-    console.log('Hello');
   });
 
   log.debug(`Watching for file changes in ${watchFile || sourceDir}`);
