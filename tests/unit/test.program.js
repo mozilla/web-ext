@@ -580,7 +580,7 @@ describe('program.main', () => {
   });
 
   it('calling run with a multiple ignored files', () => {
-    const watchIgnored = ['path/to/fake/file1.txt', 'path/to/fake/file2.txt'];
+    const watchIgnored = ['path/to/fake/file1.txt', 'path/to/fake/file2 .txt'];
 
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
