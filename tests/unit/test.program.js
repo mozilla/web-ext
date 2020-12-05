@@ -561,6 +561,42 @@ describe('program.main', () => {
       });
   });
 
+  it('calling run with a ignored file', () => {
+    const watchIgnored = Array('path/to/fake/file.txt');
+
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+
+    return execProgram(
+      ['run', '--watch-ignored', ...watchIgnored],
+      {commands: fakeCommands})
+      .then(() => {
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          {watchIgnored}
+        );
+      });
+  });
+
+  it('calling run with a multiple ignored files', () => {
+    const watchIgnored = ['path/to/fake/file1.txt', 'path/to/fake/file2.txt'];
+
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+
+    return execProgram(
+      ['run', '--watch-ignored', ...watchIgnored],
+      {commands: fakeCommands})
+      .then(() => {
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          {watchIgnored}
+        );
+      });
+  });
+
   it('converts custom preferences into an object', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
