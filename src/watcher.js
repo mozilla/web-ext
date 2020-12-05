@@ -23,6 +23,7 @@ export type OnSourceChangeParams = {|
   artifactsDir: string,
   onChange: OnChangeFn,
   shouldWatchFile: ShouldWatchFn,
+  debouceTime: number,
 |};
 
 // NOTE: this fix an issue with flow and default exports (which currently
@@ -41,6 +42,7 @@ export default function onSourceChange(
     artifactsDir,
     onChange,
     shouldWatchFile,
+    debounceTime = 1000,
   }: OnSourceChangeParams
 ): Watchpack {
   // TODO: For network disks, we would need to add {poll: true}.
@@ -49,7 +51,7 @@ export default function onSourceChange(
     new Watchpack();
 
   const executeImmediately = true;
-  onChange = debounce(onChange, 1000, executeImmediately);
+  onChange = debounce(onChange, debounceTime, executeImmediately);
 
   watcher.on('change', (filePath) => {
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
