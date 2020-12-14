@@ -6,6 +6,7 @@ import {it, describe} from 'mocha';
 import {fs} from 'mz';
 import sinon from 'sinon';
 import {assert} from 'chai';
+import Watchpack from 'watchpack';
 
 import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
 import {withTempDir} from '../../src/util/temp-dir';
@@ -229,24 +230,33 @@ describe('--watch-ignored is passed in', () => {
         debounceTime,
       });
 
+      const watchAll = new Watchpack();
+      watchAll.watch(files, [], 0);
+
       async function waitDebounce() {
         await new Promise((resolve) => setTimeout(resolve, debounceTime * 2));
       }
 
+      async function assertOnChange(filePath, expectedCallCount) {
+        const promiseOnChanged = new Promise((resolve) => watchAll.once(
+          'change',
+          (f) => resolve(f))
+        );
+        await waitDebounce();
+        await fs.writeFile(filePath, '<content>');
+        assert.equal(filePath, await promiseOnChanged);
+        sinon.assert.callCount(onChange, expectedCallCount);
+      }
+
       // Verify foo.txt is being ignored.
-      await fs.writeFile(files[0], '<content>');
-      sinon.assert.notCalled(onChange);
+      await assertOnChange(files[0], 0);
 
       // Verify that the other two files are not be ignored.
-      await fs.writeFile(files[1], '<content>');
-      await waitDebounce();
-      sinon.assert.calledOnce(onChange);
-
-      await fs.writeFile(files[2], '<content>');
-      await waitDebounce();
-      sinon.assert.calledTwice(onChange);
+      await assertOnChange(files[1], 1);
+      await assertOnChange(files[2], 2);
 
       watcher.close();
+      watchAll.close();
       // Leave watcher.close some time to complete its cleanup before withTempDir will remove the
       // test directory.
       await waitDebounce();
