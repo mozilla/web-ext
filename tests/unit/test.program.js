@@ -577,11 +577,11 @@ describe('program.main', () => {
     );
   }
 
-  it('calls run with a single ignored file', () => {
+  it('calls run with a single watchIgnored pattern', () => {
     testWatchIgnoredOption(['path/to/fake/file1.txt']);
   });
 
-  it('calls run with a multiple ignored files', () => {
+  it('calls run with a multiple watchIgnored patterns', () => {
     testWatchIgnoredOption(
       ['path/to/fake/file1.txt', 'path/to/fake/pattern*']
     );
