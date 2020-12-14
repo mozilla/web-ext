@@ -562,7 +562,7 @@ describe('program.main', () => {
   });
 
   it('calling run with a ignored file', () => {
-    const watchIgnored = Array('path/to/fake/file.txt');
+    const watchIgnored = ['path/to/fake/file.txt'];
 
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
