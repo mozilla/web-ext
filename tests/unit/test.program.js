@@ -561,40 +561,30 @@ describe('program.main', () => {
       });
   });
 
-  it('calling run with a ignored file', () => {
-    const watchIgnored = ['path/to/fake/file.txt'];
-
+  async function testWatchIgnoredOption(watchIgnored) {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
 
-    return execProgram(
+    await execProgram(
       ['run', '--watch-ignored', ...watchIgnored],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          {watchIgnored}
-        );
-      });
+      {commands: fakeCommands});
+
+    sinon.assert.calledWithMatch(
+      execProgram,
+      fakeCommands.run,
+      {watchIgnored}
+    );
+  }
+
+  it('calls run with a single ignored file', () => {
+    testWatchIgnoredOption(['path/to/fake/file1.txt']);
   });
 
-  it('calling run with a multiple ignored files', () => {
-    const watchIgnored = ['path/to/fake/file1.txt', 'path/to/fake/file2 .txt'];
-
-    const fakeCommands = fake(commands, {
-      run: () => Promise.resolve(),
-    });
-
-    return execProgram(
-      ['run', '--watch-ignored', ...watchIgnored],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          {watchIgnored}
-        );
-      });
+  it('calls run with a multiple ignored files', () => {
+    testWatchIgnoredOption(
+      ['path/to/fake/file1.txt', 'path/to/fake/pattern*']
+    );
   });
 
   it('converts custom preferences into an object', () => {
