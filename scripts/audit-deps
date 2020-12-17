@@ -2,7 +2,7 @@
 
 // This nodejs script loads the .nsprc's "exceptions" list (as `nsp check` used to support) and
 // and then filters the output of `npm audit --json` to check if any of the security advisories
-// detected should be a blocking issue and force the travis CI job to fail.
+// detected should be a blocking issue and force the CI job to fail.
 //
 // We can remove this script if/once npm audit will support this feature natively
 // (See https://github.com/npm/npm/issues/20565).

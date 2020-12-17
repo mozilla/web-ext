@@ -1,8 +1,8 @@
 const spawnSync = require('child_process').spawnSync;
 
 exports.flowCheck = () => {
-  if (process.env.TRAVIS_OS_NAME === 'windows') {
-    console.log(`'flow check' task skipped because running on ${process.env.TRAVIS_OS_NAME}`);
+  if (process.env.CI_SKIP_FLOWCHECK) {
+    console.log('flow check task skipped on CI_SKIP_FLOWCHECK env set');
   } else {
     const res = spawnSync('flow', ['check'], {stdio: 'inherit'});
     if (res.error || res.status !== 0) {

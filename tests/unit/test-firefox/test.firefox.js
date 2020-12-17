@@ -233,7 +233,7 @@ describe('firefox', () => {
 
     it('requires a valid profile directory', () => {
       // This stubs out the code that looks for a named
-      // profile because on Travis CI there will not be a Firefox
+      // profile because on CI there will not be a Firefox
       // user directory.
       const copyFromUserProfile = sinon.spy(
         (config, cb) => cb(new Error('simulated: could not find profile')));

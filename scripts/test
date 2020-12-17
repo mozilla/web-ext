@@ -1,16 +1,6 @@
 #!/usr/bin/env node
 
-let COVERAGE = process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
-
-const {TRAVIS_OS_NAME} = process.env;
-if (TRAVIS_OS_NAME === 'windows') {
-  console.log(
-    'Skipping coverage collection because running on',
-    TRAVIS_OS_NAME,
-    '(See issue https://github.com/mozilla/web-ext/issues/1739)'
-  );
-  COVERAGE = false;
-}
+const COVERAGE = process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
 
 const eslint = require('./lib/eslint');
 const {flowCheck} = require('./lib/flow');
