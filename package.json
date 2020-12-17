@@ -33,7 +33,7 @@
     "changelog": "npx conventional-changelog-cli -p angular -u",
     "changelog-lint": "commitlint --from master",
     "changelog-lint-from-stdin": "commitlint",
-    "travis-pr-title-lint": "node ./scripts/travis-pr-title-lint",
+    "github-pr-title-lint": "node ./scripts/github-pr-title-lint",
     "gen-contributing-toc": "doctoc CONTRIBUTING.md"
   },
   "homepage": "https://github.com/mozilla/web-ext",

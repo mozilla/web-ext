@@ -7,14 +7,24 @@ const Entities = require('html-entities').AllHtmlEntities;
 const shelljs = require('shelljs');
 
 const {
-  TRAVIS_REPO_SLUG,
-  TRAVIS_PULL_REQUEST,
+  // Set by circleci on pull request jobs, and it contains the entire url, e.g.:
+  //    CIRCLE_PULL_REQUEST='https://github.com/mozilla/web-ext/pull/89'
+  CIRCLE_PULL_REQUEST,
+
+  // To be set to test changes to the PR title linting by forcing it temporarily
+  // (the PR #89 linked above is one that is supposed to fail the linting,
+  // PR #79 title should instead pass the linting checks), e.g. the following
+  // command can be used to test an expected linting failure:
+  //
+  //    CIRCLE_PULL_REQUEST='https://github.com/mozilla/web-ext/pull/89' \
+  //    TEST_FORCE_PR_LINT=1 npm run github-pr-title-lint
+  TEST_FORCE_PR_LINT,
   VERBOSE,
 } = process.env;
 
 
 const DONT_PANIC_MESSAGE = `
-Don't panic! If your travis build is failing here, please take a look at
+Don't panic! If the CI job is failing here, please take a look at
 
  - https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md#writing-commit-messages
 
@@ -22,7 +32,7 @@ and feel free to ask for help from one of the maintainers in a comment; we are h
 `;
 
 function findMergeBase() {
-  const res = shelljs.exec('git merge-base HEAD master', {silent: true});
+  const res = shelljs.exec('git merge-base HEAD origin/master', {silent: true});
 
   if (res.code !== 0) {
     throw new Error(`findMergeBase Error: ${res.stderr}`);
@@ -71,18 +81,22 @@ function getGitCommitMessage(commitSha1) {
 
 function getPullRequestTitle() {
   return new Promise(function(resolve, reject) {
-    const pullRequestURLPath = `/${TRAVIS_REPO_SLUG}/pull/${TRAVIS_PULL_REQUEST}`;
+    const pullRequestURL = CIRCLE_PULL_REQUEST;
+    const pullRequestNumber = pullRequestURL.split('/').pop();
 
-    console.log(`Retrieving the pull request title from https://github.com${pullRequestURLPath}\n`);
+    if (!/^\d+$/.test(pullRequestNumber)) {
+      reject(new Error(`Unable to parse pull request number from ${pullRequestURL}`));
+      return;
+    }
 
-    var req = https.get({
-      host: 'github.com',
-      path: pullRequestURLPath,
+    console.log(`Retrieving the pull request title from ${pullRequestURL}\n`);
+
+    var req = https.get(pullRequestURL, {
       headers: {
         'User-Agent': 'GitHub... your API can be very annoying ;-)',
       },
     }, function(response) {
-      if (response.statusCode < 200 || response.statusCode > 299) {
+      if (response.statusCode < 200 || response.statusCode > 299 ) {
         reject(new Error(`getPullRequestTitle got an unexpected statusCode: ${response.statusCode}`));
         return;
       }
@@ -91,6 +105,10 @@ function getPullRequestTitle() {
       response.on('data', function(data) {
         try {
           body += data;
+
+          if (VERBOSE === 'true') {
+            console.log('DEBUG getPullRequestTitle got data:', String(data));
+          }
 
           // Once we get the closing title tag, we can read the pull request title and
           // close the http request.
@@ -108,7 +126,7 @@ function getPullRequestTitle() {
               .split(' · ');
 
             // Check that we have really got the title of a real pull request.
-            var expectedPart1 = `Pull Request #${TRAVIS_PULL_REQUEST}`;
+            var expectedPart1 = `Pull Request #${pullRequestNumber}`;
 
             if (pageTitleParts[1] === expectedPart1) {
               // Remove the "by author" part.
@@ -169,7 +187,7 @@ async function runChangelogLinting() {
     const commits = getGitBranchCommits();
     let message;
 
-    if (commits.length === 1) {
+    if (commits.length === 1 && !TEST_FORCE_PR_LINT) {
       console.log('There is only one commit in this pull request,',
                   'we are going to check the single commit message...');
       message = getGitCommitMessage(commits[0]);
@@ -191,8 +209,8 @@ async function runChangelogLinting() {
   console.log('Changelog linting completed successfully.');
 }
 
-if (TRAVIS_PULL_REQUEST && TRAVIS_PULL_REQUEST !== 'false') {
+if (CIRCLE_PULL_REQUEST) {
   runChangelogLinting();
 } else {
-  console.log('This isn\'t a Travis "pull request" job. Nothing to do here.');
+  console.log('This isn\'t a "GitHub Pull Request" CI job. Nothing to do here.');
 }
