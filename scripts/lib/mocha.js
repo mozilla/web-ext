@@ -4,7 +4,7 @@ const shell = require('shelljs');
 
 const config = require('./config');
 
-// Get the explicit path (needed on travis windows workers).
+// Get the explicit path (needed on CI windows workers).
 function which(...args) {
   return String(shell.which(...args));
 }
