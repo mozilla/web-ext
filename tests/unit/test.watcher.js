@@ -224,7 +224,7 @@ describe('watcher', () => {
           watchIgnored: ['foo.txt'].map(
             (filePath) => path.join(tmpPath, filePath)
           ),
-          shouldWatchFile: () => true,
+          shouldWatchFile: (filePath) => filePath !== tmpPath,
           debounceTime,
         });
 
@@ -243,6 +243,7 @@ describe('watcher', () => {
           await waitDebounce();
           await fs.writeFile(filePath, '<content>');
           assert.equal(filePath, await promiseOnChanged);
+          await waitDebounce();
           sinon.assert.callCount(onChange, expectedCallCount);
         }
 
