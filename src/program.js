@@ -622,10 +622,11 @@ Example: $0 --help run.
         type: 'string',
       },
       'watch-ignored': {
-        describe: 'Extension will not reload if anything in this' +
-                  ' directory or file/s changes. This is useful when there' +
-                  ' are a lots of files which are unnecessary to watch' +
-                  ' for example. node_modules folder',
+        describe: 'Paths and globs patterns that should not be ' +
+                  'watched for changes. This is useful if you want ' +
+                  'to explicitly prevent web-ext from watching part ' +
+                  'of the extension directory tree, ' +
+                  'e.g. the node_modules folder.',
         demandOption: false,
         type: 'array',
       },
