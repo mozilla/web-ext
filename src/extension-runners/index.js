@@ -240,6 +240,7 @@ export type WatcherCreatorParams = {|
   reloadExtension: (string) => void,
   sourceDir: string,
   watchFile?: string,
+  watchIgnored?: Array<string>,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
@@ -250,7 +251,8 @@ export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    reloadExtension, sourceDir, watchFile, artifactsDir, ignoreFiles,
+    reloadExtension, sourceDir, watchFile,
+    watchIgnored, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
@@ -261,6 +263,7 @@ export function defaultWatcherCreator(
   return onSourceChange({
     sourceDir,
     watchFile,
+    watchIgnored,
     artifactsDir,
     onChange: () => reloadExtension(sourceDir),
     shouldWatchFile: (file) => fileFilter.wantFile(file),
@@ -274,6 +277,7 @@ export type ReloadStrategyParams = {|
   extensionRunner: IExtensionRunner,
   sourceDir: string,
   watchFile?: string,
+  watchIgnored?: Array<string>,
   artifactsDir: string,
   ignoreFiles?: Array<string>,
   noInput?: boolean,
@@ -293,6 +297,7 @@ export function defaultReloadStrategy(
     noInput = false,
     sourceDir,
     watchFile,
+    watchIgnored,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
@@ -311,6 +316,7 @@ export function defaultReloadStrategy(
     },
     sourceDir,
     watchFile,
+    watchIgnored,
     artifactsDir,
     ignoreFiles,
   });

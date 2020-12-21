@@ -561,6 +561,32 @@ describe('program.main', () => {
       });
   });
 
+  async function testWatchIgnoredOption(watchIgnored) {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+
+    await execProgram(
+      ['run', '--watch-ignored', ...watchIgnored],
+      {commands: fakeCommands});
+
+    sinon.assert.calledWithMatch(
+      execProgram,
+      fakeCommands.run,
+      {watchIgnored}
+    );
+  }
+
+  it('calls run with a single watchIgnored pattern', () => {
+    testWatchIgnoredOption(['path/to/fake/file1.txt']);
+  });
+
+  it('calls run with a multiple watchIgnored patterns', () => {
+    testWatchIgnoredOption(
+      ['path/to/fake/file1.txt', 'path/to/fake/pattern*']
+    );
+  });
+
   it('converts custom preferences into an object', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),

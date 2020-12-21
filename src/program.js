@@ -616,10 +616,19 @@ Example: $0 --help run.
       },
       'watch-file': {
         describe: 'Reload the extension only when the contents of this' +
-                  'file changes. This is useful if you use a custom' +
+                  ' file changes. This is useful if you use a custom' +
                   ' build process for your extension',
         demandOption: false,
         type: 'string',
+      },
+      'watch-ignored': {
+        describe: 'Paths and globs patterns that should not be ' +
+                  'watched for changes. This is useful if you want ' +
+                  'to explicitly prevent web-ext from watching part ' +
+                  'of the extension directory tree, ' +
+                  'e.g. the node_modules folder.',
+        demandOption: false,
+        type: 'array',
       },
       'pre-install': {
         describe: 'Pre-install the extension into the profile before ' +

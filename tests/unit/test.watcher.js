@@ -6,6 +6,7 @@ import {it, describe} from 'mocha';
 import {fs} from 'mz';
 import sinon from 'sinon';
 import {assert} from 'chai';
+import Watchpack from 'watchpack';
 
 import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
 import {withTempDir} from '../../src/util/temp-dir';
@@ -206,4 +207,58 @@ describe('watcher', () => {
 
   });
 
+  describe('--watch-ignored is passed in', () => {
+    it('does not change if ignored file is touched', () =>
+      withTempDir(async (tmpDir) => {
+        const debounceTime = 10;
+        const onChange = sinon.spy();
+        const tmpPath = tmpDir.path();
+        const files = ['foo.txt', 'bar.txt', 'foobar.txt'].map(
+          (filePath) => path.join(tmpPath, filePath)
+        );
+
+        const watcher = onSourceChange({
+          sourceDir: tmpPath,
+          artifactsDir: path.join(tmpPath, 'web-ext-artifacts'),
+          onChange,
+          watchIgnored: ['foo.txt'].map(
+            (filePath) => path.join(tmpPath, filePath)
+          ),
+          shouldWatchFile: (filePath) => filePath !== tmpPath,
+          debounceTime,
+        });
+
+        const watchAll = new Watchpack();
+        watchAll.watch(files, [], 0);
+
+        async function waitDebounce() {
+          await new Promise((resolve) => setTimeout(resolve, debounceTime * 2));
+        }
+
+        async function assertOnChange(filePath, expectedCallCount) {
+          const promiseOnChanged = new Promise((resolve) => watchAll.once(
+            'change',
+            (f) => resolve(f))
+          );
+          await waitDebounce();
+          await fs.writeFile(filePath, '<content>');
+          assert.equal(filePath, await promiseOnChanged);
+          await waitDebounce();
+          sinon.assert.callCount(onChange, expectedCallCount);
+        }
+
+        // Verify foo.txt is being ignored.
+        await assertOnChange(files[0], 0);
+
+        // Verify that the other two files are not be ignored.
+        await assertOnChange(files[1], 1);
+        await assertOnChange(files[2], 2);
+
+        watcher.close();
+        watchAll.close();
+        // Leave watcher.close some time to complete its cleanup before withTempDir will remove the
+        // test directory.
+        await waitDebounce();
+      }));
+  });
 });
