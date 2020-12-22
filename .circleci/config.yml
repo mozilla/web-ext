@@ -104,6 +104,9 @@ commands:
       legacy_bundling:
         type: boolean
         default: false
+      mocha_timeout:
+        type: integer
+        default: 10000
     steps:
       ## NOTE: by setting the configured python to /bin/false we are forcing
       ## the production mode tests to fail if any of the dependencies is a
@@ -117,6 +120,7 @@ commands:
           environment:
             TEST_PRODUCTION_MODE: 1
             CI_RETRY_ONCE: << parameters.retry_once >>
+            MOCHA_TIMEOUT: << parameters.mocha_timeout >>
       - when:
           condition: << parameters.legacy_bundling >>
           steps:
@@ -128,6 +132,7 @@ commands:
                   TEST_PRODUCTION_MODE: 1
                   TEST_LEGACY_BUNDLING: 1
                   CI_RETRY_ONCE: << parameters.retry_once >>
+                  MOCHA_TIMEOUT: << parameters.mocha_timeout >>
       - run: npm config delete python
 
   audit_deps:
@@ -228,6 +233,10 @@ jobs:
             CI_SKIP_FLOWCHECK: y
       - run_functional_tests:
           retry_once: "y"
+          # Increase mocha timeout for functional tests on windows
+          # (to reduce the intermittent failure on the before all hook
+          # of the test.lib.imports.js).
+          mocha_timeout: 20000
 
   release-tag:
     parameters:
