@@ -73,7 +73,7 @@
     "firefox-profile": "4.0.0",
     "fs-extra": "9.0.1",
     "fx-runner": "1.0.13",
-    "import-fresh": "3.2.1",
+    "import-fresh": "3.3.0",
     "mkdirp": "1.0.4",
     "multimatch": "4.0.0",
     "mz": "2.7.0",
