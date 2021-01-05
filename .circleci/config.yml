@@ -106,7 +106,10 @@ commands:
         default: false
       mocha_timeout:
         type: integer
-        default: 10000
+        # Custom mocha timeout to reduce intermittent failures triggered
+        # by one of the functional tests (triggered by the before all hook
+        # of the test.lib.imports.js).
+        default: 20000
     steps:
       ## NOTE: by setting the configured python to /bin/false we are forcing
       ## the production mode tests to fail if any of the dependencies is a
@@ -233,10 +236,6 @@ jobs:
             CI_SKIP_FLOWCHECK: y
       - run_functional_tests:
           retry_once: "y"
-          # Increase mocha timeout for functional tests on windows
-          # (to reduce the intermittent failure on the before all hook
-          # of the test.lib.imports.js).
-          mocha_timeout: 20000
 
   release-tag:
     parameters:
