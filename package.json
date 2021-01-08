@@ -86,7 +86,7 @@
     "strip-json-comments": "3.1.1",
     "tmp": "0.2.1",
     "update-notifier": "5.0.0",
-    "watchpack": "1.7.4",
+    "watchpack": "1.7.5",
     "ws": "7.4.2",
     "yargs": "15.4.1",
     "zip-dir": "1.0.2"
