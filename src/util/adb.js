@@ -425,8 +425,8 @@ export async function listADBDevices(adbBin?: string): Promise<Array<string>> {
 }
 
 export async function listADBFirefoxAPKs(
-  adbBin?: string,
-  deviceId: string
+  deviceId: string,
+  adbBin?: string
 ): Promise<Array<string>> {
   const adbClient = new ADBUtils({adbBin});
   return await adbClient.discoverInstalledFirefoxAPKs(deviceId);
