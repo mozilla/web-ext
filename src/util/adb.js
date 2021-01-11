@@ -1,9 +1,15 @@
 /* @flow */
 import defaultADB from '@devicefarmer/adbkit';
 
-import {isErrorWithCode, UsageError, WebExtError} from '../errors';
+import {
+  isErrorWithCode,
+  UsageError,
+  WebExtError
+} from '../errors';
 import {createLogger} from '../util/logger';
-import packageIdentifiers, {defaultApkComponents} from '../firefox/package-identifiers';
+import packageIdentifiers, {
+  defaultApkComponents,
+} from '../firefox/package-identifiers';
 
 export const DEVICE_DIR_BASE = '/sdcard/';
 export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
