@@ -4,7 +4,7 @@ import defaultADB from '@devicefarmer/adbkit';
 import {
   isErrorWithCode,
   UsageError,
-  WebExtError
+  WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
 import packageIdentifiers, {
