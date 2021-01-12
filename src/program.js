@@ -527,7 +527,7 @@ Example: $0 --help run.
         },
         'api-url-prefix': {
           describe: 'Signing API URL prefix',
-          default: 'https://addons.mozilla.org/api/v3',
+          default: 'https://addons.mozilla.org/api/v4',
           demandOption: true,
           type: 'string',
         },
