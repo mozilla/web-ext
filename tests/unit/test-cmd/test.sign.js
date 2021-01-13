@@ -29,7 +29,7 @@ describe('sign', () => {
     const signingConfig = {
       apiKey: 'AMO JWT issuer',
       apiSecret: 'AMO JWT secret',
-      apiUrlPrefix: 'http://not-the-real-amo.com/api/v3',
+      apiUrlPrefix: 'http://not-the-real-amo.com/api/v4',
       apiProxy: 'http://yourproxy:6000',
       timeout: 999,
     };
