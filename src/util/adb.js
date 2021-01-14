@@ -421,7 +421,7 @@ export default class ADBUtils {
 
 export async function listADBDevices(adbBin?: string): Promise<Array<string>> {
   const adbClient = new ADBUtils({adbBin});
-  return await adbClient.discoverDevices();
+  return adbClient.discoverDevices();
 }
 
 export async function listADBFirefoxAPKs(
@@ -429,5 +429,5 @@ export async function listADBFirefoxAPKs(
   adbBin?: string
 ): Promise<Array<string>> {
   const adbClient = new ADBUtils({adbBin});
-  return await adbClient.discoverInstalledFirefoxAPKs(deviceId);
+  return adbClient.discoverInstalledFirefoxAPKs(deviceId);
 }
