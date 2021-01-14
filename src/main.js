@@ -7,7 +7,7 @@ import * as logger from './util/logger';
 // Do we need anything else?
 const util = {
   logger,
-  get adb() {
+  get adb(): Object {
     const {listADBDevices, listADBFirefoxAPKs} = require('./util/adb.js');
     return {listADBDevices, listADBFirefoxAPKs};
   },
