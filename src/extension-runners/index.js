@@ -239,7 +239,7 @@ export class MultiExtensionRunner {
 export type WatcherCreatorParams = {|
   reloadExtension: (string) => void,
   sourceDir: string,
-  watchFile?: string,
+  watchFile?: Array<string>,
   watchIgnored?: Array<string>,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
@@ -276,7 +276,7 @@ export function defaultWatcherCreator(
 export type ReloadStrategyParams = {|
   extensionRunner: IExtensionRunner,
   sourceDir: string,
-  watchFile?: string,
+  watchFile?: Array<string>,
   watchIgnored?: Array<string>,
   artifactsDir: string,
   ignoreFiles?: Array<string>,

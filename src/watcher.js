@@ -18,7 +18,7 @@ export type OnChangeFn = () => any;
 
 export type OnSourceChangeParams = {|
   sourceDir: string,
-  watchFile?: string,
+  watchFile?: Array<string>,
   watchIgnored?: Array<string>,
   artifactsDir: string,
   onChange: OnChangeFn,
@@ -57,18 +57,22 @@ export default function onSourceChange(
     proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
   });
 
-  log.debug(`Watching for file changes in ${watchFile || sourceDir}`);
+  log.debug(
+    `Watching ${watchFile ? watchFile.join(',') : sourceDir} for changes`
+  );
 
   const watchedDirs = [];
   const watchedFiles = [];
 
   if (watchFile) {
-    if (fs.existsSync(watchFile) && !fs.lstatSync(watchFile).isFile()) {
-      throw new UsageError('Invalid --watch-file value: ' +
-        `"${watchFile}" is not a file.`);
-    }
+    for (const filePath of watchFile) {
+      if (fs.existsSync(filePath) && !fs.lstatSync(filePath).isFile()) {
+        throw new UsageError('Invalid --watch-file value: ' +
+          `"${filePath}" is not a file.`);
+      }
 
-    watchedFiles.push(watchFile);
+      watchedFiles.push(filePath);
+    }
   } else {
     watchedDirs.push(sourceDir);
   }

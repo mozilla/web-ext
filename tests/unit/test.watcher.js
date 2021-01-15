@@ -13,7 +13,7 @@ import {withTempDir} from '../../src/util/temp-dir';
 import { makeSureItFails } from './helpers';
 
 type AssertWatchedParams = {
-  watchFile?: string,
+  watchFile?: Array<string>,
   touchedFile: string,
 }
 
@@ -28,7 +28,7 @@ describe('watcher', () => {
       const someFile = path.join(tmpDir.path(), touchedFile);
 
       if (watchFile) {
-        watchFile = path.join(tmpDir.path(), watchFile);
+        watchFile = watchFile.map((f) => path.join(tmpDir.path(), f));
       }
 
       var resolveChange;
@@ -116,7 +116,7 @@ describe('watcher', () => {
         watchedDirPath,
         tmpDirPath,
       } = await watchChange({
-        watchFile: 'foo.txt',
+        watchFile: ['foo.txt'],
         touchedFile: 'foo.txt',
       });
 
@@ -132,7 +132,7 @@ describe('watcher', () => {
         watchedDirPath,
         tmpDirPath,
       } = await watchChange({
-        watchFile: 'bar.txt',
+        watchFile: ['bar.txt'],
         touchedFile: 'foo.txt',
       });
 
@@ -143,7 +143,7 @@ describe('watcher', () => {
 
     it('throws error if a non-file is passed into --watch-file', () => {
       return watchChange({
-        watchFile: '/',
+        watchFile: ['/'],
         touchedFile: 'foo.txt',
       }).then(makeSureItFails()).catch((error) => {
         assert.match(
