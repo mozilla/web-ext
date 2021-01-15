@@ -9,7 +9,3 @@ export function testWebExtModuleImports(webExt) {
   );
   assert.equal(typeof webExt.cmd.run, 'function');
 }
-
-module.exports = {
-  testWebExtModuleImports,
-};
