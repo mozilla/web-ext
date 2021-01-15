@@ -2,6 +2,6 @@
 import webExt from 'web-ext';
 
 // eslint-disable-next-line import/extensions
-import * as _ from './helpers.js';
+import _ from './helpers.js';
 
 _.testWebExtModuleImports(webExt);
