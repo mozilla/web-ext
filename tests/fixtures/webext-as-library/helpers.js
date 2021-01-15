@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-function testWebExtModuleImports(webExt) {
+export function testWebExtModuleImports(webExt) {
   assert.deepEqual(Object.keys(webExt).sort(), ['cmd', 'main', 'util'].sort());
   assert.deepEqual(Object.keys(webExt.util).sort(), ['logger', 'adb'].sort());
   assert.deepEqual(
