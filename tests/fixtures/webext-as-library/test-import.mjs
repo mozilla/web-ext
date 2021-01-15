@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-unresolved
 import webExt from 'web-ext';
 
-import {testWebExtModuleImports} from './helpers';
+import * as _ from './helpers';
 
-testWebExtModuleImports(webExt);
+_.testWebExtModuleImports(webExt);
