@@ -911,10 +911,15 @@ describe('program.defaultVersionGetter', () => {
   });
 
   it('returns git commit information in development', function() {
-    const commit = `${git.branch()}-${git.long()}`;
-    const testBuildEnv = {globalEnv: 'development'};
-    assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
-                 commit);
+    return fs.exists(path.join(projectRoot, '.git')).then((exists) => {
+      if (!exists) {
+        this.skip();
+      }
+      const commit = `${git.branch()}-${git.long()}`;
+      const testBuildEnv = {globalEnv: 'development'};
+      assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
+                   commit);
+    });
   });
 });
 
