@@ -12,7 +12,7 @@ var rules = [
     exclude: /(node_modules|bower_components)/,
     test: /\.js$/,
     // babel options are in .babelrc
-    loaders: ['babel-loader'],
+    loader: 'babel-loader',
   },
 ];
 
@@ -56,7 +56,7 @@ module.exports = {
     }),
     // This seems necessary to work with the 'when' module, which is
     // required by some things such as fx-runner.
-    new webpack.IgnorePlugin(/vertx/),
+    new webpack.IgnorePlugin({ resourceRegExp: /vertx/ }),
     // Global variables are necessary to print either verson number or
     // git commit information for custom builds
     new webpack.DefinePlugin({
@@ -70,5 +70,5 @@ module.exports = {
       path.resolve(__dirname, 'node_modules'),
     ],
   },
-  devtool: 'sourcemap',
+  devtool: 'source-map',
 };
