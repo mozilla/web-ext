@@ -71,7 +71,7 @@
     "es6-error": "4.1.1",
     "event-to-promise": "0.8.0",
     "firefox-profile": "4.0.0",
-    "fs-extra": "9.0.1",
+    "fs-extra": "9.1.0",
     "fx-runner": "1.0.13",
     "import-fresh": "3.3.0",
     "mkdirp": "1.0.4",
