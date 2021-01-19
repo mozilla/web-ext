@@ -20,9 +20,7 @@ export const fixturesDir: string =
   path.join(functionalTestsDir, '..', 'fixtures');
 export const minimalAddonPath: string =
   path.join(fixturesDir, 'minimal-web-ext');
-export const fixtureEsmImport: string =
-  path.join(fixturesDir, 'webext-as-library');
-export const fixtureCjsRequire: string =
+export const fixturesUseAsLibrary: string =
   path.join(fixturesDir, 'webext-as-library');
 export const fakeFirefoxPath: string = path.join(
   functionalTestsDir,

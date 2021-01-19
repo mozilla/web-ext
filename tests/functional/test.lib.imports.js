@@ -6,7 +6,7 @@ import {describe, it, before, after} from 'mocha';
 import shell from 'shelljs';
 
 import {
-  withTempDir, fixtureEsmImport, fixtureCjsRequire,
+  withTempDir, fixturesUseAsLibrary,
 } from './common';
 
 const npm = shell.which('npm').toString();
@@ -35,7 +35,7 @@ describe('web-ext imported as a library', () => {
   it('can be imported as an ESM module', async () => {
     await withTempDir(async (tmpDir) => {
       execFileSync(npm, ['link', 'web-ext'], {cwd: tmpDir.path()});
-      shell.cp('-rf', `${fixtureEsmImport}/*`, tmpDir.path());
+      shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-import.mjs'], {
         cwd: tmpDir.path(),
       });
@@ -45,7 +45,7 @@ describe('web-ext imported as a library', () => {
   it('can be imported as a CommonJS module', async () => {
     await withTempDir(async (tmpDir) => {
       execFileSync(npm, ['link', 'web-ext'], {cwd: tmpDir.path()});
-      shell.cp('-rf', `${fixtureCjsRequire}/*`, tmpDir.path());
+      shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-require.js'], {
         cwd: tmpDir.path(),
       });

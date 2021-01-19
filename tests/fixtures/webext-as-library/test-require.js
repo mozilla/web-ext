@@ -1,5 +1,5 @@
 const webExt = require('web-ext');
 
-const _ = require('./helpers.js');
+const {testModuleExports} = require('./helpers.js');
 
-_.testWebExtModuleImports(webExt);
+testModuleExports(webExt);
