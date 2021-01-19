@@ -53,8 +53,17 @@ describe('watcher', () => {
           });
         })
         .then((watcher) => {
-          const watchedFile = watcher.fileWatchers[0];
-          const watchedDir = watcher.dirWatchers[0];
+          const {fileWatchers, directoryWatchers} = watcher;
+          let watchedFile;
+          let watchedDir;
+
+          if (fileWatchers?.size > 0) {
+            watchedFile = Array.from(fileWatchers.values())[0];
+          }
+
+          if (directoryWatchers?.size > 0) {
+            watchedDir = Array.from(directoryWatchers.values())[0];
+          }
 
           watchedFilePath = watchedFile && watchedFile.path;
           watchedDirPath = watchedDir && watchedDir.path;
