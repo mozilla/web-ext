@@ -21,6 +21,10 @@ function assertImportedADB({expectLoaded}) {
   const msg = expectLoaded
     ? 'adb module should have been loaded'
     : 'adb module should not be loaded yet';
+  // eslint-disable-next-line no-console
+  console.log(Object.keys(require.cache).filter(
+    (filePath) => filePath.includes('@devicefarmer/adbkit')
+  ));
 
   assert.equal(hasAdbDeps, expectLoaded, msg);
 }
