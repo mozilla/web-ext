@@ -85,7 +85,7 @@
     "strip-bom": "4.0.0",
     "strip-json-comments": "3.1.1",
     "tmp": "0.2.1",
-    "update-notifier": "5.0.0",
+    "update-notifier": "5.0.1",
     "watchpack": "1.7.5",
     "ws": "7.4.2",
     "yargs": "15.4.1",
