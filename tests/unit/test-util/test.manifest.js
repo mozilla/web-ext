@@ -67,7 +67,7 @@ describe('util/manifest', () => {
             );
             assert.include(
               error.message,
-              'Unexpected token , in JSON at position 51'
+              'Unexpected token "," (0x2C) in JSON at position 51'
             );
             assert.include(error.message, manifestFile);
           }));
