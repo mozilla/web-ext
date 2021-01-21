@@ -122,9 +122,16 @@ You are able to execute command functions without any argument validation. If yo
 import webExt from 'web-ext';
 
 webExt.cmd.run({
+  // To run an extension on android, uncomment next three lines
+  // target: 'firefox-android',
+  // firefoxApk: 'firefox apk package name',
+  // adbDevice: '<deviceId>',
+
+  // To run an extension on desktop, uncomment next line
+  // firefox: '/path/to/Firefox-executable',
+
   // These are command options derived from their CLI conterpart.
   // In this example, --source-dir is specified as sourceDir.
-  firefox: '/path/to/Firefox-executable',
   sourceDir: '/path/to/your/extension/source/',
 }, {
   // These are non CLI related options for each function.
@@ -140,6 +147,16 @@ webExt.cmd.run({
     // extensionRunner.reloadAllExtensions();
     // extensionRunner.exit();
   });
+```
+
+To get a list of connected adb devices, you may use the following function which takes an optional argument `adbBin` which is  a path to custom adb binary:
+```js
+webExt.util.adb.listADBDevices(); // returns a Promise<Array<string>>
+```
+
+To get a list of installed firefox APK packages for an ADB client, you may use the following function which takes in deviceId(required) and adbBin(optional) as arguments:
+```js
+webExt.util.adb.listADBFirefoxAPKs(deviceId); // returns a Promise<Array<string>>
 ```
 
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
