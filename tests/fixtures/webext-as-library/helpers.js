@@ -1,4 +1,5 @@
 const assert = require('assert');
+const path = require('path');
 
 function testModuleExports(webExt) {
   assert.deepEqual(Object.keys(webExt).sort(), ['cmd', 'main', 'util'].sort());
@@ -14,8 +15,7 @@ function testModuleExports(webExt) {
 }
 
 function assertImportedADB({expectLoaded}) {
-  const adbPathString = process.platform === 'win32' ?
-    '@devicefarmer\\adbkit' : '@devicefarmer/adbkit';
+  const adbPathString = path.join('@devicefarmer', 'adbkit');
   const hasAdbDeps = Object.keys(require.cache).filter(
     (filePath) => filePath.includes(adbPathString)
   ).length > 0;
