@@ -6,6 +6,8 @@ import {readFileSync} from 'fs';
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 import yargs from 'yargs';
+// TODO(rpl): try to remove the following suppress comment after updating flow to more recent versions.
+// $FlowFixMe: flow doesn't seem to read yet the `exports` property from the yargs package.json.
 import { Parser as yargsParser } from 'yargs/yargs';
 
 import defaultCommands from './cmd';
