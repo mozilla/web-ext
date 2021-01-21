@@ -14,8 +14,10 @@ function testModuleExports(webExt) {
 }
 
 function assertImportedADB({expectLoaded}) {
+  const adbPathString = process.platform === 'win32' ?
+    '@devicefarmer\\adbkit' : '@devicefarmer/adbkit';
   const hasAdbDeps = Object.keys(require.cache).filter(
-    (filePath) => filePath.includes('@devicefarmer/adbkit')
+    (filePath) => filePath.includes(adbPathString)
   ).length > 0;
 
   const msg = expectLoaded
