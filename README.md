@@ -121,11 +121,24 @@ You are able to execute command functions without any argument validation. If yo
 // or...
 import webExt from 'web-ext';
 
+// If you would like to run an extension on Firefox for Android:
+
+// Path to adb binary (optional parameter, auto-detected if missing)
+const adbBin = 'path/to/adb/binary';
+// Get an array of connected device ids (Array<string>)
+const deviceIds = await webExt.util.adb.listADBDevices(adbBin);
+const adbDevice = deviceIds[0];
+// Get an array of Firefox APKs (Array<string>) on a device
+const firefoxAPKs = await webExt.util.adb.listADBFirefoxAPKs(
+  deviceId, adbBin
+);
+const firefoxApk = firefoxAPKs[0];
+
 webExt.cmd.run({
-  // To run an extension on android, uncomment next three lines
-  // target: 'firefox-android',
-  // firefoxApk: 'firefox apk package name',
-  // adbDevice: '<deviceId>',
+  // Comment out next 3 lines to run the extension on firefox-desktop
+  target: 'firefox-android',
+  firefoxApk
+  adbDevice
 
   // To run an extension on desktop, uncomment next line
   // firefox: '/path/to/Firefox-executable',
