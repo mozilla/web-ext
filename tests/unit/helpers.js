@@ -204,50 +204,14 @@ export function createFakeProcess(): any {
 }
 
 /*
- * Returns a fake Firefox client as would be returned by
- * connect() of 'node-firefox-connect'
+ * Returns a fake FirefoxRDPClient as would be returned by
+ * rdp-module connectToFirefox().
  */
-
-type FakeFirefoxClientParams = {|
-  requestResult?: Object,
-  requestError?: Object,
-  makeRequestResult?: Object,
-  makeRequestError?: Object,
-|}
-export function fakeFirefoxClient({
-  requestResult = {}, requestError,
-  makeRequestResult = {}, makeRequestError,
-}: FakeFirefoxClientParams = {}): any {
+export function fakeFirefoxClient(): any {
   return {
     disconnect: sinon.spy(() => {}),
-    request: sinon.spy(
-      (request, callback) => callback(requestError, requestResult)),
-    // This is client.client, the actual underlying connection.
-    client: {
-      on: () => {},
-      makeRequest: sinon.spy((request, callback) => {
-        //
-        // The real function returns a response object that you
-        // use like this:
-        // if (response.error) {
-        //   ...
-        // } else {
-        //   response.something; // ...
-        // }
-        //
-        if (makeRequestError) {
-          let error;
-          if (typeof makeRequestError === 'object') {
-            error = makeRequestError;
-          } else {
-            error = {error: makeRequestError};
-          }
-          callback(error);
-        } else {
-          callback(makeRequestResult);
-        }
-      }),
-    },
+    on: () => {},
+    request: sinon.stub().resolves({}),
   };
 }
 

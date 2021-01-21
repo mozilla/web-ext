@@ -1,10 +1,9 @@
 /* @flow */
 import net from 'net';
 
-import defaultFirefoxConnector from '@cliqz-oss/node-firefox-connect';
-// RemoteFirefox types and implementation
-import type FirefoxClient from '@cliqz-oss/firefox-client';
-
+import FirefoxRDPClient, {
+  connectToFirefox as defaultFirefoxConnector,
+} from './rdp-client';
 import {createLogger} from '../util/logger';
 import {
   isErrorWithCode,
@@ -16,7 +15,7 @@ import {
 const log = createLogger(__filename);
 
 export type FirefoxConnectorFn =
-  (port?: number) => Promise<FirefoxClient>;
+  (port: number) => Promise<FirefoxRDPClient>;
 
 export type FirefoxRDPAddonActor = {|
   id: string,
@@ -24,9 +23,8 @@ export type FirefoxRDPAddonActor = {|
 |};
 
 export type FirefoxRDPResponseError = {|
-  error: {
-    message: string,
-  },
+  error: string,
+  message: string,
 |};
 
 export type FirefoxRDPResponseAddon = {|
@@ -43,23 +41,36 @@ export type FirefoxRDPResponseAny = Object;
 export type FirefoxRDPResponseMaybe =
   FirefoxRDPResponseRequestTypes | FirefoxRDPResponseAny;
 
+// Convert a request rejection to a message string.
+function requestErrorToMessage(err: Error | FirefoxRDPResponseError) {
+  if (err instanceof Error) {
+    return String(err);
+  }
+  return `${err.error}: ${err.message}`;
+}
+
 export class RemoteFirefox {
   client: Object;
   checkedForAddonReloading: boolean;
 
-  constructor(client: FirefoxClient) {
+  constructor(client: FirefoxRDPClient) {
     this.client = client;
     this.checkedForAddonReloading = false;
 
-    client.client.on('disconnect', () => {
+    client.on('disconnect', () => {
       log.debug('Received "disconnect" from Firefox client');
     });
-    client.client.on('end', () => {
+    client.on('end', () => {
       log.debug('Received "end" from Firefox client');
     });
-    client.client.on('message', (info) => {
-      // These are arbitrary messages that the client library ignores.
+    client.on('unsolicited-event', (info) => {
       log.debug(`Received message from client: ${JSON.stringify(info)}`);
+    });
+    client.on('rdp-error', (rdpError) => {
+      log.debug(`Received error from client: ${JSON.stringify(rdpError)}`);
+    });
+    client.on('error', (error) => {
+      log.debug(`Received error from client: ${String(error)}`);
     });
   }
 
@@ -67,109 +78,94 @@ export class RemoteFirefox {
     this.client.disconnect();
   }
 
-  addonRequest(
+  async addonRequest(
     addon: FirefoxRDPAddonActor,
     request: string
   ): Promise<FirefoxRDPResponseMaybe> {
-    return new Promise((resolve, reject) => {
-      this.client.client.makeRequest(
-        {to: addon.actor, type: request}, (response) => {
-          if (response.error) {
-            const error = `${response.error}: ${response.message}`;
-            log.debug(
-              `Client responded to '${request}' request with error:`, error);
-            reject(new WebExtError(error));
-          } else {
-            resolve(response);
-          }
-        });
-    });
-  }
-
-  getAddonsActor(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      // getRoot should work since Firefox 55 (bug 1352157).
-      this.client.request('getRoot', (err, actors) => {
-        if (!err) {
-          if (actors.addonsActor) {
-            resolve(actors.addonsActor);
-          } else {
-            reject(new RemoteTempInstallNotSupported(
-              'This version of Firefox does not provide an add-ons actor for ' +
-              'remote installation.'));
-          }
-          return;
-        }
-        log.debug(`Falling back to listTabs because getRoot failed: ${err}`);
-        // Fallback to listTabs otherwise, Firefox 49 - 77 (bug 1618691).
-        this.client.request('listTabs', (error, tabsResponse) => {
-          if (error) {
-            return reject(new WebExtError(
-              `Remote Firefox: listTabs() error: ${error}`));
-          }
-          // addonsActor was added to listTabs in Firefox 49 (bug 1273183).
-          if (!tabsResponse.addonsActor) {
-            log.debug(
-              'listTabs returned a falsey addonsActor: ' +
-              `${tabsResponse.addonsActor}`);
-            return reject(new RemoteTempInstallNotSupported(
-              'This is an older version of Firefox that does not provide an ' +
-              'add-ons actor for remote installation. Try Firefox 49 or ' +
-              'higher.'));
-          }
-          resolve(tabsResponse.addonsActor);
-        });
+    try {
+      const response = await this.client.request({
+        to: addon.actor, type: request,
       });
-    });
+      return response;
+    } catch (err) {
+      log.debug(
+        `Client responded to '${request}' request with error:`, err);
+      const message = requestErrorToMessage(err);
+      throw new WebExtError(`Remote Firefox: addonRequest() error: ${message}`);
+    }
   }
 
-  installTemporaryAddon(
+  async getAddonsActor(): Promise<string> {
+    try {
+      // getRoot should work since Firefox 55 (bug 1352157).
+      const response = await this.client.request('getRoot');
+      if (response.addonsActor == null) {
+        return Promise.reject(new RemoteTempInstallNotSupported(
+          'This version of Firefox does not provide an add-ons actor for ' +
+          'remote installation.'));
+      }
+      return response.addonsActor;
+    } catch (err) {
+      // Fallback to listTabs otherwise, Firefox 49 - 77 (bug 1618691).
+      log.debug('Falling back to listTabs because getRoot failed', err);
+    }
+
+    try {
+      const response = await this.client.request('listTabs');
+      // addonsActor was added to listTabs in Firefox 49 (bug 1273183).
+      if (response.addonsActor == null) {
+        log.debug(
+          'listTabs returned a falsey addonsActor: ' +
+          `${JSON.stringify(response)}`);
+        return Promise.reject(new RemoteTempInstallNotSupported(
+          'This is an older version of Firefox that does not provide an ' +
+          'add-ons actor for remote installation. Try Firefox 49 or ' +
+          'higher.'));
+      }
+      return response.addonsActor;
+    } catch (err) {
+      log.debug('listTabs error', err);
+      const message = requestErrorToMessage(err);
+      throw new WebExtError(`Remote Firefox: listTabs() error: ${message}`);
+    }
+  }
+
+  async installTemporaryAddon(
     addonPath: string
   ): Promise<FirefoxRDPResponseAddon> {
-    return new Promise((resolve, reject) => {
-      this.getAddonsActor().then((addonsActor) => {
-        this.client.client.makeRequest({
-          to: addonsActor,
-          type: 'installTemporaryAddon',
-          addonPath,
-        }, (installResponse) => {
-          if (installResponse.error) {
-            return reject(new WebExtError(
-              'installTemporaryAddon: Error: ' +
-              `${installResponse.error}: ${installResponse.message}`));
-          }
-          log.debug(
-            `installTemporaryAddon: ${JSON.stringify(installResponse)}`);
-          log.info(`Installed ${addonPath} as a temporary add-on`);
-          resolve(installResponse);
-        });
-      }).catch(reject);
-    });
+    const addonsActor = await this.getAddonsActor();
+
+    try {
+      const response = await this.client.request({
+        to: addonsActor,
+        type: 'installTemporaryAddon',
+        addonPath,
+      });
+      log.debug(`installTemporaryAddon: ${JSON.stringify(response)}`);
+      log.info(`Installed ${addonPath} as a temporary add-on`);
+      return response;
+    } catch (err) {
+      const message = requestErrorToMessage(err);
+      throw new WebExtError(`installTemporaryAddon: Error: ${message}`);
+    }
   }
 
-  getInstalledAddon(addonId: string): Promise<FirefoxRDPAddonActor> {
-    return new Promise(
-      (resolve, reject) => {
-        this.client.request('listAddons', (error, response) => {
-          if (error) {
-            reject(new WebExtError(
-              `Remote Firefox: listAddons() error: ${error}`));
-          } else {
-            resolve(response.addons);
-          }
-        });
-      })
-      .then((addons) => {
-        for (const addon of addons) {
-          if (addon.id === addonId) {
-            return addon;
-          }
+  async getInstalledAddon(addonId: string): Promise<FirefoxRDPAddonActor> {
+    try {
+      const response = await this.client.request('listAddons');
+      for (const addon of response.addons) {
+        if (addon.id === addonId) {
+          return addon;
         }
-        log.debug(
-          `Remote Firefox has these addons: ${addons.map((a) => a.id)}`);
-        throw new WebExtError(
-          'The remote Firefox does not have your extension installed');
-      });
+      }
+      log.debug(
+        `Remote Firefox has these addons: ${response.addons.map((a) => a.id)}`);
+      return Promise.reject(new WebExtError(
+        'The remote Firefox does not have your extension installed'));
+    } catch (err) {
+      const message = requestErrorToMessage(err);
+      throw new WebExtError(`Remote Firefox: listAddons() error: ${message}`);
+    }
   }
 
   async checkForAddonReloading(
