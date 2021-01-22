@@ -18,12 +18,14 @@ describe('webExt', () => {
     assert.equal(webExt.util.logger.consoleStream, consoleStream);
   });
 
-  it('gives access to listADBDevices', () => {
-    assert.equal(webExt.util.adb.listADBDevices, listADBDevices);
-  });
+  describe('exposes adb utils', () => {
+    it('gives access to listADBDevices', () => {
+      assert.equal(webExt.util.adb.listADBDevices, listADBDevices);
+    });
 
-  it('gives access to listADBFirefoxAPKs', () => {
-    assert.equal(webExt.util.adb.listADBFirefoxAPKs, listADBFirefoxAPKs);
+    it('gives access to listADBFirefoxAPKs', () => {
+      assert.equal(webExt.util.adb.listADBFirefoxAPKs, listADBFirefoxAPKs);
+    });
   });
 
   describe('exposes commands', () => {

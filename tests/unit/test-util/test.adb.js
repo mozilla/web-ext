@@ -1311,8 +1311,8 @@ describe('utils/adb', () => {
     });
   });
 
-  describe('test exposed adb API functions', () => {
-    it('test listADBDevices', async () => {
+  describe('exports exposed in util.adb', () => {
+    it('lists connected adb devices', async () => {
       const stubDiscoverDevices = sinon.stub(
         ADBUtils.prototype, 'discoverDevices'
       );
@@ -1322,8 +1322,7 @@ describe('utils/adb', () => {
       assert.deepEqual(devices, ['emulator1', 'device2']);
     });
 
-    it('test listADBFirefoxAPKs', async () => {
-      const adb = getFakeADBKit({});
+    it('lists installed firefox apks on a device', async () => {
       const stubDiscoverInstalledFirefoxAPKs = sinon.stub(
         ADBUtils.prototype, 'discoverInstalledFirefoxAPKs'
       );
@@ -1332,7 +1331,7 @@ describe('utils/adb', () => {
       const promise = listADBFirefoxAPKs('device1');
       const packages = await assert.isFulfilled(promise);
       sinon.assert.calledWith(
-        new ADBUtils({adb}).discoverInstalledFirefoxAPKs,
+        stubDiscoverInstalledFirefoxAPKs,
         'device1'
       );
       assert.deepEqual(packages, ['package1', 'package2', 'package3']);
