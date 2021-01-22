@@ -116,33 +116,14 @@ Aside from [using web-ext on the command line][web-ext-user-docs], you may wish 
 
 You are able to execute command functions without any argument validation. If you want to execute `web-ext run` you would do so like this:
 
+#### Running the extension on Firefox for desktop:
 ```js
 // const webExt = require('web-ext');
 // or...
 import webExt from 'web-ext';
 
-// If you would like to run an extension on Firefox for Android:
-
-// Path to adb binary (optional parameter, auto-detected if missing)
-const adbBin = 'path/to/adb/binary';
-// Get an array of connected device ids (Array<string>)
-const deviceIds = await webExt.util.adb.listADBDevices(adbBin);
-const adbDevice = deviceIds[0];
-// Get an array of Firefox APKs (Array<string>) on a device
-const firefoxAPKs = await webExt.util.adb.listADBFirefoxAPKs(
-  deviceId, adbBin
-);
-const firefoxApk = firefoxAPKs[0];
-
 webExt.cmd.run({
-  // Comment out next 3 lines to run the extension on firefox-desktop
-  target: 'firefox-android',
-  firefoxApk
-  adbDevice
-
-  // To run an extension on desktop, uncomment next line
-  // firefox: '/path/to/Firefox-executable',
-
+  firefox: '/path/to/Firefox-executable',
   // These are command options derived from their CLI conterpart.
   // In this example, --source-dir is specified as sourceDir.
   sourceDir: '/path/to/your/extension/source/',
@@ -162,15 +143,30 @@ webExt.cmd.run({
   });
 ```
 
-To get a list of connected adb devices, you may use the following function which takes an optional argument `adbBin` which is  a path to custom adb binary:
+#### Running the extension on Firefox for android:
 ```js
-webExt.util.adb.listADBDevices(); // returns a Promise<Array<string>>
+// Path to adb binary (optional parameter, auto-detected if missing)
+const adbBin = "/path/to/adb";
+// Get an array of device ids (Array<string>)
+const deviceIds = await webExt.util.adb.listADBDevices(adbBin);
+const adbDevice = ...
+// Get an array of Firefox APKs (Array<string>)
+const firefoxAPKs = await webExt.util.adb.listADBFirefoxAPKs(
+  deviceId, adbBin
+);
+const firefoxApk = ...
+
+webExt.cmd.run({
+  target: 'firefox-android',
+  firefoxApk,
+  adbDevice,
+  sourceDir: ...
+}).then((extensionRunner) => ...);
 ```
 
-To get a list of installed firefox APK packages for an ADB client, you may use the following function which takes in deviceId(required) and adbBin(optional) as arguments:
-```js
-webExt.util.adb.listADBFirefoxAPKs(deviceId); // returns a Promise<Array<string>>
-```
+
+
+
 
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
 
