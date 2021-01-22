@@ -161,7 +161,7 @@ webExt.cmd.run({
   firefoxApk,
   adbDevice,
   sourceDir: ...
-}).then((extensionRunner) => ...);
+}).then((extensionRunner) => {...});
 ```
 
 
