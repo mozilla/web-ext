@@ -116,7 +116,6 @@ Aside from [using web-ext on the command line][web-ext-user-docs], you may wish 
 
 You are able to execute command functions without any argument validation. If you want to execute `web-ext run` you would do so like this:
 
-#### Running the extension on Firefox for desktop:
 ```js
 // const webExt = require('web-ext');
 // or...
@@ -143,7 +142,7 @@ webExt.cmd.run({
   });
 ```
 
-#### Running the extension on Firefox for android:
+If you would like to run an extension on Firefox for Android:
 ```js
 // Path to adb binary (optional parameter, auto-detected if missing)
 const adbBin = "/path/to/adb";
@@ -163,10 +162,6 @@ webExt.cmd.run({
   sourceDir: ...
 }).then((extensionRunner) => {...});
 ```
-
-
-
-
 
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
 
