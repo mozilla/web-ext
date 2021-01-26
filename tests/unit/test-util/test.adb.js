@@ -1312,7 +1312,7 @@ describe('utils/adb', () => {
   });
 
   describe('exports exposed in util.adb', () => {
-    it('lists connected adb devices', async () => {
+    it('should export a listADBDevices method', async () => {
       const stubDiscoverDevices = sinon.stub(
         ADBUtils.prototype, 'discoverDevices'
       );
@@ -1322,7 +1322,7 @@ describe('utils/adb', () => {
       assert.deepEqual(devices, ['emulator1', 'device2']);
     });
 
-    it('lists installed firefox apks on a device', async () => {
+    it('should export a listADBFirefoxAPKs method', async () => {
       const stubDiscoverInstalledFirefoxAPKs = sinon.stub(
         ADBUtils.prototype, 'discoverInstalledFirefoxAPKs'
       );

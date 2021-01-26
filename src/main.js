@@ -11,7 +11,7 @@ const util = {
   // the npm dependencies used by the adb module to when actually needed.
   // This is being done to continue the courtesy of web-ext issue #1301
   get adb(): Object {
-    const {listADBDevices, listADBFirefoxAPKs} = require('./util/adb.js');
+    const {listADBDevices, listADBFirefoxAPKs} = require('./util/adb');
     return {listADBDevices, listADBFirefoxAPKs};
   },
 };
