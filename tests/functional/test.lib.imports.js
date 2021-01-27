@@ -38,7 +38,6 @@ describe('web-ext imported as a library', () => {
       shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-import.mjs'], {
         cwd: tmpDir.path(),
-        stdio: 'inherit',
       });
     });
   });
@@ -49,7 +48,6 @@ describe('web-ext imported as a library', () => {
       shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-require.js'], {
         cwd: tmpDir.path(),
-        stdio: 'inherit',
       });
     });
   });

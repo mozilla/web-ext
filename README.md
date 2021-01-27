@@ -122,9 +122,9 @@ You are able to execute command functions without any argument validation. If yo
 import webExt from 'web-ext';
 
 webExt.cmd.run({
-  firefox: '/path/to/Firefox-executable',
   // These are command options derived from their CLI conterpart.
   // In this example, --source-dir is specified as sourceDir.
+  firefox: '/path/to/Firefox-executable',
   sourceDir: '/path/to/your/extension/source/',
 }, {
   // These are non CLI related options for each function.
@@ -143,6 +143,7 @@ webExt.cmd.run({
 ```
 
 If you would like to run an extension on Firefox for Android:
+
 ```js
 // Path to adb binary (optional parameter, auto-detected if missing)
 const adbBin = "/path/to/adb";
