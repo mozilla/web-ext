@@ -142,6 +142,28 @@ webExt.cmd.run({
   });
 ```
 
+If you would like to run an extension on Firefox for Android:
+
+```js
+// Path to adb binary (optional parameter, auto-detected if missing)
+const adbBin = "/path/to/adb";
+// Get an array of device ids (Array<string>)
+const deviceIds = await webExt.util.adb.listADBDevices(adbBin);
+const adbDevice = ...
+// Get an array of Firefox APKs (Array<string>)
+const firefoxAPKs = await webExt.util.adb.listADBFirefoxAPKs(
+  deviceId, adbBin
+);
+const firefoxApk = ...
+
+webExt.cmd.run({
+  target: 'firefox-android',
+  firefoxApk,
+  adbDevice,
+  sourceDir: ...
+}).then((extensionRunner) => {...});
+```
+
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
 
 ```js

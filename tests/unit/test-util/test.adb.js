@@ -13,6 +13,7 @@ import {
 import ADBUtils, {
   ARTIFACTS_DIR_PREFIX,
   DEVICE_DIR_BASE,
+  listADBDevices, listADBFirefoxAPKs,
 } from '../../../src/util/adb';
 import {
   consoleStream, // instance is imported to inspect logged messages
@@ -1307,6 +1308,33 @@ describe('utils/adb', () => {
         adb.fakeADBClient.forward,
         'device1', 'local:fake', 'remote:fake'
       );
+    });
+  });
+
+  describe('exports exposed in util.adb', () => {
+    it('should export a listADBDevices method', async () => {
+      const stubDiscoverDevices = sinon.stub(
+        ADBUtils.prototype, 'discoverDevices'
+      );
+      stubDiscoverDevices.resolves(['emulator1', 'device2']);
+      const promise = listADBDevices();
+      const devices = await assert.isFulfilled(promise);
+      assert.deepEqual(devices, ['emulator1', 'device2']);
+    });
+
+    it('should export a listADBFirefoxAPKs method', async () => {
+      const stubDiscoverInstalledFirefoxAPKs = sinon.stub(
+        ADBUtils.prototype, 'discoverInstalledFirefoxAPKs'
+      );
+      stubDiscoverInstalledFirefoxAPKs
+        .resolves(['package1', 'package2', 'package3']);
+      const promise = listADBFirefoxAPKs('device1');
+      const packages = await assert.isFulfilled(promise);
+      sinon.assert.calledWith(
+        stubDiscoverInstalledFirefoxAPKs,
+        'device1'
+      );
+      assert.deepEqual(packages, ['package1', 'package2', 'package3']);
     });
   });
 

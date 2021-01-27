@@ -418,3 +418,16 @@ export default class ADBUtils {
     });
   }
 }
+
+export async function listADBDevices(adbBin?: string): Promise<Array<string>> {
+  const adbClient = new ADBUtils({adbBin});
+  return adbClient.discoverDevices();
+}
+
+export async function listADBFirefoxAPKs(
+  deviceId: string,
+  adbBin?: string
+): Promise<Array<string>> {
+  const adbClient = new ADBUtils({adbBin});
+  return adbClient.discoverInstalledFirefoxAPKs(deviceId);
+}

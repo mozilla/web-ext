@@ -6,6 +6,7 @@ import sinon from 'sinon';
 import webExt from '../../src/main';
 import {main} from '../../src/program';
 import {consoleStream} from '../../src/util/logger';
+import {listADBDevices, listADBFirefoxAPKs} from '../../src/util/adb';
 
 
 describe('webExt', () => {
@@ -15,6 +16,16 @@ describe('webExt', () => {
 
   it('gives you access to the log stream', () => {
     assert.equal(webExt.util.logger.consoleStream, consoleStream);
+  });
+
+  describe('exposes adb utils', () => {
+    it('gives access to listADBDevices', () => {
+      assert.equal(webExt.util.adb.listADBDevices, listADBDevices);
+    });
+
+    it('gives access to listADBFirefoxAPKs', () => {
+      assert.equal(webExt.util.adb.listADBFirefoxAPKs, listADBFirefoxAPKs);
+    });
   });
 
   describe('exposes commands', () => {
