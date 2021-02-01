@@ -122,7 +122,7 @@
     "prettyjson": "1.2.1",
     "shelljs": "0.8.4",
     "sinon": "9.2.4",
-    "webpack": "5.18.0",
+    "webpack": "5.19.0",
     "webpack-node-externals": "2.5.2",
     "yauzl": "2.10.0"
   },
