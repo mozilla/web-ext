@@ -59,8 +59,6 @@
   "dependencies": {
     "@babel/polyfill": "7.12.1",
     "@babel/runtime": "7.12.13",
-    "@cliqz-oss/firefox-client": "0.3.1",
-    "@cliqz-oss/node-firefox-connect": "1.2.1",
     "@devicefarmer/adbkit": "2.11.3",
     "addons-linter": "2.17.0",
     "bunyan": "1.8.15",
