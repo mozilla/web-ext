@@ -161,12 +161,22 @@ describe('run', () => {
     }, {firefoxApp, firefoxClient});
   });
 
+  it('throws if watchFile is not an array', async () => {
+    const cmd = prepareRun();
+    await assert.isRejected(
+      cmd.run({noReload: false, watchFile: 'invalid-value.txt' }),
+      /Unexpected watchFile type/
+    );
+  });
+
   it('can watch and reload the extension', async () => {
     const cmd = prepareRun();
     const {sourceDir, artifactsDir} = cmd.argv;
     const {reloadStrategy} = cmd.options;
 
-    const watchFile = fixturePath('minimal-web-ext', 'manifest.json');
+    const watchFile = [
+      fixturePath('minimal-web-ext', 'manifest.json'),
+    ];
 
     await cmd.run({noReload: false, watchFile });
     assert.equal(reloadStrategy.called, true);

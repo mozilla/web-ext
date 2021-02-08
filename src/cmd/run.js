@@ -38,7 +38,7 @@ export type CmdRunParams = {|
   noReload: boolean,
   preInstall: boolean,
   sourceDir: string,
-  watchFile?: string,
+  watchFile?: Array<string>,
   watchIgnored?: Array<string>,
   startUrl?: Array<string>,
   target?: Array<string>,
@@ -117,6 +117,11 @@ export default async function run(
     log.info('Disabled auto-reloading because it\'s not possible with ' +
              '--pre-install');
     noReload = true;
+  }
+
+  if (watchFile != null && (!Array.isArray(watchFile) ||
+      !watchFile.every((el) => typeof el === 'string'))) {
+    throw new UsageError('Unexpected watchFile type');
   }
 
   // Create an alias for --pref since it has been transformed into an

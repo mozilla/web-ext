@@ -621,7 +621,7 @@ Example: $0 --help run.
                   ' file changes. This is useful if you use a custom' +
                   ' build process for your extension',
         demandOption: false,
-        type: 'string',
+        type: 'array',
       },
       'watch-ignored': {
         describe: 'Paths and globs patterns that should not be ' +
