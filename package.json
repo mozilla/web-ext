@@ -57,7 +57,6 @@
     "opera"
   ],
   "dependencies": {
-    "@babel/polyfill": "7.12.1",
     "@babel/runtime": "7.12.13",
     "@devicefarmer/adbkit": "2.11.3",
     "addons-linter": "2.19.0",
