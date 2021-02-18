@@ -217,7 +217,7 @@ describe('watcher', () => {
   });
 
   describe('--watch-ignored is passed in', () => {
-    it('does not change if ignored file is touched', () =>
+    it('does not call onChange if ignored file is touched', () =>
       withTempDir(async (tmpDir) => {
         const debounceTime = 10;
         const onChange = sinon.spy();
