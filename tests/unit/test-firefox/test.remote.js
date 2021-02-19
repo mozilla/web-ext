@@ -53,6 +53,7 @@ describe('firefox.remote', () => {
     it('lets you configure the port', async () => {
       const {connect, options} = prepareConnection(7000);
       await connect;
+      // $FlowIgnore: flow doesn't know about sinon spy properties.
       assert.equal(options.connectToFirefox.args[0], 7000);
     });
 

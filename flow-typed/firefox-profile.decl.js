@@ -6,7 +6,7 @@ declare module "firefox-profile" {
   }
 
   declare type ProfileCallback = 
-    (err: ?Error, profile: Profile) => void;
+    (err: ?Error, profile: FirefoxProfile) => void;
 
   declare class Finder {
     constructor(baseDir: ?string): Finder,
