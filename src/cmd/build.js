@@ -7,9 +7,9 @@ import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
 import defaultEventToPromise from 'event-to-promise';
+import zipDir from 'zip-dir';
 
 import defaultSourceWatcher from '../watcher';
-import {zipDir} from '../util/zip-dir';
 import getValidatedManifest, {getManifestId} from '../util/manifest';
 import {prepareArtifactsDir} from '../util/artifacts';
 import {createLogger} from '../util/logger';
