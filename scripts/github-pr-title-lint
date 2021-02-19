@@ -3,7 +3,7 @@
 const https = require('https');
 const execSync = require('child_process').execSync;
 
-const Entities = require('html-entities').AllHtmlEntities;
+const {decode} = require('html-entities');
 const shelljs = require('shelljs');
 
 const {
@@ -133,7 +133,9 @@ function getPullRequestTitle() {
               var prTitleEnd = pageTitleParts[0].lastIndexOf(' by ');
               resolve(pageTitleParts[0].slice(0, prTitleEnd));
             } else {
-              console.log('DEBUG getPullRequestTitle response:', body);
+              if (VERBOSE === 'true') {
+                console.log('DEBUG getPullRequestTitle response:', body);
+              }
 
               reject(new Error('Unable to retrieve the pull request title'));
             }
@@ -151,8 +153,7 @@ function getPullRequestTitle() {
       });
     });
   }).then((message) => {
-    const entities = new Entities();
-    return entities.decode(message);
+    return decode(message, {level: 'all'});
   });
 }
 
