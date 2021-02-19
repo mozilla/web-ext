@@ -84,7 +84,12 @@ export default function onSourceChange(
     watchedDirs.push(sourceDir);
   }
 
-  watcher.watch(watchedFiles, watchedDirs, Date.now());
+  watcher.watch({
+    files: watchedFiles,
+    directories: watchedDirs,
+    missing: [],
+    startTime: Date.now(),
+  });
 
   // TODO: support interrupting the watcher on Windows.
   // https://github.com/mozilla/web-ext/issues/225
