@@ -99,6 +99,7 @@ describe('firefox', () => {
 
     function runFirefox(
       {
+        // $FlowIgnore: for the purpose of this test, fakeProfile includes only a subset of the expected properties.
         profile = fakeProfile,
         ...args
       }: RunFirefoxOptions = {},

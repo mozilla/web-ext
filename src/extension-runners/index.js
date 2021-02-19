@@ -152,7 +152,7 @@ export class MultiExtensionRunner {
   ): Promise<Array<ExtensionRunnerReloadResult>> {
     log.debug(`Reloading add-on at ${sourceDir}`);
 
-    const promises = [];
+    const promises: Array<Promise<ExtensionRunnerReloadResult>> = [];
     for (const runner of this.extensionRunners) {
       const reloadPromise = runner.reloadExtensionBySourceDir(sourceDir).then(
         () => {
@@ -170,7 +170,6 @@ export class MultiExtensionRunner {
       promises.push(reloadPromise);
     }
 
-    // $FlowFixMe: When upgrading to Flow 0.61.0, it could not follow the type of sourceDir in the array of promises.
     return await Promise.all(promises).then((results) => {
       this.handleReloadResults(results);
       return results;

@@ -6,11 +6,6 @@ declare module "ws" {
     port: number,
   }
 
-  declare type ServerAddressInfo = {
-    address: string,
-    port: number,
-  }
-
   declare class WebSocket extends events$EventEmitter {
     constructor(url: string): WebSocket,
     removeEventListener(eventName: string, cb: Function): void,
@@ -27,9 +22,9 @@ declare module "ws" {
 
   declare class Server extends net$Server {
     constructor(opts?: ServerOptions, listenCb: Function): Server,
-    address(): ServerAddressInfo,
+    address(): net$Socket$address,
     clients: Set<WebSocket>,
-    close(closedCb: Function): void,
+    close(closedCb: Function): Server,
   }
 
   declare module.exports: Class<WebSocket>;
