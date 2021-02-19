@@ -238,7 +238,7 @@ describe('watcher', () => {
         });
 
         const watchAll = new Watchpack();
-        watchAll.watch(files, [], 0);
+        watchAll.watch({files, directories: [], missing: [], startTime: 0});
 
         async function waitDebounce() {
           await new Promise((resolve) => setTimeout(resolve, debounceTime * 2));

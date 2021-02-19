@@ -5,10 +5,17 @@ declare module "watchpack" {
     ignored: Array<string>,
   };
 
+  declare type WatchOptions = {
+    files: Array<string>,
+    directories: Array<string>,
+    missing: Array<string>,
+    startTime?: number
+  };
+
   declare class Watchpack extends events$EventEmitter {
     constructor(options?: WatchpackOptions): Watchpack,
     close(): void,
-    watch(files: Array<string>, directories: Array<string>, startTime: number): void,
+    watch(options: WatchOptions): void,
   }
 
   declare module.exports: Class<Watchpack>;
