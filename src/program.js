@@ -214,7 +214,7 @@ export class Program {
     const cmd = yargsParser(this.programArgv)._[0];
     const env = systemProcess.env || {};
     const toOptionKey = (k) => decamelize(
-      camelCase(k.replace(envPrefix, '')), '-'
+      camelCase(k.replace(envPrefix, '')), {separator: '-'}
     );
 
     if (cmd) {
