@@ -86,7 +86,7 @@
     "watchpack": "1.7.5",
     "ws": "7.4.3",
     "yargs": "16.2.0",
-    "zip-dir": "1.0.2"
+    "zip-dir": "2.0.0"
   },
   "devDependencies": {
     "@babel/core": "7.12.16",
