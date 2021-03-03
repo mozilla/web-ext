@@ -484,18 +484,6 @@ Example: $0 --help run.
       default: true,
       type: 'boolean',
     },
-    'filename': {
-      alias: 'n',
-      describe: 'Name of the created extension package file.',
-      default: undefined,
-      normalize: false,
-      demandOption: false,
-      requiresArg: true,
-      type: 'string',
-      coerce: throwUsageErrorIfArray(
-        'Multiple --filename/-n option are not allowed'
-      ),
-    },
   });
 
   program
@@ -506,6 +494,18 @@ Example: $0 --help run.
         'as-needed': {
           describe: 'Watch for file changes and re-build as needed',
           type: 'boolean',
+        },
+        'filename': {
+          alias: 'n',
+          describe: 'Name of the created extension package file.',
+          default: undefined,
+          normalize: false,
+          demandOption: false,
+          requiresArg: true,
+          type: 'string',
+          coerce: throwUsageErrorIfArray(
+            'Multiple --filename/-n option are not allowed'
+          ),
         },
         'overwrite-dest': {
           alias: 'o',
