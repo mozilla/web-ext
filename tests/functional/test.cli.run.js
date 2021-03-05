@@ -14,18 +14,22 @@ const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 
 describe('web-ext run', () => {
 
-  it('accepts: --no-reload --watch-file --source-dir SRCDIR ' +
-    '--firefox FXPATH --watch-ignored',
+  it('accepts: --no-reload --watch-file --watch-files --source-dir ' +
+    'SRCDIR --firefox FXPATH --watch-ignored',
      () => withTempAddonDir(
        {addonPath: minimalAddonPath},
        (srcDir) => {
          const watchedFile = path.join(srcDir, 'watchedFile.txt');
+         const watchedFilesArr = ['watchedFile1', 'watchedFile2'].map(
+           (file) => path.join(srcDir, file)
+         );
          const watchIgnoredArr = ['ignoredFile1.txt', 'ignoredFile2.txt'].map(
            (file) => path.join(srcDir, file)
          );
          const watchIgnoredFile = path.join(srcDir, 'ignoredFile3.txt');
 
          fs.writeFileSync(watchedFile, '');
+         watchedFilesArr.forEach((file) => fs.writeFileSync(file, ''));
          watchIgnoredArr.forEach((file) => fs.writeFileSync(file, ''));
          fs.writeFileSync(watchIgnoredFile, '');
 
@@ -33,6 +37,7 @@ describe('web-ext run', () => {
            'run', '--verbose', '--no-reload',
            '--source-dir', srcDir,
            '--watch-file', watchedFile,
+           '--watch-files', ...watchedFilesArr,
            '--firefox', fakeFirefoxPath,
            '--watch-ignored', ...watchIgnoredArr,
            '--watch-ignored', watchIgnoredFile,
