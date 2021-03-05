@@ -617,9 +617,12 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'watch-file': {
-        describe: 'Reload the extension only when the contents of this' +
-                  ' file changes. This is useful if you use a custom' +
-                  ' build process for your extension',
+        alias: ['watch-files'],
+        describe: 'Reload the extension only when the content of these' +
+                  ' files change. This is useful if you use a custom' +
+                  ' build process for your extension or if you want web-ext' +
+                  ' to explicitly watch for changes to specific files,' +
+                  ' without watching the extension directory tree\n',
         demandOption: false,
         type: 'array',
       },
