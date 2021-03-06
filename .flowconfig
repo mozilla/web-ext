@@ -1,6 +1,7 @@
 [include]
 
 [libs]
+flow-typed/
 
 [options]
 module.system=node

@@ -6,6 +6,8 @@ import {readFileSync} from 'fs';
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 import yargs from 'yargs';
+// TODO(rpl): try to remove the following suppress comment after updating flow to more recent versions.
+// $FlowFixMe: flow doesn't seem to read yet the `exports` property from the yargs package.json.
 import { Parser as yargsParser } from 'yargs/yargs';
 
 import defaultCommands from './cmd';
@@ -177,6 +179,15 @@ export class Program {
       argv.noReload = !argv.reload;
     }
 
+    // Yargs doesn't accept --no-input as a valid option if there isn't a
+    // --input option defined to be negated, to fix that the --input is
+    // defined and hidden from the yargs help output and we define here
+    // the negated argument name that we expect to be set in the parsed
+    // arguments (and fix https://github.com/mozilla/web-ext/issues/1860).
+    if (argv.input != null) {
+      argv.noInput = !argv.input;
+    }
+
     // Replacement for the "requiresArg: true" parameter until the following bug
     // is fixed: https://github.com/yargs/yargs/issues/1098
     if (argv.ignoreFiles && !argv.ignoreFiles.length) {
@@ -205,7 +216,7 @@ export class Program {
     const cmd = yargsParser(this.programArgv)._[0];
     const env = systemProcess.env || {};
     const toOptionKey = (k) => decamelize(
-      camelCase(k.replace(envPrefix, '')), '-'
+      camelCase(k.replace(envPrefix, '')), {separator: '-'}
     );
 
     if (cmd) {
@@ -450,6 +461,13 @@ Example: $0 --help run.
       type: 'boolean',
       demandOption: false,
     },
+    'input': {
+      // This option is defined to make yargs to accept the --no-input
+      // defined above, but we hide it from the yargs help output.
+      hidden: true,
+      type: 'boolean',
+      demandOption: false,
+    },
     'config': {
       alias: 'c',
       describe: 'Path to a CommonJS config file to set ' +
@@ -466,18 +484,6 @@ Example: $0 --help run.
       default: true,
       type: 'boolean',
     },
-    'filename': {
-      alias: 'n',
-      describe: 'Name of the created extension package file.',
-      default: undefined,
-      normalize: false,
-      demandOption: false,
-      requiresArg: true,
-      type: 'string',
-      coerce: throwUsageErrorIfArray(
-        'Multiple --filename/-n option are not allowed'
-      ),
-    },
   });
 
   program
@@ -488,6 +494,18 @@ Example: $0 --help run.
         'as-needed': {
           describe: 'Watch for file changes and re-build as needed',
           type: 'boolean',
+        },
+        'filename': {
+          alias: 'n',
+          describe: 'Name of the created extension package file.',
+          default: undefined,
+          normalize: false,
+          demandOption: false,
+          requiresArg: true,
+          type: 'string',
+          coerce: throwUsageErrorIfArray(
+            'Multiple --filename/-n option are not allowed'
+          ),
         },
         'overwrite-dest': {
           alias: 'o',
@@ -511,7 +529,7 @@ Example: $0 --help run.
         },
         'api-url-prefix': {
           describe: 'Signing API URL prefix',
-          default: 'https://addons.mozilla.org/api/v3',
+          default: 'https://addons.mozilla.org/api/v4',
           demandOption: true,
           type: 'string',
         },
@@ -580,6 +598,11 @@ Example: $0 --help run.
         demandOption: false,
         type: 'string',
       },
+      'profile-create-if-missing': {
+        describe: 'Create the profile directory if it does not already exist',
+        demandOption: false,
+        type: 'boolean',
+      },
       'keep-profile-changes': {
         describe: 'Run Firefox directly in custom profile. Any changes to ' +
                   'the profile will be saved.',
@@ -595,10 +618,19 @@ Example: $0 --help run.
       },
       'watch-file': {
         describe: 'Reload the extension only when the contents of this' +
-                  'file changes. This is useful if you use a custom' +
+                  ' file changes. This is useful if you use a custom' +
                   ' build process for your extension',
         demandOption: false,
-        type: 'string',
+        type: 'array',
+      },
+      'watch-ignored': {
+        describe: 'Paths and globs patterns that should not be ' +
+                  'watched for changes. This is useful if you want ' +
+                  'to explicitly prevent web-ext from watching part ' +
+                  'of the extension directory tree, ' +
+                  'e.g. the node_modules folder.',
+        demandOption: false,
+        type: 'array',
       },
       'pre-install': {
         describe: 'Pre-install the extension into the profile before ' +

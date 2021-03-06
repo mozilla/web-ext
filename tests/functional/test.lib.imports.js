@@ -1,16 +1,16 @@
 /* @flow */
-import {execSync} from 'child_process';
+import {execFileSync} from 'child_process';
 import path from 'path';
 
 import {describe, it, before, after} from 'mocha';
 import shell from 'shelljs';
 
 import {
-  withTempDir, fixtureEsmImport, fixtureCjsRequire,
+  withTempDir, fixturesUseAsLibrary,
 } from './common';
 
-const npm = shell.which('npm');
-const node = shell.which('node');
+const npm = shell.which('npm').toString();
+const node = shell.which('node').toString();
 
 describe('web-ext imported as a library', () => {
   before(function() {
@@ -21,22 +21,22 @@ describe('web-ext imported as a library', () => {
       this.skip();
     }
 
-    execSync(`${npm} link`, {
+    execFileSync(npm, ['link', '.'], {
       cwd: path.resolve(path.join(__dirname, '..', '..')),
     });
   });
 
   after(() => {
-    execSync(`${npm} unlink`, {
+    execFileSync(npm, ['unlink', '.'], {
       cwd: path.resolve(path.join(__dirname, '..', '..')),
     });
   });
 
   it('can be imported as an ESM module', async () => {
     await withTempDir(async (tmpDir) => {
-      execSync(`${npm} link web-ext`, {cwd: tmpDir.path()});
-      shell.cp('-rf', `${fixtureEsmImport}/*`, tmpDir.path());
-      execSync(`${node} --experimental-modules test-import.mjs`, {
+      execFileSync(npm, ['link', 'web-ext'], {cwd: tmpDir.path()});
+      shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
+      execFileSync(node, ['--experimental-modules', 'test-import.mjs'], {
         cwd: tmpDir.path(),
       });
     });
@@ -44,9 +44,9 @@ describe('web-ext imported as a library', () => {
 
   it('can be imported as a CommonJS module', async () => {
     await withTempDir(async (tmpDir) => {
-      execSync(`${npm} link web-ext`, {cwd: tmpDir.path()});
-      shell.cp('-rf', `${fixtureCjsRequire}/*`, tmpDir.path());
-      execSync(`${node} --experimental-modules test-require.js`, {
+      execFileSync(npm, ['link', 'web-ext'], {cwd: tmpDir.path()});
+      shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
+      execFileSync(node, ['--experimental-modules', 'test-require.js'], {
         cwd: tmpDir.path(),
       });
     });

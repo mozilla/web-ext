@@ -54,7 +54,7 @@ export function applyConfigToArgv({
       continue;
     }
 
-    const decamelizedOptName = decamelize(option, '-');
+    const decamelizedOptName = decamelize(option, {separator: '-'});
 
     if (typeof options[decamelizedOptName] !== 'object') {
       throw new UsageError(`The config file at ${configFileName} specified ` +

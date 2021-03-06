@@ -53,6 +53,7 @@ describe('firefox.remote', () => {
     it('lets you configure the port', async () => {
       const {connect, options} = prepareConnection(7000);
       await connect;
+      // $FlowIgnore: flow doesn't know about sinon spy properties.
       assert.equal(options.connectToFirefox.args[0], 7000);
     });
 
@@ -71,13 +72,23 @@ describe('firefox.remote', () => {
     it('listens to client events', () => {
       const client = fakeFirefoxClient();
       const listener = sinon.spy(() => {});
-      client.client.on = listener;
+      client.on = listener;
       makeInstance(client); // this will register listeners
+
       // Make sure no errors are thrown when the client emits
       // events and calls each handler.
-      listener.firstCall.args[1](); // disconnect
-      listener.secondCall.args[1](); // end
-      listener.thirdCall.args[1]({}); // message
+      const eventListenerTests = ([
+        ['disconnect', undefined],
+        ['end', undefined],
+        ['unsolicited-event', {}],
+        ['rdp-error', {}],
+        ['error', new Error('fake')],
+      ]);
+      for (let i = 0; i < eventListenerTests.length; i++) {
+        const [name, data] = eventListenerTests[i];
+        listener.getCall(i).calledWith(name);
+        listener.getCall(i).args[1](data);
+      }
     });
 
     describe('disconnect', () => {
@@ -95,16 +106,15 @@ describe('firefox.remote', () => {
       it('makes requests to an add-on actor', async () => {
         const addon = fakeAddon();
         const stubResponse = {requestTypes: ['reload']};
-        const client = fakeFirefoxClient({
-          makeRequestResult: stubResponse,
-        });
+        const client = fakeFirefoxClient();
+        client.request = sinon.stub().resolves(stubResponse);
 
         const conn = makeInstance(client);
         const response = await conn.addonRequest(addon, 'requestTypes');
 
-        sinon.assert.called(client.client.makeRequest);
+        sinon.assert.called(client.request);
         sinon.assert.calledWithMatch(
-          client.client.makeRequest,
+          client.request,
           {type: 'requestTypes', to: 'serv1.localhost'});
 
         assert.deepEqual(response, stubResponse);
@@ -112,20 +122,19 @@ describe('firefox.remote', () => {
 
       it('throws when add-on actor requests fail', async () => {
         const addon = fakeAddon();
-        const client = fakeFirefoxClient({
-          makeRequestError: {
-            error: 'unknownError',
-            message: 'some actor failure',
-          },
+        const client = fakeFirefoxClient();
+        client.request = sinon.stub().rejects({
+          error: 'unknownError',
+          message: 'some actor failure',
         });
 
         const conn = makeInstance(client);
         await conn.addonRequest(addon, 'requestTypes')
           .then(makeSureItFails())
           .catch(onlyInstancesOf(WebExtError, (error) => {
-            assert.equal(
+            assert.match(
               error.message,
-              'unknownError: some actor failure');
+              /unknownError: some actor failure/);
           }));
       });
     });
@@ -134,10 +143,9 @@ describe('firefox.remote', () => {
 
       it('gets an installed add-on by ID', async () => {
         const someAddonId = 'some-id';
-        const client = fakeFirefoxClient({
-          requestResult: {
-            addons: [{id: 'another-id'}, {id: someAddonId}, {id: 'bazinga'}],
-          },
+        const client = fakeFirefoxClient();
+        client.request = sinon.stub().resolves({
+          addons: [{id: 'another-id'}, {id: someAddonId}, {id: 'bazinga'}],
         });
         const conn = makeInstance(client);
         const addon = await conn.getInstalledAddon(someAddonId);
@@ -145,10 +153,9 @@ describe('firefox.remote', () => {
       });
 
       it('throws an error when the add-on is not installed', async () => {
-        const client = fakeFirefoxClient({
-          requestResult: {
-            addons: [{id: 'one-id'}, {id: 'other-id'}],
-          },
+        const client = fakeFirefoxClient();
+        client.request = sinon.stub().resolves({
+          addons: [{id: 'one-id'}, {id: 'other-id'}],
         });
         const conn = makeInstance(client);
         await conn.getInstalledAddon('missing-id')
@@ -160,9 +167,8 @@ describe('firefox.remote', () => {
       });
 
       it('throws an error when listAddons() fails', async () => {
-        const client = fakeFirefoxClient({
-          requestError: new Error('some internal error'),
-        });
+        const client = fakeFirefoxClient();
+        client.request = sinon.stub().rejects(new Error('some internal error'));
         const conn = makeInstance(client);
         await conn.getInstalledAddon('some-id')
           .then(makeSureItFails())
@@ -172,6 +178,7 @@ describe('firefox.remote', () => {
               'Remote Firefox: listAddons() error: Error: some internal error');
           }));
       });
+
     });
 
     describe('checkForAddonReloading', () => {
@@ -182,7 +189,7 @@ describe('firefox.remote', () => {
         const conn = makeInstance();
 
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.addonRequest = sinon.spy(() => Promise.resolve(stubResponse));
+        conn.addonRequest = sinon.stub().resolves(stubResponse);
 
         const returnedAddon = await conn.checkForAddonReloading(addon);
         sinon.assert.called(conn.addonRequest);
@@ -215,7 +222,7 @@ describe('firefox.remote', () => {
 
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest =
-          sinon.spy(() => Promise.resolve({requestTypes: ['reload']}));
+          sinon.stub().resolves({requestTypes: ['reload']});
         const checkedAddon = await conn.checkForAddonReloading(addon);
         const finalAddon = await conn.checkForAddonReloading(checkedAddon);
         // This should remember not to check a second time.
@@ -227,10 +234,11 @@ describe('firefox.remote', () => {
     describe('installTemporaryAddon', () => {
 
       it('throws getRoot errors', async () => {
-        const client = fakeFirefoxClient({
+        const client = fakeFirefoxClient();
+        client.request = sinon.stub().rejects(
           // listTabs and getRoot response:
-          requestError: new Error('some listTabs error'),
-        });
+          new Error('some listTabs error'),
+        );
         const conn = makeInstance(client);
         await conn.installTemporaryAddon('/path/to/addon')
           .then(makeSureItFails())
@@ -245,10 +253,9 @@ describe('firefox.remote', () => {
       });
 
       it('fails when there is no add-ons actor', async () => {
-        const client = fakeFirefoxClient({
-          // A getRoot and listTabs response that does not contain addonsActor.
-          requestResult: {},
-        });
+        const client = fakeFirefoxClient();
+        // A getRoot and listTabs response that does not contain addonsActor.
+        client.request = sinon.stub().resolves({from: 'root'});
         const conn = makeInstance(client);
         await conn.installTemporaryAddon('/path/to/addon')
           .then(makeSureItFails())
@@ -262,46 +269,54 @@ describe('firefox.remote', () => {
       });
 
       it('lets you install an add-on temporarily', async () => {
-        const client = fakeFirefoxClient({
-          // getRoot response:
-          requestResult: {
-            addonsActor: 'addons1.actor.conn',
-          },
-          // installTemporaryAddon response:
-          makeRequestResult: {
-            addon: {id: 'abc123@temporary-addon'},
-          },
+        const client = fakeFirefoxClient();
+        client.request = sinon.spy(async (request) => {
+          if (request === 'getRoot') {
+            return {addonsActor: 'addons1.actor.conn'};
+          }
+
+          if (request.type === 'installTemporaryAddon') {
+            return {
+              addon: {id: 'abc123@temporary-addon'},
+            };
+          }
         });
         const conn = makeInstance(client);
         const response = await conn.installTemporaryAddon('/path/to/addon');
         assert.equal(response.addon.id, 'abc123@temporary-addon');
 
         // When called without error, there should not be any fallback.
-        sinon.assert.calledOnce(client.request);
+        sinon.assert.calledTwice(client.request);
         sinon.assert.calledWith(client.request, 'getRoot');
       });
 
       it('falls back to listTabs when getRoot is unavailable', async () => {
-        const client = fakeFirefoxClient({
-          // installTemporaryAddon response:
-          makeRequestResult: {
-            addon: {id: 'abc123@temporary-addon'},
-          },
-        });
+        const client = fakeFirefoxClient();
         client.request = sinon.stub();
+        const addonsActor = 'addons1.actor.conn';
+        const addonPath = '/path/to/addon';
+
+        client.request.withArgs({
+          type: 'installTemporaryAddon',
+          to: addonsActor,
+          addonPath,
+        }).resolves({
+          addon: {id: 'abc123@temporary-addon'},
+        });
+
         // Sample response from Firefox 49.
-        client.request.withArgs('getRoot').callsArgWith(1, {
+        client.request.withArgs('getRoot').rejects({
           error: 'unrecognizedPacketType',
           message: 'Actor root does not recognize the packet type getRoot',
         });
-        client.request.withArgs('listTabs').callsArgWith(1, undefined, {
-          addonsActor: 'addons1.actor.conn',
+        client.request.withArgs('listTabs').resolves({
+          addonsActor,
         });
         const conn = makeInstance(client);
-        const response = await conn.installTemporaryAddon('/path/to/addon');
+        const response = await conn.installTemporaryAddon(addonPath);
         assert.equal(response.addon.id, 'abc123@temporary-addon');
 
-        sinon.assert.calledTwice(client.request);
+        sinon.assert.callCount(client.request, 3);
         sinon.assert.calledWith(client.request, 'getRoot');
         sinon.assert.calledWith(client.request, 'listTabs');
       });
@@ -310,11 +325,11 @@ describe('firefox.remote', () => {
         const client = fakeFirefoxClient();
         client.request = sinon.stub();
         // Sample response from Firefox 48.
-        client.request.withArgs('getRoot').callsArgWith(1, {
+        client.request.withArgs('getRoot').rejects({
           error: 'unrecognizedPacketType',
           message: 'Actor root does not recognize the packet type getRoot',
         });
-        client.request.withArgs('listTabs').callsArgWith(1, undefined, {});
+        client.request.withArgs('listTabs').resolves({});
         const conn = makeInstance(client);
         await conn.installTemporaryAddon('/path/to/addon')
           .then(makeSureItFails())
@@ -330,16 +345,19 @@ describe('firefox.remote', () => {
       });
 
       it('throws install errors', async () => {
-        const client = fakeFirefoxClient({
-          // listTabs response:
-          requestResult: {
-            addonsActor: 'addons1.actor.conn',
-          },
-          // installTemporaryAddon response:
-          makeRequestError: {
-            error: 'install error',
-            message: 'error message',
-          },
+        const client = fakeFirefoxClient();
+        client.request = sinon.spy(async (request) => {
+          if (request === 'getRoot') {
+            return {
+              addonsActor: 'addons1.actor.conn',
+            };
+          }
+          if (request.type === 'installTemporaryAddon') {
+            return Promise.reject({
+              error: 'install error',
+              message: 'error message',
+            });
+          }
         });
         const conn = makeInstance(client);
         await conn.installTemporaryAddon('/path/to/addon')
@@ -358,12 +376,12 @@ describe('firefox.remote', () => {
         const conn = makeInstance();
 
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.getInstalledAddon = sinon.spy(() => Promise.resolve(addon));
+        conn.getInstalledAddon = sinon.stub().resolves(addon);
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading =
           (addonToCheck) => Promise.resolve(addonToCheck);
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.addonRequest = sinon.spy(() => Promise.resolve({}));
+        conn.addonRequest = sinon.stub().resolves({});
 
         await conn.reloadAddon('some-id');
         sinon.assert.called(conn.getInstalledAddon);

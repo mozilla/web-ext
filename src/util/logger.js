@@ -91,7 +91,7 @@ export class ConsoleStream {
   }
 }
 
-export const consoleStream = new ConsoleStream();
+export const consoleStream: ConsoleStream = new ConsoleStream();
 
 
 // createLogger types and implementation.

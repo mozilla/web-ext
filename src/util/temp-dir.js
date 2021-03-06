@@ -127,7 +127,7 @@ export class TempDir {
   /*
    * Remove the temp directory.
    */
-  remove() {
+  remove(): Promise<void> | void {
     if (!this._removeTempDir) {
       return;
     }

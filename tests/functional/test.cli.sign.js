@@ -54,7 +54,7 @@ describe('web-ext sign', () => {
      () => withTempAddonDir({addonPath: minimalAddonPath}, (srcDir, tmpDir) => {
        const argv = [
          'sign', '--verbose',
-         '--api-url-prefix', 'http://localhost:8989/fake/api/v3',
+         '--api-url-prefix', 'http://localhost:8989/fake/api/v4',
          '--api-key', 'FAKEAPIKEY', '--api-secret', 'FAKEAPISECRET',
          '--source-dir', srcDir,
        ];
@@ -85,7 +85,7 @@ describe('web-ext sign', () => {
          JSON.stringify({
            webExt: {
              sign: {
-               apiUrlPrefix: 'http://localhost:8989/fake/api/v3',
+               apiUrlPrefix: 'http://localhost:8989/fake/api/v4',
              },
              sourceDir: srcDir,
            },

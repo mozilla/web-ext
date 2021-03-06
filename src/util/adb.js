@@ -7,7 +7,9 @@ import {
   WebExtError,
 } from '../errors';
 import {createLogger} from '../util/logger';
-import packageIdentifiers from '../firefox/package-identifiers';
+import packageIdentifiers, {
+  defaultApkComponents,
+} from '../firefox/package-identifiers';
 
 export const DEVICE_DIR_BASE = '/sdcard/';
 export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
@@ -313,6 +315,9 @@ export default class ADBUtils {
 
     if (!apkComponent) {
       apkComponent = '.App';
+      if (defaultApkComponents[apk]) {
+        apkComponent = defaultApkComponents[apk];
+      }
     } else if (!apkComponent.includes('.')) {
       apkComponent = `.${apkComponent}`;
     }
@@ -412,4 +417,17 @@ export default class ADBUtils {
       await adbClient.forward(deviceId, local, remote);
     });
   }
+}
+
+export async function listADBDevices(adbBin?: string): Promise<Array<string>> {
+  const adbClient = new ADBUtils({adbBin});
+  return adbClient.discoverDevices();
+}
+
+export async function listADBFirefoxAPKs(
+  deviceId: string,
+  adbBin?: string
+): Promise<Array<string>> {
+  const adbClient = new ADBUtils({adbBin});
+  return adbClient.discoverInstalledFirefoxAPKs(deviceId);
 }

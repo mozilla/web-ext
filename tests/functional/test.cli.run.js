@@ -14,18 +14,28 @@ const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 
 describe('web-ext run', () => {
 
-  it('accepts: --no-reload --watch-file --source-dir SRCDIR --firefox FXPATH',
+  it('accepts: --no-reload --watch-file --source-dir SRCDIR ' +
+    '--firefox FXPATH --watch-ignored',
      () => withTempAddonDir(
        {addonPath: minimalAddonPath},
        (srcDir) => {
          const watchedFile = path.join(srcDir, 'watchedFile.txt');
+         const watchIgnoredArr = ['ignoredFile1.txt', 'ignoredFile2.txt'].map(
+           (file) => path.join(srcDir, file)
+         );
+         const watchIgnoredFile = path.join(srcDir, 'ignoredFile3.txt');
+
          fs.writeFileSync(watchedFile, '');
+         watchIgnoredArr.forEach((file) => fs.writeFileSync(file, ''));
+         fs.writeFileSync(watchIgnoredFile, '');
 
          const argv = [
            'run', '--verbose', '--no-reload',
            '--source-dir', srcDir,
            '--watch-file', watchedFile,
            '--firefox', fakeFirefoxPath,
+           '--watch-ignored', ...watchIgnoredArr,
+           '--watch-ignored', watchIgnoredFile,
          ];
          const spawnOptions = {
            env: {

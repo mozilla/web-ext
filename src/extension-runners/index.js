@@ -45,7 +45,9 @@ export type MultiExtensionRunnerParams = {|
   desktopNotifications: typeof defaultDesktopNotifications,
 |};
 
-export async function createExtensionRunner(config: ExtensionRunnerConfig) {
+export async function createExtensionRunner(
+  config: ExtensionRunnerConfig
+): Promise<IExtensionRunner> {
   switch (config.target) {
     case 'firefox-desktop': {
       // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
@@ -86,7 +88,7 @@ export class MultiExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName() {
+  getName(): string {
     return 'Multi Extension Runner';
   }
 
@@ -150,7 +152,7 @@ export class MultiExtensionRunner {
   ): Promise<Array<ExtensionRunnerReloadResult>> {
     log.debug(`Reloading add-on at ${sourceDir}`);
 
-    const promises = [];
+    const promises: Array<Promise<ExtensionRunnerReloadResult>> = [];
     for (const runner of this.extensionRunners) {
       const reloadPromise = runner.reloadExtensionBySourceDir(sourceDir).then(
         () => {
@@ -168,7 +170,6 @@ export class MultiExtensionRunner {
       promises.push(reloadPromise);
     }
 
-    // $FlowFixMe: When upgrading to Flow 0.61.0, it could not follow the type of sourceDir in the array of promises.
     return await Promise.all(promises).then((results) => {
       this.handleReloadResults(results);
       return results;
@@ -237,7 +238,8 @@ export class MultiExtensionRunner {
 export type WatcherCreatorParams = {|
   reloadExtension: (string) => void,
   sourceDir: string,
-  watchFile?: string,
+  watchFile?: Array<string>,
+  watchIgnored?: Array<string>,
   artifactsDir: string,
   onSourceChange?: OnSourceChangeFn,
   ignoreFiles?: Array<string>,
@@ -248,7 +250,8 @@ export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
 export function defaultWatcherCreator(
   {
-    reloadExtension, sourceDir, watchFile, artifactsDir, ignoreFiles,
+    reloadExtension, sourceDir, watchFile,
+    watchIgnored, artifactsDir, ignoreFiles,
     onSourceChange = defaultSourceWatcher,
     createFileFilter = defaultFileFilterCreator,
   }: WatcherCreatorParams
@@ -259,6 +262,7 @@ export function defaultWatcherCreator(
   return onSourceChange({
     sourceDir,
     watchFile,
+    watchIgnored,
     artifactsDir,
     onChange: () => reloadExtension(sourceDir),
     shouldWatchFile: (file) => fileFilter.wantFile(file),
@@ -271,7 +275,8 @@ export function defaultWatcherCreator(
 export type ReloadStrategyParams = {|
   extensionRunner: IExtensionRunner,
   sourceDir: string,
-  watchFile?: string,
+  watchFile?: Array<string>,
+  watchIgnored?: Array<string>,
   artifactsDir: string,
   ignoreFiles?: Array<string>,
   noInput?: boolean,
@@ -291,6 +296,7 @@ export function defaultReloadStrategy(
     noInput = false,
     sourceDir,
     watchFile,
+    watchIgnored,
   }: ReloadStrategyParams,
   {
     createWatcher = defaultWatcherCreator,
@@ -309,6 +315,7 @@ export function defaultReloadStrategy(
     },
     sourceDir,
     watchFile,
+    watchIgnored,
     artifactsDir,
     ignoreFiles,
   });
@@ -359,7 +366,10 @@ export function defaultReloadStrategy(
           setRawMode(stdin, true);
         } else if (keyPressed.name === 'r') {
           log.debug('Reloading installed extensions on user request');
-          extensionRunner.reloadAllExtensions();
+          await extensionRunner.reloadAllExtensions().catch((err) => {
+            log.warn(`\nError reloading extension: ${err}`);
+            log.debug(`Reloading extension error stack: ${err.stack}`);
+          });
         }
       }
 

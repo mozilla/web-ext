@@ -299,6 +299,7 @@ describe('util/extension-runners', () => {
         sourceDir: '/path/to/extension/source/',
         artifactsDir: '/path/to/web-ext-artifacts',
         watchFile: '/path/to/watched/file',
+        watchIgnored: '/path/to/ignored/file',
         onSourceChange: sinon.spy(() => {}),
         ignoreFiles: ['path/to/file', 'path/to/file2'],
         reloadExtension: sinon.spy(() => Promise.resolve()),
@@ -321,6 +322,7 @@ describe('util/extension-runners', () => {
         sinon.match({
           sourceDir: config.sourceDir,
           watchFile: config.watchFile,
+          watchIgnored: config.watchIgnored,
           artifactsDir: config.artifactsDir,
           onChange: sinon.match.typeOf('function'),
         })
@@ -391,6 +393,7 @@ describe('util/extension-runners', () => {
         extensionRunner,
         sourceDir: '/path/to/extension/source',
         watchFile: '/path/to/watched/file',
+        watchIgnored: '/path/to/ignored/file',
         artifactsDir: '/path/to/web-ext-artifacts/',
         ignoreFiles: ['first/file', 'second/file'],
       };
@@ -425,6 +428,7 @@ describe('util/extension-runners', () => {
         sinon.match({
           sourceDir: sentArgs.sourceDir,
           watchFile: sentArgs.watchFile,
+          watchIgnored: sentArgs.watchIgnored,
           artifactsDir: sentArgs.artifactsDir,
           ignoreFiles: sentArgs.ignoreFiles,
         })
@@ -536,7 +540,7 @@ describe('util/extension-runners', () => {
          const {extensionRunner, reloadStrategy} = prepare({
            stubExtensionRunner: {
              reloadAllExtensions: sinon.spy(
-               () => Promise.reject(Error('fake reload error'))
+               () => Promise.reject(new Error('fake reload error'))
              ),
            },
          });
@@ -544,20 +548,39 @@ describe('util/extension-runners', () => {
          const fakeStdin = createFakeStdin();
          sinon.spy(fakeStdin, 'setRawMode');
 
-         try {
-           await reloadStrategy({}, {stdin: fakeStdin});
-           // Wait for one tick for reloadStrategy's keypress processing loop
-           // to be ready.
-           await Promise.resolve();
+         // Stub the `fakeStdin.once` method to be able to wait
+         // once a promise resolved when the reloadStrategy method
+         // did call `stdin.once('keypress', ...)`.
+         const fakeStdinOnce = fakeStdin.once;
+         sinon.stub(fakeStdin, 'once');
 
+         function promiseWaitKeypress() {
+           return new Promise((resolve) => {
+             fakeStdin.once.callsFake((...args) => {
+               if (args[0] === 'keypress') {
+                 resolve();
+               }
+               return fakeStdinOnce.apply(fakeStdin, args);
+             });
+           });
+         }
+
+         try {
+           let onceWaitKeypress = promiseWaitKeypress();
+           await reloadStrategy({}, {stdin: fakeStdin});
+           await onceWaitKeypress;
+
+           onceWaitKeypress = promiseWaitKeypress();
            fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-           // Wait for one tick to give reloadStrategy the chance to handle
-           // the keypress event.
-           await Promise.resolve();
+           await onceWaitKeypress;
+
            sinon.assert.called(fakeStdin.setRawMode);
            sinon.assert.calledOnce(extensionRunner.reloadAllExtensions);
+
+           onceWaitKeypress = promiseWaitKeypress();
            fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-           await Promise.resolve();
+           await onceWaitKeypress;
+
            sinon.assert.calledTwice(extensionRunner.reloadAllExtensions);
          } finally {
            exitKeypressLoop(fakeStdin);

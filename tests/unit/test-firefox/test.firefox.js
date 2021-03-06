@@ -99,6 +99,7 @@ describe('firefox', () => {
 
     function runFirefox(
       {
+        // $FlowIgnore: for the purpose of this test, fakeProfile includes only a subset of the expected properties.
         profile = fakeProfile,
         ...args
       }: RunFirefoxOptions = {},
@@ -114,6 +115,7 @@ describe('firefox', () => {
     it('executes the Firefox runner with a given profile', () => {
       const runner = createFakeFxRunner();
       const profile = fakeProfile;
+      // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
       return runFirefox({fxRunner: runner, profile})
         .then(() => {
           sinon.assert.called(runner);
@@ -232,7 +234,7 @@ describe('firefox', () => {
 
     it('requires a valid profile directory', () => {
       // This stubs out the code that looks for a named
-      // profile because on Travis CI there will not be a Firefox
+      // profile because on CI there will not be a Firefox
       // user directory.
       const copyFromUserProfile = sinon.spy(
         (config, cb) => cb(new Error('simulated: could not find profile')));
@@ -659,6 +661,7 @@ describe('firefox', () => {
     it('creates a finder', () => {
       const {FxProfile} = prepareProfileFinderTest();
       FxProfile.Finder = sinon.spy(FxProfile.Finder);
+      // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
       firefox.defaultCreateProfileFinder({FxProfile});
       sinon.assert.calledWith(FxProfile.Finder, sinon.match(undefined));
     });
@@ -668,6 +671,7 @@ describe('firefox', () => {
       FxProfile.Finder = sinon.spy(FxProfile.Finder);
 
       const userDirectoryPath = '/non/existent/path';
+      // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
       firefox.defaultCreateProfileFinder({userDirectoryPath, FxProfile});
 
       sinon.assert.called(FxProfile.Finder);
@@ -689,6 +693,7 @@ describe('firefox', () => {
 
       const profileFinder = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
+        // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
         FxProfile,
       });
 
@@ -715,6 +720,7 @@ describe('firefox', () => {
 
          const getter = firefox.defaultCreateProfileFinder({
            userDirectoryPath,
+           // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
            FxProfile,
          });
 
@@ -744,6 +750,7 @@ describe('firefox', () => {
 
          const getter = firefox.defaultCreateProfileFinder({
            userDirectoryPath,
+           // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
            FxProfile,
          });
 

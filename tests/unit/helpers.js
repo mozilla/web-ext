@@ -46,7 +46,7 @@ export class ZipFile {
   /**
    * Close the zip file and wait fd to release.
    */
-  close() {
+  close(): Promise<void> | null {
     this._zip.close();
     return this._close;
   }
@@ -193,61 +193,25 @@ export function fake<T>(
   return stub;
 }
 
-export function createFakeProcess() {
+export class StubChildProcess extends EventEmitter {
+  stderr: EventEmitter = new EventEmitter();
+  stdout: EventEmitter = new EventEmitter();
+  kill: any = sinon.spy(() => {});
+}
+
+export function createFakeProcess(): any {
   return fake(process, {}, ['EventEmitter', 'stdin']);
 }
 
-export class StubChildProcess extends EventEmitter {
-  stderr = new EventEmitter();
-  stdout = new EventEmitter();
-  kill = sinon.spy(() => {});
-}
-
 /*
- * Returns a fake Firefox client as would be returned by
- * connect() of 'node-firefox-connect'
+ * Returns a fake FirefoxRDPClient as would be returned by
+ * rdp-module connectToFirefox().
  */
-
-type FakeFirefoxClientParams = {|
-  requestResult?: Object,
-  requestError?: Object,
-  makeRequestResult?: Object,
-  makeRequestError?: Object,
-|}
-export function fakeFirefoxClient({
-  requestResult = {}, requestError,
-  makeRequestResult = {}, makeRequestError,
-}: FakeFirefoxClientParams = {}) {
+export function fakeFirefoxClient(): any {
   return {
     disconnect: sinon.spy(() => {}),
-    request: sinon.spy(
-      (request, callback) => callback(requestError, requestResult)),
-    // This is client.client, the actual underlying connection.
-    client: {
-      on: () => {},
-      makeRequest: sinon.spy((request, callback) => {
-        //
-        // The real function returns a response object that you
-        // use like this:
-        // if (response.error) {
-        //   ...
-        // } else {
-        //   response.something; // ...
-        // }
-        //
-        if (makeRequestError) {
-          let error;
-          if (typeof makeRequestError === 'object') {
-            error = makeRequestError;
-          } else {
-            error = {error: makeRequestError};
-          }
-          callback(error);
-        } else {
-          callback(makeRequestResult);
-        }
-      }),
-    },
+    on: () => {},
+    request: sinon.stub().resolves({}),
   };
 }
 
@@ -289,7 +253,7 @@ export const basicManifest = {
 /*
  * A basic manifest fixture without an applications property.
  */
-export const manifestWithoutApps = deepcopy(basicManifest);
+export const manifestWithoutApps: any = deepcopy(basicManifest);
 delete manifestWithoutApps.applications;
 
 /*
@@ -302,16 +266,16 @@ export class FakeExtensionRunner {
     this.params = params;
   }
 
-  getName() {
+  getName(): string {
     return 'Fake Extension Runner';
   }
 
   async run() {}
   async exit() {}
-  async reloadAllExtensions() {
+  async reloadAllExtensions(): Promise<any> {
     return [];
   }
-  async reloadExtensionBySourceDir(sourceDir: string) {
+  async reloadExtensionBySourceDir(sourceDir: string): Promise<any> {
     const runnerName = this.getName();
     return [{runnerName, sourceDir}];
   }
@@ -320,7 +284,7 @@ export class FakeExtensionRunner {
 
 export function getFakeFirefox(
   implementations: Object = {}, port: number = 6005
-) {
+): any {
   const profile = {}; // empty object just to avoid errors.
   const firefox = () => Promise.resolve();
   const allImplementations = {
@@ -334,7 +298,7 @@ export function getFakeFirefox(
   return fake(defaultFirefoxApp, allImplementations);
 }
 
-export function getFakeRemoteFirefox(implementations: Object = {}) {
+export function getFakeRemoteFirefox(implementations: Object = {}): any {
   return fake(RemoteFirefox.prototype, implementations);
 }
 

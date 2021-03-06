@@ -3,10 +3,11 @@
 This is a command line tool to help build, run, and test
 [WebExtensions](https://wiki.mozilla.org/WebExtensions).
 
-[![Build Status](https://travis-ci.org/mozilla/web-ext.svg?branch=master)](https://travis-ci.org/mozilla/web-ext)
-[![Coverage Status](https://coveralls.io/repos/github/mozilla/web-ext/badge.svg?branch=master)](https://coveralls.io/github/mozilla/web-ext?branch=master)
+[![CircleCI](https://circleci.com/gh/mozilla/web-ext.svg?style=svg)](https://circleci.com/gh/mozilla/web-ext)
+[![codecov](https://codecov.io/gh/mozilla/web-ext/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/web-ext)
 [![Dependency Status](https://david-dm.org/mozilla/web-ext.svg)](https://david-dm.org/mozilla/web-ext)
 [![devDependency Status](https://david-dm.org/mozilla/web-ext/dev-status.svg)](https://david-dm.org/mozilla/web-ext#info=devDependencies)
+[![npm version](https://badge.fury.io/js/web-ext.svg)](https://badge.fury.io/js/web-ext)
 
 Ultimately, it aims to support browser extensions in a standard, portable,
 cross-platform way. Initially, it will provide a streamlined experience for developing
@@ -139,6 +140,28 @@ webExt.cmd.run({
     // extensionRunner.reloadAllExtensions();
     // extensionRunner.exit();
   });
+```
+
+If you would like to run an extension on Firefox for Android:
+
+```js
+// Path to adb binary (optional parameter, auto-detected if missing)
+const adbBin = "/path/to/adb";
+// Get an array of device ids (Array<string>)
+const deviceIds = await webExt.util.adb.listADBDevices(adbBin);
+const adbDevice = ...
+// Get an array of Firefox APKs (Array<string>)
+const firefoxAPKs = await webExt.util.adb.listADBFirefoxAPKs(
+  deviceId, adbBin
+);
+const firefoxApk = ...
+
+webExt.cmd.run({
+  target: 'firefox-android',
+  firefoxApk,
+  adbDevice,
+  sourceDir: ...
+}).then((extensionRunner) => {...});
 ```
 
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:

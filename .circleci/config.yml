@@ -1,0 +1,294 @@
+# These environment variables must be set in CircleCI UI
+#
+# NPM_TOKEN - A valid NPM token for releases
+#
+# NOTE:
+# - to validate changes to this file locally using the circleci CLI tool:
+#
+#     circleci config process .circleci/config.yml
+#
+# - to try run jobs locally:
+#
+#     circleci config process .circleci/config.yaml > processed.yaml
+#     circleci local execute -c tmp/process.yml --job build-nodejs-current
+#
+version: 2.1
+
+orbs:
+  # Used in the `test-windows` job to run the test on windows.
+  win: circleci/windows@1.0.0
+
+references:
+  # NOTE: update the nodejs version strings that follows to change the
+  # set of nodejs versions that should be tested.
+  # The nodejs version set as `nodejs_current` is the one used to
+  # release the package on npm.
+  nodejs_versions:
+    - &nodejs_current "10"
+    - &nodejs_next "12"
+    - &nodejs_experimental "14"
+
+  nodejs_enum: &nodejs_enum
+    type: enum
+    default: *nodejs_current
+    enum:
+      - *nodejs_current
+      - *nodejs_next
+      - *nodejs_experimental
+  repo_path: &repo_path ~/web-ext
+  defaults: &defaults
+    working_directory: *repo_path
+
+commands:
+  attach_project_repo:
+    description: attach repo from workspace
+    steps:
+      - attach_workspace:
+          at: *repo_path
+
+  persist_project_repo:
+    description: persist repo in workspace
+    steps:
+      - persist_to_workspace:
+          root: *repo_path
+          paths: .
+
+  restore_build_cache:
+    description: restore npm package cache
+    parameters:
+      suffix:
+        type: string
+        default: default
+    steps:
+      - restore_cache:
+          keys:
+            - npm-packages-{{ checksum "package-lock.json" }}-<< parameters.suffix >>
+
+  save_build_cache:
+    description: save npm package cache
+    parameters:
+      suffix:
+        type: string
+        default: default
+    steps:
+      - save_cache:
+          key: npm-packages-{{ checksum "package-lock.json" }}-<< parameters.suffix >>
+          paths:
+            - ./node_modules
+
+  run_npm_ci:
+    description: install npm dependencies
+    steps:
+      - run: npm ci
+
+  run_npm_build:
+    description: build project in << parameters.node_env >> mode
+    parameters:
+      node_env:
+        type: enum
+        default: production
+        enum: ["production", "test"]
+    steps:
+      - run:
+          command: npm run build --if-present
+          environment:
+            NODE_ENV: << parameters.node_env >>
+
+  run_functional_tests:
+    description: run functional tests
+    parameters:
+      retry_once:
+        type: enum
+        default: ""
+        enum: ["", "y"]
+      legacy_bundling:
+        type: boolean
+        default: false
+      mocha_timeout:
+        type: integer
+        # Custom mocha timeout to reduce intermittent failures triggered
+        # by one of the functional tests (triggered by the before all hook
+        # of the test.lib.imports.js).
+        default: 20000
+    steps:
+      ## NOTE: by setting the configured python to /bin/false we are forcing
+      ## the production mode tests to fail if any of the dependencies is a
+      ## binary dependency that is built using node-gyp.
+      - run: npm config set python /bin/false
+      - configure_global_npm
+      - run:
+          ## (See #1082 for rationale).
+          name: run functional tests in npm production environment
+          command: npm run test-functional
+          environment:
+            TEST_PRODUCTION_MODE: 1
+            CI_RETRY_ONCE: << parameters.retry_once >>
+            MOCHA_TIMEOUT: << parameters.mocha_timeout >>
+      - when:
+          condition: << parameters.legacy_bundling >>
+          steps:
+            - run:
+                ## (See #1639 for rationale).
+                name: run functional tests in npm legacy bundling mode
+                command: npm run test-functional
+                environment:
+                  TEST_PRODUCTION_MODE: 1
+                  TEST_LEGACY_BUNDLING: 1
+                  CI_RETRY_ONCE: << parameters.retry_once >>
+                  MOCHA_TIMEOUT: << parameters.mocha_timeout >>
+      - run: npm config delete python
+
+  audit_deps:
+    description: audit npm deps
+    steps:
+      - run: npm run audit-deps
+
+  lint_commit_conventions:
+    description: lint commit message conventions
+    steps:
+      - run: npm run github-pr-title-lint
+
+  # This is required to avoid a `EACCES` when running `npm link` (which is
+  # executed in the test suite).
+  configure_global_npm:
+    description: create custom directory for global npm installs
+    steps:
+      # NOTE: keep the following steps compatible with both bash and cmd.exe
+      - run: cd .. && mkdir .npm-global
+      - run: npm config set prefix '../.npm-global'
+
+jobs:
+  build:
+    parameters:
+      nodejs:
+        <<: *nodejs_enum
+    <<: *defaults
+    docker:
+      - image: circleci/node:<< parameters.nodejs >>
+    steps:
+      - attach_project_repo
+      - checkout
+      - restore_build_cache:
+          suffix: << parameters.nodejs >>
+      - run_npm_ci
+      - save_build_cache:
+          suffix: << parameters.nodejs >>
+      - run_npm_build:
+          node_env: test
+      - unless:
+          condition:
+            equal: [*nodejs_current, << parameters.nodejs >>]
+          steps:
+            # `flow check` does a static analysis, no need to run more than once
+            # per worflow run.
+            - run:
+                name: Turn off flow checks on non current nodejs version
+                command: export CI_SKIP_FLOWCHECK=y
+      ## Skip code coverage and the additional legacy bundling tests on jobs
+      ## running on the next nodejs versions.
+      - unless:
+          condition:
+            equal: [*nodejs_current, << parameters.nodejs >>]
+          steps:
+            - run:
+                name: run linting checks and unit tests
+                command: npm run test
+            - run_functional_tests
+      ## Steps only executed in jobs running on the current nodejs version.
+      - when:
+          condition:
+            equal: [*nodejs_current, << parameters.nodejs >>]
+          steps:
+            - run:
+                name: run linting check and unit tests with coverage
+                command: npm run test-coverage
+            - store_artifacts:
+                path: coverage
+            - run:
+                name: publish coverage data
+                command: npm run publish-coverage
+            - run_functional_tests:
+                legacy_bundling: true
+            - persist_project_repo
+            - audit_deps
+            - lint_commit_conventions
+
+  test-windows:
+    <<: *defaults
+    executor:
+      name: win/vs2019
+      shell: cmd.exe
+    steps:
+      - checkout
+      - restore_build_cache:
+          suffix: windows
+      - run_npm_ci
+      - save_build_cache:
+          suffix: windows
+      - run_npm_build:
+          node_env: test
+      - run:
+          name: run linting checks and unit tests
+          command: npm run test
+          environment:
+            # `flow check` does a static analysis, no need to run more than once
+            # per worflow run.
+            CI_SKIP_FLOWCHECK: y
+      - run_functional_tests:
+          retry_once: "y"
+
+  release-tag:
+    parameters:
+      nodejs:
+        <<: *nodejs_enum
+    <<: *defaults
+    docker:
+      - image: circleci/node:<< parameters.nodejs >>
+    steps:
+      - attach_project_repo
+      - run_npm_build:
+          node_env: production
+      - run:
+          name: npm registry auth
+          command: echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
+      - run:
+          name: npm registry publish
+          command: npm publish
+
+workflows:
+  default-workflow:
+    jobs:
+      - build:
+          name: build-nodejs-current
+          nodejs: *nodejs_current
+          filters:
+            tags:
+              only: /.*/
+      - build:
+          name: build-nodejs-next
+          nodejs: *nodejs_next
+          filters:
+            tags:
+              only: /.*/
+      - build:
+          name: build-nodejs-experimental
+          nodejs: *nodejs_experimental
+          filters:
+            tags:
+              only: /.*/
+      - test-windows:
+          filters:
+            tags:
+              only: /.*/
+      - release-tag:
+          nodejs: *nodejs_current
+          requires:
+            - build-nodejs-current
+            - build-nodejs-next
+            - build-nodejs-experimental
+            - test-windows
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

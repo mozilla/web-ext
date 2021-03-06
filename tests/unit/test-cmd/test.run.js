@@ -1,11 +1,13 @@
 /* @flow */
 import path from 'path';
 
+import { fs } from 'mz';
 import {afterEach, beforeEach, describe, it} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
 
 import run from '../../../src/cmd/run';
+import {UsageError} from '../../../src/errors';
 import {
   fixturePath,
   FakeExtensionRunner,
@@ -58,9 +60,9 @@ function prepareRun(fakeInstallResult) {
 }
 
 describe('run', () => {
-  let androidRunnerStub: sinon.SinonStub;
-  let desktopRunnerStub: sinon.SinonStub;
-  let chromiumRunnerStub: sinon.SinonStub;
+  let androidRunnerStub: any;
+  let desktopRunnerStub: any;
+  let chromiumRunnerStub: any;
 
   beforeEach(() => {
     androidRunnerStub = sinon.stub(
@@ -159,12 +161,22 @@ describe('run', () => {
     }, {firefoxApp, firefoxClient});
   });
 
+  it('throws if watchFile is not an array', async () => {
+    const cmd = prepareRun();
+    await assert.isRejected(
+      cmd.run({noReload: false, watchFile: 'invalid-value.txt' }),
+      /Unexpected watchFile type/
+    );
+  });
+
   it('can watch and reload the extension', async () => {
     const cmd = prepareRun();
     const {sourceDir, artifactsDir} = cmd.argv;
     const {reloadStrategy} = cmd.options;
 
-    const watchFile = fixturePath('minimal-web-ext', 'manifest.json');
+    const watchFile = [
+      fixturePath('minimal-web-ext', 'manifest.json'),
+    ];
 
     await cmd.run({noReload: false, watchFile });
     assert.equal(reloadStrategy.called, true);
@@ -326,4 +338,96 @@ describe('run', () => {
          },
        );
      });
+
+  describe('profile-create-new option', () => {
+    beforeEach(() => {
+      sinon.stub(fs, 'mkdir');
+      sinon.stub(fs, 'existsSync');
+    });
+
+    afterEach(() => {
+      fs.mkdir.restore();
+      fs.existsSync.restore();
+    });
+
+    const fakeProfile = '/pretend/path/to/profile';
+
+    async function testCreateProfileIfMissing(
+      expectProfileExists,
+      runParams
+    ) {
+      fs.existsSync.returns(expectProfileExists);
+      const cmd = prepareRun();
+
+      await cmd.run(runParams);
+
+      if (expectProfileExists) {
+        sinon.assert.notCalled(fs.mkdir);
+      } else {
+        sinon.assert.calledWith(fs.mkdir, fakeProfile);
+      }
+
+      if (runParams.target === 'chromium') {
+        sinon.assert.calledOnce(chromiumRunnerStub);
+
+        const {chromiumProfile} = chromiumRunnerStub.firstCall.args[0];
+        assert.equal(chromiumProfile, fakeProfile,
+                     'Got the expected chromiumProfile option');
+      } else {
+        sinon.assert.calledOnce(desktopRunnerStub);
+        const firefoxProfile = desktopRunnerStub
+          .firstCall
+          .args[0]
+          .profilePath;
+        assert.equal(firefoxProfile, fakeProfile,
+                     'Got the expected firefoxProfile option');
+      }
+    }
+
+    it('creates dir when firefox profile does not exist',
+       async () => testCreateProfileIfMissing(
+         false, {
+           firefoxProfile: fakeProfile,
+           profileCreateIfMissing: true,
+         })
+    );
+
+    it('creates dir when chromium profile does not exist',
+       async () => testCreateProfileIfMissing(
+         false, {
+           chromiumProfile: fakeProfile,
+           target: 'chromium',
+           profileCreateIfMissing: true,
+         })
+    );
+
+    it('uses the given firefox profile directory if it does exist',
+       async () => testCreateProfileIfMissing(
+         true, {
+           firefoxProfile: fakeProfile,
+           profileCreateIfMissing: true,
+         })
+    );
+
+    it('uses the given chromium profile directory if it does exist',
+       async () => testCreateProfileIfMissing(
+         true, {
+           chromiumProfile: fakeProfile,
+           target: 'chromium',
+           profileCreateIfMissing: true,
+         })
+    );
+
+    it('throws error when used without firefox-profile or chromium-profile',
+       async () => {
+         const cmd = prepareRun();
+         const promise = cmd.run({ profileCreateIfMissing: true });
+
+         await assert.isRejected(promise, UsageError);
+         await assert.isRejected(
+           promise,
+           /requires --firefox-profile or --chromium-profile/
+         );
+       });
+  });
 });
