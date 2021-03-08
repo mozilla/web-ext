@@ -47,6 +47,8 @@ describe('watcher', () => {
         onChange,
         shouldWatchFile: () => true,
       });
+
+      // $FlowIgnore: retrieve internal Watchpack properties for testing purpose.
       const {fileWatchers, directoryWatchers} = watcher;
       let watchedFile;
       let watchedDir;
