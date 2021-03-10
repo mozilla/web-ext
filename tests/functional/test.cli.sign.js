@@ -37,9 +37,10 @@ describe('web-ext sign', () => {
 
   beforeEach(() => {
     return new Promise((resolve, reject) => {
-      fakeServerProcess = spawn(process.execPath, [fakeServerPath]);
-      fakeServerProcess.stdout.on('data', resolve);
-      fakeServerProcess.stderr.on('data', reject);
+      const newProcess = spawn(process.execPath, [fakeServerPath]);
+      newProcess.stdout.on('data', resolve);
+      newProcess.stderr.on('data', reject);
+      fakeServerProcess = newProcess;
     });
   });
 
