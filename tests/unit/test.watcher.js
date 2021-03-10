@@ -23,7 +23,7 @@ describe('watcher', () => {
     watchFile,
     touchedFile,
   }: AssertWatchedParams = {}) => withTempDir(
-    (tmpDir) => {
+    async (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
       const someFile = path.join(tmpDir.path(), touchedFile);
 
@@ -31,7 +31,7 @@ describe('watcher', () => {
         watchFile = watchFile.map((f) => path.join(tmpDir.path(), f));
       }
 
-      var resolveChange;
+      let resolveChange;
       const whenFilesChanged = new Promise((resolve) => {
         resolveChange = resolve;
       });
@@ -39,66 +39,56 @@ describe('watcher', () => {
         resolveChange();
       });
 
-      let watchedFilePath;
-      let watchedDirPath;
+      await fs.writeFile(someFile, '<contents>');
+      const watcher = onSourceChange({
+        sourceDir: tmpDir.path(),
+        watchFile,
+        artifactsDir,
+        onChange,
+        shouldWatchFile: () => true,
+      });
 
-      return fs.writeFile(someFile, '<contents>')
-        .then(() => {
-          return onSourceChange({
-            sourceDir: tmpDir.path(),
-            watchFile,
-            artifactsDir,
-            onChange,
-            shouldWatchFile: () => true,
-          });
-        })
-        .then((watcher) => {
-          const {fileWatchers, directoryWatchers} = watcher;
-          let watchedFile;
-          let watchedDir;
+      // $FlowIgnore: retrieve internal Watchpack properties for testing purpose.
+      const {fileWatchers, directoryWatchers} = watcher;
+      let watchedFile;
+      let watchedDir;
 
-          if (fileWatchers?.size > 0) {
-            watchedFile = Array.from(fileWatchers.values())[0];
-          }
+      if (fileWatchers?.size > 0) {
+        watchedFile = Array.from(fileWatchers.values())[0];
+      }
 
-          if (directoryWatchers?.size > 0) {
-            watchedDir = Array.from(directoryWatchers.values())[0];
-          }
+      if (directoryWatchers?.size > 0) {
+        watchedDir = Array.from(directoryWatchers.values())[0];
+      }
 
-          watchedFilePath = watchedFile && watchedFile.path;
-          watchedDirPath = watchedDir && watchedDir.path;
+      const watchedFilePath = watchedFile && watchedFile.path;
+      const watchedDirPath = watchedDir && watchedDir.path;
 
-          return watcher;
-        })
-        .then((watcher) => {
-          return fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000)
-            .then(() => watcher);
-        }).then((watcher) => {
-          const assertParams = {
-            onChange,
-            watchedFilePath,
-            watchedDirPath,
-            tmpDirPath: tmpDir.path(),
-          };
+      await fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000);
+      const assertParams = {
+        onChange,
+        watchedFilePath,
+        watchedDirPath,
+        tmpDirPath: tmpDir.path(),
+      };
 
-          return Promise.race([
-            whenFilesChanged
-              .then(() => {
-                watcher.close();
-                // This delay seems to avoid stat errors from the watcher
-                // which can happen when the temp dir is deleted (presumably
-                // before watcher.close() has removed all listeners).
-                return new Promise((resolve) => {
-                  setTimeout(resolve, 2, assertParams);
-                });
-              }),
-            // Time out if no files are changed
-            new Promise((resolve) => setTimeout(() => {
-              watcher.close();
-              resolve(assertParams);
-            }, 500)),
-          ]);
-        });
+      return Promise.race([
+        whenFilesChanged
+          .then(() => {
+            watcher.close();
+            // This delay seems to avoid stat errors from the watcher
+            // which can happen when the temp dir is deleted (presumably
+            // before watcher.close() has removed all listeners).
+            return new Promise((resolve) => {
+              setTimeout(resolve, 2, assertParams);
+            });
+          }),
+        // Time out if no files are changed
+        new Promise((resolve) => setTimeout(() => {
+          watcher.close();
+          resolve(assertParams);
+        }, 500)),
+      ]);
     }
   );
 
