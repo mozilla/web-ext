@@ -11,7 +11,7 @@ import packageIdentifiers, {
   defaultApkComponents,
 } from '../firefox/package-identifiers';
 
-export const DEVICE_DIR_BASE = '/sdcard/';
+export const DEVICE_DIR_BASE = '/data/local/tmp/';
 export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
 
 const log = createLogger(__filename);
