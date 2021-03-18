@@ -533,7 +533,7 @@ describe('utils/adb', () => {
 
       const result = await assert.isFulfilled(promise);
 
-      assert.match(result, /^\/sdcard\/web-ext-artifacts-/);
+      assert.match(result, /^\/data\/local\/tmp\/web-ext-artifacts-/);
 
       sinon.assert.calledTwice(adb.fakeADBClient.shell);
       sinon.assert.calledWithMatch(
@@ -557,7 +557,8 @@ describe('utils/adb', () => {
          const adbUtils = new ADBUtils({adb});
 
          // Add an artifact dir to the adbUtils internal map.
-         const fakeArtifactsDir = '/sdcard/web-ext-artifacts-already-created';
+         const fakeArtifactsDir =
+           '/data/local/tmp/web-ext-artifacts-already-created';
          adbUtils.artifactsDirMap.set('device1', fakeArtifactsDir);
 
          const promise = adbUtils.getOrCreateArtifactsDir('device1');
@@ -577,7 +578,7 @@ describe('utils/adb', () => {
         },
         testFn: (adbUtils) => {
           adbUtils.artifactsDirMap.set(
-            'device1', '/sdcard/webext-artifacts-fake'
+            'device1', '/data/local/tmp/webext-artifacts-fake'
           );
           return adbUtils.clearArtifactsDir('device1');
         },
@@ -586,7 +587,7 @@ describe('utils/adb', () => {
       sinon.assert.calledOnce(adb.fakeADBClient.shell);
       sinon.assert.calledWithMatch(
         adb.fakeADBClient.shell, 'device1',
-        ['rm', '-rf', '/sdcard/webext-artifacts-fake']
+        ['rm', '-rf', '/data/local/tmp/webext-artifacts-fake']
       );
     });
 
@@ -601,7 +602,10 @@ describe('utils/adb', () => {
       });
       const adbUtils = new ADBUtils({adb});
 
-      adbUtils.artifactsDirMap.set('device1', '/sdcard/webext-artifacts-fake');
+      adbUtils.artifactsDirMap.set(
+        'device1',
+        '/data/local/tmp/webext-artifacts-fake'
+      );
       const promise = adbUtils.clearArtifactsDir('device1');
 
       await assert.isFulfilled(promise);
@@ -609,7 +613,7 @@ describe('utils/adb', () => {
       sinon.assert.calledOnce(adb.fakeADBClient.shell);
       sinon.assert.calledWithMatch(
         adb.fakeADBClient.shell, 'device1',
-        ['rm', '-rf', '/sdcard/webext-artifacts-fake']
+        ['rm', '-rf', '/data/local/tmp/webext-artifacts-fake']
       );
     });
 

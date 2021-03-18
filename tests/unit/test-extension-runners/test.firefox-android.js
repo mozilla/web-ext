@@ -361,7 +361,7 @@ describe('util/extension-runners/firefox-android', () => {
     it('does check for existing artifacts dirs', async () => {
       const adbOverrides = {
         getOrCreateArtifactsDir: sinon.spy(
-          () => Promise.resolve('/sdcard/web-ext-dir')
+          () => Promise.resolve('/data/local/tmp/web-ext-dir')
         ),
         detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(false)),
       };
@@ -402,7 +402,7 @@ describe('util/extension-runners/firefox-android', () => {
     it('does optionally remove older artifacts dirs', async () => {
       const adbOverrides = {
         getOrCreateArtifactsDir: sinon.spy(
-          () => Promise.resolve('/sdcard/web-ext-dir')
+          () => Promise.resolve('/data/local/tmp/web-ext-dir')
         ),
         detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(true)),
       };
