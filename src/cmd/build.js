@@ -132,7 +132,8 @@ function getPackageNameFromTemplate(
   const packageName = filenameTemplate.replace(
     /{([A-Za-z0-9._]+?)}/g,
     (match, manifestProperty) => {
-      return getStringPropertyValue(manifestProperty, manifestData);
+      return safeFileName(
+        getStringPropertyValue(manifestProperty, manifestData));
     }
   );
 
