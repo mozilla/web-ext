@@ -109,7 +109,7 @@
     "doctoc": "2.0.0",
     "eslint": "7.24.0",
     "eslint-plugin-async-await": "0.0.0",
-    "eslint-plugin-flowtype": "5.4.0",
+    "eslint-plugin-flowtype": "5.7.0",
     "eslint-plugin-import": "2.22.1",
     "flow-bin": "0.148.0",
     "git-rev-sync": "3.0.1",
