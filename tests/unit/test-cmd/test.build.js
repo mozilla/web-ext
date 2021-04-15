@@ -121,6 +121,22 @@ describe('build', () => {
     );
   });
 
+  it('sanitizes characters in extension name in filename from template', () => {
+    return withTempDir(
+      (tmpDir) =>
+        build({
+          sourceDir: fixturePath('slashed-name'),
+          artifactsDir: tmpDir.path(),
+          // name contains a slash. description ends with ".zip".
+          filename: 'prefix-{name}{description}',
+        })
+          .then((buildResult) => {
+            assert.match(buildResult.extensionPath,
+                         /prefix-name_w_o_slash_o_ends_with\.zip$/);
+          })
+    );
+  });
+
   it('throws an error if the filename contains a path', () => {
     return withTempDir(
       (tmpDir) =>
