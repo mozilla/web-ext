@@ -427,7 +427,7 @@ Example: $0 --help run.
       describe: 'Web extension source directory.',
       default: process.cwd(),
       requiresArg: true,
-      type: 'string',
+      type: 'array',
       coerce: path.resolve,
     },
     'artifacts-dir': {
