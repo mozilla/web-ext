@@ -69,7 +69,7 @@
     "event-to-promise": "0.8.0",
     "firefox-profile": "4.1.0",
     "fs-extra": "9.1.0",
-    "fx-runner": "1.0.13",
+    "fx-runner": "1.1.0",
     "import-fresh": "3.3.0",
     "mkdirp": "1.0.4",
     "multimatch": "5.0.0",
