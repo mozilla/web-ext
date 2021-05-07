@@ -34,7 +34,7 @@
     "changelog-lint": "commitlint --from master",
     "changelog-lint-from-stdin": "commitlint",
     "github-pr-title-lint": "node ./scripts/github-pr-title-lint",
-    "gen-contributing-toc": "doctoc CONTRIBUTING.md"
+    "gen-contributing-toc": "npx doctoc CONTRIBUTING.md"
   },
   "homepage": "https://github.com/mozilla/web-ext",
   "repository": {
@@ -106,7 +106,6 @@
     "copy-dir": "1.3.0",
     "cross-env": "7.0.3",
     "deepcopy": "2.1.0",
-    "doctoc": "2.0.0",
     "eslint": "7.24.0",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "5.7.1",
