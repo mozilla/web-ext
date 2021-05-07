@@ -110,7 +110,7 @@
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-flowtype": "5.7.2",
     "eslint-plugin-import": "2.22.1",
-    "flow-bin": "0.148.0",
+    "flow-bin": "0.150.1",
     "git-rev-sync": "3.0.1",
     "html-entities": "2.1.1",
     "mocha": "8.4.0",
