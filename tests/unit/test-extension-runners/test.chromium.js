@@ -54,11 +54,13 @@ function prepareExtensionRunnerParams({params} = {}) {
 describe('util/extension-runners/chromium', async () => {
 
   it('uses the expected chrome flags', () => {
-    // Flags from chrome-launcher v0.12.0
+    // Flags from chrome-launcher v0.14.0
     const expectedFlags = [
-      '--disable-features=TranslateUI',
+      '--disable-features=Translate',
       '--disable-component-extensions-with-background-pages',
       '--disable-background-networking',
+      '--disable-component-update',
+      '--disable-client-side-phishing-detection',
       '--disable-sync',
       '--metrics-recording-only',
       '--disable-default-apps',
@@ -67,6 +69,9 @@ describe('util/extension-runners/chromium', async () => {
       '--disable-backgrounding-occluded-windows',
       '--disable-renderer-backgrounding',
       '--disable-background-timer-throttling',
+      '--disable-ipc-flooding-protection',
+      '--password-store=basic',
+      '--use-mock-keychain',
       '--force-fieldtrials=*BackgroundTracing/default/',
     ];
 
