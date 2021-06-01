@@ -1,6 +1,4 @@
 {
   "exceptions": [
-    // hosted-git-info sec adv (due to @commitlint/cli and eslint-plugin-import dev dependencies).
-    "https://npmjs.com/advisories/1677"
   ]
 }
