@@ -217,7 +217,7 @@ jobs:
   test-windows:
     <<: *defaults
     executor:
-      name: win/vs2019
+      name: win/default
       shell: cmd.exe
     steps:
       - checkout
