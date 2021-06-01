@@ -16,7 +16,7 @@ version: 2.1
 
 orbs:
   # Used in the `test-windows` job to run the test on windows.
-  win: circleci/windows@1.1.0
+  win: circleci/windows@2.4.0
 
 references:
   # NOTE: update the nodejs version strings that follows to change the
