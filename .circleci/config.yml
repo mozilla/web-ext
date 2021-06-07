@@ -16,7 +16,7 @@ version: 2.1
 
 orbs:
   # Used in the `test-windows` job to run the test on windows.
-  win: circleci/windows@1.1.0
+  win: circleci/windows@2.4.0
 
 references:
   # NOTE: update the nodejs version strings that follows to change the
@@ -28,6 +28,12 @@ references:
     - &nodejs_next "14"
     ## TODO: replace this with 16 as soon as it becomes available
     - &nodejs_experimental "15"
+    ## NOTE: the nodejs version shipped with circleci/windows@2.4.0 orb
+    ## (v12.11.1) fails on the test-functional test related to importing
+    ## web-ext as a library (see https://github.com/mozilla/web-ext/pull/2221),
+    ## the issue seems to have been fixed on more recent nodejs versions
+    ## (any version >= 12.16.0).
+    - &nodejs_current_win "12.22.1"
 
   nodejs_enum: &nodejs_enum
     type: enum
@@ -215,17 +221,29 @@ jobs:
             - lint_commit_conventions
 
   test-windows:
+    parameters:
+      nodejs:
+        type: enum
+        default: *nodejs_current_win
+        enum:
+          - *nodejs_current_win
     <<: *defaults
     executor:
-      name: win/vs2019
+      name: win/default
       shell: cmd.exe
     steps:
+      - run:
+          name: Update nodejs version shipped on the windows circleci worker
+          command: nvm install << parameters.nodejs >>
+      - run:
+          name: Activate nodejs version installed through nvm-windows
+          command: nvm use << parameters.nodejs >>
       - checkout
       - restore_build_cache:
-          suffix: windows
+          suffix: windows-<< parameters.nodejs >>
       - run_npm_ci
       - save_build_cache:
-          suffix: windows
+          suffix: windows-<< parameters.nodejs >>
       - run_npm_build:
           node_env: test
       - run:
