@@ -430,6 +430,7 @@ describe('build', () => {
           // Make sure it uses the file filter.
           assert.typeOf(args.shouldWatchFile, 'function');
           args.shouldWatchFile('/some/path');
+          // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
           sinon.assert.called(fileFilter.wantFile);
 
           // Remove the built extension.

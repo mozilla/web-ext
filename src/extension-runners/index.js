@@ -285,7 +285,7 @@ export type ReloadStrategyParams = {|
 export type ReloadStrategyOptions = {|
   createWatcher?: WatcherCreatorFn,
   stdin?: stream$Readable,
-  kill?: typeof process.kill,
+  kill?: (pid: number, signal?: string | number) => void,
 |};
 
 export function defaultReloadStrategy(
@@ -301,6 +301,7 @@ export function defaultReloadStrategy(
   {
     createWatcher = defaultWatcherCreator,
     stdin = process.stdin,
+    // $FlowIgnore: ignore method-unbinding.
     kill = process.kill,
   }: ReloadStrategyOptions = {}
 ): void {

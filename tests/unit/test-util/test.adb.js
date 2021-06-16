@@ -75,6 +75,7 @@ function getFakeADBKit(
     startActivity: sinon.spy(() => {}),
     forward: sinon.spy(() => {}),
     push: sinon.spy(() => {
+      // $FlowIgnore: ignore method-unbinding flowtype error.
       const originalOn = fakeTransfer.on.bind(fakeTransfer);
       // $FlowIgnore: ignore flow errors on this testing hack
       fakeTransfer.on = (event, cb) => {
