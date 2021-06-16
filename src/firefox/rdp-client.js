@@ -91,10 +91,10 @@ export default class FirefoxRDPClient extends EventEmitter {
     this._pending = [];
     this._active = new Map();
 
-    this._onData = this.onData.bind(this);
-    this._onError = this.onError.bind(this);
-    this._onEnd = this.onEnd.bind(this);
-    this._onTimeout = this.onTimeout.bind(this);
+    this._onData = (...args) => this.onData(...args);
+    this._onError = (...args) => this.onError(...args);
+    this._onEnd = (...args) => this.onEnd(...args);
+    this._onTimeout = (...args) => this.onTimeout(...args);
   }
 
   connect(port: number): Promise<void> {

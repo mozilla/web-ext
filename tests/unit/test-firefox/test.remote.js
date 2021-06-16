@@ -187,13 +187,14 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const stubResponse = {requestTypes: ['reload']};
         const conn = makeInstance();
+        const addonRequest = sinon.stub().resolves(stubResponse);
 
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.addonRequest = sinon.stub().resolves(stubResponse);
+        conn.addonRequest = addonRequest;
 
         const returnedAddon = await conn.checkForAddonReloading(addon);
-        sinon.assert.called(conn.addonRequest);
-        const args = conn.addonRequest.firstCall.args;
+        sinon.assert.called(addonRequest);
+        const args = addonRequest.firstCall.args;
 
         assert.equal(args[0].id, addon.id);
         assert.equal(args[1], 'requestTypes');
@@ -219,14 +220,14 @@ describe('firefox.remote', () => {
       it('only checks for reloading once', async () => {
         const addon = fakeAddon();
         const conn = makeInstance();
+        const addonRequest = sinon.stub().resolves({requestTypes: ['reload']});
 
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.addonRequest =
-          sinon.stub().resolves({requestTypes: ['reload']});
+        conn.addonRequest = addonRequest;
         const checkedAddon = await conn.checkForAddonReloading(addon);
         const finalAddon = await conn.checkForAddonReloading(checkedAddon);
         // This should remember not to check a second time.
-        sinon.assert.calledOnce(conn.addonRequest);
+        sinon.assert.calledOnce(addonRequest);
         assert.deepEqual(finalAddon, addon);
       });
     });
@@ -375,20 +376,23 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
+        const getInstalledAddon = sinon.stub().resolves(addon);
+        const addonRequest = sinon.stub().resolves({});
+
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.getInstalledAddon = sinon.stub().resolves(addon);
+        conn.getInstalledAddon = getInstalledAddon;
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading =
           (addonToCheck) => Promise.resolve(addonToCheck);
         // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.addonRequest = sinon.stub().resolves({});
+        conn.addonRequest = addonRequest;
 
         await conn.reloadAddon('some-id');
-        sinon.assert.called(conn.getInstalledAddon);
-        sinon.assert.calledWith(conn.getInstalledAddon, 'some-id');
-        sinon.assert.called(conn.addonRequest);
+        sinon.assert.called(getInstalledAddon);
+        sinon.assert.calledWith(getInstalledAddon, 'some-id');
+        sinon.assert.called(addonRequest);
 
-        const requestArgs = conn.addonRequest.firstCall.args;
+        const requestArgs = addonRequest.firstCall.args;
         assert.deepEqual(requestArgs[0], addon);
         assert.equal(requestArgs[1], 'reload');
       });
@@ -397,16 +401,19 @@ describe('firefox.remote', () => {
         const addon = fakeAddon();
         const conn = makeInstance();
 
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.getInstalledAddon = () => Promise.resolve(addon);
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
-        conn.checkForAddonReloading =
+        const getInstalledAddon = () => Promise.resolve(addon);
+        const checkForAddonReloading =
           sinon.spy((addonToCheck) => Promise.resolve(addonToCheck));
+
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
+        conn.getInstalledAddon = getInstalledAddon;
+        // $FlowIgnore: allow overwrite not writable property for testing purpose.
+        conn.checkForAddonReloading = checkForAddonReloading;
 
         await conn.reloadAddon(addon.id);
 
-        sinon.assert.called(conn.checkForAddonReloading);
-        assert.deepEqual(conn.checkForAddonReloading.firstCall.args[0],
+        sinon.assert.called(checkForAddonReloading);
+        assert.deepEqual(checkForAddonReloading.firstCall.args[0],
                          addon);
       });
 

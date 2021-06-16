@@ -201,7 +201,7 @@ export async function isDefaultProfile(
 
   // Check for profile dir path.
   const finder = new ProfileFinder(baseProfileDir);
-  const readProfiles = promisify(finder.readProfiles.bind(finder));
+  const readProfiles = promisify((...args) => finder.readProfiles(...args));
 
   await readProfiles();
 
@@ -296,8 +296,8 @@ export function defaultCreateProfileFinder(
   }: CreateProfileFinderParams = {}
 ): getProfileFn {
   const finder = new FxProfile.Finder(userDirectoryPath);
-  const readProfiles = promisify(finder.readProfiles.bind(finder));
-  const getPath = promisify(finder.getPath.bind(finder));
+  const readProfiles = promisify((...args) => finder.readProfiles(...args));
+  const getPath = promisify((...args) => finder.getPath(...args));
   return async (profileName: string): Promise<string | void> => {
     try {
       await readProfiles();

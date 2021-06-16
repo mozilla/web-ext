@@ -38,11 +38,8 @@ describe('logger', () => {
     // NOTE: create a fake process that makes flow happy.
     function fakeProcess() {
       class FakeWritableStream extends WritableStream {
-        write(): boolean {
-          return true;
-        }
+        write = () => true;
       }
-
       const fakeWritableStream = new FakeWritableStream();
       sinon.spy(fakeWritableStream, 'write');
 

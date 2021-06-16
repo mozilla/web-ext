@@ -592,15 +592,18 @@ describe('util/extension-runners/firefox-android', () => {
            {port: runnerInstance.selectedTCPPort}
          );
 
+         // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
+         const {installTemporaryAddon} = runnerInstance.remoteFirefox;
+
          sinon.assert.calledWithMatch(
-           runnerInstance.remoteFirefox.installTemporaryAddon,
+           installTemporaryAddon,
            `${runnerInstance.selectedArtifactsDir}/${builtFileName}.xpi`
          );
 
          sinon.assert.callOrder(
            fakeADBUtils.setupForward,
            firefoxClient,
-           runnerInstance.remoteFirefox.installTemporaryAddon,
+           installTemporaryAddon
          );
        });
 
@@ -639,6 +642,7 @@ describe('util/extension-runners/firefox-android', () => {
 
          await runnerInstance.reloadAllExtensions();
 
+         // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
          sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
        });
 
@@ -652,6 +656,7 @@ describe('util/extension-runners/firefox-android', () => {
         params.extensions[0].sourceDir,
       );
 
+      // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
       sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
     });
 
@@ -674,6 +679,7 @@ describe('util/extension-runners/firefox-android', () => {
            '"/non-existent/source-dir"'
          );
 
+         // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
          sinon.assert.notCalled(runnerInstance.remoteFirefox.reloadAddon);
        });
 
@@ -701,6 +707,7 @@ describe('util/extension-runners/firefox-android', () => {
            `Error on extension loaded from ${sourceDir}: `
          ));
 
+         // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
          sinon.assert.called(runnerInstance.remoteFirefox.reloadAddon);
        });
 

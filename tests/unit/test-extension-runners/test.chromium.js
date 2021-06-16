@@ -143,6 +143,7 @@ describe('util/extension-runners/chromium', async () => {
     const fakeSocket = new EventEmitter();
     sinon.spy(fakeSocket, 'on');
     runnerInstance.wss?.emit('connection', fakeSocket);
+    // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
     sinon.assert.calledOnce(fakeSocket.on);
 
     fakeSocket.emit('error', new Error('Fake wss socket ERROR'));
@@ -240,6 +241,7 @@ describe('util/extension-runners/chromium', async () => {
 
        await exitDone;
 
+       // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
        sinon.assert.calledOnce(runnerInstance.exit);
      });
 
