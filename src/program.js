@@ -175,18 +175,6 @@ export class Program {
     if (argv.configDiscovery != null) {
       argv.noConfigDiscovery = !argv.configDiscovery;
     }
-    if (argv.reload != null) {
-      argv.noReload = !argv.reload;
-    }
-
-    // Yargs doesn't accept --no-input as a valid option if there isn't a
-    // --input option defined to be negated, to fix that the --input is
-    // defined and hidden from the yargs help output and we define here
-    // the negated argument name that we expect to be set in the parsed
-    // arguments (and fix https://github.com/mozilla/web-ext/issues/1860).
-    if (argv.input != null) {
-      argv.noInput = !argv.input;
-    }
 
     // Replacement for the "requiresArg: true" parameter until the following bug
     // is fixed: https://github.com/yargs/yargs/issues/1098
@@ -199,6 +187,20 @@ export class Program {
     }
 
     return argv;
+  }
+
+  fixNegatedCLIOptions(args: Object): Object {
+    return {
+      ...args,
+      noInput: args.input != null ? !args.input : args.noInput,
+      noReload: args.reload != null ? !args.reload : args.noReload,
+    };
+
+    // --no-input and --no-reload use Yargs negation and only set the
+    // `input` and `reload` flags rather than the noInput and noReload
+    // flags accepted by the lint and run commands respectively. This
+    // negation operation allows `input` and `reload` to be set from
+    // config files, where noInput and noReload are not permitted.
   }
 
   // getArguments() disables validation of required parameters, to allow us to
@@ -320,6 +322,8 @@ export class Program {
       }
 
       this.checkRequiredArguments(adjustedArgv);
+
+      adjustedArgv = this.fixNegatedCLIOptions(adjustedArgv);
 
       await runCommand(adjustedArgv, {shouldExitProgram});
 

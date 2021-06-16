@@ -651,6 +651,36 @@ describe('program.main', () => {
       options.selfHosted, configObject.lint.selfHosted);
   });
 
+  it('negates options in config files', async () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    const configObject = {
+      run: {
+        reload: false,
+      },
+    };
+    // Instead of loading/parsing a real file, just return an object.
+    const fakeLoadJSConfigFile = sinon.spy(() => {
+      return configObject;
+    });
+
+    await execProgram(
+      ['run', '--config', 'path/to/web-ext-config.js'],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          loadJSConfigFile: fakeLoadJSConfigFile,
+        },
+      }
+    );
+
+    const options = fakeCommands.run.firstCall.args[0];
+    // This makes sure that the config object was correctly negated
+    // when passed to run command options.
+    assert.equal(!options.noReload, configObject.run.reload);
+  });
+
   it('discovers config files', async () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
