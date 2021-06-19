@@ -119,7 +119,7 @@ commands:
         # Custom mocha timeout to reduce intermittent failures triggered
         # by one of the functional tests (triggered by the before all hook
         # of the test.lib.imports.js).
-        default: 20000
+        default: 30000
     steps:
       ## NOTE: by setting the configured python to /bin/false we are forcing
       ## the production mode tests to fail if any of the dependencies is a
