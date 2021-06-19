@@ -162,7 +162,12 @@ describe('config', () => {
     });
 
     it('coerces config option values if needed', () => {
-      const coerce = (sourceDir) => `coerced(${sourceDir})`;
+      const coerce = (sourceDir) => {
+        // coerce may have been called with the default value (undefined)
+        // and in that case we want to return undefined to allow the config file
+        // to override the empty default value.
+        return sourceDir != null ? `coerced(${sourceDir})` : undefined;
+      };
       const params = makeArgv({
         userCmd: ['fakecommand'],
         globalOpt: {
@@ -171,7 +176,7 @@ describe('config', () => {
             type: 'string',
             demandOption: false,
             // In the real world this would do something like
-            // (sourceDir) => path.resolve(sourceDir)
+            // (sourceDir) => sourceDir != null ? path.resolve(sourceDir) : undefined;
             coerce,
           },
         },

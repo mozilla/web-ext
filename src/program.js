@@ -61,6 +61,7 @@ export class Program {
   verboseEnabled: boolean;
   options: Object;
   programArgv: Array<string>;
+  demandedOptions: Object;
 
   constructor(
     argv: ?Array<string>,
@@ -168,9 +169,17 @@ export class Program {
     // regressions are located at: tests/functional/test.cli.sign.js
     //
     // Replace hack if possible:  https://github.com/mozilla/web-ext/issues/1930
-    const validationInstance = this.yargs.getValidationInstance();
+    const validationInstance =
+      this.yargs.getInternalMethods().getValidationInstance();
     const { requiredArguments } = validationInstance;
-    validationInstance.requiredArguments = () => {};
+    // Initialize demandedOptions (which is going to be set to an object with one
+    // property for each mandatory global options, then the arrow function below
+    // will receive as its demandedOptions parameter a new one that also includes
+    // all mandatory options for the sub command selected).
+    this.demandedOptions = this.yargs.getDemandedOptions();
+    validationInstance.requiredArguments = (args, demandedOptions) => {
+      this.demandedOptions = demandedOptions;
+    };
     const argv = this.yargs.argv;
     validationInstance.requiredArguments = requiredArguments;
 
@@ -211,8 +220,9 @@ export class Program {
   // must call checkRequiredArguments() to ensure that required parameters are
   // defined (in the CLI or in a config file).
   checkRequiredArguments(adjustedArgv: Object): void {
-    const validationInstance = this.yargs.getValidationInstance();
-    validationInstance.requiredArguments(adjustedArgv);
+    const validationInstance =
+      this.yargs.getInternalMethods().getValidationInstance();
+    validationInstance.requiredArguments(adjustedArgv, this.demandedOptions);
   }
 
   // Remove WEB_EXT_* environment vars that are not a global cli options
@@ -430,7 +440,7 @@ Example: $0 --help run.
       default: process.cwd(),
       requiresArg: true,
       type: 'string',
-      coerce: path.resolve,
+      coerce: (arg) => arg != null ? path.resolve(arg) : undefined,
     },
     'artifacts-dir': {
       alias: 'a',
@@ -505,9 +515,10 @@ Example: $0 --help run.
           demandOption: false,
           requiresArg: true,
           type: 'string',
-          coerce: throwUsageErrorIfArray(
-            'Multiple --filename/-n option are not allowed'
-          ),
+          coerce: (arg) => arg == null ?
+            undefined : throwUsageErrorIfArray(
+              'Multiple --filename/-n option are not allowed'
+            )(arg),
         },
         'overwrite-dest': {
           alias: 'o',
@@ -650,7 +661,8 @@ Example: $0 --help run.
         demandOption: false,
         requiresArg: true,
         type: 'array',
-        coerce: coerceCLICustomPreference,
+        coerce: (arg) => arg != null ?
+          coerceCLICustomPreference(arg) : undefined,
       },
       'start-url': {
         alias: ['u', 'url'],
