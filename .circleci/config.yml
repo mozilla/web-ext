@@ -26,8 +26,7 @@ references:
   nodejs_versions:
     - &nodejs_current "12"
     - &nodejs_next "14"
-    ## TODO: replace this with 16 as soon as it becomes available
-    - &nodejs_experimental "15"
+    - &nodejs_experimental "16"
     ## NOTE: the nodejs version shipped with circleci/windows@2.4.0 orb
     ## (v12.11.1) fails on the test-functional test related to importing
     ## web-ext as a library (see https://github.com/mozilla/web-ext/pull/2221),
