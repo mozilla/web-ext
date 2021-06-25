@@ -1,6 +1,6 @@
 {
   "name": "web-ext",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "A command line tool to help build, run, and test web extensions",
   "main": "dist/web-ext.js",
   "exports": {
@@ -16,7 +16,7 @@
   ],
   "engines": {
     "node": ">=12.0.0",
-    "npm": ">=6.9.0 <7.0.0"
+    "npm": ">=6.9.0"
   },
   "engine-strict": true,
   "bin": {
@@ -59,7 +59,7 @@
   "dependencies": {
     "@babel/runtime": "7.13.9",
     "@devicefarmer/adbkit": "2.11.3",
-    "addons-linter": "3.6.0",
+    "addons-linter": "3.8.0",
     "bunyan": "1.8.15",
     "camelcase": "6.2.0",
     "chrome-launcher": "0.14.0",
@@ -113,7 +113,7 @@
     "flow-bin": "0.152.0",
     "git-rev-sync": "3.0.1",
     "html-entities": "2.1.1",
-    "mocha": "8.4.0",
+    "mocha": "9.0.1",
     "nyc": "15.1.0",
     "prettyjson": "1.2.1",
     "shelljs": "0.8.4",
