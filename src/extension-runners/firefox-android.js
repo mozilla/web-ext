@@ -411,12 +411,10 @@ export class FirefoxAndroidExtensionRunner {
     log.debug('Checking read/write permissions needed for web-ext' +
               `on ${selectedFirefoxApk}...`);
 
-    // Runtime permission needed to be able to run Firefox on a temporarily created profile
-    // on android versions >= 23 (Android Marshmallow, which is the first version where
-    // these permissions are optional and have to be granted explicitly).
+    // Runtime permissions needed to Firefox to be able to access the
+    // xpi file uploaded to the android device or emulator.
     const requiredPermissions = [
       'android.permission.READ_EXTERNAL_STORAGE',
-      'android.permission.WRITE_EXTERNAL_STORAGE',
     ];
 
     await adbUtils.ensureRequiredAPKRuntimePermissions(
