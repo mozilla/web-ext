@@ -959,13 +959,12 @@ describe('util/extension-runners/firefox-android', () => {
              fakeADBUtils.ensureRequiredAPKRuntimePermissions,
              'emulator-1', 'org.mozilla.firefox', [
                'android.permission.READ_EXTERNAL_STORAGE',
-               'android.permission.WRITE_EXTERNAL_STORAGE',
              ]
            );
 
            sinon.assert.callOrder(
              fakeADBUtils.getAndroidVersionNumber,
-             fakeADBUtils.ensureRequiredAPKRuntimePermissions
+             fakeADBUtils.ensureRequiredAPKRuntimePermissions,
            );
          }
 
