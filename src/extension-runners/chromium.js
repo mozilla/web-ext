@@ -217,9 +217,18 @@ export class ChromiumExtensionRunner {
     if (this.params.startUrl) {
       const startingUrls = Array.isArray(this.params.startUrl) ?
         this.params.startUrl : [this.params.startUrl];
+
+      var isStartUrlExtensions = false;
+      for (let i = 0; i < startingUrls.length; i++) {
+        if (startingUrls[i].toLowerCase() === 'chrome://extensions') {
+          isStartUrlExtensions = true;
+          startingUrls.splice(i, 1)
+        }
+      } 
+      
       startingUrl = startingUrls.shift();
       chromeFlags.push(...startingUrls);
-    }
+  }
 
     this.chromiumInstance = await this.chromiumLaunch({
       enableExtensions: true,
@@ -230,6 +239,10 @@ export class ChromiumExtensionRunner {
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
     });
+
+    if (isStartUrlExtensions) {
+      await this.openTabWithExtensionsUrl()
+    }
 
     this.chromiumInstance.process.once('close', () => {
       this.chromiumInstance = null;
@@ -341,6 +354,14 @@ export class ChromiumExtensionRunner {
           await Promise.all(devExtensions.map(ext => reloadExtension(ext.id)));
           ws.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
         }
+        if (msg.type === 'webExtOpenTabWithExtensionsUrl') {
+           chrome.tabs.create({
+            url: 'chrome://extensions'
+          });
+          
+          ws.send(JSON.stringify({ type: 'webExtReloadExtensionForURLComplete' }));
+        }
+
       };
     })()`;
 
@@ -361,6 +382,24 @@ export class ChromiumExtensionRunner {
 
     process.stdout.write(
       `\rLast extension reload: ${(new Date()).toTimeString()}`);
+    log.debug('\n');
+
+    return [{runnerName}];
+  }
+
+  /**
+   * Opens a new tab in chrome with url chrome://extensions by communicating with bg extension
+  */
+  async openTabWithExtensionsUrl(): Promise<Array<ExtensionRunnerReloadResult>> {
+
+    const runnerName = this.getName();
+
+    await this.wssBroadcast({
+      type: 'webExtOpenTabWithExtensionsUrl',
+    });
+
+    process.stdout.write(
+      `\rExtension opened with tab for chrome://extension URL: ${(new Date()).toTimeString()}`);
     log.debug('\n');
 
     return [{runnerName}];
