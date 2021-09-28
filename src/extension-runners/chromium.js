@@ -150,8 +150,28 @@ export class ChromiumExtensionRunner {
       });
     });
 
+    const chromeFlags = [...DEFAULT_CHROME_FLAGS];
+    let startingUrl;
+    var specialStartingUrls = '';
+    if (this.params.startUrl) {
+      const startingUrls = Array.isArray(this.params.startUrl) ?
+        this.params.startUrl : [this.params.startUrl];
+
+      // Remove URLs starting with chrome:// from startingUrls and let bg.js open them instead
+      for (let i = 0; i < startingUrls.length; i++) {
+        if (startingUrls[i].toLowerCase().startsWith('chrome://')) {
+          specialStartingUrls += startingUrls[i] + " "
+          startingUrls.splice(i, 1)
+        }
+      }
+
+      startingUrl = startingUrls.shift();
+
+      chromeFlags.push(...startingUrls);
+    }
+
     // Create the extension that will manage the addon reloads
-    this.reloadManagerExtension = await this.createReloadManagerExtension();
+    this.reloadManagerExtension = await this.createReloadManagerExtension(specialStartingUrls);
 
     // Start chrome pointing it to a given profile dir
     const extensions = [this.reloadManagerExtension].concat(
@@ -165,8 +185,6 @@ export class ChromiumExtensionRunner {
     if (chromiumBinary) {
       log.debug(`(chromiumBinary: ${chromiumBinary})`);
     }
-
-    const chromeFlags = [...DEFAULT_CHROME_FLAGS];
 
     chromeFlags.push(`--load-extension=${extensions}`);
 
@@ -213,22 +231,6 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(`--profile-directory=${profileDirName}`);
     }
 
-    let startingUrl;
-    if (this.params.startUrl) {
-      const startingUrls = Array.isArray(this.params.startUrl) ?
-        this.params.startUrl : [this.params.startUrl];
-
-      var isStartUrlExtensions = false;
-      for (let i = 0; i < startingUrls.length; i++) {
-        if (startingUrls[i].toLowerCase() === 'chrome://extensions') {
-          isStartUrlExtensions = true;
-          startingUrls.splice(i, 1)
-        }
-      } 
-      
-      startingUrl = startingUrls.shift();
-      chromeFlags.push(...startingUrls);
-  }
 
     this.chromiumInstance = await this.chromiumLaunch({
       enableExtensions: true,
@@ -239,10 +241,6 @@ export class ChromiumExtensionRunner {
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
     });
-
-    if (isStartUrlExtensions) {
-      await this.openTabWithExtensionsUrl()
-    }
 
     this.chromiumInstance.process.once('close', () => {
       this.chromiumInstance = null;
@@ -293,7 +291,7 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  async createReloadManagerExtension(): Promise<string> {
+  async createReloadManagerExtension(specialStartingUrls: string): Promise<string> {
     const tmpDir = new TempDir();
     await tmpDir.create();
     this.registerCleanup(() => tmpDir.remove());
@@ -347,6 +345,19 @@ export class ChromiumExtensionRunner {
       const ws = new window.WebSocket(
         "ws://${wssInfo.address}:${wssInfo.port}");
 
+      
+      if (${specialStartingUrls.length} > 0)
+      {   
+        const chromeTabList = "${specialStartingUrls}".trim().split(" ")
+        chrome.runtime.onInstalled.addListener(details => {
+          if (details.reason === chrome.runtime.OnInstalledReason.INSTALL ) {
+            chromeTabList.forEach(url => {
+              chrome.tabs.create({ url });
+            });
+            }           
+        });
+      }
+   
       ws.onmessage = async (evt) => {
         const msg = JSON.parse(evt.data);
         if (msg.type === 'webExtReloadAllExtensions') {
@@ -382,24 +393,6 @@ export class ChromiumExtensionRunner {
 
     process.stdout.write(
       `\rLast extension reload: ${(new Date()).toTimeString()}`);
-    log.debug('\n');
-
-    return [{runnerName}];
-  }
-
-  /**
-   * Opens a new tab in chrome with url chrome://extensions by communicating with bg extension
-  */
-  async openTabWithExtensionsUrl(): Promise<Array<ExtensionRunnerReloadResult>> {
-
-    const runnerName = this.getName();
-
-    await this.wssBroadcast({
-      type: 'webExtOpenTabWithExtensionsUrl',
-    });
-
-    process.stdout.write(
-      `\rExtension opened with tab for chrome://extension URL: ${(new Date()).toTimeString()}`);
     log.debug('\n');
 
     return [{runnerName}];
