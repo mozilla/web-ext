@@ -365,14 +365,6 @@ export class ChromiumExtensionRunner {
           await Promise.all(devExtensions.map(ext => reloadExtension(ext.id)));
           ws.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
         }
-        if (msg.type === 'webExtOpenTabWithExtensionsUrl') {
-           chrome.tabs.create({
-            url: 'chrome://extensions'
-          });
-          
-          ws.send(JSON.stringify({ type: 'webExtReloadExtensionForURLComplete' }));
-        }
-
       };
     })()`;
 
