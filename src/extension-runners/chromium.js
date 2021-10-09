@@ -158,11 +158,14 @@ export class ChromiumExtensionRunner {
         this.params.startUrl : [this.params.startUrl];
 
       // Extract URLs starting with chrome:// from startingUrls and let bg.js open them instead
-      startingUrls.forEach((element) => {
-        if (element.toLowerCase().startsWith('chrome://')) {
-          specialStartingUrls.push(element);
-        }
-      });
+      specialStartingUrls = startingUrls.filter(
+        (item) => (item.toLowerCase().startsWith('chrome://')));
+
+      const strippedStartingUrls = startingUrls.filter(
+        (item) => !(item.toLowerCase().startsWith('chrome://')));
+
+      startingUrl = strippedStartingUrls.shift();
+      chromeFlags.push(...strippedStartingUrls);
     }
 
     // Create the extension that will manage the addon reloads
@@ -225,17 +228,6 @@ export class ChromiumExtensionRunner {
 
     if (profileDirName) {
       chromeFlags.push(`--profile-directory=${profileDirName}`);
-    }
-
-    if (this.params.startUrl) {
-      const startingUrls = Array.isArray(this.params.startUrl) ?
-        this.params.startUrl : [this.params.startUrl];
-
-      const strippedStartingUrls = startingUrls.filter(
-        (item) => !(item.toLowerCase().startsWith('chrome://')));
-
-      startingUrl = strippedStartingUrls.shift();
-      chromeFlags.push(...strippedStartingUrls);
     }
 
     this.chromiumInstance = await this.chromiumLaunch({
