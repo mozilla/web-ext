@@ -1,4 +1,9 @@
 {
   "exceptions": [
+    // ansi-regex advisory (transitive dependency introduced by update-notifier and
+    // nyc).
+    "https://github.com/advisories/GHSA-93q8-gq69-wqmw",
+    // trim-off-newlines (transitive dependency introduced by @commitlint/cli)
+    "https://github.com/advisories/GHSA-38fc-wpqx-33j7"
   ]
 }
