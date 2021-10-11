@@ -78,7 +78,7 @@
     "open": "7.4.2",
     "parse-json": "5.2.0",
     "sign-addon": "3.8.0",
-    "source-map-support": "0.5.19",
+    "source-map-support": "0.5.20",
     "strip-bom": "4.0.0",
     "strip-json-comments": "3.1.1",
     "tmp": "0.2.1",
