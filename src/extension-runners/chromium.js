@@ -332,7 +332,7 @@ export class ChromiumExtensionRunner {
       }
 
       const ws = new window.WebSocket(
-        "ws://${wssInfo.address}:${wssInfo.port}");
+        "ws://${escapeIPv6(wssInfo.address)}:${wssInfo.port}");
 
       ws.onmessage = async (evt) => {
         const msg = JSON.parse(evt.data);
@@ -423,4 +423,11 @@ export class ChromiumExtensionRunner {
       }
     }
   }
+}
+
+export function escapeIPv6(address: string): string {
+  if (/^([a-f0-9:]+:+)+[a-f0-9]+$/.test(address)) {
+    return `[${address}]`;
+  }
+  return address;
 }

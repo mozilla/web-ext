@@ -18,6 +18,7 @@ import {
 import {
   ChromiumExtensionRunner,
   DEFAULT_CHROME_FLAGS,
+  escapeIPv6,
 } from '../../../src/extension-runners/chromium';
 import type {
   ChromiumExtensionRunnerParams,
@@ -126,7 +127,7 @@ describe('util/extension-runners/chromium', async () => {
 
     // $FlowIgnore: allow to call addess even wss property can be undefined.
     const wssInfo = runnerInstance.wss.address();
-    const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
+    const wsURL = `ws://${escapeIPv6(wssInfo.address)}:${wssInfo.port}`;
     const wsClient = new WebSocket(wsURL);
 
     await new Promise((resolve) => wsClient.on('open', resolve));
@@ -637,7 +638,7 @@ describe('util/extension-runners/chromium', async () => {
       }
       // $FlowIgnore: if runnerInstance.wss would be unexpectedly undefined the test case will fail.
       const wssInfo = runnerInstance.wss.address();
-      const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
+      const wsURL = `ws://${escapeIPv6(wssInfo.address)}:${wssInfo.port}`;
       wsClient = new WebSocket(wsURL);
       await new Promise((resolve) => wsClient.on('open', resolve));
     };
