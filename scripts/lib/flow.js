@@ -4,7 +4,7 @@ exports.flowCheck = () => {
   if (process.env.CI_SKIP_FLOWCHECK) {
     console.log('flow check task skipped on CI_SKIP_FLOWCHECK env set');
   } else {
-    const res = spawnSync('flow', ['check'], {stdio: 'inherit'});
+    const res = spawnSync('flow', ['check'], {stdio: 'inherit', shell: true});
     if (res.error || res.status !== 0) {
       if (res.error) {
         console.error(res.error);
@@ -17,7 +17,7 @@ exports.flowCheck = () => {
 };
 
 exports.flowStatus = () => {
-  const res = spawnSync('flow', ['status'], {stdio: 'inherit'});
+  const res = spawnSync('flow', ['status'], {stdio: 'inherit', shell: true});
   if (res.error) {
     console.error(res.error);
     return false;
