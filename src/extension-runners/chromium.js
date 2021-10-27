@@ -136,7 +136,7 @@ export class ChromiumExtensionRunner {
     // Start a websocket server on a free localhost TCP port.
     this.wss = await new Promise((resolve) => {
       const server = new WebSocket.Server(
-        {port: 0, host: 'localhost'},
+        {port: 0, host: '127.0.0.1'},
         // Wait the server to be listening (so that the extension
         // runner can successfully retrieve server address and port).
         () => resolve(server));
