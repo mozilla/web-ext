@@ -17,6 +17,7 @@ version: 2.1
 orbs:
   # Used in the `test-windows` job to run the test on windows.
   win: circleci/windows@2.4.1
+  codecov: codecov/codecov@3.2.0
 
 references:
   # NOTE: update the nodejs version strings that follows to change the
@@ -214,9 +215,7 @@ jobs:
                 command: npm run test-coverage
             - store_artifacts:
                 path: coverage
-            - run:
-                name: publish coverage data
-                command: npm run publish-coverage
+            - codecov/upload
             - run_functional_tests:
                 legacy_bundling: true
             - persist_project_repo
