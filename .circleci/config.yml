@@ -17,7 +17,7 @@ version: 2.1
 orbs:
   # Used in the `test-windows` job to run the test on windows.
   win: circleci/windows@2.4.1
-  codecov: codecov/codecov@3.2.0
+  codecov: codecov/codecov@3.2.2
 
 references:
   # NOTE: update the nodejs version strings that follows to change the
