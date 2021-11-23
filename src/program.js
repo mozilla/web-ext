@@ -87,6 +87,7 @@ export class Program {
       'boolean-negation': true,
     });
     this.yargs.strict();
+    this.yargs.wrap(this.yargs.terminalWidth());
 
     this.commands = {};
     this.options = {};
