@@ -93,6 +93,7 @@ describe('watcher', () => {
   );
 
   it('watches for changes in the sourceDir', async () => {
+    const defaultDebounce = 500;
     const {
       onChange,
       watchedFilePath,
@@ -101,6 +102,8 @@ describe('watcher', () => {
     } = await watchChange({
       touchedFile: 'foo.txt',
     });
+
+    await new Promise((resolve) => setTimeout(resolve, defaultDebounce + 50));
 
     sinon.assert.calledOnce(onChange);
     assert.equal(watchedDirPath, tmpDirPath);
