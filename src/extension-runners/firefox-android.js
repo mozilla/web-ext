@@ -51,6 +51,12 @@ const ignoredParams = {
   args: '--args',
 };
 
+// Default adbHost to 127.0.0.1 to prevent issues with nodejs 17
+// (because if not specified adbkit may default to ipv6 while
+// adb may still only be listening on the ipv4 address),
+// see https://github.com/mozilla/web-ext/issues/2337.
+const DEFAULT_ADB_HOST = '127.0.0.1';
+
 const getIgnoredParamsWarningsMessage = (optionName) => {
   return `The Firefox for Android target does not support ${optionName}`;
 };
@@ -120,7 +126,7 @@ export class FirefoxAndroidExtensionRunner {
   async run(): Promise<void> {
     const {
       adbBin,
-      adbHost,
+      adbHost = DEFAULT_ADB_HOST,
       adbPort,
       ADBUtils = DefaultADBUtils,
     } = this.params;
