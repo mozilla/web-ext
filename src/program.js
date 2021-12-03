@@ -556,6 +556,11 @@ Example: $0 --help run.
           '\'listed\' or \'unlisted\'',
           type: 'string',
         },
+        'progress-bar': {
+          alias: 'p',
+          describe: 'Toggle Progress Bar',
+          type: 'boolean',
+        },
       })
     .command('run', 'Run the extension', commands.run, {
       'target': {

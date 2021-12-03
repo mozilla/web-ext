@@ -34,6 +34,7 @@ export type SignParams = {|
   timeout: number,
   verbose?: boolean,
   channel?: string,
+  disableProgressBar?: boolean,
 |};
 
 export type SignOptions = {
@@ -62,6 +63,7 @@ export default function sign(
     timeout,
     verbose,
     channel,
+    disableProgressBar,
   }: SignParams,
   {
     build = defaultBuilder,
@@ -74,6 +76,7 @@ export default function sign(
       await prepareArtifactsDir(artifactsDir);
 
       let manifestData;
+
 
       if (preValidatedManifest) {
         manifestData = preValidatedManifest;
@@ -112,6 +115,7 @@ export default function sign(
         log.warn('No extension ID specified (it will be auto-generated)');
       }
 
+
       const signingResult = await signAddon({
         apiKey,
         apiSecret,
@@ -120,6 +124,7 @@ export default function sign(
         timeout,
         verbose,
         id,
+        disableProgressBar,
         xpiPath: buildResult.extensionPath,
         version: manifestData.version,
         downloadDir: artifactsDir,
