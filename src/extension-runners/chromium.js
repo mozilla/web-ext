@@ -318,7 +318,8 @@ export class ChromiumExtensionRunner {
           r => chrome.management.getAll(r));
 
         return allExtensions.filter((extension) => {
-          return extension.installType === "development" &&
+          return extension.enabled &&
+            extension.installType === "development" &&
             extension.id !== chrome.runtime.id;
         });
       }
