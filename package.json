@@ -111,7 +111,7 @@
     "flow-bin": "0.165.1",
     "git-rev-sync": "3.0.2",
     "html-entities": "2.1.1",
-    "mocha": "9.1.3",
+    "mocha": "9.2.0",
     "nyc": "15.1.0",
     "prettyjson": "1.2.1",
     "shelljs": "0.8.5",
