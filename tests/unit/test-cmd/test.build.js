@@ -5,7 +5,7 @@ import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import sinon from 'sinon';
-import defaultEventToPromise from 'event-to-promise';
+import defaultFromEvent from 'promise-toolbox/fromEvent';
 
 import build, {
   safeFileName,
@@ -565,8 +565,8 @@ describe('build', () => {
     it('should reject on Unexpected errors', () => {
       return withTempDir(
         (tmpDir) => {
-          const fakeEventToPromise = sinon.spy(async (stream) => {
-            await defaultEventToPromise(stream, 'close');
+          const fakeFromEvent = sinon.spy(async (stream) => {
+            await defaultFromEvent(stream, 'close');
             // Remove contents of tmpDir before removal of directory.
             const files = await fs.readdir(tmpDir.path());
             for (const file of files) {
@@ -586,7 +586,7 @@ describe('build', () => {
             showReadyMessage: false,
           };
           const options = {
-            eventToPromise: fakeEventToPromise,
+            fromEvent: fakeFromEvent,
           };
 
           return defaultPackageCreator(params, options)

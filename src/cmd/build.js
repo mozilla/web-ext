@@ -6,7 +6,7 @@ import {fs} from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
-import defaultEventToPromise from 'event-to-promise';
+import defaultFromEvent from 'promise-toolbox/fromEvent';
 import zipDir from 'zip-dir';
 
 import defaultSourceWatcher from '../watcher';
@@ -54,7 +54,7 @@ export type LocalizedNameParams = {|
 |}
 
 export type PackageCreatorOptions = {|
-  eventToPromise: typeof defaultEventToPromise,
+  fromEvent: typeof defaultFromEvent,
 |};
 
 // This defines the _locales/messages.json type. See:
@@ -170,7 +170,7 @@ export async function defaultPackageCreator(
     filename = DEFAULT_FILENAME_TEMPLATE,
   }: PackageCreatorParams,
   {
-    eventToPromise = defaultEventToPromise,
+    fromEvent = defaultFromEvent,
   }: PackageCreatorOptions = {}
 ): Promise<ExtensionBuildResult> {
   let id;
@@ -215,7 +215,7 @@ export async function defaultPackageCreator(
   });
 
   try {
-    await eventToPromise(stream, 'close');
+    await fromEvent(stream, 'close');
   } catch (error) {
     if (!isErrorWithCode('EEXIST', error)) {
       throw error;
@@ -230,7 +230,7 @@ export async function defaultPackageCreator(
     overwriteStream.write(buffer, () => {
       overwriteStream.end();
     });
-    await eventToPromise(overwriteStream, 'close');
+    await fromEvent(overwriteStream, 'close');
   }
 
   if (showReadyMessage) {
