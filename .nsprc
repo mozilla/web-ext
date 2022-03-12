@@ -1,9 +1,8 @@
 {
   "exceptions": [
-    // ansi-regex advisory (transitive dependency introduced by update-notifier and
-    // nyc).
-    "https://github.com/advisories/GHSA-93q8-gq69-wqmw",
-    // json-schema advisory (transitive dependency introduced by sign-addon).
-    "https://github.com/advisories/GHSA-896r-f27r-55mw"
+    // node-forge advisories (transitive dependency introduced by @devicefarmer/adbkit).
+    "https://github.com/advisories/GHSA-5rrq-pxf6-6jx5",
+    "https://github.com/advisories/GHSA-gf8q-jrpm-jvxq",
+    "https://github.com/advisories/GHSA-8fr3-hfg3-gpgp"
   ]
 }
