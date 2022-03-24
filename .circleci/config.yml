@@ -25,10 +25,9 @@ references:
   # The nodejs version set as `nodejs_current` is the one used to
   # release the package on npm.
   nodejs_versions:
-    - &nodejs_current "12"
-    - &nodejs_next "14"
-    ## TODO: replace this with 16 as soon as it becomes available
-    - &nodejs_experimental "15"
+    - &nodejs_current "12.22"
+    - &nodejs_next "14.19"
+    - &nodejs_experimental "16.14"
     ## NOTE: the nodejs version shipped with circleci/windows@2.4.0 orb
     ## (v12.11.1) fails on the test-functional test related to importing
     ## web-ext as a library (see https://github.com/mozilla/web-ext/pull/2221),
@@ -172,7 +171,7 @@ jobs:
         <<: *nodejs_enum
     <<: *defaults
     docker:
-      - image: circleci/node:<< parameters.nodejs >>
+      - image: cimg/node:<< parameters.nodejs >>
     steps:
       - attach_project_repo
       - checkout
@@ -261,7 +260,7 @@ jobs:
         <<: *nodejs_enum
     <<: *defaults
     docker:
-      - image: circleci/node:<< parameters.nodejs >>
+      - image: cimg/node:<< parameters.nodejs >>
     steps:
       - attach_project_repo
       - run_npm_build:
