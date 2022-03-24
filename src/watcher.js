@@ -36,7 +36,7 @@ export default function onSourceChange(
     artifactsDir,
     onChange,
     shouldWatchFile,
-    debounceTime = 1000,
+    debounceTime = 500,
   }: OnSourceChangeParams
 ): Watchpack {
   // When running on Windows, transform the ignored paths and globs
@@ -51,7 +51,8 @@ export default function onSourceChange(
     new Watchpack({ignored}) :
     new Watchpack();
 
-  const executeImmediately = true;
+  // Allow multiple files to be changed before reloading the extension
+  const executeImmediately = false;
   onChange = debounce(onChange, debounceTime, executeImmediately);
 
   watcher.on('change', (filePath) => {
