@@ -3,6 +3,9 @@
     // node-forge advisories (transitive dependency introduced by @devicefarmer/adbkit).
     "https://github.com/advisories/GHSA-5rrq-pxf6-6jx5",
     "https://github.com/advisories/GHSA-gf8q-jrpm-jvxq",
-    "https://github.com/advisories/GHSA-8fr3-hfg3-gpgp"
+    "https://github.com/advisories/GHSA-8fr3-hfg3-gpgp",
+    "https://github.com/advisories/GHSA-2r2c-g63r-vccr",
+    "https://github.com/advisories/GHSA-x4jg-mjrx-434g",
+    "https://github.com/advisories/GHSA-cfm4-qjh2-4765"
   ]
 }
