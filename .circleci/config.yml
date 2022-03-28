@@ -160,12 +160,17 @@ commands:
 
 jobs:
   build:
+    <<: *defaults
     parameters:
+      node_options:
+        type: string
+        default: ""
       nodejs:
         <<: *nodejs_enum
-    <<: *defaults
     docker:
       - image: cimg/node:<< parameters.nodejs >>
+    environment:
+      NODE_OPTIONS: << parameters.node_options >>
     steps:
       - attach_project_repo
       - checkout
@@ -284,6 +289,9 @@ workflows:
       - build:
           name: build-nodejs-experimental
           nodejs: *nodejs_experimental
+          ## workaround `npm run build` issue triggered by webpack
+          ## on nodejs 17.
+          node_options: --openssl-legacy-provider
           filters:
             tags:
               only: /.*/
