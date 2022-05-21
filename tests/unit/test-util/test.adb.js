@@ -59,36 +59,34 @@ android.permission.WRITE_EXTERNAL_STORAGE, granted=true
 const {assert} = chai;
 
 function getFakeADBKit(
-  {adbClient = {}, adbkitUtil = {}}: {adbClient: Object, adbkitUtil?: Object}
+  {adbClient = {}, adbkitUtil = {}, adbDevice = {}}: {
+    adbClient?: Object, adbkitUtil?: Object, adbDevice?: Object
+  }
 ) {
   const fakeTransfer = new EventEmitter();
   const adbUtilReadAllStub = sinon.stub();
 
   adbUtilReadAllStub.onCall(0).returns(Promise.resolve(Buffer.from('')));
 
+  const fakeADBDevice = {
+    forward: sinon.spy(() => {}),
+    readdir: sinon.spy(() => Promise.resolve([])),
+    shell: sinon.spy(() => Promise.resolve('')),
+    startActivity: sinon.spy(() => {}),
+    ...adbDevice,
+  };
+
   const fakeADBClient = {
     listDevices: sinon.spy(() => {
       return [];
     }),
-    shell: sinon.spy(() => Promise.resolve('')),
-    readdir: sinon.spy(() => Promise.resolve([])),
-    startActivity: sinon.spy(() => {}),
-    forward: sinon.spy(() => {}),
-    push: sinon.spy(() => {
-      // $FlowIgnore: ignore method-unbinding flowtype error.
-      const originalOn = fakeTransfer.on.bind(fakeTransfer);
-      // $FlowIgnore: ignore flow errors on this testing hack
-      fakeTransfer.on = (event, cb) => {
-        originalOn(event, cb);
-        fakeTransfer.emit('end');
-      };
-      return Promise.resolve(fakeTransfer);
-    }),
+    getDevice: sinon.spy(() => fakeADBDevice),
     ...adbClient,
   };
 
   return {
     fakeADBClient,
+    fakeADBDevice,
     fakeTransfer,
     createClient: sinon.spy(() => {
       return fakeADBClient;
@@ -111,12 +109,15 @@ function createSpawnADBErrorSpy() {
 
 async function testSpawnADBUsageError(
   {
-    testFn, adbClient, adbkitUtil,
+    testFn, adbClient, adbkitUtil, adbDevice,
   }: {
-    testFn: Function, adbClient: Object, adbkitUtil?: Object,
+    testFn: Function,
+    adbClient?: Object,
+    adbkitUtil?: Object,
+    adbDevice?: Object,
   }
 ) {
-  const adb = getFakeADBKit({adbClient, adbkitUtil});
+  const adb = getFakeADBKit({adbClient, adbkitUtil, adbDevice});
   const adbUtils = new ADBUtils({adb});
 
   const promise = testFn(adbUtils);
@@ -160,7 +161,7 @@ describe('utils/adb', () => {
   describe('runShellCommand', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => adbUtils.runShellCommand(
@@ -168,15 +169,19 @@ describe('utils/adb', () => {
         ),
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBClient.getDevice);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell, 'device1', 'test -d /some/dir && echo 1'
+        adb.fakeADBClient.getDevice, 'device1'
+      );
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
+      sinon.assert.calledWith(
+        adb.fakeADBDevice.shell, 'test -d /some/dir && echo 1'
       );
     });
 
     it('rejects on any unexpected exception', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => {
             throw new Error('Unexpected error');
           }),
@@ -191,15 +196,15 @@ describe('utils/adb', () => {
 
       await assert.isRejected(promise, /Unexpected error/);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell, 'device1', 'test -d /some/dir && echo 1'
+        adb.fakeADBDevice.shell, 'test -d /some/dir && echo 1'
       );
     });
 
     it('resolves the shell command output as a string', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -214,7 +219,7 @@ describe('utils/adb', () => {
         'device1', 'echo fake_data_result'
       );
       const result = await assert.isFulfilled(promise);
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledOnce(adb.util.readAll);
       assert.equal(result, 'fake_data_result');
     });
@@ -223,21 +228,21 @@ describe('utils/adb', () => {
   describe('discoverInstalledFirefoxAPKs', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => adbUtils.discoverInstalledFirefoxAPKs('device1'),
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell, 'device1', ['pm', 'list', 'packages']
+        adb.fakeADBDevice.shell, ['pm', 'list', 'packages']
       );
     });
 
     it('resolves the array of the installed firefox APKs', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -250,14 +255,14 @@ describe('utils/adb', () => {
 
       const promise = adbUtils.discoverInstalledFirefoxAPKs('device1');
       const packages = await assert.isFulfilled(promise);
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledOnce(adb.util.readAll);
       assert.deepEqual(packages, ['org.mozilla.fennec', 'org.mozilla.firefox']);
     });
 
     it('resolves the given firefox APK with exact package name', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -273,7 +278,7 @@ describe('utils/adb', () => {
         'com.some.firefox.fork'
       );
       const packages = await assert.isFulfilled(promise);
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledOnce(adb.util.readAll);
       assert.deepEqual(packages, ['com.some.firefox.fork']);
     });
@@ -282,21 +287,21 @@ describe('utils/adb', () => {
   describe('getAndroidVersionNumber', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => adbUtils.getAndroidVersionNumber('device1'),
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell, 'device1', ['getprop', 'ro.build.version.sdk']
+        adb.fakeADBDevice.shell, ['getprop', 'ro.build.version.sdk']
       );
     });
 
     it('rejects a WebExtError when unable to return a number', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -314,15 +319,15 @@ describe('utils/adb', () => {
         promise, 'Unable to discovery android version on device1: UnexpectedNaN'
       );
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell, 'device1', ['getprop', 'ro.build.version.sdk']
+        adb.fakeADBDevice.shell, ['getprop', 'ro.build.version.sdk']
       );
     });
 
     it('resolves the android version number', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -338,9 +343,9 @@ describe('utils/adb', () => {
       const versionNumber = await assert.isFulfilled(promise);
       assert.equal(versionNumber, 21);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell, 'device1', ['getprop', 'ro.build.version.sdk']
+        adb.fakeADBDevice.shell, ['getprop', 'ro.build.version.sdk']
       );
     });
   });
@@ -348,7 +353,7 @@ describe('utils/adb', () => {
   describe('ensureRequiredAPKRuntimePermissions', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => adbUtils.ensureRequiredAPKRuntimePermissions(
@@ -359,17 +364,17 @@ describe('utils/adb', () => {
         ),
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell,
-        'device1', ['pm', 'dump', 'org.mozilla.firefox']
+        adb.fakeADBDevice.shell,
+        ['pm', 'dump', 'org.mozilla.firefox']
       );
     });
 
     it('rejects an UsageError when a required permission has not been granted',
        async () => {
          const adb = getFakeADBKit({
-           adbClient: {
+           adbDevice: {
              shell: sinon.spy(() => Promise.resolve('')),
            },
            adbkitUtil: {
@@ -395,17 +400,17 @@ describe('utils/adb', () => {
            new RegExp(`Required ${permissions[0]} has not be granted`)
          );
 
-         sinon.assert.calledOnce(adb.fakeADBClient.shell);
+         sinon.assert.calledOnce(adb.fakeADBDevice.shell);
          sinon.assert.calledWith(
-           adb.fakeADBClient.shell,
-           'device1', ['pm', 'dump', 'org.mozilla.firefox']
+           adb.fakeADBDevice.shell,
+           ['pm', 'dump', 'org.mozilla.firefox']
          );
        });
 
     describe('Android Granted Permissions discovery', async () => {
       async function assertPermissions(fakeAndroidPmDump) {
         const adb = getFakeADBKit({
-          adbClient: {
+          adbDevice: {
             shell: sinon.spy(() => Promise.resolve('')),
           },
           adbkitUtil: {
@@ -424,10 +429,10 @@ describe('utils/adb', () => {
         );
 
         await assert.isFulfilled(promise);
-        sinon.assert.calledOnce(adb.fakeADBClient.shell);
+        sinon.assert.calledOnce(adb.fakeADBDevice.shell);
         sinon.assert.calledWith(
-          adb.fakeADBClient.shell,
-          'device1', ['pm', 'dump', 'org.mozilla.firefox']
+          adb.fakeADBDevice.shell,
+          ['pm', 'dump', 'org.mozilla.firefox']
         );
       }
 
@@ -442,7 +447,7 @@ describe('utils/adb', () => {
   describe('amForceStopAPK', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => adbUtils.amForceStopAPK(
@@ -450,17 +455,17 @@ describe('utils/adb', () => {
         ),
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(
-        adb.fakeADBClient.shell,
-        'device1', ['am', 'force-stop', 'org.mozilla.firefox']
+        adb.fakeADBDevice.shell,
+        ['am', 'force-stop', 'org.mozilla.firefox']
       );
     });
 
     it('does not reject when "am force-stop" has been called successfully',
        async () => {
          const adb = getFakeADBKit({
-           adbClient: {
+           adbDevice: {
              shell: sinon.spy(() => Promise.resolve('')),
            },
          });
@@ -471,10 +476,10 @@ describe('utils/adb', () => {
          );
 
          await assert.isFulfilled(promise);
-         sinon.assert.calledOnce(adb.fakeADBClient.shell);
+         sinon.assert.calledOnce(adb.fakeADBDevice.shell);
          sinon.assert.calledWith(
-           adb.fakeADBClient.shell,
-           'device1', ['am', 'force-stop', 'org.mozilla.firefox']
+           adb.fakeADBDevice.shell,
+           ['am', 'force-stop', 'org.mozilla.firefox']
          );
        });
   });
@@ -482,21 +487,21 @@ describe('utils/adb', () => {
   describe('getOrCreateArtifactsDir', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => adbUtils.getOrCreateArtifactsDir('device1'),
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell, 'device1', /test -d (.*) ; echo \$\?/
+        adb.fakeADBDevice.shell, /test -d (.*) ; echo \$\?/
       );
     });
 
     it('rejects a WebExtError if the artifact dir path exists', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -513,15 +518,15 @@ describe('utils/adb', () => {
         /Cannot create artifacts directory (.*) because it exists on (.*)/
       );
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell, 'device1', /test -d (.*) ; echo \$\?/
+        adb.fakeADBDevice.shell, /test -d (.*) ; echo \$\?/
       );
     });
 
     it('resolves to the android artifacts dir path', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -536,19 +541,19 @@ describe('utils/adb', () => {
 
       assert.match(result, /^\/data\/local\/tmp\/web-ext-artifacts-/);
 
-      sinon.assert.calledTwice(adb.fakeADBClient.shell);
+      sinon.assert.calledTwice(adb.fakeADBDevice.shell);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell, 'device1', `test -d ${result} ; echo $?`
+        adb.fakeADBDevice.shell, `test -d ${result} ; echo $?`
       );
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell, 'device1', ['mkdir', '-p', result]
+        adb.fakeADBDevice.shell, ['mkdir', '-p', result]
       );
     });
 
     it('does not create a new artifact dir if it has been already created',
        async () => {
          const adb = getFakeADBKit({
-           adbClient: {
+           adbDevice: {
              shell: sinon.spy(() => Promise.resolve('')),
            },
            adbkitUtil: {
@@ -567,14 +572,14 @@ describe('utils/adb', () => {
          const result = await assert.isFulfilled(promise);
          assert.equal(result, fakeArtifactsDir);
 
-         sinon.assert.notCalled(adb.fakeADBClient.shell);
+         sinon.assert.notCalled(adb.fakeADBDevice.shell);
        });
   });
 
   describe('clearArtifactsDir', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => {
@@ -585,16 +590,16 @@ describe('utils/adb', () => {
         },
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell, 'device1',
+        adb.fakeADBDevice.shell,
         ['rm', '-rf', '/data/local/tmp/webext-artifacts-fake']
       );
     });
 
     it('removes the directory if it has been previously created', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -611,9 +616,9 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell, 'device1',
+        adb.fakeADBDevice.shell,
         ['rm', '-rf', '/data/local/tmp/webext-artifacts-fake']
       );
     });
@@ -621,7 +626,7 @@ describe('utils/adb', () => {
     it('is a no-op if no artifacts dir has been previously created',
        async () => {
          const adb = getFakeADBKit({
-           adbClient: {
+           adbDevice: {
              shell: sinon.spy(() => Promise.resolve('')),
            },
          });
@@ -631,7 +636,7 @@ describe('utils/adb', () => {
 
          await assert.isFulfilled(promise);
 
-         sinon.assert.notCalled(adb.fakeADBClient.shell);
+         sinon.assert.notCalled(adb.fakeADBDevice.shell);
        });
   });
 
@@ -659,7 +664,7 @@ describe('utils/adb', () => {
 
     const sb = sinon.createSandbox();
     const adbkitSpies = {
-      adbClient: {
+      adbDevice: {
         readdir: sb.spy(() => Promise.resolve([])),
         shell: sb.spy(() => Promise.resolve('')),
       },
@@ -671,10 +676,10 @@ describe('utils/adb', () => {
     // Reset the fakeADBClient spies after each test case.
     afterEach(() => sb.reset());
 
-    it('does detect old artifacts directories', async () => {
+    it('detects old artifacts directories', async () => {
       const adb = getFakeADBKit(adbkitSpies);
       const adbUtils = new ADBUtils({adb});
-      const fakeADB = adb.fakeADBClient;
+      const fakeADB = adb.fakeADBDevice;
 
       fakeADB.readdir = sb.spy(async () => filesNotArtifactsDirs);
 
@@ -684,11 +689,11 @@ describe('utils/adb', () => {
         'Expected to return false when no old artifacts dirs have been found'
       );
       sinon.assert.calledOnce(fakeADB.readdir);
-      sinon.assert.calledWith(fakeADB.readdir, 'device1', DEVICE_DIR_BASE);
+      sinon.assert.calledWith(fakeADB.readdir, DEVICE_DIR_BASE);
       // Expect adbkit shell to never be called when no artifacts have been found.
       sinon.assert.notCalled(fakeADB.shell);
 
-      adb.fakeADBClient.readdir = sb.spy(async () => allFiles);
+      adb.fakeADBDevice.readdir = sb.spy(async () => allFiles);
 
       await assert.becomes(
         adbUtils.detectOrRemoveOldArtifacts('device1', false),
@@ -702,7 +707,7 @@ describe('utils/adb', () => {
       const adb = getFakeADBKit(adbkitSpies);
       const adbUtils = new ADBUtils({adb});
 
-      adb.fakeADBClient.readdir = sb.spy(async () => allFiles);
+      adb.fakeADBDevice.readdir = sb.spy(async () => allFiles);
 
       await assert.becomes(
         adbUtils.detectOrRemoveOldArtifacts('device1', true),
@@ -710,15 +715,15 @@ describe('utils/adb', () => {
         'Expected to return true when old artifacts dirs have been found'
       );
 
-      sinon.assert.calledOnce(adb.fakeADBClient.readdir);
+      sinon.assert.calledOnce(adb.fakeADBDevice.readdir);
       assert.equal(
-        adb.fakeADBClient.shell.callCount,
+        adb.fakeADBDevice.shell.callCount,
         filesArtifactsDirs.length,
       );
 
       for (const fakeFile of filesArtifactsDirs) {
         sinon.assert.calledWithMatch(
-          adb.fakeADBClient.shell, 'device1',
+          adb.fakeADBDevice.shell,
           ['rm', '-rf', `${DEVICE_DIR_BASE}${fakeFile.name}`]
         );
       }
@@ -728,7 +733,7 @@ describe('utils/adb', () => {
   describe('pushFile', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           push: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => adbUtils.pushFile(
@@ -736,9 +741,9 @@ describe('utils/adb', () => {
         ),
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.push);
+      sinon.assert.calledOnce(adb.fakeADBDevice.push);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.push, 'device1',
+        adb.fakeADBDevice.push,
         '/fake/src', '/fake/dest'
       );
     });
@@ -747,7 +752,7 @@ describe('utils/adb', () => {
       const fakeTransfer = new EventEmitter();
       const fakeTransferPromise = Promise.resolve(fakeTransfer);
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           push: sinon.spy(() => fakeTransferPromise),
         },
       });
@@ -762,10 +767,10 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.push);
+      sinon.assert.calledOnce(adb.fakeADBDevice.push);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.push,
-        'device1', '/fake/local/path', 'fake/remote/path'
+        adb.fakeADBDevice.push,
+        '/fake/local/path', 'fake/remote/path'
       );
     });
   });
@@ -773,7 +778,7 @@ describe('utils/adb', () => {
   describe('startFirefoxAPK', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           startActivity: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => {
@@ -786,9 +791,9 @@ describe('utils/adb', () => {
         },
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.firefox_mybuild/.App',
           extras: [{
@@ -803,7 +808,7 @@ describe('utils/adb', () => {
     it('starts Firefox APK on a custom profile (only used by Fennec)',
        async () => {
          const adb = getFakeADBKit({
-           adbClient: {
+           adbDevice: {
              startActivity: sinon.spy(() => Promise.resolve()),
            },
            adbkitUtil: {
@@ -831,14 +836,14 @@ describe('utils/adb', () => {
            wait: true,
          };
 
-         sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+         sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.startActivity, 'device1', expectedAdbParams);
+           adb.fakeADBDevice.startActivity, expectedAdbParams);
        });
 
     it('starts a given APK component without a period', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -856,9 +861,9 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.geckoview_example' +
             '/org.mozilla.geckoview_example.GeckoViewActivity',
@@ -873,7 +878,7 @@ describe('utils/adb', () => {
 
     it('starts a given APK component with a period', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -891,9 +896,9 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.geckoview_example/' +
             'org.mozilla.geckoview_example.GeckoViewActivity',
@@ -908,7 +913,7 @@ describe('utils/adb', () => {
 
     it('starts a given APK component on fenix.nightly', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -926,9 +931,9 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.fenix.nightly/' +
             'org.mozilla.fenix.HomeActivity',
@@ -945,7 +950,7 @@ describe('utils/adb', () => {
       firefoxApkComponent?: string, expectedApkComponent: string
     ) {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -963,9 +968,9 @@ describe('utils/adb', () => {
       );
 
       await assert.isFulfilled(promise);
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component,
           extras: [{
@@ -989,7 +994,7 @@ describe('utils/adb', () => {
 
     it('starts without specifying an APK component', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -1007,9 +1012,9 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.geckoview_example/' +
             'org.mozilla.geckoview_example.App',
@@ -1025,7 +1030,7 @@ describe('utils/adb', () => {
     it('starts a fully-qualified APK component on the build-variant: ' +
       'fenix.nightly', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -1043,9 +1048,9 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.fenix.nightly/' +
             'org.mozilla.fenix.HomeActivity',
@@ -1060,7 +1065,7 @@ describe('utils/adb', () => {
 
     it('starts a given APK component that begins with a period', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           startActivity: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -1078,9 +1083,9 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.startActivity);
+      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.startActivity, 'device1', {
+        adb.fakeADBDevice.startActivity, {
           action: 'android.activity.MAIN',
           component: 'org.mozilla.fenix.nightly/' +
             'org.mozilla.fenix.HomeActivity',
@@ -1097,7 +1102,7 @@ describe('utils/adb', () => {
   describe('discoverRDPUnixSocket', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           shell: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => {
@@ -1107,17 +1112,16 @@ describe('utils/adb', () => {
         },
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell,
-        'device1',
+        adb.fakeADBDevice.shell,
         ['cat', '/proc/net/unix']
       );
     });
 
     it('rejects an UsageError on setUserAbortDiscovery call', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -1140,17 +1144,16 @@ describe('utils/adb', () => {
         'Exiting Firefox Remote Debugging socket discovery on user request'
       );
 
-      sinon.assert.calledOnce(adb.fakeADBClient.shell);
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.shell,
-        'device1',
+        adb.fakeADBDevice.shell,
         ['cat', '/proc/net/unix']
       );
     });
 
     it('rejects a WebExtError on timeouts', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -1176,17 +1179,16 @@ describe('utils/adb', () => {
         promise, 'Timeout while waiting for the Android Firefox Debugger Socket'
       );
 
-      sinon.assert.called(adb.fakeADBClient.shell);
+      sinon.assert.called(adb.fakeADBDevice.shell);
       sinon.assert.alwaysCalledWithMatch(
-        adb.fakeADBClient.shell,
-        'device1',
+        adb.fakeADBDevice.shell,
         ['cat', '/proc/net/unix']
       );
     });
 
     it('reminds the user to enable remote_debugging', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve('')),
         },
         adbkitUtil: {
@@ -1221,7 +1223,7 @@ describe('utils/adb', () => {
     it('rejects a WebExtError if more than one RDP socket have been found',
        async () => {
          const adb = getFakeADBKit({
-           adbClient: {
+           adbDevice: {
              shell: sinon.spy(() => Promise.resolve()),
            },
            adbkitUtil: {
@@ -1242,17 +1244,16 @@ describe('utils/adb', () => {
          await assert.isRejected(promise, WebExtError);
          await assert.isRejected(promise, /Unexpected multiple RDP sockets/);
 
-         sinon.assert.calledOnce(adb.fakeADBClient.shell);
+         sinon.assert.calledOnce(adb.fakeADBDevice.shell);
          sinon.assert.calledWithMatch(
-           adb.fakeADBClient.shell,
-           'device1',
+           adb.fakeADBDevice.shell,
            ['cat', '/proc/net/unix']
          );
        });
 
     it('resolves the android RDP unix socket path', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve()),
         },
         adbkitUtil: {
@@ -1277,7 +1278,7 @@ describe('utils/adb', () => {
   describe('setupForward', () => {
     it('rejects an UsageError on adb binary not found', async () => {
       const adb = await testSpawnADBUsageError({
-        adbClient: {
+        adbDevice: {
           forward: createSpawnADBErrorSpy(),
         },
         testFn: (adbUtils) => {
@@ -1287,16 +1288,16 @@ describe('utils/adb', () => {
         },
       });
 
-      sinon.assert.calledOnce(adb.fakeADBClient.forward);
+      sinon.assert.calledOnce(adb.fakeADBDevice.forward);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.forward,
-        'device1', 'local:fake', 'remote:fake'
+        adb.fakeADBDevice.forward,
+        'local:fake', 'remote:fake'
       );
     });
 
     it('configures an adb forwarding for a given device', async () => {
       const adb = getFakeADBKit({
-        adbClient: {
+        adbDevice: {
           shell: sinon.spy(() => Promise.resolve()),
         },
       });
@@ -1308,10 +1309,10 @@ describe('utils/adb', () => {
 
       await assert.isFulfilled(promise);
 
-      sinon.assert.calledOnce(adb.fakeADBClient.forward);
+      sinon.assert.calledOnce(adb.fakeADBDevice.forward);
       sinon.assert.calledWithMatch(
-        adb.fakeADBClient.forward,
-        'device1', 'local:fake', 'remote:fake'
+        adb.fakeADBDevice.forward,
+        'local:fake', 'remote:fake'
       );
     });
   });

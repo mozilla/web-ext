@@ -89,7 +89,9 @@ export default class ADBUtils {
     log.debug(`Run adb shell command on ${deviceId}: ${JSON.stringify(cmd)}`);
 
     return wrapADBCall(async () => {
-      return await adbClient.shell(deviceId, cmd).then(adb.util.readAll);
+      return await adbClient.getDevice(deviceId).shell(cmd).then(
+        adb.util.readAll
+      );
     }).then((res) => res.toString());
   }
 
@@ -229,7 +231,9 @@ export default class ADBUtils {
     log.debug('Checking adb device for existing web-ext artifacts dirs');
 
     return wrapADBCall(async () => {
-      const files = await adbClient.readdir(deviceId, DEVICE_DIR_BASE);
+      const files = await adbClient.getDevice(deviceId).readdir(
+        DEVICE_DIR_BASE
+      );
       let found = false;
 
       for (const file of files) {
@@ -284,7 +288,7 @@ export default class ADBUtils {
     log.debug(`Pushing ${localPath} to ${devicePath} on ${deviceId}`);
 
     await wrapADBCall(async () => {
-      await adbClient.push(deviceId, localPath, devicePath)
+      await adbClient.getDevice(deviceId).push(localPath, devicePath)
         .then(function(transfer) {
           return new Promise((resolve) => {
             transfer.on('end', resolve);
@@ -338,7 +342,7 @@ export default class ADBUtils {
     const component = `${apk}/${apkComponent}`;
 
     await wrapADBCall(async () => {
-      await adbClient.startActivity(deviceId, {
+      await adbClient.getDevice(deviceId).startActivity({
         wait: true,
         action: 'android.activity.MAIN',
         component,
@@ -414,20 +418,20 @@ export default class ADBUtils {
     log.debug(`Configuring ADB forward for ${deviceId}: ${remote} -> ${local}`);
 
     await wrapADBCall(async () => {
-      await adbClient.forward(deviceId, local, remote);
+      await adbClient.getDevice(deviceId).forward(local, remote);
     });
   }
 }
 
 export async function listADBDevices(adbBin?: string): Promise<Array<string>> {
-  const adbClient = new ADBUtils({adbBin});
-  return adbClient.discoverDevices();
+  const adbUtils = new ADBUtils({adbBin});
+  return adbUtils.discoverDevices();
 }
 
 export async function listADBFirefoxAPKs(
   deviceId: string,
   adbBin?: string
 ): Promise<Array<string>> {
-  const adbClient = new ADBUtils({adbBin});
-  return adbClient.discoverInstalledFirefoxAPKs(deviceId);
+  const adbUtils = new ADBUtils({adbBin});
+  return adbUtils.discoverInstalledFirefoxAPKs(deviceId);
 }
