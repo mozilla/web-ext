@@ -116,7 +116,6 @@ commands:
       ## the production mode tests to fail if any of the dependencies is a
       ## binary dependency that is built using node-gyp.
       - run: npm config set python /bin/false
-      - configure_global_npm
       - run:
           ## (See #1082 for rationale).
           name: run functional tests in npm production environment
@@ -148,15 +147,6 @@ commands:
     description: lint commit message conventions
     steps:
       - run: npm run github-pr-title-lint
-
-  # This is required to avoid a `EACCES` when running `npm link` (which is
-  # executed in the test suite).
-  configure_global_npm:
-    description: create custom directory for global npm installs
-    steps:
-      # NOTE: keep the following steps compatible with both bash and cmd.exe
-      - run: cd .. && mkdir .npm-global
-      - run: npm config set prefix '../.npm-global'
 
 jobs:
   build:

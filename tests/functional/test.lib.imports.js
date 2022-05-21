@@ -9,8 +9,56 @@ import {
   withTempDir, fixturesUseAsLibrary,
 } from './common';
 
-const npm = shell.which('npm').toString();
-const node = shell.which('node').toString();
+const npm = shell.which('npm')?.toString();
+const node = shell.which('node')?.toString();
+const nvm = shell.which('nvm')?.toString();
+const isWindows = process.platform === 'win32';
+
+function npmGlobalDir() {
+  if (!process.env.HOME) {
+    throw new Error('HOME environment variable is undefined');
+  }
+  const npmDir = path.join(
+    process.env.HOME, '.npm-global'
+  );
+  if (!shell.test('-d', npmDir)) {
+    shell.echo(`Creating test npm directory at ${npmDir}`);
+    shell.mkdir(npmDir);
+  }
+  return npmDir;
+}
+
+function npmLink() {
+  if (nvm || isWindows) {
+    execFileSync(npm, ['link', '.'], {
+      cwd: path.resolve(path.join(__dirname, '..', '..')),
+    });
+  } else {
+    execFileSync(npm, ['link', '.'], {
+      cwd: path.resolve(path.join(__dirname, '..', '..')),
+      env: {
+        ...process.env,
+        NPM_CONFIG_PREFIX: npmGlobalDir(),
+      },
+    });
+  }
+}
+
+function npmUnlink() {
+  if (nvm || isWindows) {
+    execFileSync(npm, ['unlink', '.'], {
+      cwd: path.resolve(path.join(__dirname, '..', '..')),
+    });
+  } else {
+    execFileSync(npm, ['unlink', '.'], {
+      cwd: path.resolve(path.join(__dirname, '..', '..')),
+      env: {
+        ...process.env,
+        NPM_CONFIG_PREFIX: npmGlobalDir(),
+      },
+    });
+  }
+}
 
 describe('web-ext imported as a library', () => {
   before(function() {
@@ -21,20 +69,16 @@ describe('web-ext imported as a library', () => {
       this.skip();
     }
 
-    execFileSync(npm, ['link', '.'], {
-      cwd: path.resolve(path.join(__dirname, '..', '..')),
-    });
+    npmLink();
   });
 
   after(() => {
-    execFileSync(npm, ['unlink', '.'], {
-      cwd: path.resolve(path.join(__dirname, '..', '..')),
-    });
+    npmUnlink();
   });
 
   it('can be imported as an ESM module', async () => {
     await withTempDir(async (tmpDir) => {
-      execFileSync(npm, ['link', 'web-ext'], {cwd: tmpDir.path()});
+      execFileSync(npm, ['install', 'web-ext'], {cwd: tmpDir.path()});
       shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-import.mjs'], {
         cwd: tmpDir.path(),
@@ -44,7 +88,7 @@ describe('web-ext imported as a library', () => {
 
   it('can be imported as a CommonJS module', async () => {
     await withTempDir(async (tmpDir) => {
-      execFileSync(npm, ['link', 'web-ext'], {cwd: tmpDir.path()});
+      execFileSync(npm, ['install', 'web-ext'], {cwd: tmpDir.path()});
       shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-require.js'], {
         cwd: tmpDir.path(),
