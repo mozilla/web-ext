@@ -1,5 +1,5 @@
 {
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "parserOptions": {
     "ecmaVersion": 6,
     "sourceType": "module",
@@ -13,10 +13,15 @@
       "restParams": true,
       "spread": true
     },
+    "babelConfig": {
+      "configFile": "./.babelrc"
+    },
+    "requireConfigFile": false
   },
   "plugins": [
     "async-await",
-    "flowtype",
+    // NOTE: disable as not currently compatible with eslint v8.
+    // "flowtype",
     "import"
   ],
   "settings": {
@@ -30,7 +35,8 @@
   },
   "extends": [
     "eslint:recommended",
-    "plugin:flowtype/recommended"
+    // NOTE: disable as not currently compatible with eslint v8.
+    // "plugin:flowtype/recommended"
   ],
   "globals": {
     "exports": false,
@@ -133,9 +139,10 @@
     "async-await/space-after-async": 2,
     "async-await/space-after-await": 2,
 
-    "flowtype/define-flow-type": 1,
-    "flowtype/use-flow-type": 1,
-    "flowtype/space-after-type-colon": [1, "always"],
+    // NOTE: disable as not currently compatible with eslint v8.
+    // "flowtype/define-flow-type": 1,
+    // "flowtype/use-flow-type": 1,
+    // "flowtype/space-after-type-colon": [1, "always"],
 
     // This makes sure imported modules exist.
     "import/no-unresolved": 2,
