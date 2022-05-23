@@ -745,6 +745,11 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
+      'privileged': {
+        describe: 'Treat your extension as a privileged extension',
+        type: 'boolean',
+        default: false,
+      },
       'self-hosted': {
         describe:
           'Your extension will be self-hosted. This disables messages ' +
