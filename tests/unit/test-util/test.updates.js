@@ -1,6 +1,6 @@
 /* @flow */
 import {it, describe} from 'mocha';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import {checkForUpdates} from '../../../src/util/updates';
 

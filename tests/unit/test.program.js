@@ -4,7 +4,7 @@ import path from 'path';
 import {describe, it} from 'mocha';
 import git from 'git-rev-sync';
 import {fs} from 'mz';
-import sinon, {spy} from 'sinon';
+import * as sinon from 'sinon';
 import {assert} from 'chai';
 
 import {applyConfigToArgv} from '../../src/config';
@@ -29,6 +29,8 @@ import {
   consoleStream, // instance is imported to inspect logged messages
   ConsoleStream,
 } from '../../src/util/logger';
+
+const {spy} = sinon;
 
 describe('program.Program', () => {
 

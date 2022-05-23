@@ -6,7 +6,7 @@ import copyDir from 'copy-dir';
 import {fs} from 'mz';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
 import {getManifestId} from '../../../src/util/manifest';

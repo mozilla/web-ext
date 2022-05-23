@@ -6,7 +6,7 @@ import stream from 'stream';
 import {promisify} from 'util';
 
 import deepcopy from 'deepcopy';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import yauzl from 'yauzl';
 import ExtendableError from 'es6-error';
 

@@ -3,7 +3,7 @@ import path from 'path';
 
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import {fs} from 'mz';
 
 import {Program} from '../../src/program';

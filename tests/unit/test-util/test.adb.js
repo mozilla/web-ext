@@ -4,7 +4,7 @@ import EventEmitter from 'events';
 
 import chai from 'chai';
 import {afterEach, describe, it} from 'mocha';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import {
   UsageError,

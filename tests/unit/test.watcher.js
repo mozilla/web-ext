@@ -4,7 +4,7 @@ import path from 'path';
 
 import {it, describe} from 'mocha';
 import {fs} from 'mz';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import {assert} from 'chai';
 import Watchpack from 'watchpack';
 
