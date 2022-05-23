@@ -129,6 +129,7 @@ describe('lint', () => {
     const {lint, createLinter} = setUp();
     return lint({
       pretty: true,
+      privileged: true,
       metadata: true,
       output: 'json',
       boring: true,
@@ -137,6 +138,7 @@ describe('lint', () => {
       sinon.assert.calledWithMatch(createLinter, {
         config: {
           pretty: true,
+          privileged: true,
           metadata: true,
           output: 'json',
           boring: true,
