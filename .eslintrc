@@ -20,12 +20,11 @@
   },
   "plugins": [
     "async-await",
-    // NOTE: disable as not currently compatible with eslint v8.
-    // "flowtype",
+    "ft-flow",
     "import"
   ],
   "settings": {
-    "flowtype": {
+    "ft-flow": {
       "onlyFilesWithFlowAnnotation": true
     },
   },
@@ -35,8 +34,7 @@
   },
   "extends": [
     "eslint:recommended",
-    // NOTE: disable as not currently compatible with eslint v8.
-    // "plugin:flowtype/recommended"
+    "plugin:ft-flow/recommended"
   ],
   "globals": {
     "exports": false,
@@ -139,10 +137,9 @@
     "async-await/space-after-async": 2,
     "async-await/space-after-await": 2,
 
-    // NOTE: disable as not currently compatible with eslint v8.
-    // "flowtype/define-flow-type": 1,
-    // "flowtype/use-flow-type": 1,
-    // "flowtype/space-after-type-colon": [1, "always"],
+    "ft-flow/define-flow-type": 1,
+    "ft-flow/use-flow-type": 1,
+    "ft-flow/space-after-type-colon": [1, "always"],
 
     // This makes sure imported modules exist.
     "import/no-unresolved": 2,
