@@ -1,7 +1,8 @@
 /* @flow */
+import { fileURLToPath } from 'url';
+
 import bunyan, {nameFromLevel, createLogger as defaultLogCreator}
   from 'bunyan';
-
 
 // Bunyan-related Flow types
 
@@ -114,13 +115,15 @@ export type CreateLoggerOptions = {|
 |};
 
 export function createLogger(
-  filename: string,
+  moduleURL?: string,
   {createBunyanLog = defaultLogCreator}: CreateLoggerOptions = {}
 ): Logger {
   return createBunyanLog({
     // Strip the leading src/ from file names (which is in all file names) to
     // make the name less redundant.
-    name: filename.replace(/^src\//, ''),
+    name: moduleURL
+      ? fileURLToPath(moduleURL).replace(/^src\//, '')
+      : 'unknown-module',
     // Capture all log levels and let the stream filter them.
     level: bunyan.TRACE,
     streams: [{

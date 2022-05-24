@@ -3,16 +3,16 @@ import net from 'net';
 
 import FirefoxRDPClient, {
   connectToFirefox as defaultFirefoxConnector,
-} from './rdp-client';
-import {createLogger} from '../util/logger';
+} from './rdp-client.js';
+import {createLogger} from '../util/logger.js';
 import {
   isErrorWithCode,
   RemoteTempInstallNotSupported,
   UsageError,
   WebExtError,
-} from '../errors';
+} from '../errors.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 export type FirefoxConnectorFn =
   (port: number) => Promise<FirefoxRDPClient>;

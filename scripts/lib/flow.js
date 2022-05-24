@@ -1,6 +1,6 @@
-const spawnSync = require('child_process').spawnSync;
+import {spawnSync} from 'child_process';
 
-exports.flowCheck = () => {
+export const flowCheck = () => {
   if (process.env.CI_SKIP_FLOWCHECK) {
     console.log('flow check task skipped on CI_SKIP_FLOWCHECK env set');
   } else {
@@ -16,7 +16,7 @@ exports.flowCheck = () => {
   return true;
 };
 
-exports.flowStatus = () => {
+export const flowStatus = () => {
   const res = spawnSync('flow', ['status'], {stdio: 'inherit', shell: true});
   if (res.error) {
     console.error(res.error);

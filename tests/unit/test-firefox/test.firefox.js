@@ -8,16 +8,16 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import {fs} from 'mz';
 
-import * as firefox from '../../../src/firefox';
-import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
-import {withTempDir} from '../../../src/util/temp-dir';
+import * as firefox from '../../../src/firefox/index.js';
+import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors.js';
+import {withTempDir} from '../../../src/util/temp-dir.js';
 import {
   basicManifest,
   fixturePath,
   makeSureItFails,
   manifestWithoutApps,
   ErrorWithCode,
-} from '../helpers';
+} from '../helpers.js';
 
 const {defaultFirefoxEnv} = firefox;
 

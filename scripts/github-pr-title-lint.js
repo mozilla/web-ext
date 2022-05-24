@@ -1,10 +1,10 @@
 /* eslint max-len: 0 */
 
-const https = require('https');
-const execSync = require('child_process').execSync;
+import https from 'https';
+import {execSync} from 'child_process';
 
-const {decode} = require('html-entities');
-const shelljs = require('shelljs');
+import {decode} from 'html-entities';
+import shelljs from 'shelljs';
 
 const {
   // Set by circleci on pull request jobs, and it contains the entire url, e.g.:

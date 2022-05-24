@@ -1,8 +1,8 @@
-const spawnSync = require('child_process').spawnSync;
+import {spawnSync} from 'child_process';
 
-const shell = require('shelljs');
+import shell from 'shelljs';
 
-const config = require('./config');
+import config from './config.js';
 
 // Get the explicit path (needed on CI windows workers).
 function which(...args) {
@@ -20,6 +20,10 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
     shell.echo(`\nSetting mocha timeout from env var: ${MOCHA_TIMEOUT}\n`);
   }
 
+  // Pass custom babel-loader node loader to transpile on the fly
+  // the tests modules.
+  binArgs.push('-n="loader=./tests/babel-loader.js"');
+
   const res = spawnSync(binPath, binArgs, {
     ...execMochaOptions,
     stdio: 'inherit',
@@ -33,10 +37,10 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
   return res.status === 0;
 };
 
-exports.mochaUnit = (execMochaOptions, coverageEnabled) => {
+export const mochaUnit = (execMochaOptions, coverageEnabled) => {
   return runMocha(config.mocha.unit, execMochaOptions, coverageEnabled);
 };
 
-exports.mochaFunctional = (execMochaOptions) => {
+export const mochaFunctional = (execMochaOptions) => {
   return runMocha(config.mocha.functional, execMochaOptions);
 };

@@ -3,10 +3,9 @@ import {afterEach, describe, it} from 'mocha';
 import {assert} from 'chai';
 import * as sinon from 'sinon';
 
-import webExt from '../../src/main';
-import {main} from '../../src/program';
-import {consoleStream} from '../../src/util/logger';
-import {listADBDevices, listADBFirefoxAPKs} from '../../src/util/adb';
+import {mockModule, resetMockModules} from './helpers.js';
+import webExt from '../../src/main.js';
+import {main} from '../../src/program.js';
 
 
 describe('webExt', () => {
@@ -14,39 +13,32 @@ describe('webExt', () => {
     assert.equal(webExt.main, main);
   });
 
-  it('gives you access to the log stream', () => {
-    assert.equal(webExt.util.logger.consoleStream, consoleStream);
-  });
-
-  describe('exposes adb utils', () => {
-    it('gives access to listADBDevices', () => {
-      assert.equal(webExt.util.adb.listADBDevices, listADBDevices);
-    });
-
-    it('gives access to listADBFirefoxAPKs', () => {
-      assert.equal(webExt.util.adb.listADBFirefoxAPKs, listADBFirefoxAPKs);
-    });
-  });
-
   describe('exposes commands', () => {
     let stub: any;
     afterEach(() => {
-      stub.restore();
+      resetMockModules();
       stub = undefined;
     });
     for (const cmd of ['run', 'lint', 'build', 'sign', 'docs']) {
       it(`lazily loads cmd/${cmd}`, async () => {
-        // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-        // $FlowIgnore: non-literal require used only in tests.
-        const cmdModule = require(`../../src/cmd/${cmd}`);
-        stub = sinon.stub(cmdModule, 'default');
+        // $FlowIgnore: non string literal imports are not supported by flow.
+        const cmdModule = await import(`../../src/cmd/${cmd}.js`);
+        stub = sinon.stub({default: cmdModule.default}, 'default');
+
+        mockModule({
+          moduleURL: `../../src/cmd/${cmd}.js`,
+          importerModuleURL: import.meta.url,
+          namedExports: {},
+          defaultExport: stub,
+        });
 
         const params = {};
         const options = {};
         const expectedResult = {};
-        stub.returns(expectedResult);
+        stub?.returns(expectedResult);
 
-        const runCommand: Function = webExt.cmd[cmd];
+        const {default: webExtModule} = await import('../../src/main.js');
+        const runCommand: Function = webExtModule.cmd[cmd];
         const result = await runCommand(params, options);
 
         // Check whether parameters and return values are forwarded as-is.

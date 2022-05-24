@@ -6,14 +6,14 @@ import {describe, it} from 'mocha';
 import * as sinon from 'sinon';
 import {fs} from 'mz';
 
-import {Program} from '../../src/program';
+import {Program} from '../../src/program.js';
 import {
   applyConfigToArgv,
   discoverConfigFiles,
   loadJSConfigFile,
-} from '../../src/config';
-import {withTempDir} from '../../src/util/temp-dir';
-import {UsageError, WebExtError} from '../../src/errors';
+} from '../../src/config.js';
+import {withTempDir} from '../../src/util/temp-dir.js';
+import {UsageError, WebExtError} from '../../src/errors.js';
 
 type MakeArgvParams = {|
   userCmd?: Array<string>,

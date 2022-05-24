@@ -7,10 +7,10 @@ import * as sinon from 'sinon';
 import {fs} from 'mz';
 
 
-import {onlyInstancesOf, UsageError} from '../../../src/errors';
-import {withTempDir} from '../../../src/util/temp-dir';
-import {prepareArtifactsDir} from '../../../src/util/artifacts';
-import {makeSureItFails, ErrorWithCode} from '../helpers';
+import {onlyInstancesOf, UsageError} from '../../../src/errors.js';
+import {withTempDir} from '../../../src/util/temp-dir.js';
+import {prepareArtifactsDir} from '../../../src/util/artifacts.js';
+import {makeSureItFails, ErrorWithCode} from '../helpers.js';
 
 
 describe('prepareArtifactsDir', () => {

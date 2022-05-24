@@ -1,5 +1,6 @@
 /* @flow */
 import {Writable as WritableStream} from 'stream';
+import {pathToFileURL} from 'url';
 
 import bunyan from 'bunyan';
 import * as sinon from 'sinon';
@@ -7,7 +8,7 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 
 
-import {createLogger, ConsoleStream} from '../../../src/util/logger';
+import {createLogger, ConsoleStream} from '../../../src/util/logger.js';
 
 
 describe('logger', () => {
@@ -16,9 +17,12 @@ describe('logger', () => {
 
     it('makes file names less redundant', () => {
       const createBunyanLog = sinon.spy(() => {});
-      createLogger('src/some-file.js', {createBunyanLog});
+      const expectedName = process.platform === 'win32'
+        ? 'C:\\src\\some-file.js'
+        : '/src/some-file.js';
+      createLogger(pathToFileURL(expectedName).href, {createBunyanLog});
       sinon.assert.calledWithMatch(
-        createBunyanLog, {name: 'some-file.js'}
+        createBunyanLog, {name: expectedName}
       );
     });
 

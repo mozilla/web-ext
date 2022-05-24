@@ -1,26 +1,26 @@
 /* @flow */
 import { fs } from 'mz';
 
-import defaultBuildExtension from './build';
+import defaultBuildExtension from './build.js';
 import {
   showDesktopNotification as defaultDesktopNotifications,
-} from '../util/desktop-notifier';
-import * as defaultFirefoxApp from '../firefox';
+} from '../util/desktop-notifier.js';
+import * as defaultFirefoxApp from '../firefox/index.js';
 import {
   connectWithMaxRetries as defaultFirefoxClient,
-} from '../firefox/remote';
-import {createLogger} from '../util/logger';
-import defaultGetValidatedManifest from '../util/manifest';
-import {UsageError} from '../../src/errors';
+} from '../firefox/remote.js';
+import {createLogger} from '../util/logger.js';
+import defaultGetValidatedManifest from '../util/manifest.js';
+import {UsageError} from '../errors.js';
 import {
   createExtensionRunner,
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
-} from '../extension-runners';
+} from '../extension-runners/index.js';
 // Import objects that are only used as Flow types.
-import type {FirefoxPreferences} from '../firefox/preferences';
+import type {FirefoxPreferences} from '../firefox/preferences.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 
 // Run command types and implementation.

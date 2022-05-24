@@ -15,14 +15,14 @@ import {
 } from 'chrome-launcher';
 import WebSocket from 'ws';
 
-import {createLogger} from '../util/logger';
-import {TempDir} from '../util/temp-dir';
+import {createLogger} from '../util/logger.js';
+import {TempDir} from '../util/temp-dir.js';
 import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
 } from './base';
-import isDirectory from '../util/is-directory';
-import fileExists from '../util/file-exists';
+import isDirectory from '../util/is-directory.js';
+import fileExists from '../util/file-exists.js';
 
 type ChromiumSpecificRunnerParams = {|
    chromiumBinary?: string,
@@ -36,7 +36,7 @@ export type ChromiumExtensionRunnerParams = {|
   ...ChromiumSpecificRunnerParams,
 |};
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 const EXCLUDED_CHROME_FLAGS = [
   '--disable-extensions',
@@ -87,8 +87,8 @@ export class ChromiumExtensionRunner {
     const localStatePath = path.join(dirPath, 'Local State');
     const defaultPath = path.join(dirPath, 'Default');
     // Local State and Default are typical for the user-data-dir
-    return await fileExists(localStatePath)
-      && await isDirectory(defaultPath);
+    return (await fileExists(localStatePath))
+      && (await isDirectory(defaultPath));
   }
 
   static async isProfileDir(dirPath: string): Promise<boolean> {
@@ -110,8 +110,8 @@ export class ChromiumExtensionRunner {
     }
 
     const isProfileDirAndNotUserData =
-      await ChromiumExtensionRunner.isProfileDir(chromiumProfile)
-      && !await ChromiumExtensionRunner.isUserDataDir(chromiumProfile);
+      (await ChromiumExtensionRunner.isProfileDir(chromiumProfile))
+      && !(await ChromiumExtensionRunner.isUserDataDir(chromiumProfile));
 
     if (isProfileDirAndNotUserData) {
       const {dir: userDataDir, base: profileDirName} =
@@ -183,7 +183,7 @@ export class ChromiumExtensionRunner {
 
     if (userDataDir && this.params.keepProfileChanges) {
       if (profileDirName
-        && !await ChromiumExtensionRunner.isUserDataDir(userDataDir)) {
+        && !(await ChromiumExtensionRunner.isUserDataDir(userDataDir))) {
         throw new Error('The profile you provided is not in a ' +
           'user-data-dir. The changes cannot be kept. Please either ' +
           'remove --keep-profile-changes or use a profile in a ' +

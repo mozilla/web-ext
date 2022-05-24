@@ -12,12 +12,12 @@ import {
   MultiExtensionsReloadError,
   RemoteTempInstallNotSupported,
   WebExtError,
-} from '../errors';
-import * as defaultFirefoxApp from '../firefox';
+} from '../errors.js';
+import * as defaultFirefoxApp from '../firefox/index.js';
 import {
   connectWithMaxRetries as defaultFirefoxConnector,
-} from '../firefox/remote';
-import {createLogger} from '../util/logger';
+} from '../firefox/remote.js';
+import {createLogger} from '../util/logger.js';
 // Import flow types from project files.
 import type {
   FirefoxRDPResponseAddon,
@@ -47,7 +47,8 @@ export type FirefoxDesktopExtensionRunnerParams = {|
   ...FirefoxDesktopSpecificRunnerParams,
 |};
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
+
 
 /**
  * Implements an IExtensionRunner which manages a Firefox Desktop instance.

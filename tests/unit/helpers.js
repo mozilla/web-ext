@@ -4,17 +4,19 @@ import EventEmitter from 'events';
 import tty from 'tty';
 import stream from 'stream';
 import {promisify} from 'util';
+import {fileURLToPath, pathToFileURL} from 'url';
 
 import deepcopy from 'deepcopy';
 import * as sinon from 'sinon';
 import yauzl from 'yauzl';
 import ExtendableError from 'es6-error';
+import * as td from 'testdouble';
 
-import {createLogger} from '../../src/util/logger';
-import * as defaultFirefoxApp from '../../src/firefox';
-import {RemoteFirefox} from '../../src/firefox/remote';
+import {createLogger} from '../../src/util/logger.js';
+import * as defaultFirefoxApp from '../../src/firefox/index.js';
+import {RemoteFirefox} from '../../src/firefox/remote.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 
 /*
@@ -104,7 +106,9 @@ export class ZipFile {
  * Returns a path to a test fixture file. Invoke it the same as path.join().
  */
 export function fixturePath(...pathParts: Array<string>): string {
-  return path.join(__dirname, '..', 'fixtures', ...pathParts);
+  return path.join(
+    moduleURLToDirname(import.meta.url), '..', 'fixtures', ...pathParts
+  );
 }
 
 
@@ -159,9 +163,9 @@ export function fake<T>(
   original: Object, methods: Object = {}, skipProperties: Array<string> = []
 ): T {
   const stub = {};
-
-  // Provide stubs for all original members:
-  const proto = Object.getPrototypeOf(original);
+  // Provide stubs for all original members (fallback to Object if original
+  // doesn't have a defined prototype):
+  const proto = Object.getPrototypeOf(original) || Object;
   const props = Object.getOwnPropertyNames(original)
     .concat(Object.getOwnPropertyNames(proto))
     .filter((key) => !skipProperties.includes(key));
@@ -315,4 +319,40 @@ class FakeStdin extends stream.Readable {
 export function createFakeStdin(): tty.ReadStream {
   // $FlowIgnore: flow complains that the return value is incompatible with tty.ReadStream
   return new FakeStdin();
+}
+
+export function moduleURLToDirname(moduleURL: ?string): string {
+  if (!moduleURL) {
+    throw new Error('Unexpected undefined module url');
+  }
+  return path.dirname(fileURLToPath(moduleURL));
+}
+
+export function mockModule({
+  moduleURL,
+  importerModuleURL,
+  namedExports,
+  defaultExport,
+}: {
+  moduleURL: string,
+  importerModuleURL: ?string,
+  namedExports?: ?Object,
+  defaultExport?: any,
+}): void {
+  // Compute the full URL to the module to mock, otherwise
+  // quibble will compute the wrong module URL when running
+  // on windows (which would be looking as "C:\\C:\\Users\\...").
+  // $FlowIgnore: ignore issue with import.meta.url being typed as void or string.
+  const baseDir = path.dirname(fileURLToPath(importerModuleURL));
+  const fullModuleURL = pathToFileURL(
+    path.resolve(path.join(baseDir, moduleURL))
+  ).href;
+
+  td.replaceEsm(fullModuleURL, namedExports, defaultExport);
+  global.__webextMocks?.add(fullModuleURL);
+}
+
+export function resetMockModules(): void {
+  td.reset();
+  global.__webextMocks?.clear();
 }

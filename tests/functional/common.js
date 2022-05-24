@@ -2,16 +2,19 @@
 import path from 'path';
 import {ChildProcess, spawn} from 'child_process';
 import {promisify} from 'util';
+import { fileURLToPath } from 'url';
 
 import copyDir from 'copy-dir';
 import prettyjson from 'prettyjson';
 
-import * as tmpDirUtils from '../../src/util/temp-dir';
+import * as tmpDirUtils from '../../src/util/temp-dir.js';
 
 export const withTempDir = tmpDirUtils.withTempDir;
 
 
-export const functionalTestsDir: string = path.resolve(__dirname);
+export const functionalTestsDir: string = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url || ''))
+);
 export const projectDir: string = path.join(functionalTestsDir, '..', '..');
 export const webExt: string = process.env.TEST_WEB_EXT_BIN ?
   path.resolve(process.env.TEST_WEB_EXT_BIN) :

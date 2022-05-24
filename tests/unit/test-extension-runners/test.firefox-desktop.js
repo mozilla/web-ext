@@ -7,7 +7,7 @@ import * as sinon from 'sinon';
 
 import {
   FirefoxDesktopExtensionRunner,
-} from '../../../src/extension-runners/firefox-desktop';
+} from '../../../src/extension-runners/firefox-desktop.js';
 import type {
   FirefoxDesktopExtensionRunnerParams,
 } from '../../../src/extension-runners/firefox-desktop';
@@ -17,12 +17,12 @@ import {
   getFakeRemoteFirefox,
   makeSureItFails,
   StubChildProcess,
-} from '../helpers';
+} from '../helpers.js';
 import {
   onlyInstancesOf,
   WebExtError,
   RemoteTempInstallNotSupported,
-} from '../../../src/errors';
+} from '../../../src/errors.js';
 
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
 const tempInstallResult = {

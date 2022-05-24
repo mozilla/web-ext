@@ -1,20 +1,22 @@
 /* @flow */
-import defaultADB from '@devicefarmer/adbkit';
+import ADBKit from '@devicefarmer/adbkit';
 
 import {
   isErrorWithCode,
   UsageError,
   WebExtError,
-} from '../errors';
-import {createLogger} from '../util/logger';
+} from '../errors.js';
+import {createLogger} from '../util/logger.js';
 import packageIdentifiers, {
   defaultApkComponents,
-} from '../firefox/package-identifiers';
+} from '../firefox/package-identifiers.js';
 
 export const DEVICE_DIR_BASE = '/data/local/tmp/';
 export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
 
-const log = createLogger(__filename);
+const defaultADB = ADBKit.default;
+
+const log = createLogger(import.meta.url);
 
 export type ADBUtilsParams = {|
   adb?: typeof defaultADB,

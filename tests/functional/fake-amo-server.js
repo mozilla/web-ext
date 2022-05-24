@@ -3,7 +3,7 @@
 // Fake AMO signing server:
 // -  http://addons-server.readthedocs.io/en/latest/topics/api/signing.html
 
-var http = require('http');
+import http from 'http';
 
 const FAKE_REPLIES = [
   {

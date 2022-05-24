@@ -5,27 +5,29 @@ import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import * as sinon from 'sinon';
-import defaultFromEvent from 'promise-toolbox/fromEvent';
+import * as promiseToolbox from 'promise-toolbox';
 
 import build, {
   safeFileName,
   getDefaultLocalizedName,
   getStringPropertyValue,
   defaultPackageCreator,
-} from '../../../src/cmd/build';
-import {FileFilter} from '../../../src/util/file-filter';
-import {withTempDir} from '../../../src/util/temp-dir';
+} from '../../../src/cmd/build.js';
+import {FileFilter} from '../../../src/util/file-filter.js';
+import {withTempDir} from '../../../src/util/temp-dir.js';
 import {
   basicManifest,
   fixturePath,
   makeSureItFails,
   manifestWithoutApps,
   ZipFile,
-} from '../helpers';
-import {UsageError} from '../../../src/errors';
-import {createLogger} from '../../../src/util/logger';
+} from '../helpers.js';
+import {UsageError} from '../../../src/errors.js';
+import {createLogger} from '../../../src/util/logger.js';
 
-const log = createLogger(__filename);
+const {pFromEvent: defaultFromEvent} = promiseToolbox;
+
+const log = createLogger(import.meta.url);
 
 describe('build', () => {
 

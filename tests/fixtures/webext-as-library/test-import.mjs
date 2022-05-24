@@ -4,6 +4,7 @@ import webExt from 'web-ext';
 // eslint-disable-next-line import/extensions
 import helpers from './helpers.js';
 
-const {testModuleExports} = helpers;
+const {testModuleExports, testModuleExportedUtils} = helpers;
 
-testModuleExports(webExt);
+await testModuleExports(webExt);
+await testModuleExportedUtils();

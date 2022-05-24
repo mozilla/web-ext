@@ -1,7 +1,7 @@
 /* @flow */
 import {beforeEach, afterEach} from 'mocha';
 
-import {consoleStream} from '../../src/util/logger';
+import {consoleStream} from '../../src/util/logger.js';
 
 beforeEach(function() {
   consoleStream.makeVerbose();

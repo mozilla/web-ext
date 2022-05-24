@@ -1,8 +1,8 @@
-const spawnSync = require('child_process').spawnSync;
+import {spawnSync} from 'child_process';
 
-const config = require('./config');
+import config from './config.js';
 
-module.exports = () => {
+export default () => {
   const res = spawnSync('eslint', config.eslint.files, {
     stdio: 'inherit',
     shell: true,

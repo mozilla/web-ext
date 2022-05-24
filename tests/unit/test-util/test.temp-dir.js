@@ -4,7 +4,7 @@ import {fs} from 'mz';
 import {assert} from 'chai';
 import * as sinon from 'sinon';
 
-import {withTempDir, TempDir} from '../../../src/util/temp-dir';
+import {withTempDir, TempDir} from '../../../src/util/temp-dir.js';
 
 
 describe('util.withTempDir', () => {

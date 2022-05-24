@@ -2,7 +2,7 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {execWebExt} from './common';
+import {execWebExt} from './common.js';
 
 describe('web-ext', () => {
   it('recommends matching command', async () => {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Load the TCP Library
-const net = require('net');
+import net from 'net';
 
 const REPLY_INITIAL = {from: 'root'};
 const REQUEST_ACTORS = {to: 'root', type: 'getRoot'};

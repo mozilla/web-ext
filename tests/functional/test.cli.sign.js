@@ -9,7 +9,7 @@ import {fs} from 'mz';
 import {
   minimalAddonPath, fakeServerPath,
   withTempAddonDir, execWebExt, reportCommandErrors,
-} from './common';
+} from './common.js';
 
 // Put this as "web-ext-config.js" in the current directory, and replace
 // "FAKEAPIKEY" and "FAKEAPISECRET" with the actual values to enable

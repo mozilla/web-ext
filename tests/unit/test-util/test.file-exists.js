@@ -5,9 +5,9 @@ import {assert} from 'chai';
 import {describe, it} from 'mocha';
 import {fs} from 'mz';
 
-import fileExists from '../../../src/util/file-exists';
-import {withTempDir} from '../../../src/util/temp-dir';
-import {ErrorWithCode} from '../helpers';
+import fileExists from '../../../src/util/file-exists.js';
+import {withTempDir} from '../../../src/util/temp-dir.js';
+import {ErrorWithCode} from '../helpers.js';
 
 
 describe('util/file-exists', () => {

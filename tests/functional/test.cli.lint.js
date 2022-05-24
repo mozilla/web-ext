@@ -3,7 +3,7 @@ import {describe, it} from 'mocha';
 
 import {
   minimalAddonPath, withTempAddonDir, execWebExt, reportCommandErrors,
-} from './common';
+} from './common.js';
 
 describe('web-ext lint', () => {
   it('should accept: --source-dir SRCDIR',

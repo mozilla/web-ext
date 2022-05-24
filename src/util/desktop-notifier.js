@@ -1,10 +1,10 @@
 /* @flow */
 import defaultNotifier from 'node-notifier';
 
-import {createLogger} from './logger';
+import {createLogger} from './logger.js';
 import type {Logger} from './logger';
 
-const defaultLog = createLogger(__filename);
+const defaultLog = createLogger(import.meta.url);
 
 export type DesktopNotificationsParams = {|
   title: string,

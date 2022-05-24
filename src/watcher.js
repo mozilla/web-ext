@@ -3,11 +3,10 @@ import {fs} from 'mz';
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
-import { UsageError } from './errors';
-import {createLogger} from './util/logger';
+import { UsageError } from './errors.js';
+import {createLogger} from './util/logger.js';
 
-
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 
 // onSourceChange types and implementation

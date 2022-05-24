@@ -4,7 +4,7 @@ import {assert} from 'chai';
 
 import {
   withTempDir, execWebExt, reportCommandErrors,
-} from './common';
+} from './common.js';
 
 describe('web-ext', () => {
   it('should accept: --help', () => withTempDir((tmpDir) => {

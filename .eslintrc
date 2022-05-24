@@ -26,7 +26,7 @@
   "settings": {
     "ft-flow": {
       "onlyFilesWithFlowAnnotation": true
-    },
+    }
   },
   "env": {
     "node": true,
@@ -174,7 +174,8 @@
     // This catches duplicate exports.
     "import/no-duplicates": 2,
     // This ensures import statements never provide a file extension in the path.
-    "import/extensions": [2, "never"],
+    // NOTE: disabled due to https://github.com/import-js/eslint-plugin-import/issues/2104
+    "import/extensions": [0, "never"],
     // This ensures imports are organized by type and that groups are separated
     // by a new line.
     "import/order": [2, {

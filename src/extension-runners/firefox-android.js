@@ -8,23 +8,23 @@
 import path from 'path';
 import readline from 'readline';
 
-import {withTempDir} from '../util/temp-dir';
-import DefaultADBUtils from '../util/adb';
+import {withTempDir} from '../util/temp-dir.js';
+import DefaultADBUtils from '../util/adb.js';
 import {
   showDesktopNotification as defaultDesktopNotifications,
-} from '../util/desktop-notifier';
+} from '../util/desktop-notifier.js';
 import {
   MultiExtensionsReloadError,
   UsageError,
   WebExtError,
-} from '../errors';
-import * as defaultFirefoxApp from '../firefox';
+} from '../errors.js';
+import * as defaultFirefoxApp from '../firefox/index.js';
 import {
   connectWithMaxRetries as defaultFirefoxConnector,
   findFreeTcpPort,
-} from '../firefox/remote';
-import {createLogger} from '../util/logger';
-import {isTTY, setRawMode} from '../util/stdin';
+} from '../firefox/remote.js';
+import {createLogger} from '../util/logger.js';
+import {isTTY, setRawMode} from '../util/stdin.js';
 import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
@@ -40,7 +40,7 @@ import type {
   ExtensionBuildResult,
 } from '../cmd/build';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 const ignoredParams = {
   profilePath: '--profile-path',

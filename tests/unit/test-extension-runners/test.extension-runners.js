@@ -10,11 +10,11 @@ import {
   defaultWatcherCreator,
   defaultReloadStrategy,
   MultiExtensionRunner,
-} from '../../../src/extension-runners';
+} from '../../../src/extension-runners/index.js';
 import {
   createFakeStdin,
   FakeExtensionRunner,
-} from '../helpers';
+} from '../helpers.js';
 import type {
   IExtensionRunner, // eslint-disable-line import/named
 } from '../../../src/extension-runners/base';

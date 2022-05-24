@@ -2,10 +2,10 @@
 import {fs} from 'mz';
 import defaultAsyncMkdirp from 'mkdirp';
 
-import {UsageError, isErrorWithCode} from '../errors';
-import {createLogger} from './logger';
+import {UsageError, isErrorWithCode} from '../errors.js';
+import {createLogger} from './logger.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 const defaultAsyncFsAccess: typeof fs.access = fs.access.bind(fs);
 
