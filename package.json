@@ -63,7 +63,7 @@
     "camelcase": "6.2.0",
     "chrome-launcher": "0.15.0",
     "debounce": "1.2.0",
-    "decamelize": "5.0.0",
+    "decamelize": "5.0.1",
     "es6-error": "4.1.1",
     "firefox-profile": "4.2.2",
     "fs-extra": "9.1.0",
