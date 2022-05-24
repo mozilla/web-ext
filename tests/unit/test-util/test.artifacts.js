@@ -3,7 +3,7 @@ import path from 'path';
 
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import {fs} from 'mz';
 
 

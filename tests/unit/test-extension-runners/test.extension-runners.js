@@ -3,7 +3,7 @@ import stream from 'stream';
 
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import {
   createExtensionRunner,

@@ -7,7 +7,7 @@ import {assert} from 'chai';
 import {describe, it, beforeEach, afterEach} from 'mocha';
 import deepcopy from 'deepcopy';
 import fs from 'fs-extra';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import WebSocket from 'ws';
 
 import getValidatedManifest from '../../../src/util/manifest';

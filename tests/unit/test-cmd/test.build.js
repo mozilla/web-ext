@@ -4,7 +4,7 @@ import path from 'path';
 import {fs} from 'mz';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import defaultFromEvent from 'promise-toolbox/fromEvent';
 
 import build, {

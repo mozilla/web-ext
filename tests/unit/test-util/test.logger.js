@@ -2,7 +2,7 @@
 import {Writable as WritableStream} from 'stream';
 
 import bunyan from 'bunyan';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import {it, describe} from 'mocha';
 import {assert} from 'chai';
 

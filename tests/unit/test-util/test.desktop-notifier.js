@@ -1,6 +1,6 @@
 /* @flow */
 import {it, describe} from 'mocha';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import {showDesktopNotification} from '../../../src/util/desktop-notifier';
 import {createLogger} from '../../../src/util/logger';

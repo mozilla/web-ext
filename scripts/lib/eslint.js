@@ -1,17 +1,16 @@
-const {CLIEngine} = require('eslint');
+const spawnSync = require('child_process').spawnSync;
 
 const config = require('./config');
 
-const eslint = new CLIEngine();
-
 module.exports = () => {
-  const lint = eslint.executeOnFiles(config.eslint.files);
-
-  console.log(eslint.getFormatter()(lint.results));
-
-  if (lint.errorCount > 0) {
+  const res = spawnSync('eslint', config.eslint.files, {
+    stdio: 'inherit',
+    shell: true,
+  });
+  if (res.error) {
+    console.error(res.error);
     return false;
   }
 
-  return true;
+  return res.status === 0;
 };

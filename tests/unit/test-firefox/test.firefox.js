@@ -2,7 +2,7 @@
 import path from 'path';
 
 import deepcopy from 'deepcopy';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
 import {describe, it} from 'mocha';
 import {assert} from 'chai';

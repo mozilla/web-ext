@@ -4,7 +4,7 @@ import path from 'path';
 import { fs } from 'mz';
 import {afterEach, beforeEach, describe, it} from 'mocha';
 import {assert} from 'chai';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import run from '../../../src/cmd/run';
 import {UsageError} from '../../../src/errors';

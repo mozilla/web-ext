@@ -96,7 +96,8 @@ export type RunningWebExt = {|
 |};
 
 export function execWebExt(
-  argv: Array<string>, spawnOptions: child_process$spawnOpts,
+  argv: Array<string>,
+  spawnOptions: child_process$spawnOpts,
 ): RunningWebExt {
 
   const spawnedProcess = spawn(

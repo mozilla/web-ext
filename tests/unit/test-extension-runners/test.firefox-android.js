@@ -5,7 +5,7 @@ import EventEmitter from 'events';
 import {assert} from 'chai';
 import {describe, it} from 'mocha';
 import deepcopy from 'deepcopy';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import {consoleStream} from '../../../src/util/logger';
 import {

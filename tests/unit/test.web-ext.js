@@ -1,7 +1,7 @@
 /* @flow */
 import {afterEach, describe, it} from 'mocha';
 import {assert} from 'chai';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import webExt from '../../src/main';
 import {main} from '../../src/program';
