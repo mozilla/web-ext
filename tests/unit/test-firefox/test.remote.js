@@ -10,18 +10,18 @@ import {
   RemoteTempInstallNotSupported,
   UsageError,
   WebExtError,
-} from '../../../src/errors';
+} from '../../../src/errors.js';
 import {
   connect as defaultConnector,
   connectWithMaxRetries,
   RemoteFirefox,
   findFreeTcpPort,
-} from '../../../src/firefox/remote';
+} from '../../../src/firefox/remote.js';
 import {
   fakeFirefoxClient,
   makeSureItFails,
   TCPConnectError,
-} from '../helpers';
+} from '../helpers.js';
 
 
 describe('firefox.remote', () => {

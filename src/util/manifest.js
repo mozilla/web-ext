@@ -6,10 +6,10 @@ import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
 
-import {InvalidManifest} from '../errors';
-import {createLogger} from './logger';
+import {InvalidManifest} from '../errors.js';
+import {createLogger} from './logger.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 
 // getValidatedManifest helper types and implementation

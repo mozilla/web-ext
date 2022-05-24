@@ -7,23 +7,23 @@ import {describe, it} from 'mocha';
 import deepcopy from 'deepcopy';
 import * as sinon from 'sinon';
 
-import {consoleStream} from '../../../src/util/logger';
+import {consoleStream} from '../../../src/util/logger.js';
 import {
   FirefoxAndroidExtensionRunner,
-} from '../../../src/extension-runners/firefox-android';
+} from '../../../src/extension-runners/firefox-android.js';
 import type {
   FirefoxAndroidExtensionRunnerParams,
 } from '../../../src/extension-runners/firefox-android';
 import {
   UsageError,
   WebExtError,
-} from '../../../src/errors';
+} from '../../../src/errors.js';
 import {
   basicManifest,
   createFakeStdin,
   getFakeFirefox,
   getFakeRemoteFirefox,
-} from '../helpers';
+} from '../helpers.js';
 
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
 const tempInstallResult = {
@@ -983,39 +983,28 @@ describe('util/extension-runners/firefox-android', () => {
       const optionsWarningTestCases = [
         {
           params: {profilePath: '/fake/dir'},
-          expectedMessage: (
-            /Android target does not support --profile-path/
-          ),
+          expectedMessage: /Android target does not support --profile-path/,
         },
         {
           params: {keepProfileChanges: true},
-          expectedMessage: (
-            /Android target does not support --keep-profile-changes/
-          ),
+          expectedMessage:
+            /Android target does not support --keep-profile-changes/,
         },
         {
           params: {browserConsole: true},
-          expectedMessage: (
-            /Android target does not support --browser-console/
-          ),
+          expectedMessage: /Android target does not support --browser-console/,
         },
         {
           params: {preInstall: true},
-          expectedMessage: (
-            /Android target does not support --pre-install/
-          ),
+          expectedMessage: /Android target does not support --pre-install/,
         },
         {
           params: {startUrl: 'http://fake-start-url.org'},
-          expectedMessage: (
-            /Android target does not support --start-url/
-          ),
+          expectedMessage: /Android target does not support --start-url/,
         },
         {
           params: {args: ['-headless=false']},
-          expectedMessage: (
-            /Android target does not support --args/
-          ),
+          expectedMessage: /Android target does not support --args/,
         },
       ];
 

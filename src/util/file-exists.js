@@ -1,7 +1,7 @@
 /* @flow */
 import {fs} from 'mz';
 
-import {isErrorWithCode} from '../errors';
+import {isErrorWithCode} from '../errors.js';
 
 type FileExistsOptions = {|
   fileIsReadable: (filePath: string) => Promise<boolean>,

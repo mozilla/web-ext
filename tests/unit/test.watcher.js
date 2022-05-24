@@ -8,9 +8,12 @@ import * as sinon from 'sinon';
 import {assert} from 'chai';
 import Watchpack from 'watchpack';
 
-import {default as onSourceChange, proxyFileChanges} from '../../src/watcher';
-import {withTempDir} from '../../src/util/temp-dir';
-import { makeSureItFails } from './helpers';
+import {
+  default as onSourceChange,
+  proxyFileChanges,
+} from '../../src/watcher.js';
+import {withTempDir} from '../../src/util/temp-dir.js';
+import { makeSureItFails } from './helpers.js';
 
 type AssertWatchedParams = {
   watchFile?: Array<string>,

@@ -1,9 +1,9 @@
 /* @flow */
 import open from 'open';
 
-import {createLogger} from '../util/logger';
+import {createLogger} from '../util/logger.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 export type DocsParams = {
   noInput?: boolean,

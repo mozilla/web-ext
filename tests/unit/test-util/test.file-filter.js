@@ -2,7 +2,7 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {FileFilter, isSubPath} from '../../../src/util/file-filter';
+import {FileFilter, isSubPath} from '../../../src/util/file-filter.js';
 
 describe('util/file-filter', () => {
 

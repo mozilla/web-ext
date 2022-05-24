@@ -6,24 +6,25 @@ import {promisify} from 'util';
 import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile from 'firefox-profile';
 import {fs} from 'mz';
-import fromEvent from 'promise-toolbox/fromEvent';
+import * as promiseToolbox from 'promise-toolbox';
 
-import isDirectory from '../util/is-directory';
-import {isErrorWithCode, UsageError, WebExtError} from '../errors';
-import {getPrefs as defaultPrefGetter} from './preferences';
-import {getManifestId} from '../util/manifest';
-import {findFreeTcpPort as defaultRemotePortFinder} from './remote';
-import {createLogger} from '../util/logger';
+import isDirectory from '../util/is-directory.js';
+import {isErrorWithCode, UsageError, WebExtError} from '../errors.js';
+import {getPrefs as defaultPrefGetter} from './preferences.js';
+import {getManifestId} from '../util/manifest.js';
+import {findFreeTcpPort as defaultRemotePortFinder} from './remote.js';
+import {createLogger} from '../util/logger.js';
 // Import flow types
 import type {
   PreferencesAppName,
   PreferencesGetterFn,
   FirefoxPreferences,
 } from './preferences';
-import type {ExtensionManifest} from '../util/manifest';
+import type {ExtensionManifest} from '../util/manifest.js';
 
+const { pFromEvent: fromEvent } = promiseToolbox;
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 const defaultAsyncFsStat: typeof fs.stat = fs.stat.bind(fs);
 

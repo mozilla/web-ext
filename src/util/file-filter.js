@@ -3,9 +3,9 @@ import path from 'path';
 
 import multimatch from 'multimatch';
 
-import {createLogger} from './logger';
+import {createLogger} from './logger.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 // check if target is a sub directory of src
 export const isSubPath = (src: string, target: string): boolean => {

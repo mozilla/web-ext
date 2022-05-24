@@ -2,10 +2,10 @@
 import {describe, it} from 'mocha';
 import {assert} from 'chai';
 
-import {WebExtError, UsageError} from '../../../src/errors';
+import {WebExtError, UsageError} from '../../../src/errors.js';
 import {
   getPrefs, coerceCLICustomPreference, nonOverridablePreferences,
-} from '../../../src/firefox/preferences';
+} from '../../../src/firefox/preferences.js';
 
 
 describe('firefox/preferences', () => {

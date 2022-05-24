@@ -2,12 +2,12 @@
 
 import type {
   BuildCmdParams, BuildCmdOptions, ExtensionBuildResult,
-} from './build';
-import type {LintCmdParams, LintCmdOptions} from './lint';
-import type {CmdRunParams, CmdRunOptions} from './run';
-import type {MultiExtensionRunner} from '../extension-runners';
-import type {SignParams, SignOptions, SignResult} from './sign';
-import type {DocsParams, DocsOptions} from './docs';
+} from './build.js';
+import type {LintCmdParams, LintCmdOptions} from './lint.js';
+import type {CmdRunParams, CmdRunOptions} from './run.js';
+import type {MultiExtensionRunner} from '../extension-runners/index.js';
+import type {SignParams, SignOptions, SignResult} from './sign.js';
+import type {DocsParams, DocsOptions} from './docs.js';
 
 // This module exports entry points for all supported commands. For performance
 // reasons (faster start-up), the implementations are not statically imported
@@ -17,40 +17,35 @@ import type {DocsParams, DocsOptions} from './docs';
 async function build(
   params: BuildCmdParams, options: BuildCmdOptions
 ): Promise<ExtensionBuildResult> {
-  // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-  const {default: runCommand} = require('./build');
+  const {default: runCommand} = await import('./build.js');
   return runCommand(params, options);
 }
 
 async function lint(
   params: LintCmdParams, options: LintCmdOptions
 ): Promise<void> {
-  // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-  const {default: runCommand} = require('./lint');
+  const {default: runCommand} = await import('./lint.js');
   return runCommand(params, options);
 }
 
 async function run(
   params: CmdRunParams, options: CmdRunOptions
 ): Promise<MultiExtensionRunner> {
-  // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-  const {default: runCommand} = require('./run');
+  const {default: runCommand} = await import('./run.js');
   return runCommand(params, options);
 }
 
 async function sign(
   params: SignParams, options: SignOptions
 ): Promise<SignResult> {
-  // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-  const {default: runCommand} = require('./sign');
+  const {default: runCommand} = await import('./sign.js');
   return runCommand(params, options);
 }
 
 async function docs(
   params: DocsParams, options: DocsOptions
 ): Promise<void> {
-  // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-  const {default: runCommand} = require('./docs');
+  const {default: runCommand} = await import('./docs.js');
   return runCommand(params, options);
 }
 

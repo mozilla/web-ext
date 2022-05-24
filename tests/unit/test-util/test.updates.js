@@ -2,7 +2,7 @@
 import {it, describe} from 'mocha';
 import * as sinon from 'sinon';
 
-import {checkForUpdates} from '../../../src/util/updates';
+import {checkForUpdates} from '../../../src/util/updates.js';
 
 describe('util/updates', () => {
   describe('checkForUpdates()', () => {

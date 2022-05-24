@@ -10,24 +10,24 @@ import fs from 'fs-extra';
 import * as sinon from 'sinon';
 import WebSocket from 'ws';
 
-import getValidatedManifest from '../../../src/util/manifest';
+import getValidatedManifest from '../../../src/util/manifest.js';
 import {
   basicManifest,
   StubChildProcess,
-} from '../helpers';
+} from '../helpers.js';
 import {
   ChromiumExtensionRunner,
   DEFAULT_CHROME_FLAGS,
-} from '../../../src/extension-runners/chromium';
+} from '../../../src/extension-runners/chromium.js';
 import type {
   ChromiumExtensionRunnerParams,
 } from '../../../src/extension-runners/chromium';
 import {
   consoleStream, // instance is imported to inspect logged messages
-} from '../../../src/util/logger';
-import { TempDir, withTempDir } from '../../../src/util/temp-dir';
-import fileExists from '../../../src/util/file-exists';
-import isDirectory from '../../../src/util/is-directory';
+} from '../../../src/util/logger.js';
+import { TempDir, withTempDir } from '../../../src/util/temp-dir.js';
+import fileExists from '../../../src/util/file-exists.js';
+import isDirectory from '../../../src/util/is-directory.js';
 
 function prepareExtensionRunnerParams({params} = {}) {
   const fakeChromeInstance = {

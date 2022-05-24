@@ -3,7 +3,7 @@ import {it, describe} from 'mocha';
 import {assert} from 'chai';
 import * as sinon from 'sinon';
 
-import defaultLintCommand from '../../../src/cmd/lint';
+import defaultLintCommand from '../../../src/cmd/lint.js';
 
 type setUpParams = {|
   createLinter?: Function,

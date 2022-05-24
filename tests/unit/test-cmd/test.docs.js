@@ -3,8 +3,8 @@ import {it, describe} from 'mocha';
 import * as sinon from 'sinon';
 import {assert} from 'chai';
 
-import {makeSureItFails} from '../helpers';
-import defaultDocsCommand, {url} from '../../../src/cmd/docs';
+import {makeSureItFails} from '../helpers.js';
+import defaultDocsCommand, {url} from '../../../src/cmd/docs.js';
 
 describe('docs', () => {
   it('passes the correct url to docs', () => {

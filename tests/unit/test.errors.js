@@ -4,8 +4,8 @@ import {assert} from 'chai';
 
 import {
   onlyErrorsWithCode, isErrorWithCode, onlyInstancesOf,
-} from '../../src/errors';
-import {makeSureItFails, ErrorWithCode} from './helpers';
+} from '../../src/errors.js';
+import {makeSureItFails, ErrorWithCode} from './helpers.js';
 
 
 describe('errors', () => {

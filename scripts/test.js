@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 
+import eslint from './lib/eslint.js';
+import {flowCheck} from './lib/flow.js';
+import {mochaUnit} from './lib/mocha.js';
+import {isBuilt} from './lib/babel.js';
+
 const COVERAGE = process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
 
-const eslint = require('./lib/eslint');
-const {flowCheck} = require('./lib/flow');
-const {mochaUnit} = require('./lib/mocha');
+if (!isBuilt()) {
+  console.error('web-ext transpiled sources missing. Run "npm run build".');
+  process.exit(1);
+}
 
 console.log('Running eslint...');
 if (!eslint()) {

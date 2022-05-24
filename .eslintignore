@@ -1,4 +1,5 @@
-dist/
+lib/
+!scripts/lib
 coverage/
 artifacts/
 flow-typed/

@@ -6,14 +6,16 @@ import {assert} from 'chai';
 import deepcopy from 'deepcopy';
 import {fs} from 'mz';
 
-import {onlyInstancesOf, InvalidManifest} from '../../../src/errors';
-import getValidatedManifest, {getManifestId} from '../../../src/util/manifest';
-import {withTempDir} from '../../../src/util/temp-dir';
+import {onlyInstancesOf, InvalidManifest} from '../../../src/errors.js';
+import getValidatedManifest, {
+  getManifestId,
+} from '../../../src/util/manifest.js';
+import {withTempDir} from '../../../src/util/temp-dir.js';
 import {
   basicManifest,
   makeSureItFails,
   manifestWithoutApps,
-} from '../helpers';
+} from '../helpers.js';
 
 
 describe('util/manifest', () => {

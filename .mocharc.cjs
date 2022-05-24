@@ -7,6 +7,6 @@ module.exports = {
   reporter: 'spec',
   require: [
     '@babel/register',
-    './tests/setup',
+    './tests/setup.js',
   ]
 };

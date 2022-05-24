@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import FirefoxRDPClient, {
   connectToFirefox,
   parseRDPMessage,
-} from '../../../src/firefox/rdp-client';
+} from '../../../src/firefox/rdp-client.js';
 
 function createFakeRDPServer() {
   let lastSocket;

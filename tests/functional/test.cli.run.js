@@ -8,7 +8,7 @@ import { fs } from 'mz';
 import {
   minimalAddonPath, fakeFirefoxPath,
   withTempAddonDir, execWebExt, reportCommandErrors,
-} from './common';
+} from './common.js';
 
 const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 

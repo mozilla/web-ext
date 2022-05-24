@@ -4,7 +4,7 @@ import {assert} from 'chai';
 
 import {
   minimalAddonPath, withTempAddonDir, execWebExt, reportCommandErrors,
-} from './common';
+} from './common.js';
 
 describe('web-ext build', () => {
   it('should accept: --source-dir SRCDIR',

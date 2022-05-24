@@ -1,14 +1,14 @@
 /* @flow */
 import {createInstance as defaultLinterCreator} from 'addons-linter';
 
-import {createLogger} from '../util/logger';
+import {createLogger} from '../util/logger.js';
 import {
   createFileFilter as defaultFileFilterCreator,
-} from '../util/file-filter';
+} from '../util/file-filter.js';
 // import flow types
-import type {FileFilterCreatorFn} from '../util/file-filter';
+import type {FileFilterCreatorFn} from '../util/file-filter.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 
 // Define the needed 'addons-linter' module flow types.

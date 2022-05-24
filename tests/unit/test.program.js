@@ -7,28 +7,29 @@ import {fs} from 'mz';
 import * as sinon from 'sinon';
 import {assert} from 'chai';
 
-import {applyConfigToArgv} from '../../src/config';
+import {applyConfigToArgv} from '../../src/config.js';
 import {
   defaultVersionGetter,
   main,
   Program,
   throwUsageErrorIfArray,
-} from '../../src/program';
-import commands from '../../src/cmd';
+} from '../../src/program.js';
+import commands from '../../src/cmd/index.js';
 import {
   onlyInstancesOf,
   UsageError,
-} from '../../src/errors';
+} from '../../src/errors.js';
 import {
   createFakeProcess,
   fake,
   makeSureItFails,
   ErrorWithCode,
-} from './helpers';
+  moduleURLToDirname,
+} from './helpers.js';
 import {
   consoleStream, // instance is imported to inspect logged messages
   ConsoleStream,
-} from '../../src/util/logger';
+} from '../../src/util/logger.js';
 
 const {spy} = sinon;
 
@@ -36,12 +37,16 @@ describe('program.Program', () => {
 
   function execProgram(program, options = {}) {
     const fakeProcess = createFakeProcess();
-    const absolutePackageDir = path.join(__dirname, '..', '..');
+    const absolutePackageDir = path.join(
+      moduleURLToDirname(import.meta.url),
+      '..',
+      '..'
+    );
     if (program.absolutePackageDir == null) {
       program.absolutePackageDir = absolutePackageDir;
     }
     return program.execute({
-      getVersion: () => 'not-a-real-version',
+      getVersion: async () => 'not-a-real-version',
       checkForUpdates: spy(),
       systemProcess: fakeProcess,
       shouldExitProgram: false,
@@ -215,7 +220,9 @@ describe('program.Program', () => {
     program.command('thing', 'does a thing', () => {});
     return execProgram(program, {getVersion: version})
       .then(() => {
-        sinon.assert.calledWith(version, path.join(__dirname, '..', '..'));
+        sinon.assert.calledWith(version, path.join(
+          moduleURLToDirname(import.meta.url), '..', '..')
+        );
       });
   });
 
@@ -294,7 +301,7 @@ describe('program.Program', () => {
 
   it('checks for updates automatically', () => {
     const handler = spy();
-    const getVersion = () => 'some-package-version';
+    const getVersion = async () => 'some-package-version';
     const checkForUpdates = sinon.stub();
     const program = new Program(['run'])
       .command('run', 'some command', handler);
@@ -311,7 +318,7 @@ describe('program.Program', () => {
 
   it('does not check for updates during development', () => {
     const handler = spy();
-    const getVersion = () => 'some-package-version';
+    const getVersion = async () => 'some-package-version';
     const checkForUpdates = sinon.stub();
     const program = new Program(['run'])
       .command('run', 'some command', handler);
@@ -908,27 +915,31 @@ describe('program.main', () => {
 });
 
 describe('program.defaultVersionGetter', () => {
-  const projectRoot = path.join(__dirname, '..', '..');
+  const projectRoot = path.join(
+    moduleURLToDirname(import.meta.url), '..', '..'
+  );
 
   it('returns the package version in production', () => {
     const pkgFile = path.join(projectRoot, 'package.json');
     return fs.readFile(pkgFile)
-      .then((pkgData) => {
+      .then(async (pkgData) => {
         const testBuildEnv = {globalEnv: 'production'};
-        assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
+        assert.equal(await defaultVersionGetter(projectRoot, testBuildEnv),
                      JSON.parse(pkgData).version);
       });
   });
 
   it('returns git commit information in development', function() {
-    return fs.exists(path.join(projectRoot, '.git')).then((exists) => {
+    return fs.exists(path.join(projectRoot, '.git')).then(async (exists) => {
       if (!exists) {
         this.skip();
       }
-      const commit = `${git.branch()}-${git.long()}`;
+      const commit = `${git.branch(projectRoot)}-${git.long(projectRoot)}`;
       const testBuildEnv = {globalEnv: 'development'};
-      assert.equal(defaultVersionGetter(projectRoot, testBuildEnv),
-                   commit);
+      assert.equal(
+        await defaultVersionGetter(projectRoot, testBuildEnv),
+        commit
+      );
     });
   });
 });

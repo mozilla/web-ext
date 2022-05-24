@@ -6,11 +6,11 @@ import importFresh from 'import-fresh';
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
 
-import fileExists from './util/file-exists';
-import {createLogger} from './util/logger';
-import {UsageError, WebExtError} from './errors';
+import fileExists from './util/file-exists.js';
+import {createLogger} from './util/logger.js';
+import {UsageError, WebExtError} from './errors.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 type ApplyConfigToArgvParams = {|
   // This is the argv object which will get updated by each

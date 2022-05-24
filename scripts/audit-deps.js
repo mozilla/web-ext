@@ -7,8 +7,8 @@
 // We can remove this script if/once npm audit will support this feature natively
 // (See https://github.com/npm/npm/issues/20565).
 
-const shell = require('shelljs');
-const stripJsonComments = require('strip-json-comments');
+import shell from 'shelljs';
+import stripJsonComments from 'strip-json-comments';
 
 const npmVersion = parseInt(shell.exec('npm --version', {silent: true}).stdout.split('.')[0], 10);
 const npmCmd = npmVersion >= 6 ? 'npm' : 'npx npm@latest';

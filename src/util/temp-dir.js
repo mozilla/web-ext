@@ -3,10 +3,10 @@ import {promisify} from 'util';
 
 import tmp from 'tmp';
 
-import {createLogger} from './logger';
-import {multiArgsPromisedFn, promisifyCustom} from './promisify';
+import {createLogger} from './logger.js';
+import {multiArgsPromisedFn, promisifyCustom} from './promisify.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 export type MakePromiseCallback = (tmpDir: TempDir) => any;
 

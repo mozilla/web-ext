@@ -2,25 +2,24 @@
   "name": "web-ext",
   "version": "6.8.0",
   "description": "A command line tool to help build, run, and test web extensions",
-  "main": "dist/web-ext.js",
+  "type": "module",
+  "main": "index.js",
   "exports": {
-    "import": "./index.mjs",
-    "require": "./dist/web-ext.js"
+    ".": "./index.js",
+    "./util/adb": "./lib/util/adb.js",
+    "./util/logger": "./lib/util/logger.js"
   },
   "files": [
-    "CODE_OF_CONDUCT.md",
-    "README.md",
-    "dist/*.js",
-    "src/**",
-    "index.mjs"
+    "index.js",
+    "lib/**"
   ],
   "engines": {
-    "node": ">=12.0.0",
+    "node": ">=14.0.0",
     "npm": ">=6.9.0"
   },
   "engine-strict": true,
   "bin": {
-    "web-ext": "bin/web-ext"
+    "web-ext": "bin/web-ext.js"
   },
   "scripts": {
     "build": "node scripts/build",
@@ -88,10 +87,9 @@
     "zip-dir": "2.0.0"
   },
   "devDependencies": {
+    "@babel/cli": "7.17.10",
     "@babel/core": "7.18.0",
     "@babel/eslint-parser": "7.17.0",
-    "@babel/plugin-proposal-class-properties": "7.17.12",
-    "@babel/plugin-transform-runtime": "7.18.0",
     "@babel/preset-env": "7.18.0",
     "@babel/preset-flow": "7.17.12",
     "@babel/register": "7.17.7",
@@ -99,6 +97,7 @@
     "@commitlint/config-conventional": "17.0.0",
     "babel-loader": "8.2.5",
     "babel-plugin-istanbul": "6.1.1",
+    "babel-plugin-transform-inline-environment-variables": "0.4.4",
     "chai": "4.3.4",
     "chai-as-promised": "7.1.1",
     "copy-dir": "1.3.0",
@@ -116,8 +115,7 @@
     "prettyjson": "1.2.1",
     "shelljs": "0.8.5",
     "sinon": "12.0.1",
-    "webpack": "5.24.2",
-    "webpack-node-externals": "2.5.2",
+    "testdouble": "3.16.5",
     "yauzl": "2.10.0"
   },
   "author": "Kumar McMillan",

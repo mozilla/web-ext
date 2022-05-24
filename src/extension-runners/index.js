@@ -8,26 +8,25 @@ import type {
   IExtensionRunner, // eslint-disable-line import/named
   ExtensionRunnerReloadResult,
 } from './base';
-import {WebExtError} from '../errors';
+import {WebExtError} from '../errors.js';
 import {
   showDesktopNotification as defaultDesktopNotifications,
-} from '../util/desktop-notifier';
-import type {FirefoxAndroidExtensionRunnerParams} from './firefox-android';
-import type {FirefoxDesktopExtensionRunnerParams} from './firefox-desktop';
-import type {ChromiumExtensionRunnerParams} from './chromium';
-import {createLogger} from '../util/logger';
-import type {FileFilterCreatorFn} from '../util/file-filter';
+} from '../util/desktop-notifier.js';
+import type {FirefoxAndroidExtensionRunnerParams} from './firefox-android.js';
+import type {FirefoxDesktopExtensionRunnerParams} from './firefox-desktop.js';
+import type {ChromiumExtensionRunnerParams} from './chromium.js';
+import {createLogger} from '../util/logger.js';
+import type {FileFilterCreatorFn} from '../util/file-filter.js';
 import {
   createFileFilter as defaultFileFilterCreator,
-} from '../util/file-filter';
+} from '../util/file-filter.js';
 import {
   isTTY, setRawMode,
-} from '../util/stdin';
-import defaultSourceWatcher from '../watcher';
+} from '../util/stdin.js';
+import defaultSourceWatcher from '../watcher.js';
 import type {OnSourceChangeFn} from '../watcher';
 
-
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 
 export type ExtensionRunnerConfig = {|
   target: 'firefox-desktop',
@@ -50,18 +49,19 @@ export async function createExtensionRunner(
 ): Promise<IExtensionRunner> {
   switch (config.target) {
     case 'firefox-desktop': {
-      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-      const {FirefoxDesktopExtensionRunner} = require('./firefox-desktop');
+      const {
+        FirefoxDesktopExtensionRunner,
+      } = await import('./firefox-desktop.js');
       return new FirefoxDesktopExtensionRunner(config.params);
     }
     case 'firefox-android': {
-      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-      const {FirefoxAndroidExtensionRunner} = require('./firefox-android');
+      const {
+        FirefoxAndroidExtensionRunner,
+      } = await import('./firefox-android.js');
       return new FirefoxAndroidExtensionRunner(config.params);
     }
     case 'chromium': {
-      // TODO: use async import instead of require - https://github.com/mozilla/web-ext/issues/1306
-      const {ChromiumExtensionRunner} = require('./chromium');
+      const {ChromiumExtensionRunner} = await import('./chromium.js');
       return new ChromiumExtensionRunner(config.params);
     }
     default:

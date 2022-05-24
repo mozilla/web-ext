@@ -2,18 +2,18 @@
 import path from 'path';
 
 import {fs} from 'mz';
-import {signAddon as defaultAddonSigner} from 'sign-addon';
+import signAddonModule from 'sign-addon';
 
-import defaultBuilder from './build';
-import getValidatedManifest, {getManifestId} from '../util/manifest';
-import {withTempDir} from '../util/temp-dir';
-import {isErrorWithCode, UsageError, WebExtError} from '../errors';
-import {prepareArtifactsDir} from '../util/artifacts';
-import {createLogger} from '../util/logger';
-import type {ExtensionManifest} from '../util/manifest';
+import defaultBuilder from './build.js';
+import getValidatedManifest, {getManifestId} from '../util/manifest.js';
+import {withTempDir} from '../util/temp-dir.js';
+import {isErrorWithCode, UsageError, WebExtError} from '../errors.js';
+import {prepareArtifactsDir} from '../util/artifacts.js';
+import {createLogger} from '../util/logger.js';
+import type {ExtensionManifest} from '../util/manifest.js';
 
-
-const log = createLogger(__filename);
+const {signAddon: defaultAddonSigner} = signAddonModule;
+const log = createLogger(import.meta.url);
 
 const defaultAsyncFsReadFile: (string) => Promise<Buffer> =
   fs.readFile.bind(fs);

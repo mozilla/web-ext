@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-const path = require('path');
+import path from 'path';
 
-const shell = require('shelljs');
-const tmp = require('tmp');
+import shell from 'shelljs';
+import tmp from 'tmp';
 
-const pkg = require('../package.json');
-const {mochaFunctional} = require('./lib/mocha');
+import {mochaFunctional} from './lib/mocha.js';
+
+const pkg = JSON.parse(shell.cat('package.json'));
 
 shell.set('-e');
 

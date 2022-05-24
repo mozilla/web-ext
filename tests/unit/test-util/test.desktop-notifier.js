@@ -2,9 +2,9 @@
 import {it, describe} from 'mocha';
 import * as sinon from 'sinon';
 
-import {showDesktopNotification} from '../../../src/util/desktop-notifier';
-import {createLogger} from '../../../src/util/logger';
-import {makeSureItFails} from '../helpers';
+import {showDesktopNotification} from '../../../src/util/desktop-notifier.js';
+import {createLogger} from '../../../src/util/logger.js';
+import {makeSureItFails} from '../helpers.js';
 
 describe('util/desktop-notifier', () => {
   describe('desktopNotifications()', () => {
@@ -32,7 +32,7 @@ describe('util/desktop-notifier', () => {
 
     it('logs error when notifier fails', () => {
       const expectedError = new Error('an error');
-      const fakeLog = createLogger(__filename);
+      const fakeLog = createLogger(import.meta.url);
       sinon.spy(fakeLog, 'debug');
       const fakeNotifier = {
         notify: (obj, callback) => {

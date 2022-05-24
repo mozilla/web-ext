@@ -8,18 +8,18 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import * as sinon from 'sinon';
 
-import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors';
-import {getManifestId} from '../../../src/util/manifest';
-import {withTempDir} from '../../../src/util/temp-dir';
+import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors.js';
+import {getManifestId} from '../../../src/util/manifest.js';
+import {withTempDir} from '../../../src/util/temp-dir.js';
 import completeSignCommand, {
   extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
-} from '../../../src/cmd/sign';
+} from '../../../src/cmd/sign.js';
 import {
   basicManifest,
   makeSureItFails,
   manifestWithoutApps,
   fixturePath,
-} from '../helpers';
+} from '../helpers.js';
 // Import flow type
 import type {ExtensionManifestApplications} from '../../../src/util/manifest';
 

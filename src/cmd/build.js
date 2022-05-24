@@ -5,27 +5,27 @@ import {createWriteStream} from 'fs';
 import {fs} from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
-import stripJsonComments from 'strip-json-comments';
-import defaultFromEvent from 'promise-toolbox/fromEvent';
+import * as promiseToolbox from 'promise-toolbox';
 import zipDir from 'zip-dir';
 
-import defaultSourceWatcher from '../watcher';
-import getValidatedManifest, {getManifestId} from '../util/manifest';
-import {prepareArtifactsDir} from '../util/artifacts';
-import {createLogger} from '../util/logger';
-import {UsageError, isErrorWithCode} from '../errors';
+import defaultSourceWatcher from '../watcher.js';
+import getValidatedManifest, {getManifestId} from '../util/manifest.js';
+import {prepareArtifactsDir} from '../util/artifacts.js';
+import {createLogger} from '../util/logger.js';
+import {UsageError, isErrorWithCode} from '../errors.js';
 import {
   createFileFilter as defaultFileFilterCreator,
   FileFilter,
-} from '../util/file-filter';
+} from '../util/file-filter.js';
 // Import flow types.
-import type {OnSourceChangeFn} from '../watcher';
-import type {ExtensionManifest} from '../util/manifest';
-import type {FileFilterCreatorFn} from '../util/file-filter';
+import type {OnSourceChangeFn} from '../watcher.js';
+import type {ExtensionManifest} from '../util/manifest.js';
+import type {FileFilterCreatorFn} from '../util/file-filter.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
 const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';
 
+const {pFromEvent: defaultFromEvent} = promiseToolbox;
 
 export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9.-]+/g, '_');
@@ -83,6 +83,7 @@ export async function getDefaultLocalizedName(
 
   messageContents = stripBom(messageContents);
 
+  const {default: stripJsonComments } = await import('strip-json-comments');
   try {
     messageData = parseJSON(stripJsonComments(messageContents));
   } catch (error) {

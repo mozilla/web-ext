@@ -1,8 +1,9 @@
 /* @flow */
-import {WebExtError, UsageError} from '../errors';
-import {createLogger} from '../util/logger';
+import {WebExtError, UsageError} from '../errors.js';
+import {createLogger} from '../util/logger.js';
 
-const log = createLogger(__filename);
+const log = createLogger(import.meta.url);
+
 export const nonOverridablePreferences = [
   'devtools.debugger.remote-enabled', 'devtools.debugger.prompt-connection',
   'xpinstall.signatures.required',

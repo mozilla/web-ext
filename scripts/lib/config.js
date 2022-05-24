@@ -1,5 +1,5 @@
-module.exports = {
-  clean: ['dist/*'],
+export default {
+  clean: ['lib/*'],
   watch: {
     files: [
       'package.json',
@@ -14,7 +14,7 @@ module.exports = {
   },
   eslint: {
     files: [
-      '.', './index.mjs', './src/**/*.js', './tests/**/*.js', './scripts/**',
+      '.', './index.js', './src/**/*.js', './tests/**/*.js', './scripts/**',
     ],
   },
   mocha: {

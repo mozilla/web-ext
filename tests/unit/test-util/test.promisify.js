@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import {
   multiArgsPromisedFn,
   promisifyCustom,
-} from '../../../src/util/promisify';
+} from '../../../src/util/promisify.js';
 
 describe('nodejs util.promisify', () => {
   it('wraps a nodejs callback-based function into a promised function',

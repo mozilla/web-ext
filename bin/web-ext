@@ -1,7 +1,0 @@
-#!/usr/bin/env node
-
-var webExt = require('../dist/web-ext');
-var path = require('path');
-var absolutePackageDir = path.join(path.resolve(__dirname), '..');
-
-webExt.main(absolutePackageDir);

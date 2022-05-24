@@ -9,15 +9,15 @@ import * as sinon from 'sinon';
 import {
   UsageError,
   WebExtError,
-} from '../../../src/errors';
+} from '../../../src/errors.js';
 import ADBUtils, {
   ARTIFACTS_DIR_PREFIX,
   DEVICE_DIR_BASE,
   listADBDevices, listADBFirefoxAPKs,
-} from '../../../src/util/adb';
+} from '../../../src/util/adb.js';
 import {
   consoleStream, // instance is imported to inspect logged messages
-} from '../../../src/util/logger';
+} from '../../../src/util/logger.js';
 
 const fakeADBPackageList = `
 package:org.mozilla.fennec
