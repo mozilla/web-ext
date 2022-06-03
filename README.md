@@ -74,7 +74,7 @@ version on the command line with this:
 ## Installation from source
 
 You'll need:
-* [Node.js](https://nodejs.org/en/), 12.0.0 or higher
+* [Node.js](https://nodejs.org/en/), 14.0.0 or higher
 * [npm](https://www.npmjs.com/), 6.9.0 or higher is recommended
 
 Optionally, you may like:
@@ -89,7 +89,7 @@ Change into the source and install all dependencies:
 
     git clone https://github.com/mozilla/web-ext.git
     cd web-ext
-    npm install
+    npm ci
 
 Build the command:
 
@@ -112,13 +112,17 @@ need to relink it.
 
 ## Using web-ext in NodeJS code
 
-Aside from [using web-ext on the command line][web-ext-user-docs], you may wish to execute `web-ext` in NodeJS code. There is limited support for this. Here are some examples.
+**Note:** There is limited support for this API.
+
+Aside from [using web-ext on the command line][web-ext-user-docs], you may wish to execute `web-ext` in NodeJS code.
+
+As of version `7.0.0`, the `web-ext` npm package exports NodeJS native ES modules only. If you are using CommonJS, you will have to use [dynamic imports][dynamic-imports].
+
+### Examples
 
 You are able to execute command functions without any argument validation. If you want to execute `web-ext run` you would do so like this:
 
 ```js
-// const webExt = require('web-ext');
-// or...
 import webExt from 'web-ext';
 
 webExt.cmd.run({
@@ -145,13 +149,15 @@ webExt.cmd.run({
 If you would like to run an extension on Firefox for Android:
 
 ```js
+import adbUtils from "web-ext/util/adb";
+
 // Path to adb binary (optional parameter, auto-detected if missing)
 const adbBin = "/path/to/adb";
 // Get an array of device ids (Array<string>)
-const deviceIds = await webExt.util.adb.listADBDevices(adbBin);
+const deviceIds = await adbUtils.listADBDevices(adbBin);
 const adbDevice = ...
 // Get an array of Firefox APKs (Array<string>)
-const firefoxAPKs = await webExt.util.adb.listADBFirefoxAPKs(
+const firefoxAPKs = await adbUtils.listADBFirefoxAPKs(
   deviceId, adbBin
 );
 const firefoxApk = ...
@@ -167,7 +173,9 @@ webExt.cmd.run({
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
 
 ```js
-webExt.util.logger.consoleStream.makeVerbose();
+import webExtLogger from "web-ext/util/logger";
+
+webExtLogger.consoleStream.makeVerbose();
 webExt.cmd.run({sourceDir: './src'}, {shouldExitProgram: false});
 ```
 
@@ -226,3 +234,4 @@ Here is a partial list of examples:
     extensions.
 
 [web-ext-user-docs]: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext
+[dynamic-imports]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports
