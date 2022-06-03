@@ -78,7 +78,7 @@
     "sign-addon": "3.11.0",
     "source-map-support": "0.5.20",
     "strip-bom": "5.0.0",
-    "strip-json-comments": "3.1.1",
+    "strip-json-comments": "4.0.0",
     "tmp": "0.2.1",
     "update-notifier": "5.1.0",
     "watchpack": "2.1.1",
