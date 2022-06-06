@@ -114,7 +114,7 @@
     "nyc": "15.1.0",
     "prettyjson": "1.2.5",
     "shelljs": "0.8.5",
-    "sinon": "12.0.1",
+    "sinon": "14.0.0",
     "testdouble": "3.16.5",
     "yauzl": "2.10.0"
   },
