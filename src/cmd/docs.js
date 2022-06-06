@@ -17,17 +17,13 @@ export type DocsOptions = {
 // eslint-disable-next-line max-len
 export const url = 'https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/';
 
-export default function docs(
+export default async function docs(
   params: DocsParams, {openUrl = open}: DocsOptions = {}
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
-    openUrl(url, (error) => {
-      if (error) {
-        log.debug(`Encountered an error while opening URL ${url}`, error);
-        reject(error);
-      } else {
-        resolve();
-      }
-    });
-  });
+  try {
+    await openUrl(url);
+  } catch (error) {
+    log.debug(`Encountered an error while opening URL ${url}`, error);
+    throw error;
+  }
 }
