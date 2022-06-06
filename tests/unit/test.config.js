@@ -37,9 +37,9 @@ function makeArgv({
   if (globalOpt) {
     program.setGlobalOptions(globalOpt);
   }
-  if (commandOpt) {
-    program.command(command, commandDesc, commandExecutor, commandOpt);
-  }
+
+  commandOpt = commandOpt ?? {};
+  program.command(command, commandDesc, commandExecutor, commandOpt);
 
   const argv = program.yargs.exitProcess(false).argv;
   return {

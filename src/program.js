@@ -180,7 +180,16 @@ export class Program {
     validationInstance.requiredArguments = (args, demandedOptions) => {
       this.demandedOptions = demandedOptions;
     };
-    const argv = this.yargs.argv;
+    let argv;
+    try {
+      argv = this.yargs.argv;
+    } catch (err) {
+      if (err.name === 'YError' &&
+          err.message.startsWith('Unknown argument: ')) {
+        throw new UsageError(err.message);
+      }
+      throw err;
+    }
     validationInstance.requiredArguments = requiredArguments;
 
     // Yargs boolean options doesn't define the no* counterpart
