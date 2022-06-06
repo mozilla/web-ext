@@ -6,7 +6,7 @@ import {promisify} from 'util';
 import {default as defaultFxRunner} from 'fx-runner';
 import FirefoxProfile from 'firefox-profile';
 import {fs} from 'mz';
-import * as promiseToolbox from 'promise-toolbox';
+import fromEvent from 'promise-toolbox/fromEvent';
 
 import isDirectory from '../util/is-directory.js';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors.js';
@@ -22,7 +22,6 @@ import type {
 } from './preferences';
 import type {ExtensionManifest} from '../util/manifest.js';
 
-const { pFromEvent: fromEvent } = promiseToolbox;
 
 const log = createLogger(import.meta.url);
 
