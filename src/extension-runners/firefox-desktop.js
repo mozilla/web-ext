@@ -275,7 +275,7 @@ export class FirefoxDesktopExtensionRunner {
           this.reloadableExtensions.set(extension.sourceDir, addonId);
         } catch (error) {
           if (error instanceof RemoteTempInstallNotSupported) {
-            log.debug(`Caught: ${error}`);
+            log.debug(`Caught: ${String(error)}`);
             throw new WebExtError(
               'Temporary add-on installation is not supported in this version' +
               ' of Firefox (you need Firefox 49 or higher). For older Firefox' +

@@ -22,12 +22,12 @@ export const isSubPath = (src: string, target: string): boolean => {
 
 // FileFilter types and implementation.
 
-export type FileFilterOptions = {|
+export type FileFilterOptions = {
   baseIgnoredPatterns?: Array<string>,
   ignoreFiles?: Array<string>,
   sourceDir: string,
   artifactsDir?: string,
-|};
+};
 
 /*
  * Allows or ignores files.

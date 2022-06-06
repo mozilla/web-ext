@@ -51,9 +51,9 @@ export type LocalizedNameParams = {|
   manifestData: ExtensionManifest,
 |}
 
-export type PackageCreatorOptions = {|
+export type PackageCreatorOptions = {
   fromEvent: typeof defaultFromEvent,
-|};
+};
 
 // This defines the _locales/messages.json type. See:
 // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Internationalization#Providing_localized_strings_in__locales
@@ -250,7 +250,7 @@ export type BuildCmdParams = {|
   filename?: string,
 |};
 
-export type BuildCmdOptions = {|
+export type BuildCmdOptions = {
   manifestData?: ExtensionManifest,
   fileFilter?: FileFilter,
   onSourceChange?: OnSourceChangeFn,
@@ -258,7 +258,7 @@ export type BuildCmdOptions = {|
   showReadyMessage?: boolean,
   createFileFilter?: FileFilterCreatorFn,
   shouldExitProgram?: boolean,
-|};
+};
 
 export default async function build(
   {

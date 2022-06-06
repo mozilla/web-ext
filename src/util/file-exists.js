@@ -3,9 +3,9 @@ import {fs} from 'mz';
 
 import {isErrorWithCode} from '../errors.js';
 
-type FileExistsOptions = {|
+type FileExistsOptions = {
   fileIsReadable: (filePath: string) => Promise<boolean>,
-|};
+};
 
 /*
  * Resolves true if the path is a readable file.

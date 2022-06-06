@@ -282,11 +282,11 @@ export type ReloadStrategyParams = {|
   noInput?: boolean,
 |};
 
-export type ReloadStrategyOptions = {|
+export type ReloadStrategyOptions = {
   createWatcher?: WatcherCreatorFn,
   stdin?: stream$Readable,
   kill?: (pid: number, signal?: string | number) => void,
-|};
+};
 
 export function defaultReloadStrategy(
   {

@@ -144,9 +144,9 @@ export function loadJSConfigFile(filePath: string): Object {
   return configObject;
 }
 
-type DiscoverConfigFilesParams = {|
+type DiscoverConfigFilesParams = {
   getHomeDir: () => string,
-|};
+};
 
 export async function discoverConfigFiles(
   {getHomeDir = os.homedir}: DiscoverConfigFilesParams = {}
