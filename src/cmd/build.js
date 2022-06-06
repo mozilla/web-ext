@@ -5,7 +5,7 @@ import {createWriteStream} from 'fs';
 import {fs} from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
-import * as promiseToolbox from 'promise-toolbox';
+import defaultFromEvent from 'promise-toolbox/fromEvent';
 import zipDir from 'zip-dir';
 
 import defaultSourceWatcher from '../watcher.js';
@@ -24,8 +24,6 @@ import type {FileFilterCreatorFn} from '../util/file-filter.js';
 
 const log = createLogger(import.meta.url);
 const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';
-
-const {pFromEvent: defaultFromEvent} = promiseToolbox;
 
 export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9.-]+/g, '_');
