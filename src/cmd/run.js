@@ -59,7 +59,7 @@ export type CmdRunParams = {|
   chromiumProfile?: string,
 |};
 
-export type CmdRunOptions = {|
+export type CmdRunOptions = {
   buildExtension: typeof defaultBuildExtension,
   desktopNotifications: typeof defaultDesktopNotifications,
   firefoxApp: typeof defaultFirefoxApp,
@@ -68,7 +68,7 @@ export type CmdRunOptions = {|
   shouldExitProgram?: boolean,
   MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
   getValidatedManifest?: typeof defaultGetValidatedManifest,
-|};
+};
 
 export default async function run(
   {

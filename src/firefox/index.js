@@ -82,13 +82,13 @@ export type FirefoxInfo = {|
 
 // Run command types and implementaion.
 
-export type FirefoxRunOptions = {|
+export type FirefoxRunOptions = {
   fxRunner?: FirefoxRunnerFn,
   findRemotePort?: RemotePortFinderFn,
   firefoxBinary?: string,
   binaryArgs?: Array<string>,
   args?: Array<any>,
-|};
+};
 
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.
@@ -241,11 +241,11 @@ export async function isDefaultProfile(
 
 // configureProfile types and implementation.
 
-export type ConfigureProfileOptions = {|
+export type ConfigureProfileOptions = {
   app?: PreferencesAppName,
   getPrefs?: PreferencesGetterFn,
   customPrefs?: FirefoxPreferences,
-|};
+};
 
 export type ConfigureProfileFn = (
   profile: FirefoxProfile,
@@ -285,10 +285,10 @@ export function configureProfile(
 
 export type getProfileFn = (profileName: string) => Promise<string | void>;
 
-export type CreateProfileFinderParams = {|
+export type CreateProfileFinderParams = {
   userDirectoryPath?: string,
   FxProfile?: typeof FirefoxProfile
-|}
+}
 
 export function defaultCreateProfileFinder(
   {
@@ -398,12 +398,12 @@ export async function createProfile(
 
 // copyProfile types and implementation.
 
-export type CopyProfileOptions = {|
+export type CopyProfileOptions = {
   app?: PreferencesAppName,
   configureThisProfile?: ConfigureProfileFn,
   copyFromUserProfile?: Function,
   customPrefs?: FirefoxPreferences,
-|};
+};
 
 /*
  * Copies an existing Firefox profile and creates a new temporary profile.

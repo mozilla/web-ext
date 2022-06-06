@@ -32,13 +32,13 @@ export type Logger = {
 
 // ConsoleStream types and implementation.
 
-export type ConsoleStreamParams = {|
+export type ConsoleStreamParams = {
   verbose?: boolean,
-|};
+};
 
-export type ConsoleOptions = {|
+export type ConsoleOptions = {
   localProcess?: typeof process,
-|};
+};
 
 export class ConsoleStream {
   verbose: boolean;
@@ -97,22 +97,22 @@ export const consoleStream: ConsoleStream = new ConsoleStream();
 
 // createLogger types and implementation.
 
-export type BunyanStreamConfig = {|
+export type BunyanStreamConfig = {
   type: string,
   stream: ConsoleStream,
-|};
+};
 
-export type CreateBunyanLogParams = {|
+export type CreateBunyanLogParams = {
   name: string,
   level: BunyanLogLevel,
   streams: Array<BunyanStreamConfig>,
-|};
+};
 
 export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
 
-export type CreateLoggerOptions = {|
+export type CreateLoggerOptions = {
   createBunyanLog: CreateBunyanLogFn,
-|};
+};
 
 export function createLogger(
   moduleURL?: string,

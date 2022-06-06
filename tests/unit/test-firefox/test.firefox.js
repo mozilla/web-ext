@@ -614,11 +614,11 @@ describe('firefox', () => {
   describe('defaultCreateProfileFinder', () => {
 
     // Define the params type for the prepareProfileFinderTest helper.
-    type PrepareProfileFinderTestParams = {|
+    type PrepareProfileFinderTestParams = {
       readProfiles?: Function,
       getPath?: Function,
       profiles?: Array<{Name: string}>,
-    |};
+    };
 
     const defaultFakeProfiles = [{Name: 'someName'}];
 

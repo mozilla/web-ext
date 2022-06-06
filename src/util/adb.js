@@ -27,10 +27,10 @@ export type ADBUtilsParams = {|
   adbDevice?: string,
 |};
 
-export type DiscoveryParams = {|
+export type DiscoveryParams = {
   maxDiscoveryTime: number,
   retryInterval: number,
-|};
+};
 
 // Helper function used to raise an UsageError when the adb binary has not been found.
 async function wrapADBCall(asyncFn: (...any) => Promise<any>): Promise<any> {

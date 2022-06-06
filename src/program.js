@@ -29,9 +29,9 @@ const envPrefix = 'WEB_EXT';
 const defaultGlobalEnv = process.env.WEBEXT_BUILD_ENV || 'development';
 
 
-type ProgramOptions = {|
+type ProgramOptions = {
   absolutePackageDir?: string,
-|}
+}
 
 export type VersionGetterFn = (absolutePackageDir: string) => Promise<string>;
 
@@ -332,7 +332,7 @@ export class Program {
       if (!(error instanceof UsageError) || adjustedArgv.verbose) {
         log.error(`\n${error.stack}\n`);
       } else {
-        log.error(`\n${error}\n`);
+        log.error(`\n${String(error)}\n`);
       }
       if (error.code) {
         log.error(`Error code: ${error.code}\n`);

@@ -204,9 +204,9 @@ export class RemoteFirefox {
 
 // Connect types and implementation
 
-export type ConnectOptions = {|
+export type ConnectOptions = {
   connectToFirefox: FirefoxConnectorFn,
-|};
+};
 
 export async function connect(
   port: number,
@@ -227,9 +227,9 @@ export type ConnectWithMaxRetriesParams = {|
   port: number,
 |};
 
-export type ConnectWithMaxRetriesDeps = {|
+export type ConnectWithMaxRetriesDeps = {
   connectToFirefox: typeof connect,
-|};
+};
 
 export async function connectWithMaxRetries(
   // A max of 250 will try connecting for 30 seconds.

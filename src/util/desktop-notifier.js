@@ -12,10 +12,10 @@ export type DesktopNotificationsParams = {|
   icon?: string,
 |};
 
-export type DesktopNotificationsOptions = {|
+export type DesktopNotificationsOptions = {
   notifier?: typeof defaultNotifier,
   log?: Logger,
-|};
+};
 
 export function showDesktopNotification(
   {

@@ -55,11 +55,11 @@ export type LintCmdParams = {|
   warningsAsErrors?: boolean,
 |};
 
-export type LintCmdOptions = {|
+export type LintCmdOptions = {
   createLinter?: LinterCreatorFn,
   createFileFilter?: FileFilterCreatorFn,
   shouldExitProgram?: boolean,
-|};
+};
 
 export default function lint(
   {

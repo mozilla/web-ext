@@ -5,10 +5,10 @@ import * as sinon from 'sinon';
 
 import defaultLintCommand from '../../../src/cmd/lint.js';
 
-type setUpParams = {|
+type setUpParams = {
   createLinter?: Function,
   createFileFilter?: Function,
-|}
+}
 
 describe('lint', () => {
 
