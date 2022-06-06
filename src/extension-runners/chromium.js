@@ -13,7 +13,7 @@ import {
   Launcher as ChromeLauncher,
   launch as defaultChromiumLaunch,
 } from 'chrome-launcher';
-import WebSocket from 'ws';
+import WebSocket, {WebSocketServer} from 'ws';
 
 import {createLogger} from '../util/logger.js';
 import {TempDir} from '../util/temp-dir.js';
@@ -55,7 +55,7 @@ export class ChromiumExtensionRunner {
   chromiumInstance: ?ChromeLauncher;
   chromiumLaunch: typeof defaultChromiumLaunch;
   reloadManagerExtension: string;
-  wss: ?WebSocket.Server;
+  wss: ?WebSocketServer;
   exiting: boolean;
   _promiseSetupDone: ?Promise<void>;
 
@@ -135,10 +135,10 @@ export class ChromiumExtensionRunner {
   async setupInstance(): Promise<void> {
     // Start a websocket server on a free localhost TCP port.
     this.wss = await new Promise((resolve) => {
-      const server = new WebSocket.Server(
+      const server = new WebSocketServer(
         // Use a ipv4 host so we don't need to escape ipv6 address
         // https://github.com/mozilla/web-ext/issues/2331
-        {port: 0, host: '127.0.0.1'},
+        {port: 0, host: '127.0.0.1', clientTracking: true},
         // Wait the server to be listening (so that the extension
         // runner can successfully retrieve server address and port).
         () => resolve(server));
@@ -412,6 +412,14 @@ export class ChromiumExtensionRunner {
     }
 
     if (this.wss) {
+      // Close all websocket clients, closing the WebSocketServer
+      // does not terminate the existing connection and it wouldn't
+      // resolve until all of the existing connections are closed.
+      for (const wssClient of this.wss?.clients || []) {
+        if (wssClient.readyState === WebSocket.OPEN) {
+          wssClient.terminate();
+        }
+      }
       await new Promise((resolve) =>
         this.wss ? this.wss.close(resolve) : resolve());
       this.wss = null;

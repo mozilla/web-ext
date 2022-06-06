@@ -6,26 +6,26 @@ declare module "ws" {
     port: number,
   }
 
-  declare class WebSocket extends events$EventEmitter {
+  declare export class WebSocket extends events$EventEmitter {
     constructor(url: string): WebSocket,
     removeEventListener(eventName: string, cb: Function): void,
     readyState: "CONNECTING" | "OPEN" | "CLOSING" | "CLOSED",
     send(msg: string): void,
-    close(): void,
+    close(code?: number, reason?: string | Buffer): void,
+    terminate(): void,
       
     static OPEN: "OPEN",
     static CLOSED: "CLOSED",
     static CONNECTING: "CONNECTING",
     static CLOSING: "CLOSING",
-    static Server: Class<Server>,
   }
 
-  declare class Server extends net$Server {
-    constructor(opts?: ServerOptions, listenCb: Function): Server,
+  declare export class WebSocketServer extends net$Server {
+    constructor(opts?: ServerOptions, listenCb: Function): WebSocketServer,
     address(): net$Socket$address,
     clients: Set<WebSocket>,
-    close(closedCb: Function): Server,
+    close(closedCb: Function): WebSocketServer,
   }
 
-  declare module.exports: Class<WebSocket>;
+  declare export default typeof WebSocket;
 }
