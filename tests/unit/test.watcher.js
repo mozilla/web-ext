@@ -53,19 +53,16 @@ describe('watcher', () => {
 
       // $FlowIgnore: retrieve internal Watchpack properties for testing purpose.
       const {fileWatchers, directoryWatchers} = watcher;
-      let watchedFile;
-      let watchedDir;
+      let watchedFilePath;
+      let watchedDirPath;
 
       if (fileWatchers?.size > 0) {
-        watchedFile = Array.from(fileWatchers.values())[0];
+        watchedFilePath = Array.from(fileWatchers.keys())[0];
       }
 
       if (directoryWatchers?.size > 0) {
-        watchedDir = Array.from(directoryWatchers.values())[0];
+        watchedDirPath = Array.from(directoryWatchers.keys())[0];
       }
-
-      const watchedFilePath = watchedFile && watchedFile.path;
-      const watchedDirPath = watchedDir && watchedDir.path;
 
       await fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000);
       const assertParams = {
