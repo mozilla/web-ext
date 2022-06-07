@@ -2,7 +2,7 @@
 import path from 'path';
 
 import {fs} from 'mz';
-import signAddonModule from 'sign-addon';
+import {signAddon as defaultAddonSigner} from 'sign-addon';
 
 import defaultBuilder from './build.js';
 import getValidatedManifest, {getManifestId} from '../util/manifest.js';
@@ -12,7 +12,6 @@ import {prepareArtifactsDir} from '../util/artifacts.js';
 import {createLogger} from '../util/logger.js';
 import type {ExtensionManifest} from '../util/manifest.js';
 
-const {signAddon: defaultAddonSigner} = signAddonModule;
 const log = createLogger(import.meta.url);
 
 const defaultAsyncFsReadFile: (string) => Promise<Buffer> =
