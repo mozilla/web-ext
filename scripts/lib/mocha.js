@@ -26,6 +26,13 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
 
   const res = spawnSync(binPath, binArgs, {
     ...execMochaOptions,
+    env: {
+      ...process.env,
+      // Make sure NODE_ENV is set to test (which also enable babel
+      // install plugin for all modules transpiled on the fly by the
+      // tests/babel-loader.js).
+      NODE_ENV: 'test',
+    },
     stdio: 'inherit',
   });
 
