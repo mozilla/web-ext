@@ -454,4 +454,22 @@ describe('run', () => {
          );
        });
   });
+
+  describe('firefox-preview', () => {
+    it('supports the MV3 preview', async () => {
+      const cmd = await prepareRun();
+      const runOptions = {
+        firefoxPreview: ['mv3'],
+      };
+
+      await cmd.run(runOptions);
+
+      sinon.assert.calledOnce(desktopRunnerStub);
+      const runnerParams = desktopRunnerStub.firstCall.args[0];
+
+      assert.deepEqual(runnerParams.customPrefs, {
+        'extensions.manifestV3.enabled': true,
+      });
+    });
+  });
 });

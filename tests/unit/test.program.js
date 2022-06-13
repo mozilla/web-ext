@@ -912,6 +912,16 @@ describe('program.main', () => {
     }
   });
 
+  it('sets the default firefox preview to "mv3"', async () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+
+    await execProgram(['run', '--firefox-preview'], {commands: fakeCommands});
+
+    const {firefoxPreview} = fakeCommands.run.firstCall.args[0];
+    assert.deepEqual(firefoxPreview, ['mv3']);
+  });
 });
 
 describe('program.defaultVersionGetter', () => {
