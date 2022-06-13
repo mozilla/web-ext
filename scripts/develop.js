@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
-const path = require('path');
+import path from 'path';
 
-const Watchpack = require('watchpack');
-const notifier = require('node-notifier');
+import Watchpack from 'watchpack';
+import notifier from 'node-notifier';
 
-const config = require('./lib/config');
-const eslint = require('./lib/eslint');
-const {flowStatus} = require('./lib/flow');
-const {mochaUnit, mochaFunctional} = require('./lib/mocha');
-const webpack = require('./lib/webpack');
+import config from './lib/config.js';
+import eslint from './lib/eslint.js';
+import {flowStatus} from './lib/flow.js';
+import {mochaUnit, mochaFunctional} from './lib/mocha.js';
+import babel from './lib/babel.js';
 
 const COVERAGE = process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
 
@@ -50,11 +50,9 @@ async function runTasks(changes) {
     return;
   }
 
-  console.log('\nBuilding web-ext webpack bundle');
-  const webpackSuccess = await webpack().then(() => true, () => false);
-
-  if (!webpackSuccess) {
-    notify('webpack build errors');
+  console.log('\nBuilding web-ext');
+  if (!babel()) {
+    notify('babel build errors');
     return;
   }
 
