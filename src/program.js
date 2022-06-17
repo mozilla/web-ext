@@ -691,6 +691,12 @@ Example: $0 --help run.
         demandOption: false,
         type: 'array',
       },
+      'firefox-preview': {
+        describe: 'Turn on developer preview features in Firefox',
+        demandOption: false,
+        default: ['mv3'],
+        type: 'array',
+      },
       // Firefox for Android CLI options.
       'adb-bin': {
         describe: 'Specify a custom path to the adb binary',

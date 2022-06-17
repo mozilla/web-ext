@@ -43,6 +43,7 @@ export type CmdRunParams = {|
   startUrl?: Array<string>,
   target?: Array<string>,
   args?: Array<string>,
+  firefoxPreview: Array<string>,
 
   // Android CLI options.
   adbBin?: string,
@@ -89,6 +90,7 @@ export default async function run(
     startUrl,
     target,
     args,
+    firefoxPreview = [],
     // Android CLI options.
     adbBin,
     adbHost,
@@ -126,7 +128,12 @@ export default async function run(
 
   // Create an alias for --pref since it has been transformed into an
   // object containing one or more preferences.
-  const customPrefs = pref;
+  const customPrefs: FirefoxPreferences = {...pref};
+  if (firefoxPreview.includes('mv3')) {
+    log.info('Configuring Firefox preferences for Manifest V3');
+    customPrefs['extensions.manifestV3.enabled'] = true;
+  }
+
   const manifestData = await getValidatedManifest(sourceDir);
 
   const profileDir = firefoxProfile || chromiumProfile;
