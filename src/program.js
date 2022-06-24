@@ -543,6 +543,12 @@ Example: $0 --help run.
       'sign',
       'Sign the extension so it can be installed in Firefox',
       commands.sign, {
+        'api-host': {
+          describe: 'Signing API host - only used with `use-submission-api`',
+          default: 'https://addons.mozilla.org',
+          demandOption: true,
+          type: 'string',
+        },
         'api-key': {
           describe: 'API key (JWT issuer) from addons.mozilla.org',
           demandOption: true,
@@ -565,6 +571,12 @@ Example: $0 --help run.
             'Example: https://yourproxy:6000 ',
           demandOption: false,
           type: 'string',
+        },
+        'use-submission-api': {
+          describe:
+            'Sign using the addon submission API',
+          demandOption: false,
+          type: 'boolean',
         },
         'id': {
           describe:
