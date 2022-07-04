@@ -103,6 +103,17 @@ export function execWebExt(
   spawnOptions: child_process$spawnOpts,
 ): RunningWebExt {
 
+  if (spawnOptions.env) {
+    spawnOptions.env = {
+      // Propagate the current environment when redefining it from the `spawnOptions`
+      // otherwise it may trigger unexpected failures due to missing variables that
+      // may be expected (e.g. #2444 was failing only on Windows because
+      // @pnpm/npm-conf, a transitive dependencies for update-notifier, was expecting
+      // process.env.APPDATA to be defined when running on Windows).
+      ...process.env,
+      ...spawnOptions.env,
+    };
+  }
   const spawnedProcess = spawn(
     process.execPath, [webExt, ...argv], spawnOptions
   );

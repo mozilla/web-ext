@@ -44,7 +44,6 @@ describe('web-ext run', () => {
          ];
          const spawnOptions = {
            env: {
-             PATH: process.env.PATH,
              EXPECTED_MESSAGE,
              addonPath: srcDir,
              // Add an environment var unrelated to the executed command to
@@ -91,7 +90,6 @@ describe('web-ext run', () => {
 
       const spawnOptions = {
         env: {
-          PATH: process.env.PATH,
           addonPath: srcDir,
         },
       };
