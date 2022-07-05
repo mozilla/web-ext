@@ -1,6 +1,4 @@
 {
   "exceptions": [
-    // async advisory (transitive dependency introduced by @devicefarmer/adbkit -> @devicefarmer/adbkit-monkey).
-    "https://github.com/advisories/GHSA-fwr7-v2mv-hh25"
   ]
 }
