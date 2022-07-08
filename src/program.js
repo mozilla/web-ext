@@ -221,6 +221,10 @@ export class Program {
       throw new UsageError('Not enough arguments following: start-url');
     }
 
+    if (Array.isArray(argv.firefoxPreview) && !argv.firefoxPreview.length) {
+      argv.firefoxPreview = ['mv3'];
+    }
+
     return argv;
   }
 
@@ -692,9 +696,9 @@ Example: $0 --help run.
         type: 'array',
       },
       'firefox-preview': {
-        describe: 'Turn on developer preview features in Firefox',
+        describe: 'Turn on developer preview features in Firefox' +
+          ' (defaults to "mv3")',
         demandOption: false,
-        default: ['mv3'],
         type: 'array',
       },
       // Firefox for Android CLI options.
