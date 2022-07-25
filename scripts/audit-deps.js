@@ -61,27 +61,63 @@ if (auditReport) {
     }
   }
 
-  for (const advId of Object.keys(auditReport.advisories)) {
-    const adv = auditReport.advisories[advId];
+  if (auditReport.auditReportVersion > 2) {
+    // Throw a more clear error when a new format that this script does not expect
+    // has been introduced.
+    console.error(
+      'ERROR: npm audit JSON is using a new format not yet supported.',
+      '\nPlease file a bug in the github repository and attach the following JSON data sample to it:',
+      `\n\n${JSON.stringify(auditReport, null, 2)}`
+    );
+  } else if (auditReport.auditReportVersion === 2) {
+    // New npm audit json format introduced in npm v8.
+    for (const vulnerablePackage of Object.keys(auditReport.vulnerabilities)) {
+      const item = auditReport.vulnerabilities[vulnerablePackage];
 
-    if (exceptions.includes(adv.url)) {
-      ignoredIssues.push(adv);
-      continue;
+      if (item.via.every((via) => exceptions.includes(via.url))) {
+        ignoredIssues.push(item);
+        continue;
+      }
+      blockingIssues.push(item);
     }
-    blockingIssues.push(adv);
+  } else {
+    // Old npm audit json format for npm versions < npm v8
+    for (const advId of Object.keys(auditReport.advisories)) {
+      const adv = auditReport.advisories[advId];
+
+      if (exceptions.includes(adv.url)) {
+        ignoredIssues.push(adv);
+        continue;
+      }
+      blockingIssues.push(adv);
+    }
   }
 }
 
 // Reporting.
 
-function formatFinding(desc) {
-  const details = `(dev: ${desc.dev}, optional: ${desc.optional}, bundled: ${desc.bundled})`;
-  return `${desc.version} ${details}\n    ${desc.paths.join('\n    ')}`;
+function formatAdvisoryV1(adv) {
+  function formatFinding(desc) {
+    return `${desc.version}, paths: ${desc.paths.join(', ')}`;
+  }
+  const findings = adv.findings.map(formatFinding).map((msg) => `  ${msg}`).join('\n');
+  return `${adv.module_name} (${adv.url}):\n${findings}`;
+}
+
+function formatAdvisoryV2(adv) {
+  function formatVia(via) {
+    return `${via.url}\n    ${via.dependency} ${via.range}\n    ${via.title}`;
+  }
+  const entryVia = adv.via.map(formatVia).map((msg) => `  ${msg}`).join('\n');
+  const fixAvailable = Boolean(adv.fixAvailable);
+  const entryDetails = `isDirect: ${adv.isDirect}, severity: ${adv.severity}, fixAvailable: ${fixAvailable}`;
+  return `${adv.name} (${entryDetails}):\n${entryVia}`;
 }
 
 function formatAdvisory(adv) {
-  const findings = adv.findings.map(formatFinding).map((msg) => `  ${msg}`).join('\n');
-  return `${adv.module_name} (${adv.url}):\n${findings}`;
+  return auditReport.auditReportVersion === 2
+    ? formatAdvisoryV2(adv)
+    : formatAdvisoryV1(adv);
 }
 
 if (ignoredIssues.length > 0) {
