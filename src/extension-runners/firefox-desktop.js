@@ -238,7 +238,9 @@ export class FirefoxDesktopExtensionRunner {
     }
 
     this.runningInfo = await firefoxApp.run(this.profile, {
-      firefoxBinary, binaryArgs,
+      firefoxBinary,
+      binaryArgs,
+      extensions,
     });
 
     this.runningInfo.firefox.on('close', () => {

@@ -599,7 +599,9 @@ Example: $0 --help run.
                   'or firefox.exe. ' +
                   'If not specified, the default Firefox will be used. ' +
                   'You can specify the following aliases in lieu of a path: ' +
-                  'firefox, beta, nightly, firefoxdeveloperedition.',
+                  'firefox, beta, nightly, firefoxdeveloperedition. ' +
+                  'For Flatpak, use `flatpak:org.mozilla.firefox` where ' +
+                  '`org.mozilla.firefox` is the application ID.',
         demandOption: false,
         type: 'string',
       },

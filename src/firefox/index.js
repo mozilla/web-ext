@@ -21,6 +21,7 @@ import type {
   FirefoxPreferences,
 } from './preferences';
 import type {ExtensionManifest} from '../util/manifest.js';
+import type {Extension} from '../extension-runners/base.js';
 
 
 const log = createLogger(import.meta.url);
@@ -50,6 +51,7 @@ export type FirefoxRunnerParams = {|
   'foreground'?: boolean,
   'listen': number,
   'binary-args'?: Array<string> | string,
+  'binary-args-first'?: boolean,
   'env'?: {
     // This match the flowtype signature for process.env (and prevent flow
     // from complaining about differences between their type signature)
@@ -87,6 +89,7 @@ export type FirefoxRunOptions = {
   firefoxBinary?: string,
   binaryArgs?: Array<string>,
   args?: Array<any>,
+  extensions: Array<Extension>,
 };
 
 /*
@@ -97,7 +100,9 @@ export async function run(
   {
     fxRunner = defaultFxRunner,
     findRemotePort = defaultRemotePortFinder,
-    firefoxBinary, binaryArgs,
+    firefoxBinary,
+    binaryArgs,
+    extensions,
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxInfo> {
 
@@ -105,10 +110,35 @@ export async function run(
 
   const remotePort = await findRemotePort();
 
+  if (firefoxBinary && firefoxBinary.startsWith('flatpak:')) {
+    const flatpakAppId = firefoxBinary.substring(8);
+    log.debug(`Configuring Firefox with flatpak: appId=${flatpakAppId}`);
+
+    // This should be resolved by the fx-runner.
+    firefoxBinary = 'flatpak';
+    binaryArgs = [
+      'run',
+      `--filesystem=${profile.path()}`,
+      ...extensions.map(({ sourceDir }) => `--filesystem=${sourceDir}:ro`),
+      // We need to share the network namespace because we want to connect to
+      // Firefox with the remote protocol. There is no way to tell flatpak to
+      // only expose a port AFAIK.
+      '--share=network',
+      // Kill the entire sandbox when the launching process dies, which is what
+      // we want since exiting web-ext involves `kill` and the process executed
+      // here is `flatpak run`.
+      '--die-with-parent',
+      flatpakAppId,
+    ].concat(...(binaryArgs || []));
+  }
+
   const results = await fxRunner({
     // if this is falsey, fxRunner tries to find the default one.
     'binary': firefoxBinary,
     'binary-args': binaryArgs,
+    // For Flatpak we need to respect the order of the command arguments because
+    // we have arguments for Flapack (first) and then Firefox.
+    'binary-args-first': firefoxBinary === 'flatpak',
     // This ensures a new instance of Firefox is created. It has nothing
     // to do with the devtools remote debugger.
     'no-remote': true,

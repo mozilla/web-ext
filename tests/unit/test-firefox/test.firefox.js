@@ -141,8 +141,10 @@ describe('firefox', () => {
       return runFirefox({fxRunner, binaryArgs})
         .then(() => {
           sinon.assert.called(fxRunner);
-          assert.equal(fxRunner.firstCall.args[0]['binary-args'],
-                       binaryArgs);
+          sinon.assert.calledWithMatch(fxRunner, {
+            'binary-args': binaryArgs,
+            'binary-args-first': false,
+          });
         });
     });
 
@@ -210,6 +212,31 @@ describe('firefox', () => {
           // logger they don't raise any exceptions.
           firefoxApp.writeStdout('example of stdout');
           firefoxApp.writeStderr('example of stderr');
+        });
+    });
+
+    it('supports flatpak', () => {
+      const runner = createFakeFxRunner();
+      const firefoxBinary = 'flatpak:org.mozilla.firefox';
+      const profile = fakeProfile;
+      const extensions = [{sourceDir: '/path/to/extension'}];
+
+      // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
+      return runFirefox({profile, fxRunner: runner, firefoxBinary, extensions})
+        .then(() => {
+          sinon.assert.called(runner);
+          sinon.assert.calledWithMatch(runner, {
+            'binary': 'flatpak',
+            'binary-args': [
+              'run',
+              `--filesystem=${profile.path()}`,
+              '--filesystem=/path/to/extension:ro',
+              '--share=network',
+              '--die-with-parent',
+              'org.mozilla.firefox',
+            ],
+            'binary-args-first': true,
+          });
         });
     });
 
