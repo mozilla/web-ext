@@ -87,10 +87,10 @@
     "zip-dir": "2.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.18.9",
-    "@babel/core": "7.18.9",
+    "@babel/cli": "7.18.10",
+    "@babel/core": "7.18.10",
     "@babel/eslint-parser": "7.18.9",
-    "@babel/preset-env": "7.18.9",
+    "@babel/preset-env": "7.18.10",
     "@babel/preset-flow": "7.18.6",
     "@babel/register": "7.18.9",
     "@commitlint/cli": "17.0.3",
