@@ -6,11 +6,43 @@ import { fs } from 'mz';
 import { assert, expect } from 'chai';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
-import nock from 'nock';
-import { File, FormData } from 'node-fetch';
+import { File, FormData, Response } from 'node-fetch';
 
 import Client, { signAddon } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
+
+class JSONResponse extends Response {
+  constructor(data, status) {
+    super(JSON.stringify(data), {status});
+  }
+}
+
+const mockNodeFetch = (
+  nodeFetchStub: any,
+  url: string,
+  method: string,
+  responses: Array<{
+    body: any,
+    status: number,
+  }>
+): void => {
+  const stubMatcher = nodeFetchStub.withArgs(
+    url,
+    sinon.match.has('method', method)
+  );
+  for (let i = 0; i < responses.length; i++) {
+    const { body, status } = responses[i];
+    stubMatcher
+      .onCall(i)
+      .callsFake(async () => {
+        if (typeof body === 'string') {
+          return new Response(body, { status });
+        }
+        return new JSONResponse(body, status);
+      });
+  }
+  return stubMatcher;
+};
 
 describe('util.submit-addon', () => {
 
@@ -111,6 +143,7 @@ describe('util.submit-addon', () => {
   describe('Client', () => {
     const apiHost = 'http://not-a-real-amo-api.com';
     const apiPath = '/api/v5';
+    const apiHostPath = `${apiHost}${apiPath}`;
 
     const clientDefaults = {
       apiKey: 'fake-api-key',
@@ -156,17 +189,22 @@ describe('util.submit-addon', () => {
     };
 
     describe('doUploadSubmit', () => {
-      afterEach(() => {
-        nock.cleanAll();
-      });
-
       it('submits the xpi', async () => {
         const client = new Client(clientDefaults);
         sinon.stub(client, 'fileFromSync')
           .returns(new File([], 'foo.xpi'));
-        nock(apiHost)
-          .post(`${apiPath}/addons/upload/`)
-          .reply(200, sampleUploadDetail);
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHostPath}/addons/upload/`,
+          'POST',
+          [
+            {
+              body: sampleUploadDetail,
+              status: 200,
+            },
+          ]
+        );
+
         const xpiPath = '/some/path.xpi';
         const channel = 'someChannel';
         const waitStub = sinon.stub(client, 'waitForValidation')
@@ -179,10 +217,6 @@ describe('util.submit-addon', () => {
     });
 
     describe('waitForValidation', () => {
-      afterEach(() => {
-        nock.cleanAll();
-      });
-
       it('aborts validation check after timeout', async () => {
         const client = new Client({
           ...clientDefaults,
@@ -191,9 +225,17 @@ describe('util.submit-addon', () => {
           validationCheckInterval: 1,
         });
         const uploadUuid = '@some-guid';
-        nock(apiHost)
-          .get(`${apiPath}/addons/upload/${uploadUuid}/`)
-          .reply(200, {});
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          'GET',
+          [
+            {
+              body: {},
+              status: 200,
+            },
+          ]
+        );
 
         const clientPromise = client.waitForValidation(uploadUuid);
         await assert.isRejected(clientPromise, 'Validation: timeout.');
@@ -206,11 +248,19 @@ describe('util.submit-addon', () => {
           validationCheckInterval: 1,
         });
         const uploadUuid = '@some-guid';
-        nock(apiHost)
-          .get(`${apiPath}/addons/upload/${uploadUuid}/`).times(2)
-          .reply(200, {})
-          .get(`${apiPath}/addons/upload/${uploadUuid}/`)
-          .reply(200, {processed: true, valid: true, uuid: uploadUuid});
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          'GET',
+          [
+            { body: {}, status: 200 },
+            { body: {}, status: 200 },
+            {
+              body: { processed: true, valid: true, uuid: uploadUuid },
+              status: 200,
+            },
+          ]
+        );
 
         const returnUuid = await client.waitForValidation(uploadUuid);
         assert.equal(returnUuid, uploadUuid);
@@ -224,11 +274,20 @@ describe('util.submit-addon', () => {
         });
         const uploadUuid = '@some-guid';
         const validationUrl = `${apiHost}/to/validation/report`;
-        nock(apiHost)
-          .get(`${apiPath}/addons/upload/${uploadUuid}/`).times(2)
-          .reply(200, {})
-          .get(`${apiPath}/addons/upload/${uploadUuid}/`)
-          .reply(200, {processed: true, valid: false, url: validationUrl});
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          'GET',
+          [
+            { body: {}, status: 200 },
+            { body: {}, status: 200 },
+            {
+              body: { processed: true, valid: false, url: validationUrl },
+              status: 200,
+            },
+          ]
+        );
+
 
         const clientPromise = client.waitForValidation(uploadUuid);
         await assert.isRejected(clientPromise, validationUrl);
@@ -236,43 +295,40 @@ describe('util.submit-addon', () => {
     });
 
     describe('doNewAddonSubmit', () => {
-      afterEach(() => {
-        nock.cleanAll();
-      });
-
       it('posts the upload uuid', async () => {
         const client = new Client(clientDefaults);
-        nock(apiHost)
-          .post(`${apiPath}/addons/addon/`).reply(202, sampleAddonDetail);
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHostPath}/addons/addon/`,
+          'POST',
+          [
+            { body: sampleAddonDetail, status: 202 },
+          ]
+        );
         const uploadUuid = 'some-uuid';
-
         const returnData = await client.doNewAddonSubmit(uploadUuid, {});
         expect(returnData).to.eql(sampleAddonDetail);
       });
     });
 
     describe('doNewAddonOrVersionSubmit', () => {
-      afterEach(() => {
-        nock.cleanAll();
-      });
-
       it('puts the upload uuid to the addon detail', async () => {
         const client = new Client(clientDefaults);
         const guid = '@some-addon-guid';
-        nock(apiHost)
-          .put(`${apiPath}/addons/addon/${guid}/`)
-          .reply(202, sampleAddonDetail);
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHostPath}/addons/addon/${guid}/`,
+          'POST',
+          [
+            { body: sampleAddonDetail, status: 202 },
+          ]
+        );
         const uploadUuid = 'some-uuid';
-
         await client.doNewAddonOrVersionSubmit(guid, uploadUuid, {});
       });
     });
 
     describe('waitForApproval', () => {
-      afterEach(() => {
-        nock.cleanAll();
-      });
-
       it('aborts approval wait after timeout', async () => {
         const client = new Client({
           ...clientDefaults,
@@ -284,9 +340,12 @@ describe('util.submit-addon', () => {
         const versionId = 0;
         const detailPath =
           `${apiPath}/addons/addon/${addonId}/versions/${versionId}/`;
-
-        nock(apiHost).get(detailPath).reply(200, {});
-
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHost}${detailPath}`,
+          'GET',
+          [{ body: {}, status: 200 }]
+        );
         const clientPromise = client.waitForApproval(addonId, versionId);
         await assert.isRejected(clientPromise, 'Approval: timeout.');
       });
@@ -302,11 +361,16 @@ describe('util.submit-addon', () => {
         const detailPath =
           `${apiPath}/addons/addon/${addonId}/versions/${versionId}/`;
         const url = `${apiHost}file/download/url`;
-        nock(apiHost)
-          .get(detailPath).reply(200, {})
-          .get(detailPath).reply(200, {file: {status: 'nominated'}})
-          .get(detailPath).reply(200, {file: {status: 'public', url}});
-
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHost}${detailPath}`,
+          'GET',
+          [
+            { body: {}, status: 200 },
+            { body: {}, status: 200 },
+            { body: { file: { status: 'public', url } }, status: 200 },
+          ]
+        );
         const fileUrl = await client.waitForApproval(addonId, versionId);
         assert.equal(fileUrl, url);
       });
@@ -318,17 +382,18 @@ describe('util.submit-addon', () => {
       const fileUrl = `${apiHost}${filePath}`;
       const addonId = '@some-addon-id';
 
-      afterEach(() => {
-        nock.cleanAll();
-      });
-
       it('downloads the file to tmpdir', () => withTempDir(async (tmpDir) => {
         const client = new Client(
           { ...clientDefaults, downloadDir: tmpDir.path() },
         );
         const fileData = 'a';
 
-        nock(apiHost).get(filePath).reply(200, fileData);
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHost}${filePath}`,
+          'GET',
+          [{ body: fileData, status: 200 }]
+        );
 
         const result = await client.downloadSignedFile(fileUrl, addonId);
         expect(result).to.eql({
@@ -343,7 +408,13 @@ describe('util.submit-addon', () => {
 
       it('raises when the response is not ok', async () => {
         const client = new Client(clientDefaults);
-        nock(apiHost).get(filePath).reply(404, 'a');
+
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHost}${filePath}`,
+          'GET',
+          [{ body: 'a', status: 404 }]
+        );
 
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
         await assert.isRejected(
@@ -363,7 +434,14 @@ describe('util.submit-addon', () => {
 
       it('raises a consistent error when saveToFile raises', async () => {
         const client = new Client(clientDefaults);
-        nock(apiHost).get(filePath).reply(200, 'a');
+
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          `${apiHost}${filePath}`,
+          'GET',
+          [{ body: 'a', status: 200 }]
+        );
+
         sinon.stub(client, 'saveToFile').rejects(new Error('some save error'));
 
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
@@ -380,30 +458,57 @@ describe('util.submit-addon', () => {
       const uploadUuid = sampleUploadDetail.uuid;
       const addonId = sampleAddonDetail.guid;
 
+      let nodeFetchStub;
+
       before(() => {
         sinon.stub(client, 'fileFromSync').returns(new File([], xpiPath));
         sinon.stub(client, 'saveToFile').resolves();
+        nodeFetchStub = sinon.stub(client, 'nodeFetch');
       });
 
       afterEach(() => {
-        nock.cleanAll();
+        nodeFetchStub.reset();
       });
 
-      const addUploadNocks = () => {
-        nock(apiHost)
-          .post(`${apiPath}/addons/upload/`)
-          .reply(200, sampleUploadDetail)
-          .get(`${apiPath}/addons/upload/${uploadUuid}/`)
-          .reply(200, {processed: true, valid: true, uuid: uploadUuid});
+      const addUploadMocks = () => {
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHostPath}/addons/upload/`,
+          'POST',
+          [{ body: sampleUploadDetail, status: 200 }]
+        );
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          'GET',
+          [
+            {
+              body: { processed: true, valid: true, uuid: uploadUuid },
+              status: 200,
+            },
+          ]
+        );
       };
 
-      const addApprovalNocks = (versionId) => {
+      const addApprovalMocks = (versionId) => {
         const url = `${apiHost}${downloadPath}`;
-        nock(apiHost)
-          .get(`${apiPath}/addons/addon/${addonId}/versions/${versionId}/`)
-          .reply(200, {file: {status: 'public', url}})
-          .get(downloadPath)
-          .reply(200, `${versionId}`);
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHostPath}/addons/addon/${addonId}/versions/${versionId}/`,
+          'GET',
+          [
+            {
+              body: { file: { status: 'public', url } },
+              status: 200,
+            },
+          ]
+        );
+        mockNodeFetch(
+          nodeFetchStub,
+          url,
+          'GET',
+          [{ body: `${versionId}`, status: 200 }]
+        );
       };
 
       [
@@ -411,12 +516,14 @@ describe('util.submit-addon', () => {
         {channel: 'unlisted', versionId: sampleVersionDetail2.id},
       ].forEach(({channel, versionId}) =>
         it('uploads new listed add-on; downloads the signed xpi', async () => {
-          addUploadNocks();
-          nock(apiHost)
-            .post(`${apiPath}/addons/addon/`)
-            .reply(200, sampleAddonDetail);
-          addApprovalNocks(versionId);
-
+          addUploadMocks();
+          mockNodeFetch(
+            nodeFetchStub,
+            `${apiHostPath}/addons/addon/`,
+            'POST',
+            [{ body: sampleAddonDetail, status: 200 }]
+          );
+          addApprovalMocks(versionId);
           await client.postNewAddon(xpiPath, channel, {});
         }));
 
@@ -425,13 +532,27 @@ describe('util.submit-addon', () => {
         const versionId = sampleVersionDetail.id;
         const query = '?filter=all_with_unlisted';
 
-        addUploadNocks();
-        nock(apiHost)
-          .put(`${apiPath}/addons/addon/${addonId}/`)
-          .reply(200, sampleAddonDetail)
-          .get(`${apiPath}/addons/addon/${addonId}/versions/${query}`)
-          .reply(200, {results: [sampleVersionDetail]});
-        addApprovalNocks(versionId);
+        addUploadMocks();
+
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHostPath}/addons/addon/${addonId}/`,
+          'PUT',
+          [{ body: sampleAddonDetail, status: 200 }]
+        );
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHostPath}/addons/addon/${addonId}/versions/${query}`,
+          'GET',
+          [
+            {
+              body: { results: [sampleVersionDetail] },
+              status: 200,
+            },
+          ]
+        );
+
+        addApprovalMocks(versionId);
 
         await client.putVersion(xpiPath, channel, `${addonId}`, {});
       });
@@ -439,81 +560,104 @@ describe('util.submit-addon', () => {
 
     describe('fetchJson', () => {
       const client = new Client(clientDefaults);
+      const nodeFetchStub = sinon.stub(client, 'nodeFetch');
 
       afterEach(() => {
-        nock.cleanAll();
+        nodeFetchStub.reset();
       });
 
       it('rejects with a promise on not ok responses', async () => {
-        nock(apiHost).get('/').reply(400, {});
-
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHost}/`,
+          'GET',
+          [{ body: {}, status: 400 }]
+        );
         const clientPromise = client.fetchJson(`${apiHost}/`);
         await assert.isRejected(clientPromise, 'Bad Request: 400.');
       });
 
       it('rejects with a promise on < 100 responses', async () => {
-        nock(apiHost).get('/').reply(99, {});
-
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHost}/`,
+          'GET',
+          [{ body: {}, status: 99 }]
+        );
         const clientPromise = client.fetchJson(`${apiHost}/`);
         await assert.isRejected(clientPromise, 'Bad Request: 99.');
       });
 
       it('rejects with a promise on >= 500 responses', async () => {
-        nock(apiHost).get('/').reply(500, {});
-
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHost}/`,
+          'GET',
+          [{ body: {}, status: 500 }]
+        );
         const clientPromise = client.fetchJson(`${apiHost}/`);
         await assert.isRejected(clientPromise, 'Bad Request: 500.');
       });
 
       it('resolves with a promise containing response json', async () => {
-        const nockJson = {thing: ['other'], this: {that: 1}};
-        nock(apiHost).get('/').reply(200, nockJson);
-
+        const resJson = {thing: ['other'], this: {that: 1}};
+        mockNodeFetch(
+          nodeFetchStub,
+          `${apiHost}/`,
+          'GET',
+          [{ body: resJson, status: 200 }]
+        );
         const responseJson = await client.fetchJson(`${apiHost}/`);
-
-        expect(responseJson).to.eql(nockJson);
+        expect(responseJson).to.eql(resJson);
       });
     });
 
     describe('fetch', () => {
       const client = new Client(clientDefaults);
-      let jwtSignSpy;
-      const reqheaders = {
-        Authorization: async (headerValue) =>
-          headerValue === `JWT ${await jwtSignSpy.firstCall.returnValue}`,
-        Accept: 'application/json',
-      };
+      let nodeFetchStub;
 
       beforeEach(() => {
-        jwtSignSpy = sinon.spy(client, 'signJWT');
+        nodeFetchStub = sinon.stub(client, 'nodeFetch');
       });
 
       afterEach(() => {
-        jwtSignSpy.restore();
-        nock.cleanAll();
+        nodeFetchStub.restore();
       });
 
       it('sets json content type for string type body', async () => {
-        nock(apiHost, {
-          reqheaders: {...reqheaders, 'Content-Type': 'application/json'},
-        }).post('/').reply(200, {});
+        nodeFetchStub.resolves(new JSONResponse({}, 200));
 
-        // nock would error if the headers don't match
         await client.fetch(`${apiHost}/`, 'POST', 'body');
+
+        assert.equal(
+          nodeFetchStub.firstCall.args[1].headers['Content-Type'],
+          'application/json'
+        );
+        sinon.assert.calledOnce(nodeFetchStub);
       });
 
       it("doesn't set content type for FormData type body", async () => {
-        nock(apiHost, {reqheaders}).post('/').reply(200, {});
+        nodeFetchStub.resolves(new JSONResponse({}, 200));
 
-        // nock would error if the headers don't match
         await client.fetch(`${apiHost}/`, 'POST', new FormData());
+
+        assert.equal(
+          nodeFetchStub.firstCall.args[1].headers['Content-Type'],
+          undefined
+        );
+        sinon.assert.calledOnce(nodeFetchStub);
       });
 
       it("doesn't set content type for no body", async () => {
-        nock(apiHost, {reqheaders}).post('/').reply(200, {});
+        nodeFetchStub.resolves(new JSONResponse({}, 200));
 
-        // nock would error if the headers don't match
         await client.fetch(`${apiHost}/`, 'POST');
+
+        assert.equal(
+          nodeFetchStub.firstCall.args[1].headers['Content-Type'],
+          undefined
+        );
+        sinon.assert.calledOnce(nodeFetchStub);
       });
     });
   });

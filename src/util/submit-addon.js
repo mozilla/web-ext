@@ -65,6 +65,17 @@ export default class Client {
     return fileFromSync(path);
   }
 
+  nodeFetch(
+    url: string,
+    { method, headers, body }: {
+      method: string,
+      headers: { [key: string]: string },
+      body?: typeof FormData | string
+    }
+  ): Promise<typeof Response> {
+    return fetch(url, { method, headers, body });
+  }
+
   async doUploadSubmit(xpiPath: string, channel: string): Promise<string> {
     const url = `${this.apiUrl}upload/`;
     const formData = new FormData();
@@ -96,15 +107,15 @@ export default class Client {
 
           const success = successFunc(responseData);
           if (success) {
+            clearTimeout(abortTimeout);
             resolve(success);
           } else {
             // Still in progress, so wait for a while and try again.
             checkTimeout = setTimeout(pollStatus, checkInterval);
           }
         } catch (err) {
-          reject(err);
-        } finally {
           clearTimeout(abortTimeout);
+          reject(err);
         }
       };
 
@@ -223,7 +234,7 @@ export default class Client {
         'Content-Type': 'application/json',
       };
     }
-    return fetch(url, { method, body, headers });
+    return this.nodeFetch(url, { method, body, headers });
   }
 
   async downloadSignedFile(

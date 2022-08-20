@@ -112,7 +112,6 @@
     "git-rev-sync": "3.0.2",
     "html-entities": "2.3.3",
     "mocha": "10.0.0",
-    "nock": "13.2.8",
     "nyc": "15.1.0",
     "prettyjson": "1.2.5",
     "shelljs": "0.8.5",
