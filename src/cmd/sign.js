@@ -142,8 +142,11 @@ export default function sign(
         );
       }
 
-      if (useSubmissionApi && apiHost.endsWith('/')) {
-        apiHost = apiHost.slice(0, -1);
+      try {
+        const apiHostURL = new URL(apiHost);
+        apiHost = apiHostURL.origin;
+      } catch (err) {
+        throw new UsageError(`Invalid apiHost: ${apiHost}`);
       }
 
       const signSubmitArgs = {

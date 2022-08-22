@@ -31,7 +31,7 @@ type ClientConstructorParams = {|
 export default class Client {
   apiKey: string;
   apiSecret: string;
-  apiUrl: string;
+  apiUrl: URL;
   apiJwtExpiresIn: number;
   validationCheckInterval: number;
   validationCheckTimeout: number;
@@ -52,7 +52,7 @@ export default class Client {
   }: ClientConstructorParams) {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
-    this.apiUrl = `${apiHost}/api/v5/addons/`;
+    this.apiUrl = new URL('/api/v5/addons/', apiHost);
     this.apiJwtExpiresIn = apiJwtExpiresIn;
     this.validationCheckInterval = validationCheckInterval;
     this.validationCheckTimeout = validationCheckTimeout;
@@ -66,7 +66,7 @@ export default class Client {
   }
 
   nodeFetch(
-    url: string,
+    url: URL,
     { method, headers, body }: {
       method: string,
       headers: { [key: string]: string },
@@ -77,7 +77,7 @@ export default class Client {
   }
 
   async doUploadSubmit(xpiPath: string, channel: string): Promise<string> {
-    const url = `${this.apiUrl}upload/`;
+    const url = new URL('upload/', this.apiUrl);
     const formData = new FormData();
     formData.set('channel', channel);
     formData.set('upload', this.fileFromSync(xpiPath));
@@ -87,7 +87,7 @@ export default class Client {
 
   waitRetry(
     successFunc: (detailResponseData: any) => string | null,
-    checkUrl: string,
+    checkUrl: URL,
     checkInterval: number,
     abortInterval: number,
     context: string,
@@ -142,7 +142,7 @@ export default class Client {
           `${detailResponseData.url}`
         );
       },
-      `${this.apiUrl}upload/${uuid}/`,
+      new URL(`upload/${uuid}/`, this.apiUrl),
       this.validationCheckInterval,
       this.validationCheckTimeout,
       'Validation',
@@ -150,7 +150,7 @@ export default class Client {
   }
 
   async doNewAddonSubmit(uuid: string, metaDataJson: Object): Promise<any> {
-    const url = `${this.apiUrl}addon/`;
+    const url = new URL('addon/', this.apiUrl);
     const jsonData = { version: { upload: uuid }, ...metaDataJson };
     return this.fetchJson(url, 'POST', JSON.stringify(jsonData));
   }
@@ -160,7 +160,7 @@ export default class Client {
     uuid: string,
     metaDataJson: Object,
   ): Promise<typeof Response> {
-    const url = `${this.apiUrl}addon/${addonId}/`;
+    const url = new URL(`addon/${addonId}/`, this.apiUrl);
     const jsonData = { version: { upload: uuid }, ...metaDataJson };
     return this.fetch(url, 'PUT', JSON.stringify(jsonData));
   }
@@ -176,7 +176,7 @@ export default class Client {
 
         return null;
       },
-      `${this.apiUrl}addon/${addonId}/versions/${versionId}/`,
+      new URL(`addon/${addonId}/versions/${versionId}/`, this.apiUrl),
       this.approvalCheckInterval,
       this.approvalCheckTimeout,
       'Approval',
@@ -184,7 +184,7 @@ export default class Client {
   }
 
   async fetchJson(
-    url: string,
+    url: URL,
     method: string = 'GET',
     body?: typeof FormData | string,
     errorMsg: string = 'Bad Request'
@@ -217,13 +217,13 @@ export default class Client {
   }
 
   async fetch(
-    url: string,
+    url: URL,
     method: string = 'GET',
     body?: typeof FormData | string,
   ): Promise<typeof Response> {
     const authToken = await this.signJWT();
 
-    log.info(`Fetching URL: ${url}`);
+    log.info(`Fetching URL: ${url.href}`);
     let headers = {
       Authorization: `JWT ${authToken}`,
       Accept: 'application/json',
@@ -238,10 +238,10 @@ export default class Client {
   }
 
   async downloadSignedFile(
-    fileUrl: string,
+    fileUrl: URL,
     addonId: string
   ): Promise<SignResult> {
-    const filename = fileUrl.split('/').pop(); // get the name from fileUrl
+    const filename = fileUrl.pathname.split('/').pop(); // get the name from fileUrl
     const dest = `${this.downloadDir}/${filename}`;
     try {
       const response = await this.fetch(fileUrl);
@@ -278,7 +278,7 @@ export default class Client {
       [versionObject]: {id: newVersionId},
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
 
-    const fileUrl = await this.waitForApproval(addonId, newVersionId);
+    const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
 
     return this.downloadSignedFile(fileUrl, addonId);
   }
@@ -293,11 +293,12 @@ export default class Client {
 
     await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
-    const url =
-      `${this.apiUrl}addon/${addonId}/versions/?filter=all_with_unlisted`;
+    const url = new URL(
+      `addon/${addonId}/versions/?filter=all_with_unlisted`, this.apiUrl
+    );
     const {results: [{id: newVersionId}]} = await this.fetchJson(url);
 
-    const fileUrl = await this.waitForApproval(addonId, newVersionId);
+    const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
 
     return this.downloadSignedFile(fileUrl, addonId);
   }
