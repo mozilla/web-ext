@@ -8,7 +8,7 @@ import {describe, it} from 'mocha';
 import {assert} from 'chai';
 import * as sinon from 'sinon';
 
-import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors.js';
+import {UsageError, WebExtError} from '../../../src/errors.js';
 import {getManifestId} from '../../../src/util/manifest.js';
 import {withTempDir} from '../../../src/util/temp-dir.js';
 import completeSignCommand, {
@@ -16,7 +16,6 @@ import completeSignCommand, {
 } from '../../../src/cmd/sign.js';
 import {
   basicManifest,
-  makeSureItFails,
   manifestWithoutApps,
   fixturePath,
 } from '../helpers.js';
@@ -27,10 +26,10 @@ describe('sign', () => {
 
   function getStubs() {
     const signingConfig = {
+      apiHost: 'http://not-the-real-amo.com',
       apiKey: 'AMO JWT issuer',
       apiSecret: 'AMO JWT secret',
       apiUrlPrefix: 'http://not-the-real-amo.com/api/v4',
-      apiProxy: 'http://yourproxy:6000',
       timeout: 999,
     };
 
@@ -41,16 +40,21 @@ describe('sign', () => {
 
     const signingResult = {
       id: 'some-addon-id',
-      success: true,
       downloadedFiles: [],
     };
-    const signAddon = sinon.spy(() => Promise.resolve(signingResult));
+    const signAddonResult = {...signingResult, success: true};
+    const submitAddonResult = {...signingResult};
+    const signAddon = sinon.spy(() => Promise.resolve(signAddonResult));
+    const submitAddon = sinon.spy(() => Promise.resolve(submitAddonResult));
 
     return {
       signingConfig,
       build,
       buildResult,
       signAddon,
+      submitAddon,
+      signAddonResult,
+      submitAddonResult,
       signingResult,
       preValidatedManifest: basicManifest,
     };
@@ -86,15 +90,43 @@ describe('sign', () => {
         .then(() => completeSignCommand({
           sourceDir,
           artifactsDir: path.join(tmpDir.path(), 'artifacts'),
+          apiProxy: 'http://yourproxy:6000',
           ...stubs.signingConfig,
         }, {
           signAddon: stubs.signAddon,
         }))
         .then((result) => {
-          assert.equal(result.success, true);
+          assert.equal(result.id, stubs.signingResult.id);
           // Do a sanity check that a built extension was passed to the
           // signer.
           assert.include(stubs.signAddon.firstCall.args[0].xpiPath,
+                         'minimal_extension-1.0.zip');
+        });
+    }
+  ));
+
+  it('builds and signs an extension with submission api', () => withTempDir(
+    // This test only stubs out the signer in an effort to integrate
+    // all other parts of the process.
+    (tmpDir) => {
+      const stubs = getStubs();
+      const sourceDir = path.join(tmpDir.path(), 'source-dir');
+      const copyDirAsPromised = promisify(copyDir);
+      return copyDirAsPromised(fixturePath('minimal-web-ext'), sourceDir)
+        .then(() => completeSignCommand({
+          sourceDir,
+          artifactsDir: path.join(tmpDir.path(), 'artifacts'),
+          ...stubs.signingConfig,
+          useSubmissionApi: true,
+          channel: 'listed',
+        }, {
+          submitAddon: stubs.submitAddon,
+        }))
+        .then((result) => {
+          assert.equal(result.id, stubs.signingResult.id);
+          // Do a sanity check that a built extension was passed to the
+          // signer.
+          assert.include(stubs.submitAddon.firstCall.args[0].xpiPath,
                          'minimal_extension-1.0.zip');
         });
     }
@@ -120,6 +152,32 @@ describe('sign', () => {
     }
   ));
 
+  it('trims trailing "/" from apiHost', () => withTempDir(
+    (tmpDir) => {
+      const stubs = getStubs();
+      const apiHost = stubs.signingConfig.apiHost;
+      return sign(
+        tmpDir, stubs,
+        {
+          extraArgs: {
+            apiHost: `${apiHost}/`,
+            useSubmissionApi: true,
+            channel: 'unlisted',
+          },
+          extraOptions: {
+            preValidatedManifest: manifestWithoutApps,
+          },
+        })
+        .then(() => {
+          sinon.assert.called(stubs.submitAddon);
+          sinon.assert.calledWithMatch(
+            stubs.submitAddon,
+            {apiHost}
+          );
+        });
+    }
+  ));
+
   it('allows a custom ID when no ID in manifest.json', () => withTempDir(
     (tmpDir) => {
       const customId = 'some-custom-id';
@@ -140,6 +198,69 @@ describe('sign', () => {
         });
     }
   ));
+
+  it(
+    "doesn't allow a custom ID when no ID in manifest.json with submission api",
+    () => withTempDir(
+      async (tmpDir) => {
+        const customId = 'some-custom-id';
+        const stubs = getStubs();
+        const promiseSigned = sign(
+          tmpDir, stubs,
+          {
+            extraArgs: {
+              id: customId,
+              useSubmissionApi: true,
+            },
+            extraOptions: {
+              preValidatedManifest: manifestWithoutApps,
+            },
+          });
+        await assert.isRejected(promiseSigned, UsageError);
+        await assert.isRejected(
+          promiseSigned, /Cannot set custom ID some-custom-id/
+        );
+        await assert.isRejected(
+          promiseSigned, /requires a custom ID be specified in the manifest/
+        );
+      }
+    ));
+
+  it(
+    "doesn't allow ID file when no ID in manifest.json with submission api",
+    () => withTempDir(
+      async (tmpDir) => {
+        const sourceDir = path.join(tmpDir.path(), 'source-dir');
+        const stubs = getStubs();
+        await fs.mkdir(sourceDir);
+        await saveIdToSourceDir(sourceDir, 'some-other-id');
+        // Now, make a signing call with a custom ID.
+        const promiseSigned = sign(tmpDir, stubs, {
+          extraArgs: {
+            useSubmissionApi: true,
+            channel: 'listed',
+            sourceDir,
+          },
+          extraOptions: {
+            preValidatedManifest: manifestWithoutApps,
+          },
+        });
+
+        await assert.isRejected(promiseSigned, UsageError);
+        await assert.isRejected(
+          promiseSigned,
+          /Cannot use previously auto-generated extension ID/
+        );
+        await assert.isRejected(
+          promiseSigned,
+          /some-other-id - /
+        );
+        await assert.isRejected(
+          promiseSigned,
+          /requires a custom ID be specified in the manifest/
+        );
+      }
+    ));
 
   it('prefers a custom ID over an ID file', () => withTempDir(
     (tmpDir) => {
@@ -167,10 +288,10 @@ describe('sign', () => {
   ));
 
   it('disallows a custom ID when manifest.json has ID', () => withTempDir(
-    (tmpDir) => {
+    async (tmpDir) => {
       const customId = 'some-custom-id';
       const stubs = getStubs();
-      return sign(
+      const signPromise = sign(
         tmpDir, stubs,
         {
           extraArgs: {
@@ -180,23 +301,23 @@ describe('sign', () => {
             // This manifest has an ID in it.
             preValidatedManifest: basicManifest,
           },
-        })
-        .then(makeSureItFails())
-        .catch(onlyInstancesOf(UsageError, (error) => {
-          assert.match(error.message, /Cannot set custom ID some-custom-id/);
-          assert.match(
-            error.message,
-            /manifest\.json declares ID basic-manifest@web-ext-test-suite/);
-        }));
+        });
+      await assert.isRejected(signPromise, UsageError);
+      await assert.isRejected(
+        signPromise, /Cannot set custom ID some-custom-id/
+      );
+      await assert.isRejected(
+        signPromise,
+        /manifest\.json declares ID basic-manifest@web-ext-test-suite/,
+      );
     }
   ));
 
   it('remembers auto-generated IDs for successive signing', () => withTempDir(
     (tmpDir) => {
-
       function _sign() {
         const signAddon = sinon.spy(() => Promise.resolve({
-          ...stubs.signingResult,
+          ...stubs.signAddonResult,
           id: 'auto-generated-id',
         }));
 
@@ -237,6 +358,49 @@ describe('sign', () => {
     }
   ));
 
+  it('requires a channel for submission API', () => withTempDir(
+    async (tmpDir) => {
+      const stubs = getStubs();
+      const signPromise = sign(
+        tmpDir, stubs,
+        {
+          extraArgs: {
+            useSubmissionApi: true,
+          },
+          extraOptions: {
+            preValidatedManifest: manifestWithoutApps,
+          },
+        });
+      await assert.isRejected(signPromise, UsageError);
+      await assert.isRejected(
+        signPromise,
+        /channel is a required parameter for the addon submission API/,
+      );
+    }
+  ));
+
+  it('does not support apiProxy with submission API', () => withTempDir(
+    async (tmpDir) => {
+      const stubs = getStubs();
+      const signPromise = sign(
+        tmpDir, stubs,
+        {
+          extraArgs: {
+            useSubmissionApi: true,
+            apiProxy: 'http://yourproxy:6000',
+            channel: 'listed',
+          },
+          extraOptions: {
+            preValidatedManifest: manifestWithoutApps,
+          },
+        });
+      await assert.isRejected(signPromise, UsageError);
+      await assert.isRejected(
+        signPromise, /apiProxy isn't yet supported for the addon submission API/
+      );
+    }
+  ));
+
   it('returns a signing result', () => withTempDir(
     (tmpDir) => {
       const stubs = getStubs();
@@ -248,19 +412,16 @@ describe('sign', () => {
   ));
 
   it('might fail', () => withTempDir(
-    (tmpDir) => {
-      return sign(
+    async (tmpDir) => {
+      const signPromise = sign(
         tmpDir, {
           ...getStubs(),
           signAddon: () => Promise.resolve({
             success: false,
           }),
-        })
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.instanceOf(error, WebExtError);
-          assert.match(error.message, /The extension could not be signed/);
         });
+      await assert.isRejected(signPromise, WebExtError);
+      await assert.isRejected(signPromise, /The extension could not be signed/);
     }
   ));
 
@@ -268,14 +429,15 @@ describe('sign', () => {
     (tmpDir) => {
       const stubs = getStubs();
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
+      const apiProxy = 'http://yourproxy:6000';
       const applications: ExtensionManifestApplications =
         stubs.preValidatedManifest.applications || {gecko: {}};
-      return sign(tmpDir, stubs, {extraArgs: {artifactsDir}})
+      return sign(tmpDir, stubs, {extraArgs: {artifactsDir, apiProxy}})
         .then(() => {
           sinon.assert.called(stubs.signAddon);
           sinon.assert.calledWithMatch(stubs.signAddon, {
             apiKey: stubs.signingConfig.apiKey,
-            apiProxy: stubs.signingConfig.apiProxy,
+            apiProxy,
             apiSecret: stubs.signingConfig.apiSecret,
             apiUrlPrefix: stubs.signingConfig.apiUrlPrefix,
             downloadDir: artifactsDir,
@@ -323,15 +485,24 @@ describe('sign', () => {
   ));
 
   it('passes through a signing exception', () => withTempDir(
-    (tmpDir) => {
+    async (tmpDir) => {
       const stubs = getStubs();
       stubs.signAddon = () => Promise.reject(new Error('some signing error'));
 
-      return sign(tmpDir, stubs)
-        .then(makeSureItFails())
-        .catch((error) => {
-          assert.match(error.message, /signing error/);
-        });
+      const signPromise = sign(tmpDir, stubs);
+      await assert.isRejected(signPromise, /signing error/);
+    }
+  ));
+
+  it('passes through a signing exception from submitAddon', () => withTempDir(
+    async (tmpDir) => {
+      const stubs = getStubs();
+      stubs.submitAddon = () => Promise.reject(new Error('some signing error'));
+
+      const signPromise = sign(tmpDir, stubs, {
+        extraArgs: { useSubmissionApi: true, channel: 'listed' },
+      });
+      await assert.isRejected(signPromise, /signing error/);
     }
   ));
 
@@ -376,14 +547,14 @@ describe('sign', () => {
     ));
 
     it('throws an error for empty files', () => withTempDir(
-      (tmpDir) => {
+      async (tmpDir) => {
         const sourceDir = tmpDir.path();
-        return fs.writeFile(path.join(sourceDir, extensionIdFile), '')
-          .then(() => getIdFromSourceDir(sourceDir))
-          .then(makeSureItFails())
-          .catch(onlyInstancesOf(UsageError, (error) => {
-            assert.match(error.message, /No ID found in extension ID file/);
-          }));
+        await fs.writeFile(path.join(sourceDir, extensionIdFile), '');
+        const getIdPromise = getIdFromSourceDir(sourceDir);
+        await assert.isRejected(getIdPromise, UsageError);
+        await assert.isRejected(
+          getIdPromise, /No ID found in extension ID file/
+        );
       }
     ));
 

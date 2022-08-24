@@ -5,12 +5,16 @@ import {fs} from 'mz';
 import {signAddon as defaultAddonSigner} from 'sign-addon';
 
 import defaultBuilder from './build.js';
-import getValidatedManifest, {getManifestId} from '../util/manifest.js';
-import {withTempDir} from '../util/temp-dir.js';
 import {isErrorWithCode, UsageError, WebExtError} from '../errors.js';
 import {prepareArtifactsDir} from '../util/artifacts.js';
 import {createLogger} from '../util/logger.js';
+import getValidatedManifest, {getManifestId} from '../util/manifest.js';
 import type {ExtensionManifest} from '../util/manifest.js';
+import { signAddon as defaultSubmitAddonSigner } from '../util/submit-addon.js';
+import type { SignResult } from '../util/submit-addon.js';
+import {withTempDir} from '../util/temp-dir.js';
+
+export type { SignResult };
 
 const log = createLogger(import.meta.url);
 
@@ -22,10 +26,12 @@ export const extensionIdFile = '.web-extension-id';
 // Sign command types and implementation.
 
 export type SignParams = {|
+  apiHost: string,
   apiKey: string,
-  apiProxy: string,
+  apiProxy?: string,
   apiSecret: string,
   apiUrlPrefix: string,
+  useSubmissionApi?: boolean,
   artifactsDir: string,
   id?: string,
   ignoreFiles?: Array<string>,
@@ -38,22 +44,19 @@ export type SignParams = {|
 export type SignOptions = {
   build?: typeof defaultBuilder,
   signAddon?: typeof defaultAddonSigner,
+  submitAddon?: typeof defaultSubmitAddonSigner,
   preValidatedManifest?: ExtensionManifest,
   shouldExitProgram?: boolean,
 };
 
-export type SignResult = {|
-  success: boolean,
-  id: string,
-  downloadedFiles: Array<string>,
-|};
-
 export default function sign(
   {
+    apiHost,
     apiKey,
     apiProxy,
     apiSecret,
     apiUrlPrefix,
+    useSubmissionApi = false,
     artifactsDir,
     id,
     ignoreFiles = [],
@@ -66,6 +69,7 @@ export default function sign(
     build = defaultBuilder,
     preValidatedManifest,
     signAddon = defaultAddonSigner,
+    submitAddon = defaultSubmitAddonSigner,
   }: SignOptions = {}
 ): Promise<SignResult> {
   return withTempDir(
@@ -88,6 +92,19 @@ export default function sign(
 
       const manifestId = getManifestId(manifestData);
 
+      if (useSubmissionApi && id && !manifestId) {
+        throw new UsageError(
+          `Cannot set custom ID ${id} - addon submission API requires a ` +
+          'custom ID be specified in the manifest'
+        );
+      }
+      if (useSubmissionApi && idFromSourceDir && !manifestId) {
+        throw new UsageError(
+          'Cannot use previously auto-generated extension ID ' +
+          `${idFromSourceDir} - addon submission API ` +
+          'requires a custom ID be specified in the manifest'
+        );
+      }
       if (id && manifestId) {
         throw new UsageError(
           `Cannot set custom ID ${id} because manifest.json ` +
@@ -111,38 +128,67 @@ export default function sign(
         log.warn('No extension ID specified (it will be auto-generated)');
       }
 
-      const signingResult = await signAddon({
+      if (useSubmissionApi && !channel) {
+        throw new UsageError(
+          'channel is a required parameter for the addon submission API'
+        );
+      }
+
+      if (useSubmissionApi && apiProxy) {
+        // https://github.com/mozilla/web-ext/issues/2472
+        throw new UsageError(
+          "apiProxy isn't yet supported for the addon submission API. " +
+          'See https://github.com/mozilla/web-ext/issues/2472'
+        );
+      }
+
+      try {
+        const apiHostURL = new URL(apiHost);
+        apiHost = apiHostURL.origin;
+      } catch (err) {
+        throw new UsageError(`Invalid apiHost: ${apiHost}`);
+      }
+
+      const signSubmitArgs = {
         apiKey,
         apiSecret,
-        apiUrlPrefix,
-        apiProxy,
         timeout,
-        verbose,
         id,
         xpiPath: buildResult.extensionPath,
-        version: manifestData.version,
         downloadDir: artifactsDir,
         channel,
-      });
+      };
 
-      if (signingResult.id) {
-        await saveIdToSourceDir(sourceDir, signingResult.id);
+      let result;
+      try {
+        if (useSubmissionApi) {
+          // $FlowIgnore: we verify 'channel' is set above
+          result = await submitAddon({...signSubmitArgs, apiHost, channel});
+        } else {
+          const { success, id: newId, downloadedFiles } = await signAddon({
+            ...signSubmitArgs,
+            apiUrlPrefix,
+            apiProxy,
+            verbose,
+            version: manifestData.version,
+          });
+          if (!success) {
+            throw new Error('The extension could not be signed');
+          }
+          result = { id: newId, downloadedFiles };
+        }
+      } catch (clientError) {
+        log.info('FAIL');
+        throw new WebExtError(clientError.message);
       }
 
       // All information about the downloaded files would have
-      // already been logged by signAddon().
-      if (signingResult.success) {
-        log.info(`Extension ID: ${signingResult.id}`);
-        log.info('SUCCESS');
-      } else {
-        log.info('FAIL');
-        throw new WebExtError(
-          'The extension could not be signed');
-      }
-
-      return signingResult;
-    }
-  );
+      // already been logged by signAddon() or submitAddon().
+      await saveIdToSourceDir(sourceDir, result.id);
+      log.info(`Extension ID: ${result.id}`);
+      log.info('SUCCESS');
+      return result;
+    });
 }
 
 
