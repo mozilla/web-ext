@@ -151,7 +151,9 @@ export default class Client {
 
   async doNewAddonSubmit(uuid: string, metaDataJson: Object): Promise<any> {
     const url = new URL('addon/', this.apiUrl);
-    const jsonData = { version: { upload: uuid }, ...metaDataJson };
+    const jsonData = {
+      ...metaDataJson, version: { upload: uuid, ...metaDataJson.version },
+    };
     return this.fetchJson(url, 'POST', JSON.stringify(jsonData));
   }
 
@@ -161,7 +163,9 @@ export default class Client {
     metaDataJson: Object,
   ): Promise<typeof Response> {
     const url = new URL(`addon/${addonId}/`, this.apiUrl);
-    const jsonData = { version: { upload: uuid }, ...metaDataJson };
+    const jsonData = {
+      ...metaDataJson, version: { upload: uuid, ...metaDataJson.version },
+    };
     return this.fetch(url, 'PUT', JSON.stringify(jsonData));
   }
 
@@ -313,6 +317,7 @@ type signAddonParams = {|
   xpiPath: string,
   downloadDir: string,
   channel: string,
+  metaDataJson?: Object,
   SubmitClient?: typeof Client,
 |}
 
@@ -325,6 +330,7 @@ export async function signAddon({
   xpiPath,
   downloadDir,
   channel,
+  metaDataJson = {},
   SubmitClient = Client,
 }: signAddonParams): Promise<SignResult> {
   try {
@@ -349,8 +355,8 @@ export async function signAddon({
   // We specifically need to know if `id` has not been passed as a parameter because
   // it's the indication that a new add-on should be created, rather than a new version.
   if (id === undefined) {
-    return client.postNewAddon(xpiPath, channel, {});
+    return client.postNewAddon(xpiPath, channel, metaDataJson);
   }
 
-  return client.putVersion(xpiPath, channel, id, {});
+  return client.putVersion(xpiPath, channel, id, metaDataJson);
 }

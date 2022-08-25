@@ -138,6 +138,21 @@ describe('util.submit-addon', () => {
         'Error: ENOENT: no such file or directory'
       );
     });
+
+    it('passes through metadata json object if defined', async () => {
+      const metaDataJson = {version: {license: 'MPL2.0'}};
+      await signAddon({
+        ...signAddonDefaults,
+        metaDataJson,
+      });
+      sinon.assert.notCalled(putVersionStub);
+      sinon.assert.calledWith(
+        postNewAddonStub,
+        signAddonDefaults.xpiPath,
+        signAddonDefaults.channel,
+        metaDataJson
+      );
+    });
   });
 
   describe('Client', () => {
@@ -309,6 +324,29 @@ describe('util.submit-addon', () => {
         const returnData = await client.doNewAddonSubmit(uploadUuid, {});
         expect(returnData).to.eql(sampleAddonDetail);
       });
+
+      it('combines provided metaDataJson with upload uuid', async () => {
+        const client = new Client(clientDefaults);
+        const nodeFetchStub = sinon.stub(client, 'nodeFetch');
+        nodeFetchStub.callsFake(async () => {
+          return new JSONResponse(sampleAddonDetail, 202);
+        });
+        const uploadUuid = 'some-uuid';
+        const metaDataJson = {
+          version: {license: 'MPL2.0'}, categories: {firefox: ['other']},
+        };
+        const body = JSON.stringify({
+          version: {upload: uploadUuid, license: metaDataJson.version.license},
+          categories: metaDataJson.categories,
+        });
+
+        await client.doNewAddonSubmit(uploadUuid, metaDataJson);
+        sinon.assert.calledWith(
+          nodeFetchStub,
+          sinon.match.instanceOf(URL),
+          sinon.match({ method: 'POST', body })
+        );
+      });
     });
 
     describe('doNewAddonOrVersionSubmit', () => {
@@ -325,6 +363,30 @@ describe('util.submit-addon', () => {
         );
         const uploadUuid = 'some-uuid';
         await client.doNewAddonOrVersionSubmit(guid, uploadUuid, {});
+      });
+
+      it('combines provided metaDataJson with upload uuid', async () => {
+        const client = new Client(clientDefaults);
+        const nodeFetchStub = sinon.stub(client, 'nodeFetch');
+        nodeFetchStub.callsFake(async () => {
+          return new JSONResponse(sampleAddonDetail, 202);
+        });
+        const uploadUuid = 'some-uuid';
+        const guid = '@some-addon-guid';
+        const metaDataJson = {
+          version: {license: 'MPL2.0'}, categories: {firefox: ['other']},
+        };
+        const body = JSON.stringify({
+          version: {upload: uploadUuid, license: metaDataJson.version.license},
+          categories: metaDataJson.categories,
+        });
+
+        await client.doNewAddonOrVersionSubmit(guid, uploadUuid, metaDataJson);
+        sinon.assert.calledWith(
+          nodeFetchStub,
+          sinon.match.instanceOf(URL),
+          sinon.match({ method: 'PUT', body })
+        );
       });
     });
 

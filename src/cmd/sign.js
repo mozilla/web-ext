@@ -39,6 +39,7 @@ export type SignParams = {|
   timeout: number,
   verbose?: boolean,
   channel?: string,
+  metadata?: string,
 |};
 
 export type SignOptions = {
@@ -64,6 +65,7 @@ export default function sign(
     timeout,
     verbose,
     channel,
+    metadata,
   }: SignParams,
   {
     build = defaultBuilder,
@@ -149,6 +151,15 @@ export default function sign(
         throw new UsageError(`Invalid apiHost: ${apiHost}`);
       }
 
+      let metaDataJson;
+      if (metadata) {
+        try {
+          metaDataJson = JSON.parse(metadata);
+        } catch (err) {
+          throw new UsageError('Invalid JSON in metadata');
+        }
+      }
+
       const signSubmitArgs = {
         apiKey,
         apiSecret,
@@ -162,8 +173,10 @@ export default function sign(
       let result;
       try {
         if (useSubmissionApi) {
-          // $FlowIgnore: we verify 'channel' is set above
-          result = await submitAddon({...signSubmitArgs, apiHost, channel});
+          result = await submitAddon(
+            // $FlowIgnore: we verify 'channel' is set above
+            {...signSubmitArgs, apiHost, channel, metaDataJson}
+          );
         } else {
           const { success, id: newId, downloadedFiles } = await signAddon({
             ...signSubmitArgs,

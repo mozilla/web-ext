@@ -569,20 +569,17 @@ Example: $0 --help run.
           describe:
             'Use a proxy to access the signing API. ' +
             'Example: https://yourproxy:6000 ',
-          demandOption: false,
           type: 'string',
         },
         'use-submission-api': {
           describe:
             'Sign using the addon submission API',
-          demandOption: false,
           type: 'boolean',
         },
         'id': {
           describe:
             'A custom ID for the extension. This has no effect if the ' +
             'extension already declares an explicit ID in its manifest.',
-          demandOption: false,
           type: 'string',
         },
         'timeout': {
@@ -590,8 +587,13 @@ Example: $0 --help run.
           type: 'number',
         },
         'channel': {
-          describe: 'The channel for which to sign the addon. Either ' +
-          '\'listed\' or \'unlisted\'',
+          describe: 'The channel for which to sign the addon.',
+          type: 'string',
+          choices: ['listed', 'unlisted'],
+        },
+        'metadata': {
+          describe: 'A JSON object containing metadata to be passed to the ' +
+          'API.  Only used with `use-submission-api`',
           type: 'string',
         },
       })
