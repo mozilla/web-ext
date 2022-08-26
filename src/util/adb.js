@@ -302,7 +302,7 @@ export default class ADBUtils {
   async startFirefoxAPK(
     deviceId: string,
     apk: string,
-    apkComponent: ?string,
+    apkComponentParam: ?string,
     deviceProfileDir: string,
   ): Promise<void> {
     const {adbClient} = this;
@@ -319,13 +319,16 @@ export default class ADBUtils {
       value: `-profile ${deviceProfileDir}`,
     }];
 
-    if (!apkComponent) {
+    let apkComponent: string;
+    if (!apkComponentParam) {
       apkComponent = '.App';
       if (defaultApkComponents[apk]) {
         apkComponent = defaultApkComponents[apk];
       }
-    } else if (!apkComponent.includes('.')) {
-      apkComponent = `.${apkComponent}`;
+    } else if (!apkComponentParam.includes('.')) {
+      apkComponent = `.${apkComponentParam}`;
+    } else {
+      apkComponent = apkComponentParam;
     }
 
     // if `apk` is a browser package or the `apk` has a
@@ -361,7 +364,7 @@ export default class ADBUtils {
     deviceId: string, apk: string,
     {maxDiscoveryTime, retryInterval}: DiscoveryParams = {}
   ): Promise<string> {
-    let rdpUnixSockets = [];
+    let rdpUnixSockets: Array<string> = [];
 
     const discoveryStartedAt = Date.now();
     const msg = (

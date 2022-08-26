@@ -160,7 +160,7 @@ export type PackageCreatorFn =
 
 export async function defaultPackageCreator(
   {
-    manifestData,
+    manifestData: manifestDataParam,
     sourceDir,
     fileFilter,
     artifactsDir,
@@ -173,7 +173,9 @@ export async function defaultPackageCreator(
   }: PackageCreatorOptions = {}
 ): Promise<ExtensionBuildResult> {
   let id;
-  if (manifestData) {
+  let manifestData: ExtensionManifest;
+  if (manifestDataParam) {
+    manifestData = manifestDataParam;
     id = getManifestId(manifestData);
     log.debug(`Using manifest id=${id || '[not specified]'}`);
   } else {

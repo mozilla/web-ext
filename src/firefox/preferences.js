@@ -147,7 +147,7 @@ export function coerceCLICustomPreference(
     }
 
     const key = prefsAry[0];
-    let value = prefsAry.slice(1).join('=');
+    let value: number | string | boolean = prefsAry.slice(1).join('=');
 
     if (/[^\w{@}.-]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);

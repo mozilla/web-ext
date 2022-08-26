@@ -297,7 +297,7 @@ export class FirefoxAndroidExtensionRunner {
   async adbDevicesDiscoveryAndSelect() {
     const {adbUtils} = this;
     const {adbDevice} = this.params;
-    let devices = [];
+    let devices: Array<string> = [];
 
     log.debug('Listing android devices');
     devices = await adbUtils.discoverDevices();

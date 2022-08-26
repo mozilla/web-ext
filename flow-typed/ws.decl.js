@@ -8,6 +8,7 @@ declare module "ws" {
 
   declare export class WebSocket extends events$EventEmitter {
     constructor(url: string): WebSocket,
+    addEventListener(eventName: string, cb: Function): void,
     removeEventListener(eventName: string, cb: Function): void,
     readyState: "CONNECTING" | "OPEN" | "CLOSING" | "CLOSED",
     send(msg: string): void,

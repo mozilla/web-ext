@@ -47,7 +47,7 @@ export class FileFilter {
     ],
     ignoreFiles = [],
     sourceDir,
-    artifactsDir,
+    artifactsDir: artifactsDirParam,
   }: FileFilterOptions = {}) {
     sourceDir = path.resolve(sourceDir);
 
@@ -58,7 +58,13 @@ export class FileFilter {
     if (ignoreFiles) {
       this.addToIgnoreList(ignoreFiles);
     }
-    if (artifactsDir && isSubPath(sourceDir, artifactsDir)) {
+
+    if (!artifactsDirParam) {
+      return;
+    }
+
+    let artifactsDir: string = artifactsDirParam;
+    if (isSubPath(sourceDir, artifactsDir)) {
       artifactsDir = path.resolve(artifactsDir);
       log.debug(
         `Ignoring artifacts directory "${artifactsDir}" ` +
