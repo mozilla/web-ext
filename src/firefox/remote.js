@@ -131,7 +131,8 @@ export class RemoteFirefox {
   }
 
   async installTemporaryAddon(
-    addonPath: string
+    addonPath: string,
+    openDevTools?: boolean
   ): Promise<FirefoxRDPResponseAddon> {
     const addonsActor = await this.getAddonsActor();
 
@@ -140,6 +141,7 @@ export class RemoteFirefox {
         to: addonsActor,
         type: 'installTemporaryAddon',
         addonPath,
+        openDevTools,
       });
       log.debug(`installTemporaryAddon: ${JSON.stringify(response)}`);
       log.info(`Installed ${addonPath} as a temporary add-on`);
