@@ -593,7 +593,7 @@ Example: $0 --help run.
           describe: 'The channel for which to sign the addon. Either ' +
           '\'listed\' or \'unlisted\'',
         },
-        'metadata': {
+        'listing-metadata': {
           describe: 'A JSON object containing metadata to be passed to the ' +
           'API. See https://addons-server.readthedocs.io' +
           '/en/latest/topics/api/addons.html for details. ' +

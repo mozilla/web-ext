@@ -39,7 +39,7 @@ export type SignParams = {|
   timeout: number,
   verbose?: boolean,
   channel?: string,
-  metadata?: string,
+  listingMetadata?: string,
 |};
 
 export type SignOptions = {
@@ -65,7 +65,7 @@ export default function sign(
     timeout,
     verbose,
     channel,
-    metadata,
+    listingMetadata,
   }: SignParams,
   {
     build = defaultBuilder,
@@ -152,11 +152,11 @@ export default function sign(
       }
 
       let metaDataJson;
-      if (metadata) {
+      if (listingMetadata) {
         try {
-          metaDataJson = JSON.parse(metadata);
+          metaDataJson = JSON.parse(listingMetadata);
         } catch (err) {
-          throw new UsageError('Invalid JSON in metadata');
+          throw new UsageError('Invalid JSON in listing metadata');
         }
       }
 

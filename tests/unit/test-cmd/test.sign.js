@@ -507,32 +507,34 @@ describe('sign', () => {
   ));
 
   it(
-    'parses metadata as JSON and passes through to submitAddon',
+    'parses listing metadata as JSON and passes through to submitAddon',
     () => withTempDir(
       async (tmpDir) => {
         const stubs = getStubs();
         const metaDataJson = {version: {license: 'MPL2.0'}};
-        const metadata = JSON.stringify(metaDataJson);
+        const listingMetadata = JSON.stringify(metaDataJson);
 
         return sign(tmpDir, stubs, {
-          extraArgs: {useSubmissionApi: true, channel: 'listed', metadata}})
-          .then(() => {
-            sinon.assert.called(stubs.submitAddon);
-            sinon.assert.calledWithMatch(stubs.submitAddon, {metaDataJson});
-          });
+          extraArgs: {
+            useSubmissionApi: true, channel: 'listed', listingMetadata,
+          },
+        }).then(() => {
+          sinon.assert.called(stubs.submitAddon);
+          sinon.assert.calledWithMatch(stubs.submitAddon, {metaDataJson});
+        });
       }
     ));
 
   it('raises an error on invalid JSON', () => withTempDir(
     async (tmpDir) => {
       const stubs = getStubs();
-      const metadata = '{"broken":"json"';
+      const listingMetadata = '{"broken":"json"';
       const signPromise = sign(
-        tmpDir, stubs, { extraArgs: { metadata } });
+        tmpDir, stubs, { extraArgs: { listingMetadata } });
       await assert.isRejected(signPromise, UsageError);
       await assert.isRejected(
         signPromise,
-        /Invalid JSON in metadata/,
+        /Invalid JSON in listing metadata/,
       );
     }
   ));
