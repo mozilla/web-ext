@@ -8,8 +8,10 @@ import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
 import { File, FormData, Response } from 'node-fetch';
 
-import Client, { JwtApiAuth, signAddon }
-  from '../../../src/util/submit-addon.js';
+import Client, {
+  JwtApiAuth,
+  signAddon,
+} from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
 
 class JSONResponse extends Response {
@@ -199,13 +201,21 @@ describe('util.submit-addon', () => {
       status: 'unreviewed',
     };
 
+    const getAuthHeaderSpy = sinon.spy(apiAuth, 'getAuthHeader');
+
+    afterEach(() => {
+      getAuthHeaderSpy.resetHistory();
+    });
+
     describe('doUploadSubmit', () => {
       it('submits the xpi', async () => {
         const client = new Client(clientDefaults);
         sinon.stub(client, 'fileFromSync')
           .returns(new File([], 'foo.xpi'));
+
+        const nodeFetchStub = sinon.stub(client, 'nodeFetch');
         mockNodeFetch(
-          sinon.stub(client, 'nodeFetch'),
+          nodeFetchStub,
           `${apiHostPath}/addons/upload/`,
           'POST',
           [
@@ -224,6 +234,20 @@ describe('util.submit-addon', () => {
         const returnUuid = await client.doUploadSubmit(xpiPath, channel);
         assert.equal(sampleUploadDetail.uuid, returnUuid);
         sinon.assert.calledWith(waitStub, sampleUploadDetail.uuid);
+
+        // Verify the jwt Authorization header are included in the response.
+        sinon.assert.calledOnce(getAuthHeaderSpy);
+        const authHeaderValue = await getAuthHeaderSpy.getCall(0).returnValue;
+        assert.match(authHeaderValue, /^JWT .*/);
+        sinon.assert.calledOnceWithMatch(
+          nodeFetchStub,
+          sinon.match.instanceOf(URL),
+          sinon.match({
+            headers: {
+              Authorization: authHeaderValue,
+            },
+          })
+        );
       });
     });
 
