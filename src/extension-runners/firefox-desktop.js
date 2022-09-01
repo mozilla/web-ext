@@ -243,6 +243,7 @@ export class FirefoxDesktopExtensionRunner {
       firefoxBinary,
       binaryArgs,
       extensions,
+      devtools,
     });
 
     this.runningInfo.firefox.on('close', () => {

@@ -12,6 +12,9 @@ import * as firefox from '../../../src/firefox/index.js';
 import {onlyInstancesOf, UsageError, WebExtError} from '../../../src/errors.js';
 import {withTempDir} from '../../../src/util/temp-dir.js';
 import {
+  consoleStream, // instance is imported to inspect logged messages
+} from '../../../src/util/logger.js';
+import {
   basicManifest,
   fixturePath,
   makeSureItFails,
@@ -238,6 +241,41 @@ describe('firefox', () => {
             'binary-args-first': true,
           });
         });
+    });
+
+    it('logs link to debugging docs', async () => {
+      const runner = createFakeFxRunner();
+      consoleStream.flushCapturedLogs();
+      consoleStream.startCapturing();
+
+      const expectedMessage = 'More info about WebExtensions debugging:';
+      const expectedURLToDocs =
+        'https://extensionworkshop.com/documentation/develop/debugging/';
+      await runFirefox({fxRunner: runner, devtools: false});
+      assert.notOk(consoleStream.capturedMessages.find(
+        (msg) => msg.includes(expectedMessage)
+      ));
+      assert.notOk(consoleStream.capturedMessages.find(
+        (msg) => msg.includes(expectedURLToDocs)
+      ));
+
+      consoleStream.flushCapturedLogs();
+
+      await runFirefox({fxRunner: runner, devtools: true});
+      const foundMessage = consoleStream.capturedMessages.find(
+        (msg) => msg.includes(expectedMessage)
+      );
+      const foundDocURL = consoleStream.capturedMessages.find(
+        (msg) => msg.includes(expectedURLToDocs)
+      );
+
+      // Expect the logs to be found.
+      assert.ok(foundMessage);
+      assert.ok(foundDocURL);
+
+      // Expected to be emitted as info level logs.
+      assert.ok(foundMessage?.includes('[info]'));
+      assert.ok(foundDocURL?.includes('[info]'));
     });
 
   });
@@ -1003,7 +1041,6 @@ describe('firefox', () => {
         sinon.assert.calledOnce(fakeAsyncFsStat);
       }
     ));
-
   });
 
 });
