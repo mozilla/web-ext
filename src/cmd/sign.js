@@ -39,7 +39,7 @@ export type SignParams = {|
   timeout: number,
   verbose?: boolean,
   channel?: string,
-  listingMetadata?: string,
+  amoMetadata?: string,
 |};
 
 export type SignOptions = {
@@ -48,6 +48,7 @@ export type SignOptions = {
   submitAddon?: typeof defaultSubmitAddonSigner,
   preValidatedManifest?: ExtensionManifest,
   shouldExitProgram?: boolean,
+  asyncFsReadFile?: typeof defaultAsyncFsReadFile,
 };
 
 export default function sign(
@@ -65,13 +66,14 @@ export default function sign(
     timeout,
     verbose,
     channel,
-    listingMetadata,
+    amoMetadata,
   }: SignParams,
   {
     build = defaultBuilder,
     preValidatedManifest,
     signAddon = defaultAddonSigner,
     submitAddon = defaultSubmitAddonSigner,
+    asyncFsReadFile = defaultAsyncFsReadFile,
   }: SignOptions = {}
 ): Promise<SignResult> {
   return withTempDir(
@@ -152,9 +154,10 @@ export default function sign(
       }
 
       let metaDataJson;
-      if (listingMetadata) {
+      if (amoMetadata) {
+        const metadataFileBuffer = await asyncFsReadFile(amoMetadata);
         try {
-          metaDataJson = JSON.parse(listingMetadata);
+          metaDataJson = JSON.parse(metadataFileBuffer.toString());
         } catch (err) {
           throw new UsageError('Invalid JSON in listing metadata');
         }

@@ -512,15 +512,22 @@ describe('sign', () => {
       async (tmpDir) => {
         const stubs = getStubs();
         const metaDataJson = {version: {license: 'MPL2.0'}};
-        const listingMetadata = JSON.stringify(metaDataJson);
+        const amoMetadata = 'path/to/metadata.json';
+        const asyncFsReadFileStub = sinon.spy(
+          () => Promise.resolve(new Buffer(JSON.stringify(metaDataJson)))
+        );
 
         return sign(tmpDir, stubs, {
           extraArgs: {
-            useSubmissionApi: true, channel: 'listed', listingMetadata,
+            useSubmissionApi: true, channel: 'listed', amoMetadata,
+          },
+          extraOptions: {
+            asyncFsReadFile: asyncFsReadFileStub,
           },
         }).then(() => {
           sinon.assert.called(stubs.submitAddon);
           sinon.assert.calledWithMatch(stubs.submitAddon, {metaDataJson});
+          sinon.assert.calledWith(asyncFsReadFileStub, amoMetadata);
         });
       }
     ));
@@ -528,14 +535,23 @@ describe('sign', () => {
   it('raises an error on invalid JSON', () => withTempDir(
     async (tmpDir) => {
       const stubs = getStubs();
-      const listingMetadata = '{"broken":"json"';
-      const signPromise = sign(
-        tmpDir, stubs, { extraArgs: { listingMetadata } });
+      const amoMetadata = 'path/to/metadata.json';
+      const asyncFsReadFileStub = sinon.spy(
+        () => Promise.resolve(new Buffer('{"broken":"json"'))
+      );
+
+      const signPromise = sign(tmpDir, stubs, {
+        extraArgs: { amoMetadata },
+        extraOptions: {
+          asyncFsReadFile: asyncFsReadFileStub,
+        },
+      });
       await assert.isRejected(signPromise, UsageError);
       await assert.isRejected(
         signPromise,
         /Invalid JSON in listing metadata/,
       );
+      sinon.assert.calledWith(asyncFsReadFileStub, amoMetadata);
     }
   ));
 
