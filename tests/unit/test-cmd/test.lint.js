@@ -143,6 +143,8 @@ describe('lint', () => {
           output: 'json',
           boring: true,
           selfHosted: true,
+          minManifestVersion: 2,
+          maxManifestVersion: 2,
         },
       });
     });
@@ -167,4 +169,18 @@ describe('lint', () => {
     });
   });
 
+  describe('firefox-preview', () => {
+    it('enables MV3 support in addons-linter', async () => {
+      const {lint, createLinter} = setUp();
+
+      await lint({firefoxPreview: ['mv3']});
+
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          minManifestVersion: 2,
+          maxManifestVersion: 3,
+        },
+      });
+    });
+  });
 });
