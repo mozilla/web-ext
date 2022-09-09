@@ -543,9 +543,10 @@ Example: $0 --help run.
       'sign',
       'Sign the extension so it can be installed in Firefox',
       commands.sign, {
-        'api-host': {
-          describe: 'Signing API host - only used with `use-submission-api`',
-          default: 'https://addons.mozilla.org',
+        'amo-base-url': {
+          describe:
+            'Signing API URL prefix - only used with `use-submission-api`',
+          default: 'https://addons.mozilla.org/api/v5',
           demandOption: true,
           type: 'string',
         },
