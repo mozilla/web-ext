@@ -216,8 +216,8 @@ describe('firefox', () => {
       const profile = fakeProfile;
       const extensions = [{ sourceDir: '/path/to/extension' }];
 
-      // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
       return runFirefox({
+        // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
         profile,
         fxRunner: runner,
         firefoxBinary,

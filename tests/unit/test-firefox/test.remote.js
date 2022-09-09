@@ -446,8 +446,8 @@ describe('firefox.remote', () => {
 
   describe('connectWithMaxRetries', () => {
     function firefoxClient(opt = {}, deps) {
-      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return connectWithMaxRetries(
+        // $FlowIgnore: allow use of inexact object literal for testing purpose.
         {
           maxRetries: 0,
           retryInterval: 1,
