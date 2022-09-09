@@ -195,6 +195,7 @@ jobs:
           condition:
             equal: [*nodejs_current, << parameters.nodejs >>]
           steps:
+            - run: npm run prettier-ci
             - run:
                 name: run linting check and unit tests with coverage
                 command: npm run test-coverage
