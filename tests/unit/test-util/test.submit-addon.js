@@ -151,7 +151,7 @@ describe('util.submit-addon', () => {
       );
     });
 
-    it('throws error if xpiPath is invalid', async () => {
+    it('throws error if amoBaseUrl is an invalid URL', async () => {
       const amoBaseUrl = 'badUrl';
       const signAddonPromise = signAddon({...signAddonDefaults, amoBaseUrl});
       await assert.isRejected(
