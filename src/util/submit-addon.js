@@ -54,7 +54,7 @@ export class JwtApiAuth {
 
 type ClientConstructorParams = {|
   apiAuth: ApiAuth,
-  apiHost: string,
+  baseUrl: URL,
   validationCheckInterval?: number,
   validationCheckTimeout?: number,
   approvalCheckInterval?: number,
@@ -73,7 +73,7 @@ export default class Client {
 
   constructor({
     apiAuth,
-    apiHost,
+    baseUrl,
     validationCheckInterval = 1000,
     validationCheckTimeout = 300000, // 5 minutes.
     approvalCheckInterval = 1000,
@@ -81,7 +81,7 @@ export default class Client {
     downloadDir = process.cwd(),
   }: ClientConstructorParams) {
     this.apiAuth = apiAuth;
-    this.apiUrl = new URL('/api/v5/addons/', apiHost);
+    this.apiUrl = new URL('/addons/', baseUrl);
     this.validationCheckInterval = validationCheckInterval;
     this.validationCheckTimeout = validationCheckTimeout;
     this.approvalCheckInterval = approvalCheckInterval;
@@ -322,7 +322,7 @@ export default class Client {
 type signAddonParams = {|
   apiKey: string,
   apiSecret: string,
-  apiHost: string,
+  amoBaseUrl: string,
   timeout: number,
   id?: string,
   xpiPath: string,
@@ -335,7 +335,7 @@ type signAddonParams = {|
 export async function signAddon({
   apiKey,
   apiSecret,
-  apiHost,
+  amoBaseUrl,
   timeout,
   id,
   xpiPath,
@@ -354,9 +354,16 @@ export async function signAddon({
     throw new Error(`error with ${xpiPath}: ${statError}`);
   }
 
+  let baseUrl;
+  try {
+    baseUrl = new URL(amoBaseUrl);
+  } catch (err) {
+    throw new Error(`Invalid AMO API base URL: ${amoBaseUrl}`);
+  }
+
   const client = new SubmitClient({
     apiAuth: new ApiAuthClass({ apiKey, apiSecret }),
-    apiHost,
+    baseUrl,
     validationCheckTimeout: timeout,
     approvalCheckTimeout: timeout,
     downloadDir,

@@ -26,7 +26,7 @@ export const extensionIdFile = '.web-extension-id';
 // Sign command types and implementation.
 
 export type SignParams = {|
-  apiHost: string,
+  amoBaseUrl: string,
   apiKey: string,
   apiProxy?: string,
   apiSecret: string,
@@ -51,7 +51,7 @@ export type SignOptions = {
 
 export default function sign(
   {
-    apiHost,
+    amoBaseUrl,
     apiKey,
     apiProxy,
     apiSecret,
@@ -142,13 +142,6 @@ export default function sign(
         );
       }
 
-      try {
-        const apiHostURL = new URL(apiHost);
-        apiHost = apiHostURL.origin;
-      } catch (err) {
-        throw new UsageError(`Invalid apiHost: ${apiHost}`);
-      }
-
       const signSubmitArgs = {
         apiKey,
         apiSecret,
@@ -163,7 +156,7 @@ export default function sign(
       try {
         if (useSubmissionApi) {
           // $FlowIgnore: we verify 'channel' is set above
-          result = await submitAddon({...signSubmitArgs, apiHost, channel});
+          result = await submitAddon({...signSubmitArgs, amoBaseUrl, channel});
         } else {
           const { success, id: newId, downloadedFiles } = await signAddon({
             ...signSubmitArgs,
