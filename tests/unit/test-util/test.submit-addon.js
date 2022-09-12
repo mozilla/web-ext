@@ -150,6 +150,15 @@ describe('util.submit-addon', () => {
         'Error: ENOENT: no such file or directory'
       );
     });
+
+    it('throws error if xpiPath is invalid', async () => {
+      const amoBaseUrl = 'badUrl';
+      const signAddonPromise = signAddon({...signAddonDefaults, amoBaseUrl});
+      await assert.isRejected(
+        signAddonPromise,
+        `Invalid AMO API base URL: ${amoBaseUrl}`
+      );
+    });
   });
 
   describe('Client', () => {

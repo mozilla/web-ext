@@ -358,7 +358,7 @@ export async function signAddon({
   try {
     baseUrl = new URL(amoBaseUrl);
   } catch (err) {
-    throw new Error(`Invalid amoBaseUrl: ${amoBaseUrl}`);
+    throw new Error(`Invalid AMO API base URL: ${amoBaseUrl}`);
   }
 
   const client = new SubmitClient({
