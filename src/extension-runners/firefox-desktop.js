@@ -33,6 +33,7 @@ import type {FirefoxInfo} from '../firefox/index'; // eslint-disable-line import
 type FirefoxDesktopSpecificRunnerParams = {|
   customPrefs?: FirefoxPreferences,
   browserConsole: boolean,
+  devtools: boolean,
   firefoxBinary: string,
   preInstall: boolean,
 
@@ -212,6 +213,7 @@ export class FirefoxDesktopExtensionRunner {
   async startFirefoxInstance() {
     const {
       browserConsole,
+      devtools,
       extensions,
       firefoxBinary,
       preInstall,
@@ -241,6 +243,7 @@ export class FirefoxDesktopExtensionRunner {
       firefoxBinary,
       binaryArgs,
       extensions,
+      devtools,
     });
 
     this.runningInfo.firefox.on('close', () => {
@@ -262,7 +265,7 @@ export class FirefoxDesktopExtensionRunner {
       for (const extension of extensions) {
         try {
           const addonId = await (
-            remoteFirefox.installTemporaryAddon(extension.sourceDir)
+            remoteFirefox.installTemporaryAddon(extension.sourceDir, devtools)
               .then((installResult: FirefoxRDPResponseAddon) => {
                 return installResult.addon.id;
               })

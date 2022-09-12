@@ -9,6 +9,7 @@ const REQUEST_INSTALL_ADDON = {
   to: 'fakeAddonsActor',
   type: 'installTemporaryAddon',
   addonPath: process.env.addonPath,
+  openDevTools: false, // Introduced in Firefox 106 (Bug 1787409 / Bug 1789245)
 };
 const REPLY_INSTALL_ADDON = {
   from: 'fakeAddonsActor',

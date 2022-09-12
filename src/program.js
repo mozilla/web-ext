@@ -707,6 +707,12 @@ Example: $0 --help run.
         demandOption: false,
         type: 'array',
       },
+      'devtools': {
+        describe: 'Open the DevTools for the installed add-on ' +
+                  '(Firefox 106 and later)',
+        demandOption: false,
+        type: 'boolean',
+      },
       'browser-console': {
         alias: ['bc'],
         describe: 'Open the DevTools Browser Console.',

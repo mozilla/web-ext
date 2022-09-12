@@ -28,6 +28,7 @@ const log = createLogger(import.meta.url);
 export type CmdRunParams = {|
   artifactsDir: string,
   browserConsole: boolean,
+  devtools: boolean,
   pref?: FirefoxPreferences,
   firefox: string,
   firefoxProfile?: string,
@@ -75,6 +76,7 @@ export default async function run(
   {
     artifactsDir,
     browserConsole = false,
+    devtools = false,
     pref,
     firefox,
     firefoxProfile,
@@ -174,6 +176,7 @@ export default async function run(
       profilePath: firefoxProfile,
       customPrefs,
       browserConsole,
+      devtools,
       preInstall,
 
       // Firefox runner injected dependencies.
