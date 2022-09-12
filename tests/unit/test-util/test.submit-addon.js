@@ -10,6 +10,7 @@ import { File, FormData, Response } from 'node-fetch';
 
 import Client, {
   JwtApiAuth,
+  saveIdToFile,
   signAddon,
 } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
@@ -75,6 +76,7 @@ describe('util.submit-addon', () => {
       downloadDir: '/some-dir/',
       xpiPath: '/some.xpi',
       channel: 'some-channel',
+      savedIdPath: '.id-file',
     };
 
     it('creates Client with parameters', async () => {
@@ -118,13 +120,17 @@ describe('util.submit-addon', () => {
     it('calls postNewAddon if `id` is undefined', async () => {
       const xpiPath = 'this/path/xpi.xpi';
       const channel = 'thisChannel';
+      const savedIdPath = '.some.id.file';
       await signAddon({
         ...signAddonDefaults,
         xpiPath,
         channel,
+        savedIdPath,
       });
       sinon.assert.notCalled(putVersionStub);
-      sinon.assert.calledWith(postNewAddonStub, xpiPath, channel, {});
+      sinon.assert.calledWith(
+        postNewAddonStub, xpiPath, channel, savedIdPath, {}
+      );
     });
 
     it('calls putVersion if `id` is defined', async () => {
@@ -171,6 +177,7 @@ describe('util.submit-addon', () => {
         postNewAddonStub,
         signAddonDefaults.xpiPath,
         signAddonDefaults.channel,
+        signAddonDefaults.savedIdPath,
         metaDataJson
       );
     });
@@ -620,17 +627,23 @@ describe('util.submit-addon', () => {
         {channel: 'listed', versionId: sampleVersionDetail.id},
         {channel: 'unlisted', versionId: sampleVersionDetail2.id},
       ].forEach(({channel, versionId}) =>
-        it('uploads new listed add-on; downloads the signed xpi', async () => {
-          addUploadMocks();
-          mockNodeFetch(
-            nodeFetchStub,
-            new URL('/addons/addon/', baseUrl),
-            'POST',
-            [{ body: sampleAddonDetail, status: 200 }]
-          );
-          addApprovalMocks(versionId);
-          await client.postNewAddon(xpiPath, channel, {});
-        }));
+        it(
+          `uploads new ${channel} add-on; downloads the signed xpi`,
+          async () => {
+            addUploadMocks();
+            const saveIdStub = sinon.stub();
+            saveIdStub.resolves();
+            const idFile = 'id.file';
+            mockNodeFetch(
+              nodeFetchStub,
+              new URL('/addons/addon/', baseUrl),
+              'POST',
+              [{ body: sampleAddonDetail, status: 200 }]
+            );
+            addApprovalMocks(versionId);
+            await client.postNewAddon(xpiPath, channel, idFile, {}, saveIdStub);
+            sinon.assert.calledWith(saveIdStub, idFile, sampleAddonDetail.guid);
+          }));
 
       it('uploads a new version; then downloads the signed xpi', async () => {
         const channel = 'listed';
@@ -766,4 +779,31 @@ describe('util.submit-addon', () => {
       });
     });
   });
+
+  describe('saveIdToFile', () => {
+
+    it('saves an extension ID to file', () => withTempDir(
+      (tmpDir) => {
+        const idFile = path.join(tmpDir.path(), 'extensionId.File');
+        return saveIdToFile(idFile, 'some-id')
+          .then(() => fs.readFile(idFile))
+          .then((content) => {
+            assert.include(content.toString(), 'some-id');
+          });
+      }
+    ));
+
+    it('will overwrite an existing file', () => withTempDir(
+      (tmpDir) => {
+        const idFile = path.join(tmpDir.path(), 'extensionId.File');
+        return saveIdToFile(idFile, 'first-id')
+          .then(() => saveIdToFile(idFile, 'second-id'))
+          .then(() => fs.readFile(idFile))
+          .then((content) => {
+            assert.include(content.toString(), 'second-id');
+          });
+      }
+    ));
+  });
+
 });

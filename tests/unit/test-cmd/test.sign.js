@@ -10,9 +10,10 @@ import * as sinon from 'sinon';
 
 import {UsageError, WebExtError} from '../../../src/errors.js';
 import {getManifestId} from '../../../src/util/manifest.js';
+import {saveIdToFile} from '../../../src/util/submit-addon.js';
 import {withTempDir} from '../../../src/util/temp-dir.js';
 import completeSignCommand, {
-  extensionIdFile, getIdFromSourceDir, saveIdToSourceDir,
+  extensionIdFile, getIdFromFile,
 } from '../../../src/cmd/sign.js';
 import {
   basicManifest,
@@ -208,9 +209,10 @@ describe('sign', () => {
     () => withTempDir(
       async (tmpDir) => {
         const sourceDir = path.join(tmpDir.path(), 'source-dir');
+        const idFile = path.join(sourceDir, extensionIdFile);
         const stubs = getStubs();
         await fs.mkdir(sourceDir);
-        await saveIdToSourceDir(sourceDir, 'some-other-id');
+        await saveIdToFile(idFile, 'some-other-id');
         // Now, make a signing call with a custom ID.
         const promiseSigned = sign(tmpDir, stubs, {
           extraArgs: {
@@ -242,11 +244,12 @@ describe('sign', () => {
   it('prefers a custom ID over an ID file', () => withTempDir(
     (tmpDir) => {
       const sourceDir = path.join(tmpDir.path(), 'source-dir');
+      const idFile = path.join(sourceDir, extensionIdFile);
       const customId = 'some-custom-id';
       const stubs = getStubs();
       // First, save an extension ID like a previous signing call.
       return fs.mkdir(sourceDir)
-        .then(() => saveIdToSourceDir(sourceDir, 'some-other-id'))
+        .then(() => saveIdToFile(idFile, 'some-other-id'))
         // Now, make a signing call with a custom ID.
         .then(() => sign(tmpDir, stubs, {
           extraArgs: {
@@ -532,40 +535,13 @@ describe('sign', () => {
     }
   ));
 
-  describe('saveIdToSourceDir', () => {
-
-    it('saves an extension ID to file', () => withTempDir(
-      (tmpDir) => {
-        const sourceDir = tmpDir.path();
-        return saveIdToSourceDir(sourceDir, 'some-id')
-          .then(() => fs.readFile(path.join(sourceDir, extensionIdFile)))
-          .then((content) => {
-            assert.include(content.toString(), 'some-id');
-          });
-      }
-    ));
-
-    it('will overwrite an existing file', () => withTempDir(
-      (tmpDir) => {
-        const sourceDir = tmpDir.path();
-        return saveIdToSourceDir(sourceDir, 'first-id')
-          .then(() => saveIdToSourceDir(sourceDir, 'second-id'))
-          .then(() => getIdFromSourceDir(sourceDir))
-          .then((savedId) => {
-            assert.equal(savedId, 'second-id');
-          });
-      }
-    ));
-
-  });
-
-  describe('getIdFromSourceDir', () => {
+  describe('getIdFromFile', () => {
 
     it('gets a saved extension ID', () => withTempDir(
       (tmpDir) => {
-        const sourceDir = tmpDir.path();
-        return saveIdToSourceDir(sourceDir, 'some-id')
-          .then(() => getIdFromSourceDir(sourceDir))
+        const idFile = path.join(tmpDir.path(), extensionIdFile);
+        return saveIdToFile(idFile, 'some-id')
+          .then(() => getIdFromFile(idFile))
           .then((extensionId) => {
             assert.equal(extensionId, 'some-id');
           });
@@ -574,9 +550,9 @@ describe('sign', () => {
 
     it('throws an error for empty files', () => withTempDir(
       async (tmpDir) => {
-        const sourceDir = tmpDir.path();
-        await fs.writeFile(path.join(sourceDir, extensionIdFile), '');
-        const getIdPromise = getIdFromSourceDir(sourceDir);
+        const idFile = path.join(tmpDir.path(), extensionIdFile);
+        await fs.writeFile(idFile, '');
+        const getIdPromise = getIdFromFile(idFile);
         await assert.isRejected(getIdPromise, UsageError);
         await assert.isRejected(
           getIdPromise, /No ID found in extension ID file/
@@ -586,8 +562,8 @@ describe('sign', () => {
 
     it('returns empty ID when extension file does not exist', () => withTempDir(
       (tmpDir) => {
-        const sourceDir = tmpDir.path();
-        return getIdFromSourceDir(sourceDir)
+        const idFile = path.join(tmpDir.path(), extensionIdFile);
+        return getIdFromFile(idFile)
           .then((savedId) => {
             assert.strictEqual(savedId, undefined);
           });
@@ -599,7 +575,7 @@ describe('sign', () => {
         throw new Error('Unexpected fs.readFile error');
       });
       await assert.isRejected(
-        getIdFromSourceDir('fakeSourceDir', fakeAsyncFsReadFile),
+        getIdFromFile('fakeIdFile', fakeAsyncFsReadFile),
         /Unexpected fs.readFile error/);
 
       sinon.assert.calledOnce(fakeAsyncFsReadFile);

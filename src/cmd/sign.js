@@ -10,7 +10,10 @@ import {prepareArtifactsDir} from '../util/artifacts.js';
 import {createLogger} from '../util/logger.js';
 import getValidatedManifest, {getManifestId} from '../util/manifest.js';
 import type {ExtensionManifest} from '../util/manifest.js';
-import { signAddon as defaultSubmitAddonSigner } from '../util/submit-addon.js';
+import {
+  signAddon as defaultSubmitAddonSigner,
+  saveIdToFile,
+} from '../util/submit-addon.js';
 import type { SignResult } from '../util/submit-addon.js';
 import {withTempDir} from '../util/temp-dir.js';
 
@@ -81,6 +84,7 @@ export default function sign(
       await prepareArtifactsDir(artifactsDir);
 
       let manifestData;
+      const savedIdPath = path.join(sourceDir, extensionIdFile);
 
       if (preValidatedManifest) {
         manifestData = preValidatedManifest;
@@ -91,7 +95,7 @@ export default function sign(
       const [buildResult, idFromSourceDir] = await Promise.all([
         build({sourceDir, ignoreFiles, artifactsDir: tmpDir.path()},
               {manifestData, showReadyMessage: false}),
-        getIdFromSourceDir(sourceDir),
+        getIdFromFile(savedIdPath),
       ]);
 
       const manifestId = getManifestId(manifestData);
@@ -169,10 +173,14 @@ export default function sign(
       let result;
       try {
         if (useSubmissionApi) {
-          result = await submitAddon(
+          result = await submitAddon({
+            ...signSubmitArgs,
+            amoBaseUrl,
             // $FlowIgnore: we verify 'channel' is set above
-            {...signSubmitArgs, amoBaseUrl, channel, metaDataJson}
-          );
+            channel,
+            savedIdPath,
+            metaDataJson,
+          });
         } else {
           const { success, id: newId, downloadedFiles } = await signAddon({
             ...signSubmitArgs,
@@ -185,28 +193,26 @@ export default function sign(
             throw new Error('The extension could not be signed');
           }
           result = { id: newId, downloadedFiles };
+          // All information about the downloaded files would have already been
+          // logged by signAddon(). submitAddon() calls saveIdToSourceDir itself.
+          await saveIdToFile(savedIdPath, newId);
+          log.info(`Extension ID: ${newId}`);
+          log.info('SUCCESS');
         }
       } catch (clientError) {
         log.info('FAIL');
         throw new WebExtError(clientError.message);
       }
 
-      // All information about the downloaded files would have
-      // already been logged by signAddon() or submitAddon().
-      await saveIdToSourceDir(sourceDir, result.id);
-      log.info(`Extension ID: ${result.id}`);
-      log.info('SUCCESS');
       return result;
     });
 }
 
 
-export async function getIdFromSourceDir(
-  sourceDir: string,
+export async function getIdFromFile(
+  filePath: string,
   asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile,
 ): Promise<string | void> {
-  const filePath = path.join(sourceDir, extensionIdFile);
-
   let content;
 
   try {
@@ -235,18 +241,4 @@ export async function getIdFromSourceDir(
   }
 
   return id;
-}
-
-
-export async function saveIdToSourceDir(
-  sourceDir: string, id: string
-): Promise<void> {
-  const filePath = path.join(sourceDir, extensionIdFile);
-  await fs.writeFile(filePath, [
-    '# This file was created by https://github.com/mozilla/web-ext',
-    '# Your auto-generated extension ID for addons.mozilla.org is:',
-    id.toString(),
-  ].join('\n'));
-
-  log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
 }
