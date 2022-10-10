@@ -598,6 +598,8 @@ export class FirefoxAndroidExtensionRunner {
     } finally {
       if (isTTY(stdin)) {
         stdin.removeListener('keypress', handleCtrlC);
+        // Restore mode so Ctrl-C can be used to kill the process.
+        setRawMode(stdin, false);
       }
     }
 

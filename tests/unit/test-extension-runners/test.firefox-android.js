@@ -1025,5 +1025,22 @@ describe('util/extension-runners/firefox-android', () => {
     });
 
   });
+  it('Stdin raw mode is set to false before setupForward',
+     async () => {
+       const {
+         params, fakeADBUtils,
+       } = prepareSelectedDeviceAndAPKParams();
 
+       fakeADBUtils.setupForward = sinon.spy(async () => {
+         fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+       });
+
+       const fakeStdin = sinon.spy(createFakeStdin());
+       params.stdin = fakeStdin;
+
+       const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+       await runnerInstance.run();
+
+       assert.deepEqual(fakeStdin.setRawMode.lastCall.args, [false]);
+     });
 });
