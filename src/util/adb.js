@@ -60,6 +60,10 @@ export default class ADBUtils {
   // while it is still executing.
   userAbortDiscovery: boolean;
 
+  // Toggled when the user wants to abort the Start Activity loop
+  // while it is still executing.
+  userAbortStartActivity: boolean;
+
   constructor(params: ADBUtilsParams) {
     this.params = params;
 
@@ -81,6 +85,7 @@ export default class ADBUtils {
     this.artifactsDirMap = new Map();
 
     this.userAbortDiscovery = false;
+    this.userAbortStartActivity = false;
   }
 
   runShellCommand(
@@ -343,18 +348,41 @@ export default class ADBUtils {
     // the following to: `${apk}/${apk}.${apkComponent}`
     const component = `${apk}/${apkComponent}`;
 
-    await wrapADBCall(async () => {
+    let exception;
+    wrapADBCall(async () => {
       await adbClient.getDevice(deviceId).startActivity({
         wait: true,
         action: 'android.activity.MAIN',
         component,
         extras,
       });
+    }).then(() => {
+      exception = null;
+    }).catch((err) => {
+      exception = err;
     });
+
+    // Wait for the activity to be started.
+    while (exception === undefined) {
+      if (this.userAbortStartActivity) {
+        throw new UsageError(
+          'Exiting Firefox Start Activity on user request'
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (exception) {
+      throw exception;
+    }
   }
 
   setUserAbortDiscovery(value: boolean) {
     this.userAbortDiscovery = value;
+  }
+
+  setUserAbortStartActivity(value: boolean) {
+    this.userAbortStartActivity = value;
   }
 
   async discoverRDPUnixSocket(

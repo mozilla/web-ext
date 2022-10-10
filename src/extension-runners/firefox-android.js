@@ -145,6 +145,13 @@ export class FirefoxAndroidExtensionRunner {
     // push the profile preferences to the remote profile dir.
     await this.adbPrepareProfileDir();
 
+    const stdin = this.params.stdin || process.stdin;
+
+    if (isTTY(stdin)) {
+      readline.emitKeypressEvents(stdin);
+      setRawMode(stdin, true);
+    }
+
     // NOTE: running Firefox for Android on the Android Emulator can be
     // pretty slow, we can run the following 3 steps in parallel to speed up
     // it a bit.
@@ -163,6 +170,11 @@ export class FirefoxAndroidExtensionRunner {
       // Create an ADB forward connection on a free tcp port
       this.adbDiscoveryAndForwardRDPUnixSocket(),
     ]);
+
+    if (isTTY(stdin)) {
+      // Restore mode so Ctrl-C can be used to kill the process.
+      setRawMode(stdin, false);
+    }
 
     // Connect to RDP socket on the local tcp server, install all the pushed extension
     // and keep track of the built and installed extension by extension sourceDir.
@@ -499,12 +511,30 @@ export class FirefoxAndroidExtensionRunner {
 
     log.debug(`Using profile ${deviceProfileDir} (ignored by Fenix)`);
 
-    await adbUtils.startFirefoxAPK(
-      selectedAdbDevice,
-      selectedFirefoxApk,
-      firefoxApkComponent,
-      deviceProfileDir,
-    );
+    const stdin = this.params.stdin || process.stdin;
+
+    const handleCtrlC = (str, key) => {
+      if (key.ctrl && key.name === 'c') {
+        adbUtils.setUserAbortStartActivity(true);
+      }
+    };
+
+    if (isTTY(stdin)) {
+      stdin.on('keypress', handleCtrlC);
+    }
+
+    try {
+      await adbUtils.startFirefoxAPK(
+        selectedAdbDevice,
+        selectedFirefoxApk,
+        firefoxApkComponent,
+        deviceProfileDir,
+      );
+    } finally {
+      if (isTTY(stdin)) {
+        stdin.removeListener('keypress', handleCtrlC);
+      }
+    }
   }
 
   async buildAndPushExtension(sourceDir: string) {
@@ -579,9 +609,6 @@ export class FirefoxAndroidExtensionRunner {
     // TODO: use noInput property to decide if we should
     // disable direct keypress handling.
     if (isTTY(stdin)) {
-      readline.emitKeypressEvents(stdin);
-      setRawMode(stdin, true);
-
       stdin.on('keypress', handleCtrlC);
     }
 
@@ -598,8 +625,6 @@ export class FirefoxAndroidExtensionRunner {
     } finally {
       if (isTTY(stdin)) {
         stdin.removeListener('keypress', handleCtrlC);
-        // Restore mode so Ctrl-C can be used to kill the process.
-        setRawMode(stdin, false);
       }
     }
 

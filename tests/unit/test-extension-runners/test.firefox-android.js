@@ -132,6 +132,7 @@ function prepareSelectedDeviceAndAPKParams(
     clearArtifactsDir: sinon.spy(() => Promise.resolve()),
     detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(true)),
     setUserAbortDiscovery: sinon.spy(() => {}),
+    setUserAbortStartActivity: sinon.spy(() => {}),
     ensureRequiredAPKRuntimePermissions: sinon.spy(() => Promise.resolve()),
     ...adbOverrides,
   };
@@ -785,6 +786,47 @@ describe('util/extension-runners/firefox-android', () => {
            /fake user exit/
          );
        });
+
+    it('allows user to exit while waiting to start activity',
+       async () => {
+         const {
+           params, fakeADBUtils,
+         } = prepareSelectedDeviceAndAPKParams();
+
+         fakeADBUtils.startFirefoxAPK = sinon.spy(async () => {
+           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+
+           sinon.assert.calledOnce(fakeADBUtils.setUserAbortStartActivity);
+           sinon.assert.calledWith(
+             fakeADBUtils.setUserAbortStartActivity
+           );
+
+           // Reject the expected error, if all the assertion passes.
+           throw new UsageError('fake user exit');
+         });
+
+         const fakeStdin = createFakeStdin();
+
+         params.stdin = fakeStdin;
+
+         let actualError;
+
+         try {
+           const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+           await runnerInstance.run();
+         } catch (error) {
+           actualError = error;
+         } finally {
+           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+         }
+
+         assert.instanceOf(actualError, UsageError);
+         assert.match(
+           actualError && actualError.message,
+           /fake user exit/
+         );
+       });
+
 
     it('rejects on Android Firefox Debugger discovery timeouts',
        async () => {
