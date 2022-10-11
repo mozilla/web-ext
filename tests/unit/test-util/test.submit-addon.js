@@ -150,7 +150,7 @@ describe('util.submit-addon', () => {
         'Error: ENOENT: no such file or directory'
       );
     });
-    
+
     it('throws error if amoBaseUrl is an invalid URL', async () => {
       const amoBaseUrl = 'badUrl';
       const signAddonPromise = signAddon({...signAddonDefaults, amoBaseUrl});
