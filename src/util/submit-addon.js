@@ -16,11 +16,45 @@ export type SignResult = {|
   downloadedFiles: Array<string>,
 |};
 
+export interface ApiAuth {
+  getAuthHeader(): Promise<string>
+}
+
+export class JwtApiAuth {
+  #apiKey: string;
+  #apiSecret: string;
+  #apiJwtExpiresIn: number;
+
+  constructor({
+    apiKey,
+    apiSecret,
+    apiJwtExpiresIn = 60 * 5, // 5 minutes
+  }: {apiKey: string, apiSecret: string, apiJwtExpiresIn?: number}) {
+    this.#apiKey = apiKey;
+    this.#apiSecret = apiSecret;
+    this.#apiJwtExpiresIn = apiJwtExpiresIn;
+  }
+
+  async signJWT(): Promise<string> {
+    return new SignJWT({ iss: this.#apiKey })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      // jose expects either:
+      // a number, which is treated an absolute timestamp - so must be after now, or
+      // a string, which is parsed as a relative time from now.
+      .setExpirationTime(`${this.#apiJwtExpiresIn}seconds`)
+      .sign(Uint8Array.from(Buffer.from(this.#apiSecret, 'utf8')));
+  }
+
+  async getAuthHeader(): Promise<string> {
+    const authToken = await this.signJWT();
+    return `JWT ${authToken}`;
+  }
+}
+
 type ClientConstructorParams = {|
-  apiKey: string,
-  apiSecret: string,
-  apiHost: string,
-  apiJwtExpiresIn?: number,
+  apiAuth: ApiAuth,
+  baseUrl: URL,
   validationCheckInterval?: number,
   validationCheckTimeout?: number,
   approvalCheckInterval?: number,
@@ -29,10 +63,8 @@ type ClientConstructorParams = {|
 |};
 
 export default class Client {
-  apiKey: string;
-  apiSecret: string;
+  apiAuth: ApiAuth;
   apiUrl: URL;
-  apiJwtExpiresIn: number;
   validationCheckInterval: number;
   validationCheckTimeout: number;
   approvalCheckInterval: number;
@@ -40,20 +72,16 @@ export default class Client {
   downloadDir: string;
 
   constructor({
-    apiKey,
-    apiSecret,
-    apiHost,
-    apiJwtExpiresIn = 60 * 5, // 5 minutes
+    apiAuth,
+    baseUrl,
     validationCheckInterval = 1000,
     validationCheckTimeout = 300000, // 5 minutes.
     approvalCheckInterval = 1000,
     approvalCheckTimeout = 900000, // 15 minutes.
     downloadDir = process.cwd(),
   }: ClientConstructorParams) {
-    this.apiKey = apiKey;
-    this.apiSecret = apiSecret;
-    this.apiUrl = new URL('/api/v5/addons/', apiHost);
-    this.apiJwtExpiresIn = apiJwtExpiresIn;
+    this.apiAuth = apiAuth;
+    this.apiUrl = new URL('/addons/', baseUrl);
     this.validationCheckInterval = validationCheckInterval;
     this.validationCheckTimeout = validationCheckTimeout;
     this.approvalCheckInterval = approvalCheckInterval;
@@ -209,27 +237,14 @@ export default class Client {
     return data;
   }
 
-  async signJWT(): Promise<string> {
-    return new SignJWT({ iss: this.apiKey })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      // jose expects either:
-      // a number, which is treated an absolute timestamp - so must be after now, or
-      // a string, which is parsed as a relative time from now.
-      .setExpirationTime(`${this.apiJwtExpiresIn}seconds`)
-      .sign(Uint8Array.from(Buffer.from(this.apiSecret, 'utf8')));
-  }
-
   async fetch(
     url: URL,
     method: string = 'GET',
     body?: typeof FormData | string,
   ): Promise<typeof Response> {
-    const authToken = await this.signJWT();
-
     log.info(`Fetching URL: ${url.href}`);
     let headers = {
-      Authorization: `JWT ${authToken}`,
+      Authorization: await this.apiAuth.getAuthHeader(),
       Accept: 'application/json',
     };
     if (typeof body === 'string') {
@@ -311,7 +326,7 @@ export default class Client {
 type signAddonParams = {|
   apiKey: string,
   apiSecret: string,
-  apiHost: string,
+  amoBaseUrl: string,
   timeout: number,
   id?: string,
   xpiPath: string,
@@ -319,12 +334,13 @@ type signAddonParams = {|
   channel: string,
   metaDataJson?: Object,
   SubmitClient?: typeof Client,
+  ApiAuthClass?: typeof JwtApiAuth,
 |}
 
 export async function signAddon({
   apiKey,
   apiSecret,
-  apiHost,
+  amoBaseUrl,
   timeout,
   id,
   xpiPath,
@@ -332,6 +348,7 @@ export async function signAddon({
   channel,
   metaDataJson = {},
   SubmitClient = Client,
+  ApiAuthClass = JwtApiAuth,
 }: signAddonParams): Promise<SignResult> {
   try {
     const stats = await fsPromises.stat(xpiPath);
@@ -343,10 +360,16 @@ export async function signAddon({
     throw new Error(`error with ${xpiPath}: ${statError}`);
   }
 
+  let baseUrl;
+  try {
+    baseUrl = new URL(amoBaseUrl);
+  } catch (err) {
+    throw new Error(`Invalid AMO API base URL: ${amoBaseUrl}`);
+  }
+
   const client = new SubmitClient({
-    apiKey,
-    apiSecret,
-    apiHost,
+    apiAuth: new ApiAuthClass({ apiKey, apiSecret }),
+    baseUrl,
     validationCheckTimeout: timeout,
     approvalCheckTimeout: timeout,
     downloadDir,

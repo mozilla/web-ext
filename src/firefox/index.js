@@ -90,6 +90,7 @@ export type FirefoxRunOptions = {
   binaryArgs?: Array<string>,
   args?: Array<any>,
   extensions: Array<Extension>,
+  devtools: boolean,
 };
 
 /*
@@ -103,6 +104,7 @@ export async function run(
     firefoxBinary,
     binaryArgs,
     extensions,
+    devtools,
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxInfo> {
 
@@ -164,9 +166,13 @@ export async function run(
     throw error;
   });
 
-  log.info(
-    'Use --verbose or open Tools > Web Developer > Browser Console ' +
-    'to see logging');
+  if (!devtools) {
+    log.info('Use --verbose or --devtools to see logging');
+  }
+  if (devtools) {
+    log.info('More info about WebExtensions debugging:');
+    log.info('https://extensionworkshop.com/documentation/develop/debugging/');
+  }
 
   firefox.stderr.on('data', (data) => {
     log.debug(`Firefox stderr: ${data.toString().trim()}`);

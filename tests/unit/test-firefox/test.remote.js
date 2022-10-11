@@ -297,11 +297,11 @@ describe('firefox.remote', () => {
         const addonsActor = 'addons1.actor.conn';
         const addonPath = '/path/to/addon';
 
-        client.request.withArgs({
+        client.request.withArgs(sinon.match({
           type: 'installTemporaryAddon',
           to: addonsActor,
           addonPath,
-        }).resolves({
+        })).resolves({
           addon: {id: 'abc123@temporary-addon'},
         });
 

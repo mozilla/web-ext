@@ -26,7 +26,7 @@ describe('sign', () => {
 
   function getStubs() {
     const signingConfig = {
-      apiHost: 'http://not-the-real-amo.com',
+      amoBaseUrl: 'http://not-the-real-amo.com/api/v5',
       apiKey: 'AMO JWT issuer',
       apiSecret: 'AMO JWT secret',
       apiUrlPrefix: 'http://not-the-real-amo.com/api/v4',
@@ -126,8 +126,11 @@ describe('sign', () => {
           assert.equal(result.id, stubs.signingResult.id);
           // Do a sanity check that a built extension was passed to the
           // signer.
-          assert.include(stubs.submitAddon.firstCall.args[0].xpiPath,
-                         'minimal_extension-1.0.zip');
+          const submitAddonCall = stubs.submitAddon.firstCall.args[0];
+          assert.include(submitAddonCall.xpiPath, 'minimal_extension-1.0.zip');
+          assert.include(
+            submitAddonCall.amoBaseUrl, stubs.signingConfig.amoBaseUrl
+          );
         });
     }
   ));
@@ -147,32 +150,6 @@ describe('sign', () => {
           sinon.assert.calledWithMatch(
             stubs.signAddon,
             {id: getManifestId(manifestWithoutApps)}
-          );
-        });
-    }
-  ));
-
-  it('trims trailing "/" from apiHost', () => withTempDir(
-    (tmpDir) => {
-      const stubs = getStubs();
-      const apiHost = stubs.signingConfig.apiHost;
-      return sign(
-        tmpDir, stubs,
-        {
-          extraArgs: {
-            apiHost: `${apiHost}/`,
-            useSubmissionApi: true,
-            channel: 'unlisted',
-          },
-          extraOptions: {
-            preValidatedManifest: manifestWithoutApps,
-          },
-        })
-        .then(() => {
-          sinon.assert.called(stubs.submitAddon);
-          sinon.assert.calledWithMatch(
-            stubs.submitAddon,
-            {apiHost}
           );
         });
     }

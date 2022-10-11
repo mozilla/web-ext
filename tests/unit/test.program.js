@@ -552,6 +552,21 @@ describe('program.main', () => {
       });
   });
 
+  it('opens devtools when --devtools is specified', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return execProgram(
+      ['run', '--devtools'],
+      {commands: fakeCommands})
+      .then(() => {
+        sinon.assert.calledWithMatch(
+          fakeCommands.run,
+          {devtools: true}
+        );
+      });
+  });
+
   async function testWatchFileOption(watchFile) {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),

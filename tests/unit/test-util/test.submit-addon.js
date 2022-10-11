@@ -8,7 +8,10 @@ import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
 import { File, FormData, Response } from 'node-fetch';
 
-import Client, { signAddon } from '../../../src/util/submit-addon.js';
+import Client, {
+  JwtApiAuth,
+  signAddon,
+} from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
 
 class JSONResponse extends Response {
@@ -67,7 +70,7 @@ describe('util.submit-addon', () => {
     const signAddonDefaults = {
       apiKey: 'some-key',
       apiSecret: 'ffff',
-      apiHost: 'https://some.url',
+      amoBaseUrl: 'https://some.url/api/v5',
       timeout: 1,
       downloadDir: '/some-dir/',
       xpiPath: '/some.xpi',
@@ -77,25 +80,34 @@ describe('util.submit-addon', () => {
     it('creates Client with parameters', async () => {
       const apiKey = 'fooKey';
       const apiSecret = '4321';
-      const apiHost = 'https://foo.host';
+      const amoBaseUrl = 'https://foo.host/api/v5';
+      const baseUrl = new URL(amoBaseUrl);
       const downloadDir = '/foo';
       const clientSpy = sinon.spy(Client);
+      const apiAuthSpy = sinon.spy(JwtApiAuth);
 
       await signAddon({
         ...signAddonDefaults,
         apiKey,
         apiSecret,
-        apiHost,
+        amoBaseUrl,
         downloadDir,
         SubmitClient: clientSpy,
+        ApiAuthClass: apiAuthSpy,
       });
 
+      sinon.assert.calledOnce(apiAuthSpy);
+      assert.deepEqual(
+        apiAuthSpy.firstCall.args[0], {
+          apiKey,
+          apiSecret,
+        }
+      );
       sinon.assert.calledOnce(clientSpy);
       assert.deepEqual(
         clientSpy.firstCall.args[0], {
-          apiKey,
-          apiSecret,
-          apiHost,
+          apiAuth: {},
+          baseUrl,
           validationCheckTimeout: signAddonDefaults.timeout,
           approvalCheckTimeout: signAddonDefaults.timeout,
           downloadDir,
@@ -138,6 +150,15 @@ describe('util.submit-addon', () => {
         'Error: ENOENT: no such file or directory'
       );
     });
+    
+    it('throws error if amoBaseUrl is an invalid URL', async () => {
+      const amoBaseUrl = 'badUrl';
+      const signAddonPromise = signAddon({...signAddonDefaults, amoBaseUrl});
+      await assert.isRejected(
+        signAddonPromise,
+        `Invalid AMO API base URL: ${amoBaseUrl}`
+      );
+    });
 
     it('passes through metadata json object if defined', async () => {
       const metaDataJson = {version: {license: 'MPL2.0'}};
@@ -156,14 +177,14 @@ describe('util.submit-addon', () => {
   });
 
   describe('Client', () => {
-    const apiHost = 'http://not-a-real-amo-api.com';
-    const apiPath = '/api/v5';
-    const apiHostPath = `${apiHost}${apiPath}`;
+    const baseUrl = new URL('http://not-a-real-amo-api.com/api/v5');
 
+    const apiAuth = new JwtApiAuth(
+      {apiKey: 'fake-api-key', apiSecret: '1234abcd'}
+    );
     const clientDefaults = {
-      apiKey: 'fake-api-key',
-      apiSecret: '1234abcd',
-      apiHost,
+      apiAuth,
+      baseUrl,
       approvalCheckInterval: 0,
       validationCheckInterval: 0,
     };
@@ -203,14 +224,22 @@ describe('util.submit-addon', () => {
       status: 'unreviewed',
     };
 
+    const getAuthHeaderSpy = sinon.spy(apiAuth, 'getAuthHeader');
+
+    afterEach(() => {
+      getAuthHeaderSpy.resetHistory();
+    });
+
     describe('doUploadSubmit', () => {
       it('submits the xpi', async () => {
         const client = new Client(clientDefaults);
         sinon.stub(client, 'fileFromSync')
           .returns(new File([], 'foo.xpi'));
+
+        const nodeFetchStub = sinon.stub(client, 'nodeFetch');
         mockNodeFetch(
-          sinon.stub(client, 'nodeFetch'),
-          `${apiHostPath}/addons/upload/`,
+          nodeFetchStub,
+          new URL('/addons/upload/', baseUrl),
           'POST',
           [
             {
@@ -228,6 +257,20 @@ describe('util.submit-addon', () => {
         const returnUuid = await client.doUploadSubmit(xpiPath, channel);
         assert.equal(sampleUploadDetail.uuid, returnUuid);
         sinon.assert.calledWith(waitStub, sampleUploadDetail.uuid);
+
+        // Verify the jwt Authorization header are included in the response.
+        sinon.assert.calledOnce(getAuthHeaderSpy);
+        const authHeaderValue = await getAuthHeaderSpy.getCall(0).returnValue;
+        assert.match(authHeaderValue, /^JWT .*/);
+        sinon.assert.calledOnceWithMatch(
+          nodeFetchStub,
+          sinon.match.instanceOf(URL),
+          sinon.match({
+            headers: {
+              Authorization: authHeaderValue,
+            },
+          })
+        );
       });
     });
 
@@ -242,7 +285,7 @@ describe('util.submit-addon', () => {
         const uploadUuid = '@some-guid';
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             {
@@ -265,7 +308,7 @@ describe('util.submit-addon', () => {
         const uploadUuid = '@some-guid';
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             { body: {}, status: 200 },
@@ -288,10 +331,10 @@ describe('util.submit-addon', () => {
           validationCheckInterval: 1,
         });
         const uploadUuid = '@some-guid';
-        const validationUrl = `${apiHost}/to/validation/report`;
+        const validationUrl = new URL('/to/validation/report', baseUrl);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             { body: {}, status: 200 },
@@ -314,7 +357,7 @@ describe('util.submit-addon', () => {
         const client = new Client(clientDefaults);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          `${apiHostPath}/addons/addon/`,
+          new URL('/addons/addon/', baseUrl),
           'POST',
           [
             { body: sampleAddonDetail, status: 202 },
@@ -355,7 +398,7 @@ describe('util.submit-addon', () => {
         const guid = '@some-addon-guid';
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          `${apiHostPath}/addons/addon/${guid}/`,
+          new URL(`/addons/addon/${guid}/`, baseUrl),
           'POST',
           [
             { body: sampleAddonDetail, status: 202 },
@@ -400,11 +443,11 @@ describe('util.submit-addon', () => {
         });
         const addonId = '@random-addon';
         const versionId = 0;
-        const detailPath =
-          `${apiPath}/addons/addon/${addonId}/versions/${versionId}/`;
+        const detailUrl =
+          new URL(`/addons/addon/${addonId}/versions/${versionId}/`, baseUrl);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          `${apiHost}${detailPath}`,
+          detailUrl,
           'GET',
           [{ body: {}, status: 200 }]
         );
@@ -420,12 +463,12 @@ describe('util.submit-addon', () => {
         });
         const addonId = '@random-addon';
         const versionId = 0;
-        const detailPath =
-          `${apiPath}/addons/addon/${addonId}/versions/${versionId}/`;
-        const url = `${apiHost}file/download/url`;
+        const detailUrl =
+          new URL(`/addons/addon/${addonId}/versions/${versionId}/`, baseUrl);
+        const url = new URL('/file/download/url', baseUrl);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          `${apiHost}${detailPath}`,
+          detailUrl,
           'GET',
           [
             { body: {}, status: 200 },
@@ -441,7 +484,7 @@ describe('util.submit-addon', () => {
     describe('downloadSignedFile', () => {
       const filename = 'download.xpi';
       const filePath = `/path/to/${filename}`;
-      const fileUrl = new URL(filePath, apiHost);
+      const fileUrl = new URL(filePath, baseUrl);
       const addonId = '@some-addon-id';
 
       it('downloads the file to tmpdir', () => withTempDir(async (tmpDir) => {
@@ -535,13 +578,13 @@ describe('util.submit-addon', () => {
       const addUploadMocks = () => {
         mockNodeFetch(
           nodeFetchStub,
-          `${apiHostPath}/addons/upload/`,
+          new URL('/addons/upload/', baseUrl),
           'POST',
           [{ body: sampleUploadDetail, status: 200 }]
         );
         mockNodeFetch(
           nodeFetchStub,
-          `${apiHostPath}/addons/upload/${uploadUuid}/`,
+          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             {
@@ -553,10 +596,10 @@ describe('util.submit-addon', () => {
       };
 
       const addApprovalMocks = (versionId) => {
-        const url = `${apiHost}${downloadPath}`;
+        const url = (new URL(downloadPath, baseUrl).toString());
         mockNodeFetch(
           nodeFetchStub,
-          `${apiHostPath}/addons/addon/${addonId}/versions/${versionId}/`,
+          new URL(`/addons/addon/${addonId}/versions/${versionId}/`, baseUrl),
           'GET',
           [
             {
@@ -581,7 +624,7 @@ describe('util.submit-addon', () => {
           addUploadMocks();
           mockNodeFetch(
             nodeFetchStub,
-            `${apiHostPath}/addons/addon/`,
+            new URL('/addons/addon/', baseUrl),
             'POST',
             [{ body: sampleAddonDetail, status: 200 }]
           );
@@ -598,13 +641,13 @@ describe('util.submit-addon', () => {
 
         mockNodeFetch(
           nodeFetchStub,
-          `${apiHostPath}/addons/addon/${addonId}/`,
+          new URL(`/addons/addon/${addonId}/`, baseUrl),
           'PUT',
           [{ body: sampleAddonDetail, status: 200 }]
         );
         mockNodeFetch(
           nodeFetchStub,
-          `${apiHostPath}/addons/addon/${addonId}/versions/${query}`,
+          new URL(`/addons/addon/${addonId}/versions/${query}`, baseUrl),
           'GET',
           [
             {
@@ -623,7 +666,6 @@ describe('util.submit-addon', () => {
     describe('fetchJson', () => {
       const client = new Client(clientDefaults);
       const nodeFetchStub = sinon.stub(client, 'nodeFetch');
-      const urlToFetch = new URL(apiHost);
 
       afterEach(() => {
         nodeFetchStub.reset();
@@ -632,33 +674,33 @@ describe('util.submit-addon', () => {
       it('rejects with a promise on not ok responses', async () => {
         mockNodeFetch(
           nodeFetchStub,
-          urlToFetch,
+          baseUrl,
           'GET',
           [{ body: {}, status: 400 }]
         );
-        const clientPromise = client.fetchJson(urlToFetch);
+        const clientPromise = client.fetchJson(baseUrl);
         await assert.isRejected(clientPromise, 'Bad Request: 400.');
       });
 
       it('rejects with a promise on < 100 responses', async () => {
         mockNodeFetch(
           nodeFetchStub,
-          urlToFetch,
+          baseUrl,
           'GET',
           [{ body: {}, status: 99 }]
         );
-        const clientPromise = client.fetchJson(urlToFetch);
+        const clientPromise = client.fetchJson(baseUrl);
         await assert.isRejected(clientPromise, 'Bad Request: 99.');
       });
 
       it('rejects with a promise on >= 500 responses', async () => {
         mockNodeFetch(
           nodeFetchStub,
-          urlToFetch,
+          baseUrl,
           'GET',
           [{ body: {}, status: 500 }]
         );
-        const clientPromise = client.fetchJson(urlToFetch);
+        const clientPromise = client.fetchJson(baseUrl);
         await assert.isRejected(clientPromise, 'Bad Request: 500.');
       });
 
@@ -666,11 +708,11 @@ describe('util.submit-addon', () => {
         const resJson = {thing: ['other'], this: {that: 1}};
         mockNodeFetch(
           nodeFetchStub,
-          urlToFetch,
+          baseUrl,
           'GET',
           [{ body: resJson, status: 200 }]
         );
-        const responseJson = await client.fetchJson(urlToFetch);
+        const responseJson = await client.fetchJson(baseUrl);
         expect(responseJson).to.eql(resJson);
       });
     });
@@ -678,7 +720,6 @@ describe('util.submit-addon', () => {
     describe('fetch', () => {
       const client = new Client(clientDefaults);
       let nodeFetchStub;
-      const urlToFetch = new URL(apiHost);
 
       beforeEach(() => {
         nodeFetchStub = sinon.stub(client, 'nodeFetch');
@@ -691,7 +732,7 @@ describe('util.submit-addon', () => {
       it('sets json content type for string type body', async () => {
         nodeFetchStub.resolves(new JSONResponse({}, 200));
 
-        await client.fetch(urlToFetch, 'POST', 'body');
+        await client.fetch(baseUrl, 'POST', 'body');
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
@@ -703,7 +744,7 @@ describe('util.submit-addon', () => {
       it("doesn't set content type for FormData type body", async () => {
         nodeFetchStub.resolves(new JSONResponse({}, 200));
 
-        await client.fetch(urlToFetch, 'POST', new FormData());
+        await client.fetch(baseUrl, 'POST', new FormData());
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
@@ -715,7 +756,7 @@ describe('util.submit-addon', () => {
       it("doesn't set content type for no body", async () => {
         nodeFetchStub.resolves(new JSONResponse({}, 200));
 
-        await client.fetch(urlToFetch, 'POST');
+        await client.fetch(baseUrl, 'POST');
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],

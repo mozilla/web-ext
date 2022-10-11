@@ -149,7 +149,7 @@ webExt.cmd.run({
 If you would like to run an extension on Firefox for Android:
 
 ```js
-import adbUtils from "web-ext/util/adb";
+import * as adbUtils from "web-ext/util/adb";
 
 // Path to adb binary (optional parameter, auto-detected if missing)
 const adbBin = "/path/to/adb";
@@ -173,7 +173,7 @@ webExt.cmd.run({
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
 
 ```js
-import webExtLogger from "web-ext/util/logger";
+import * as webExtLogger from "web-ext/util/logger";
 
 webExtLogger.consoleStream.makeVerbose();
 webExt.cmd.run({sourceDir: './src'}, {shouldExitProgram: false});

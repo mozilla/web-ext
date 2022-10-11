@@ -425,6 +425,15 @@ export async function main(
   const program = new Program(argv, {absolutePackageDir});
   const version = await getVersion(absolutePackageDir);
 
+  // This is an option shared by some commands but not all of them, hence why
+  // it isn't a global option.
+  const firefoxPreviewOption = {
+    describe: 'Turn on developer preview features in Firefox' +
+    ' (defaults to "mv3")',
+    demandOption: false,
+    type: 'array',
+  };
+
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.
@@ -543,9 +552,10 @@ Example: $0 --help run.
       'sign',
       'Sign the extension so it can be installed in Firefox',
       commands.sign, {
-        'api-host': {
-          describe: 'Signing API host - only used with `use-submission-api`',
-          default: 'https://addons.mozilla.org',
+        'amo-base-url': {
+          describe:
+            'Signing API URL prefix - only used with `use-submission-api`',
+          default: 'https://addons.mozilla.org/api/v5',
           demandOption: true,
           type: 'string',
         },
@@ -704,6 +714,12 @@ Example: $0 --help run.
         demandOption: false,
         type: 'array',
       },
+      'devtools': {
+        describe: 'Open the DevTools for the installed add-on ' +
+                  '(Firefox 106 and later)',
+        demandOption: false,
+        type: 'boolean',
+      },
       'browser-console': {
         alias: ['bc'],
         describe: 'Open the DevTools Browser Console.',
@@ -716,12 +732,7 @@ Example: $0 --help run.
         demandOption: false,
         type: 'array',
       },
-      'firefox-preview': {
-        describe: 'Turn on developer preview features in Firefox' +
-          ' (defaults to "mv3")',
-        demandOption: false,
-        type: 'array',
-      },
+      'firefox-preview': firefoxPreviewOption,
       // Firefox for Android CLI options.
       'adb-bin': {
         describe: 'Specify a custom path to the adb binary',
@@ -817,6 +828,7 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
+      'firefox-preview': firefoxPreviewOption,
     })
     .command('docs', 'Open the web-ext documentation in a browser',
              commands.docs, {});

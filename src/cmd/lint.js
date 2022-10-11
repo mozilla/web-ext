@@ -22,6 +22,8 @@ export type LinterCreatorParams = {|
     pretty?: boolean,
     warningsAsErrors?: boolean,
     metadata?: boolean,
+    minManifestVersion?: number,
+    maxManifestVersion?: number,
     output?: LinterOutputType,
     privileged?: boolean,
     boring?: boolean,
@@ -44,6 +46,7 @@ export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
 export type LintCmdParams = {|
   artifactsDir?: string,
   boring?: boolean,
+  firefoxPreview: Array<string>,
   ignoreFiles?: Array<string>,
   metadata?: boolean,
   output?: LinterOutputType,
@@ -65,6 +68,7 @@ export default function lint(
   {
     artifactsDir,
     boring,
+    firefoxPreview = [],
     ignoreFiles,
     metadata,
     output,
@@ -83,24 +87,29 @@ export default function lint(
 ): Promise<void> {
   const fileFilter = createFileFilter({sourceDir, ignoreFiles, artifactsDir});
 
+  const config = {
+    logLevel: verbose ? 'debug' : 'fatal',
+    stack: Boolean(verbose),
+    pretty,
+    privileged,
+    warningsAsErrors,
+    metadata,
+    output,
+    boring,
+    selfHosted,
+    shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
+    minManifestVersion: 2,
+    maxManifestVersion: 2,
+    // This mimics the first command line argument from yargs, which should be
+    // the directory to the extension.
+    _: [sourceDir],
+  };
+
+  if (firefoxPreview.includes('mv3')) {
+    config.maxManifestVersion = 3;
+  }
+
   log.debug(`Running addons-linter on ${sourceDir}`);
-  const linter = createLinter({
-    config: {
-      logLevel: verbose ? 'debug' : 'fatal',
-      stack: Boolean(verbose),
-      pretty,
-      privileged,
-      warningsAsErrors,
-      metadata,
-      output,
-      boring,
-      selfHosted,
-      shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
-      // This mimics the first command line argument from yargs,
-      // which should be the directory to the extension.
-      _: [sourceDir],
-    },
-    runAsBinary: shouldExitProgram,
-  });
+  const linter = createLinter({ config, runAsBinary: shouldExitProgram });
   return linter.run();
 }
