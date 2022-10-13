@@ -39,6 +39,7 @@ export type SignParams = {|
   timeout: number,
   verbose?: boolean,
   channel?: string,
+  amoMetadata?: string,
 |};
 
 export type SignOptions = {
@@ -47,6 +48,7 @@ export type SignOptions = {
   submitAddon?: typeof defaultSubmitAddonSigner,
   preValidatedManifest?: ExtensionManifest,
   shouldExitProgram?: boolean,
+  asyncFsReadFile?: typeof defaultAsyncFsReadFile,
 };
 
 export default function sign(
@@ -64,12 +66,14 @@ export default function sign(
     timeout,
     verbose,
     channel,
+    amoMetadata,
   }: SignParams,
   {
     build = defaultBuilder,
     preValidatedManifest,
     signAddon = defaultAddonSigner,
     submitAddon = defaultSubmitAddonSigner,
+    asyncFsReadFile = defaultAsyncFsReadFile,
   }: SignOptions = {}
 ): Promise<SignResult> {
   return withTempDir(
@@ -142,6 +146,16 @@ export default function sign(
         );
       }
 
+      let metaDataJson;
+      if (amoMetadata) {
+        const metadataFileBuffer = await asyncFsReadFile(amoMetadata);
+        try {
+          metaDataJson = JSON.parse(metadataFileBuffer.toString());
+        } catch (err) {
+          throw new UsageError('Invalid JSON in listing metadata');
+        }
+      }
+
       const signSubmitArgs = {
         apiKey,
         apiSecret,
@@ -155,8 +169,10 @@ export default function sign(
       let result;
       try {
         if (useSubmissionApi) {
-          // $FlowIgnore: we verify 'channel' is set above
-          result = await submitAddon({...signSubmitArgs, amoBaseUrl, channel});
+          result = await submitAddon(
+            // $FlowIgnore: we verify 'channel' is set above
+            {...signSubmitArgs, amoBaseUrl, channel, metaDataJson}
+          );
         } else {
           const { success, id: newId, downloadedFiles } = await signAddon({
             ...signSubmitArgs,
