@@ -286,7 +286,9 @@ export default class Client {
   async postNewAddon(
     xpiPath: string,
     channel: string,
-    metaDataJson: Object
+    savedIdPath: string,
+    metaDataJson: Object,
+    saveIdToFileFunc: (string, string) => Promise<void> = saveIdToFile,
   ): Promise<SignResult> {
     const uploadUuid = await this.doUploadSubmit(xpiPath, channel);
 
@@ -296,6 +298,11 @@ export default class Client {
       guid: addonId,
       [versionObject]: {id: newVersionId},
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
+
+    await saveIdToFileFunc(savedIdPath, addonId);
+    log.info(`Generated extension ID: ${addonId}.`);
+    log.info('You must add the following to your manifest:');
+    log.info(`"browser_specific_settings": {"gecko": "${addonId}"}`);
 
     const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
 
@@ -332,6 +339,7 @@ type signAddonParams = {|
   xpiPath: string,
   downloadDir: string,
   channel: string,
+  savedIdPath: string,
   metaDataJson?: Object,
   SubmitClient?: typeof Client,
   ApiAuthClass?: typeof JwtApiAuth,
@@ -346,6 +354,7 @@ export async function signAddon({
   xpiPath,
   downloadDir,
   channel,
+  savedIdPath,
   metaDataJson = {},
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
@@ -378,8 +387,20 @@ export async function signAddon({
   // We specifically need to know if `id` has not been passed as a parameter because
   // it's the indication that a new add-on should be created, rather than a new version.
   if (id === undefined) {
-    return client.postNewAddon(xpiPath, channel, metaDataJson);
+    return client.postNewAddon(xpiPath, channel, savedIdPath, metaDataJson);
   }
 
   return client.putVersion(xpiPath, channel, id, metaDataJson);
+}
+
+export async function saveIdToFile(
+  filePath: string, id: string
+): Promise<void> {
+  await fsPromises.writeFile(filePath, [
+    '# This file was created by https://github.com/mozilla/web-ext',
+    '# Your auto-generated extension ID for addons.mozilla.org is:',
+    id.toString(),
+  ].join('\n'));
+
+  log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
 }
