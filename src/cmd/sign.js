@@ -194,7 +194,7 @@ export default function sign(
           }
           result = { id: newId, downloadedFiles };
           // All information about the downloaded files would have already been
-          // logged by signAddon(). submitAddon() calls saveIdToSourceDir itself.
+          // logged by signAddon(). submitAddon() calls saveIdToFile itself.
           await saveIdToFile(savedIdPath, newId);
           log.info(`Extension ID: ${newId}`);
           log.info('SUCCESS');
