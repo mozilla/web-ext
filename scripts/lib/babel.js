@@ -1,7 +1,7 @@
-import {spawnSync} from 'child_process';
+import { spawnSync } from 'child_process';
 
 import shell from 'shelljs';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 export function isBuilt() {
   const isJS = (name) => name.endsWith('.js');
@@ -17,15 +17,12 @@ export function isBuilt() {
 
     console.log(
       'Missing build files in lib:',
-      err.expected.reduce(
-        (result, filename) => {
-          if (!err.actual.includes(filename)) {
-            result += `\n- lib/${filename}`;
-          }
-          return result;
-        },
-        ''
-      ),
+      err.expected.reduce((result, filename) => {
+        if (!err.actual.includes(filename)) {
+          result += `\n- lib/${filename}`;
+        }
+        return result;
+      }, ''),
       '\n'
     );
 
@@ -36,10 +33,14 @@ export function isBuilt() {
 }
 
 export default () => {
-  const res = spawnSync('babel', ['--source-maps', 'true', 'src/', '-d', 'lib/'], {
-    stdio: 'inherit',
-    shell: true,
-  });
+  const res = spawnSync(
+    'babel',
+    ['--source-maps', 'true', 'src/', '-d', 'lib/'],
+    {
+      stdio: 'inherit',
+      shell: true,
+    }
+  );
   if (res.error) {
     console.error(res.error);
     return false;

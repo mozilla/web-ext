@@ -2,9 +2,9 @@
 // Load the TCP Library
 import net from 'net';
 
-const REPLY_INITIAL = {from: 'root'};
-const REQUEST_ACTORS = {to: 'root', type: 'getRoot'};
-const REPLY_ACTORS = {from: 'root', addonsActor: 'fakeAddonsActor'};
+const REPLY_INITIAL = { from: 'root' };
+const REQUEST_ACTORS = { to: 'root', type: 'getRoot' };
+const REPLY_ACTORS = { from: 'root', addonsActor: 'fakeAddonsActor' };
 const REQUEST_INSTALL_ADDON = {
   to: 'fakeAddonsActor',
   type: 'installTemporaryAddon',
@@ -36,24 +36,25 @@ function getPortFromArgs() {
 
   return parseInt(port, 10);
 }
-net.createServer(function(socket) {
-  socket.on('data', function(data) {
-    if (String(data) === toRDP(REQUEST_ACTORS)) {
-      socket.write(toRDP(REPLY_ACTORS));
-    } else if (String(data) === toRDP(REQUEST_INSTALL_ADDON)) {
-      socket.write(toRDP(REPLY_INSTALL_ADDON));
+net
+  .createServer(function (socket) {
+    socket.on('data', function (data) {
+      if (String(data) === toRDP(REQUEST_ACTORS)) {
+        socket.write(toRDP(REPLY_ACTORS));
+      } else if (String(data) === toRDP(REQUEST_INSTALL_ADDON)) {
+        socket.write(toRDP(REPLY_INSTALL_ADDON));
 
-      process.stderr.write(`${process.env.EXPECTED_MESSAGE}\n`);
+        process.stderr.write(`${process.env.EXPECTED_MESSAGE}\n`);
 
-      process.exit(0);
-    } else {
+        process.exit(0);
+      } else {
+        process.stderr.write(
+          `Fake Firefox received an unexpected message: ${String(data)}\n`
+        );
+        process.exit(1);
+      }
+    });
 
-      process.stderr.write(
-        `Fake Firefox received an unexpected message: ${String(data)}\n`
-      );
-      process.exit(1);
-    }
-  });
-
-  socket.write(toRDP(REPLY_INITIAL));
-}).listen(getPortFromArgs(), '127.0.0.1');
+    socket.write(toRDP(REPLY_INITIAL));
+  })
+  .listen(getPortFromArgs(), '127.0.0.1');

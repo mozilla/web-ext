@@ -1,4 +1,4 @@
-import {spawnSync} from 'child_process';
+import { spawnSync } from 'child_process';
 
 import config from './config.js';
 

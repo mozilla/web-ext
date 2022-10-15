@@ -1,8 +1,8 @@
 /* @flow */
 import stream from 'stream';
 
-import {describe, it} from 'mocha';
-import {assert} from 'chai';
+import { describe, it } from 'mocha';
+import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import {
@@ -11,19 +11,18 @@ import {
   defaultReloadStrategy,
   MultiExtensionRunner,
 } from '../../../src/extension-runners/index.js';
-import {
-  createFakeStdin,
-  FakeExtensionRunner,
-} from '../helpers.js';
+import { createFakeStdin, FakeExtensionRunner } from '../helpers.js';
 import type {
   IExtensionRunner, // eslint-disable-line import/named
 } from '../../../src/extension-runners/base';
 
-function createFakeExtensionRunner(
-  {
-    params = {}, overriddenMethods = {},
-  }: {params?: Object, overriddenMethods?: Object}
-): IExtensionRunner {
+function createFakeExtensionRunner({
+  params = {},
+  overriddenMethods = {},
+}: {
+  params?: Object,
+  overriddenMethods?: Object,
+}): IExtensionRunner {
   const runner = new FakeExtensionRunner(params);
 
   for (const [fnName, fn] of Object.entries(overriddenMethods)) {
@@ -45,16 +44,18 @@ function exitKeypressLoop(stdin) {
   try {
     // Ensure that the keypress processing loop (defined in defaultReloadStrategy)
     // is exited.
-    stdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+    stdin.emit('keypress', 'c', { name: 'c', ctrl: true });
   } catch (error) {
     // NOTE: exceptions raised by this helper are logged on the console
     // and ignored (so that we don't hide an exception raised by a try block
     // if this helper is used in a finally block).
 
     // eslint-disable-next-line no-console
-    console.error('ERROR in exitKeypressLoop test helper - ' +
-                  'Unexpected exception while exiting the keypress loop',
-                  error);
+    console.error(
+      'ERROR in exitKeypressLoop test helper - ' +
+        'Unexpected exception while exiting the keypress loop',
+      error
+    );
   }
 }
 
@@ -68,91 +69,78 @@ describe('util/extension-runners', () => {
   });
 
   describe('MultiExtensionRunner', () => {
+    it('calls the "run" method on all the created IExtensionRunner', async () => {
+      const params = prepareExtensionRunnerParams();
+      const [fakeExtensionRunner, anotherFakeExtensionRunner] = params.runners;
 
-    it('calls the "run" method on all the created IExtensionRunner',
-       async () => {
-         const params = prepareExtensionRunnerParams();
-         const [
-           fakeExtensionRunner, anotherFakeExtensionRunner,
-         ] = params.runners;
+      sinon.spy(fakeExtensionRunner, 'run');
+      sinon.spy(anotherFakeExtensionRunner, 'run');
 
-         sinon.spy(fakeExtensionRunner, 'run');
-         sinon.spy(anotherFakeExtensionRunner, 'run');
+      const runnerInstance = new MultiExtensionRunner(params);
 
-         const runnerInstance = new MultiExtensionRunner(params);
+      assert.equal(runnerInstance.getName(), 'Multi Extension Runner');
 
-         assert.equal(runnerInstance.getName(), 'Multi Extension Runner');
+      await runnerInstance.run();
 
-         await runnerInstance.run();
+      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+      sinon.assert.calledOnce(fakeExtensionRunner.run);
+      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+      sinon.assert.calledOnce(anotherFakeExtensionRunner.run);
+    });
 
-         // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-         sinon.assert.calledOnce(fakeExtensionRunner.run);
-         // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-         sinon.assert.calledOnce(anotherFakeExtensionRunner.run);
-       });
+    it('calls the "reloadAllExtensions" on all the created runners', async () => {
+      const params = prepareExtensionRunnerParams();
+      const [fakeExtensionRunner, anotherFakeExtensionRunner] = params.runners;
 
-    it('calls the "reloadAllExtensions" on all the created runners',
-       async () => {
-         const params = prepareExtensionRunnerParams();
-         const [
-           fakeExtensionRunner, anotherFakeExtensionRunner,
-         ] = params.runners;
+      sinon.spy(fakeExtensionRunner, 'reloadAllExtensions');
+      sinon.spy(anotherFakeExtensionRunner, 'reloadAllExtensions');
 
-         sinon.spy(fakeExtensionRunner, 'reloadAllExtensions');
-         sinon.spy(anotherFakeExtensionRunner, 'reloadAllExtensions');
+      const runnerInstance = new MultiExtensionRunner(params);
 
-         const runnerInstance = new MultiExtensionRunner(params);
+      await runnerInstance.reloadAllExtensions();
 
-         await runnerInstance.reloadAllExtensions();
+      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+      sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
+      sinon.assert.calledOnce(
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        anotherFakeExtensionRunner.reloadAllExtensions
+      );
+    });
 
-         // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-         sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
-         sinon.assert.calledOnce(
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           anotherFakeExtensionRunner.reloadAllExtensions);
-       });
+    it('calls the "reloadExtensionBySourceDir" on all the created runners', async () => {
+      const params = prepareExtensionRunnerParams();
+      const [fakeExtensionRunner, anotherFakeExtensionRunner] = params.runners;
 
-    it('calls the "reloadExtensionBySourceDir" on all the created runners',
-       async () => {
-         const params = prepareExtensionRunnerParams();
-         const [
-           fakeExtensionRunner, anotherFakeExtensionRunner,
-         ] = params.runners;
+      sinon.spy(fakeExtensionRunner, 'reloadExtensionBySourceDir');
+      sinon.spy(anotherFakeExtensionRunner, 'reloadExtensionBySourceDir');
 
-         sinon.spy(fakeExtensionRunner, 'reloadExtensionBySourceDir');
-         sinon.spy(anotherFakeExtensionRunner, 'reloadExtensionBySourceDir');
+      const runnerInstance = new MultiExtensionRunner(params);
 
-         const runnerInstance = new MultiExtensionRunner(params);
+      await runnerInstance.reloadExtensionBySourceDir('/fake/source/dir');
 
-         await runnerInstance.reloadExtensionBySourceDir(
-           '/fake/source/dir'
-         );
+      const spyReloadExtension =
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        fakeExtensionRunner.reloadExtensionBySourceDir;
+      const spyAnotherReloadExtension =
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        anotherFakeExtensionRunner.reloadExtensionBySourceDir;
 
-         const spyReloadExtension =
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           fakeExtensionRunner.reloadExtensionBySourceDir;
-         const spyAnotherReloadExtension =
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           anotherFakeExtensionRunner.reloadExtensionBySourceDir;
+      sinon.assert.calledOnce(spyReloadExtension);
+      sinon.assert.calledOnce(spyAnotherReloadExtension);
 
-         sinon.assert.calledOnce(spyReloadExtension);
-         sinon.assert.calledOnce(spyAnotherReloadExtension);
-
-         sinon.assert.calledWith(
-           spyReloadExtension,
-           sinon.match('/fake/source/dir')
-         );
-         sinon.assert.calledWith(
-           spyAnotherReloadExtension,
-           sinon.match('/fake/source/dir')
-         );
-       });
+      sinon.assert.calledWith(
+        spyReloadExtension,
+        sinon.match('/fake/source/dir')
+      );
+      sinon.assert.calledWith(
+        spyAnotherReloadExtension,
+        sinon.match('/fake/source/dir')
+      );
+    });
 
     it('calls exit on all the created IExtensionRunner', async () => {
       const params = prepareExtensionRunnerParams();
-      const [
-        fakeExtensionRunner, anotherFakeExtensionRunner,
-      ] = params.runners;
+      const [fakeExtensionRunner, anotherFakeExtensionRunner] = params.runners;
 
       sinon.spy(fakeExtensionRunner, 'exit');
       sinon.spy(anotherFakeExtensionRunner, 'exit');
@@ -167,149 +155,143 @@ describe('util/extension-runners', () => {
       sinon.assert.calledOnce(anotherFakeExtensionRunner.exit);
     });
 
-    it('shows a desktop notification on errors while reloading all extensions',
-       async () => {
-         const params = prepareExtensionRunnerParams();
-         const fakeExtensionRunner = createFakeExtensionRunner({
-           overriddenMethods: {
-             getName: () => 'fakeExtensionRunner',
-             reloadAllExtensions: () => {
-               return Promise.reject(new Error('reload error 1'));
-             },
-           },
-         });
-         const anotherFakeExtensionRunner = createFakeExtensionRunner({
-           getName: () => 'anotherFakeExtensionRunner',
-           overriddenMethods: {
-             reloadAllExtensions: () => {
-               return Promise.reject(new Error('reload error 2'));
-             },
-           },
-         });
+    it('shows a desktop notification on errors while reloading all extensions', async () => {
+      const params = prepareExtensionRunnerParams();
+      const fakeExtensionRunner = createFakeExtensionRunner({
+        overriddenMethods: {
+          getName: () => 'fakeExtensionRunner',
+          reloadAllExtensions: () => {
+            return Promise.reject(new Error('reload error 1'));
+          },
+        },
+      });
+      const anotherFakeExtensionRunner = createFakeExtensionRunner({
+        getName: () => 'anotherFakeExtensionRunner',
+        overriddenMethods: {
+          reloadAllExtensions: () => {
+            return Promise.reject(new Error('reload error 2'));
+          },
+        },
+      });
 
-         params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
+      params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
 
-         const runnerInstance = new MultiExtensionRunner(params);
+      const runnerInstance = new MultiExtensionRunner(params);
 
-         await runnerInstance.reloadAllExtensions();
+      await runnerInstance.reloadAllExtensions();
 
-         // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-         sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
-         sinon.assert.calledOnce(
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           anotherFakeExtensionRunner.reloadAllExtensions
-         );
-         sinon.assert.callCount(params.desktopNotifications, 2);
-         sinon.assert.calledWith(
-           params.desktopNotifications,
-           sinon.match({
-             title: sinon.match(/web-ext run: extension reload error/),
-             message: sinon.match(/on "fakeExtensionRunner" - reload error 1/),
-           })
-         );
-       });
-
-    it('shows a desktop notification on errors while reloading an extension',
-       async () => {
-         const params = prepareExtensionRunnerParams();
-         const fakeExtensionRunner = createFakeExtensionRunner({
-           overriddenMethods: {
-             getName: () => 'fakeExtensionRunner',
-             reloadExtensionBySourceDir: () => {
-               return Promise.reject(new Error('reload error 1'));
-             },
-           },
-         });
-         const anotherFakeExtensionRunner = createFakeExtensionRunner({
-           overriddenMethods: {
-             reloadExtensionBySourceDir: () => Promise.resolve(),
-             getName: () => 'anotherFakeExtensionRunner',
-           },
-         });
-
-         params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
-
-         const runnerInstance = new MultiExtensionRunner(params);
-         const sourceDir = '/fake/sourceDir';
-         const res = await runnerInstance.reloadExtensionBySourceDir(sourceDir);
-         const errors = res.filter((r) => r.reloadError);
-
-         assert.equal(res.length, 2);
-         assert.equal(errors.length, 1);
-
-         sinon.assert.calledOnce(
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           fakeExtensionRunner.reloadExtensionBySourceDir
-         );
-         sinon.assert.calledOnce(
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           anotherFakeExtensionRunner.reloadExtensionBySourceDir
-         );
-         sinon.assert.calledOnce(params.desktopNotifications);
-
-         sinon.assert.calledWith(
-           params.desktopNotifications,
-           sinon.match({
-             title: sinon.match(/web-ext run: extension reload error/),
-             message: sinon.match(
-               /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/
-             ),
-           })
-         );
-       });
-
-    describe('registerCleanup', () => {
-
-      it('calls its callbacks once all the runner callbacks have been called',
-         async () => {
-           const params = prepareExtensionRunnerParams();
-           const [
-             fakeExtensionRunner, anotherFakeExtensionRunner,
-           ] = params.runners;
-
-           sinon.spy(fakeExtensionRunner, 'registerCleanup');
-           sinon.spy(anotherFakeExtensionRunner, 'registerCleanup');
-
-           const runnerInstance = new MultiExtensionRunner(params);
-
-           const waitRegisterCleanup = new Promise((resolve) => {
-             runnerInstance.registerCleanup(resolve);
-           });
-
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           sinon.assert.calledOnce(fakeExtensionRunner.registerCleanup);
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           sinon.assert.calledOnce(anotherFakeExtensionRunner.registerCleanup);
-
-           // Call the cleanup callback on the first runner.
-           // $FlowIgnore: ignore method-unbinding, we just access the spy properties here.
-           fakeExtensionRunner.registerCleanup.firstCall.args[0]();
-
-           const checkIncompleteCleanup = await Promise.race([
-             waitRegisterCleanup,
-             new Promise((resolve) => {
-               setTimeout(() => {
-                 resolve('waitRegisterCleanup should not be resolved yet');
-               }, 300);
-             }),
-           ]);
-
-           assert.equal(checkIncompleteCleanup,
-                        'waitRegisterCleanup should not be resolved yet');
-
-           // Call the cleanup callback on the second and last runner.
-           // $FlowIgnore: ignore method-unbinding, we just access the spy properties here.
-           anotherFakeExtensionRunner.registerCleanup.firstCall.args[0]();
-
-           await waitRegisterCleanup;
-         });
-
+      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+      sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
+      sinon.assert.calledOnce(
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        anotherFakeExtensionRunner.reloadAllExtensions
+      );
+      sinon.assert.callCount(params.desktopNotifications, 2);
+      sinon.assert.calledWith(
+        params.desktopNotifications,
+        sinon.match({
+          title: sinon.match(/web-ext run: extension reload error/),
+          message: sinon.match(/on "fakeExtensionRunner" - reload error 1/),
+        })
+      );
     });
 
+    it('shows a desktop notification on errors while reloading an extension', async () => {
+      const params = prepareExtensionRunnerParams();
+      const fakeExtensionRunner = createFakeExtensionRunner({
+        overriddenMethods: {
+          getName: () => 'fakeExtensionRunner',
+          reloadExtensionBySourceDir: () => {
+            return Promise.reject(new Error('reload error 1'));
+          },
+        },
+      });
+      const anotherFakeExtensionRunner = createFakeExtensionRunner({
+        overriddenMethods: {
+          reloadExtensionBySourceDir: () => Promise.resolve(),
+          getName: () => 'anotherFakeExtensionRunner',
+        },
+      });
+
+      params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
+
+      const runnerInstance = new MultiExtensionRunner(params);
+      const sourceDir = '/fake/sourceDir';
+      const res = await runnerInstance.reloadExtensionBySourceDir(sourceDir);
+      const errors = res.filter((r) => r.reloadError);
+
+      assert.equal(res.length, 2);
+      assert.equal(errors.length, 1);
+
+      sinon.assert.calledOnce(
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        fakeExtensionRunner.reloadExtensionBySourceDir
+      );
+      sinon.assert.calledOnce(
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        anotherFakeExtensionRunner.reloadExtensionBySourceDir
+      );
+      sinon.assert.calledOnce(params.desktopNotifications);
+
+      sinon.assert.calledWith(
+        params.desktopNotifications,
+        sinon.match({
+          title: sinon.match(/web-ext run: extension reload error/),
+          message: sinon.match(
+            /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/
+          ),
+        })
+      );
+    });
+
+    describe('registerCleanup', () => {
+      it('calls its callbacks once all the runner callbacks have been called', async () => {
+        const params = prepareExtensionRunnerParams();
+        const [fakeExtensionRunner, anotherFakeExtensionRunner] =
+          params.runners;
+
+        sinon.spy(fakeExtensionRunner, 'registerCleanup');
+        sinon.spy(anotherFakeExtensionRunner, 'registerCleanup');
+
+        const runnerInstance = new MultiExtensionRunner(params);
+
+        const waitRegisterCleanup = new Promise((resolve) => {
+          runnerInstance.registerCleanup(resolve);
+        });
+
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        sinon.assert.calledOnce(fakeExtensionRunner.registerCleanup);
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        sinon.assert.calledOnce(anotherFakeExtensionRunner.registerCleanup);
+
+        // Call the cleanup callback on the first runner.
+        // $FlowIgnore: ignore method-unbinding, we just access the spy properties here.
+        fakeExtensionRunner.registerCleanup.firstCall.args[0]();
+
+        const checkIncompleteCleanup = await Promise.race([
+          waitRegisterCleanup,
+          new Promise((resolve) => {
+            setTimeout(() => {
+              resolve('waitRegisterCleanup should not be resolved yet');
+            }, 300);
+          }),
+        ]);
+
+        assert.equal(
+          checkIncompleteCleanup,
+          'waitRegisterCleanup should not be resolved yet'
+        );
+
+        // Call the cleanup callback on the second and last runner.
+        // $FlowIgnore: ignore method-unbinding, we just access the spy properties here.
+        anotherFakeExtensionRunner.registerCleanup.firstCall.args[0]();
+
+        await waitRegisterCleanup;
+      });
+    });
   });
 
   describe('defaultWatcherCreator', () => {
-
     function prepare() {
       const config = {
         sourceDir: '/path/to/extension/source/',
@@ -324,13 +306,13 @@ describe('util/extension-runners', () => {
         config,
         createWatcher: (customConfig = {}) => {
           // $FlowIgnore: allow use of inexact object literal for testing purpose.
-          return defaultWatcherCreator({...config, ...customConfig});
+          return defaultWatcherCreator({ ...config, ...customConfig });
         },
       };
     }
 
     it('configures a source watcher', () => {
-      const {config, createWatcher} = prepare();
+      const { config, createWatcher } = prepare();
       createWatcher();
       sinon.assert.called(config.onSourceChange);
       sinon.assert.calledWith(
@@ -346,10 +328,10 @@ describe('util/extension-runners', () => {
     });
 
     it('configures a run command with the expected fileFilter', () => {
-      const fileFilter = {wantFile: sinon.spy()};
+      const fileFilter = { wantFile: sinon.spy() };
       const createFileFilter = sinon.spy(() => fileFilter);
-      const {config, createWatcher} = prepare();
-      createWatcher({createFileFilter});
+      const { config, createWatcher } = prepare();
+      createWatcher({ createFileFilter });
       sinon.assert.called(createFileFilter);
       sinon.assert.calledWith(
         createFileFilter,
@@ -359,7 +341,7 @@ describe('util/extension-runners', () => {
           ignoreFiles: config.ignoreFiles,
         })
       );
-      const {shouldWatchFile} = config.onSourceChange.firstCall.args[0];
+      const { shouldWatchFile } = config.onSourceChange.firstCall.args[0];
       shouldWatchFile('path/to/file');
       sinon.assert.called(fileFilter.wantFile);
       sinon.assert.calledWith(fileFilter.wantFile, sinon.match('path/to/file'));
@@ -368,12 +350,12 @@ describe('util/extension-runners', () => {
     it('returns a watcher', () => {
       const watcher = {};
       const onSourceChange = sinon.spy(() => watcher);
-      const createdWatcher = prepare().createWatcher({onSourceChange});
+      const createdWatcher = prepare().createWatcher({ onSourceChange });
       assert.equal(createdWatcher, watcher);
     });
 
     it('reloads the extension', async () => {
-      const {config, createWatcher} = prepare();
+      const { config, createWatcher } = prepare();
       createWatcher();
 
       sinon.assert.called(config.onSourceChange);
@@ -384,7 +366,7 @@ describe('util/extension-runners', () => {
         })
       );
 
-      const {onChange} = config.onSourceChange.firstCall.args[0];
+      const { onChange } = config.onSourceChange.firstCall.args[0];
       // Simulate executing the handler when a source file changes.
       await onChange();
       sinon.assert.called(config.reloadExtension);
@@ -393,12 +375,10 @@ describe('util/extension-runners', () => {
         sinon.match(config.sourceDir)
       );
     });
-
   });
 
   describe('defaultReloadStrategy', () => {
-
-    function prepare({stubExtensionRunner} = {}) {
+    function prepare({ stubExtensionRunner } = {}) {
       const watcher = {
         close: sinon.spy(() => {}),
       };
@@ -423,8 +403,8 @@ describe('util/extension-runners', () => {
         watcher,
         extensionRunner,
         reloadStrategy: async (argOverride = {}, optOverride = {}) => {
-          const mergedArgs = {...args, ...argOverride};
-          const mergedOpts = {...options, ...optOverride};
+          const mergedArgs = { ...args, ...argOverride };
+          const mergedOpts = { ...options, ...optOverride };
           // $FlowIgnore: allow use of inexact object literal for testing purpose.
           return defaultReloadStrategy(mergedArgs, mergedOpts);
         },
@@ -432,10 +412,7 @@ describe('util/extension-runners', () => {
     }
 
     it('configures a watcher', () => {
-      const {
-        createWatcher, reloadStrategy,
-        ...sentArgs
-      } = prepare();
+      const { createWatcher, reloadStrategy, ...sentArgs } = prepare();
 
       reloadStrategy();
       sinon.assert.called(createWatcher);
@@ -452,9 +429,7 @@ describe('util/extension-runners', () => {
     });
 
     it('configure the watcher to reload an extension by sourceDir', () => {
-      const {
-        extensionRunner, createWatcher, reloadStrategy,
-      } = prepare({
+      const { extensionRunner, createWatcher, reloadStrategy } = prepare({
         stubExtensionRunner: {
           reloadExtensionBySourceDir() {},
         },
@@ -471,11 +446,11 @@ describe('util/extension-runners', () => {
       );
 
       const sourceDir = '/fake/sourceDir';
-      const {reloadExtension} = createWatcher.firstCall.args[0];
+      const { reloadExtension } = createWatcher.firstCall.args[0];
       reloadExtension(sourceDir);
 
       // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
-      const {reloadExtensionBySourceDir} = extensionRunner;
+      const { reloadExtensionBySourceDir } = extensionRunner;
 
       sinon.assert.calledOnce(reloadExtensionBySourceDir);
       sinon.assert.calledWith(
@@ -485,9 +460,7 @@ describe('util/extension-runners', () => {
     });
 
     it('cleans up when the extension runner closes', () => {
-      const {
-        extensionRunner, watcher, reloadStrategy, stdin,
-      } = prepare({
+      const { extensionRunner, watcher, reloadStrategy, stdin } = prepare({
         stubExtensionRunner: {
           registerCleanup() {},
         },
@@ -498,14 +471,11 @@ describe('util/extension-runners', () => {
       reloadStrategy();
 
       // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
-      const {registerCleanup} = extensionRunner;
+      const { registerCleanup } = extensionRunner;
 
       sinon.assert.called(registerCleanup);
       sinon.assert.calledOnce(registerCleanup);
-      sinon.assert.calledWith(
-        registerCleanup,
-        sinon.match.typeOf('function')
-      );
+      sinon.assert.calledWith(registerCleanup, sinon.match.typeOf('function'));
 
       const registeredCb = registerCleanup.firstCall.args[0];
       registeredCb();
@@ -516,15 +486,15 @@ describe('util/extension-runners', () => {
     });
 
     it('can reload when user presses R in shell console', async () => {
-      const {extensionRunner, reloadStrategy} = prepare();
+      const { extensionRunner, reloadStrategy } = prepare();
 
       const fakeStdin = createFakeStdin();
       sinon.spy(fakeStdin, 'setRawMode');
       sinon.spy(extensionRunner, 'reloadAllExtensions');
 
       try {
-        await reloadStrategy({}, {stdin: fakeStdin});
-        fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
+        await reloadStrategy({}, { stdin: fakeStdin });
+        fakeStdin.emit('keypress', 'r', { name: 'r', ctrl: false });
 
         // Wait for one tick.
         await Promise.resolve();
@@ -538,8 +508,8 @@ describe('util/extension-runners', () => {
       }
     });
 
-    it('allows you to disable input', async function() {
-      const {extensionRunner, reloadStrategy} = prepare();
+    it('allows you to disable input', async function () {
+      const { extensionRunner, reloadStrategy } = prepare();
       sinon.spy(extensionRunner, 'registerCleanup');
 
       const fakeStdin = createFakeStdin();
@@ -547,7 +517,7 @@ describe('util/extension-runners', () => {
       sinon.spy(fakeStdin, 'setRawMode');
 
       try {
-        await reloadStrategy({noInput: true}, {stdin: fakeStdin});
+        await reloadStrategy({ noInput: true }, { stdin: fakeStdin });
         // This is meant to test that all input is ignored.
         // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.notCalled(fakeStdin.setRawMode);
@@ -562,94 +532,92 @@ describe('util/extension-runners', () => {
       sinon.assert.notCalled(fakeStdin.pause);
     });
 
-    it('can still reload when user presses R after a reload error',
-       async () => {
-         const {extensionRunner, reloadStrategy} = prepare({
-           stubExtensionRunner: {
-             reloadAllExtensions: sinon.spy(
-               () => Promise.reject(new Error('fake reload error'))
-             ),
-           },
-         });
+    it('can still reload when user presses R after a reload error', async () => {
+      const { extensionRunner, reloadStrategy } = prepare({
+        stubExtensionRunner: {
+          reloadAllExtensions: sinon.spy(() =>
+            Promise.reject(new Error('fake reload error'))
+          ),
+        },
+      });
 
-         const fakeStdin = createFakeStdin();
-         sinon.spy(fakeStdin, 'setRawMode');
+      const fakeStdin = createFakeStdin();
+      sinon.spy(fakeStdin, 'setRawMode');
 
-         // Stub the `fakeStdin.once` method to be able to wait
-         // once a promise resolved when the reloadStrategy method
-         // did call `stdin.once('keypress', ...)`.
-         // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
-         const fakeStdinOnce = fakeStdin.once;
-         sinon.stub(fakeStdin, 'once');
+      // Stub the `fakeStdin.once` method to be able to wait
+      // once a promise resolved when the reloadStrategy method
+      // did call `stdin.once('keypress', ...)`.
+      // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
+      const fakeStdinOnce = fakeStdin.once;
+      sinon.stub(fakeStdin, 'once');
 
-         function promiseWaitKeypress() {
-           return new Promise((resolve) => {
-             // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-             fakeStdin.once.callsFake((...args) => {
-               if (args[0] === 'keypress') {
-                 resolve();
-               }
-               return fakeStdinOnce.apply(fakeStdin, args);
-             });
-           });
-         }
+      function promiseWaitKeypress() {
+        return new Promise((resolve) => {
+          // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+          fakeStdin.once.callsFake((...args) => {
+            if (args[0] === 'keypress') {
+              resolve();
+            }
+            return fakeStdinOnce.apply(fakeStdin, args);
+          });
+        });
+      }
 
-         try {
-           let onceWaitKeypress = promiseWaitKeypress();
-           await reloadStrategy({}, {stdin: fakeStdin});
-           await onceWaitKeypress;
+      try {
+        let onceWaitKeypress = promiseWaitKeypress();
+        await reloadStrategy({}, { stdin: fakeStdin });
+        await onceWaitKeypress;
 
-           onceWaitKeypress = promiseWaitKeypress();
-           fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-           await onceWaitKeypress;
+        onceWaitKeypress = promiseWaitKeypress();
+        fakeStdin.emit('keypress', 'r', { name: 'r', ctrl: false });
+        await onceWaitKeypress;
 
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           const {reloadAllExtensions} = extensionRunner;
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        const { reloadAllExtensions } = extensionRunner;
 
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           sinon.assert.called(fakeStdin.setRawMode);
-           sinon.assert.calledOnce(reloadAllExtensions);
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        sinon.assert.called(fakeStdin.setRawMode);
+        sinon.assert.calledOnce(reloadAllExtensions);
 
-           onceWaitKeypress = promiseWaitKeypress();
-           fakeStdin.emit('keypress', 'r', {name: 'r', ctrl: false});
-           await onceWaitKeypress;
+        onceWaitKeypress = promiseWaitKeypress();
+        fakeStdin.emit('keypress', 'r', { name: 'r', ctrl: false });
+        await onceWaitKeypress;
 
-           sinon.assert.calledTwice(reloadAllExtensions);
-         } finally {
-           exitKeypressLoop(fakeStdin);
-         }
-       });
+        sinon.assert.calledTwice(reloadAllExtensions);
+      } finally {
+        exitKeypressLoop(fakeStdin);
+      }
+    });
 
-    it('shuts down firefox on user request (CTRL+C in shell console)',
-       async () => {
-         const {extensionRunner, reloadStrategy} = prepare({
-           stubExtensionRunner: {
-             async exit() {},
-           },
-         });
+    it('shuts down firefox on user request (CTRL+C in shell console)', async () => {
+      const { extensionRunner, reloadStrategy } = prepare({
+        stubExtensionRunner: {
+          async exit() {},
+        },
+      });
 
-         const fakeStdin = createFakeStdin();
+      const fakeStdin = createFakeStdin();
 
-         try {
-           await reloadStrategy({}, {stdin: fakeStdin});
+      try {
+        await reloadStrategy({}, { stdin: fakeStdin });
 
-           // Wait for one tick.
-           await Promise.resolve();
+        // Wait for one tick.
+        await Promise.resolve();
 
-           fakeStdin.emit('keypress', 'c', {name: 'c', ctrl: true});
+        fakeStdin.emit('keypress', 'c', { name: 'c', ctrl: true });
 
-           // Wait for one tick.
-           await Promise.resolve();
+        // Wait for one tick.
+        await Promise.resolve();
 
-           // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
-           sinon.assert.called(extensionRunner.exit);
-         } finally {
-           exitKeypressLoop(fakeStdin);
-         }
-       });
+        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
+        sinon.assert.called(extensionRunner.exit);
+      } finally {
+        exitKeypressLoop(fakeStdin);
+      }
+    });
 
     it('pauses the web-ext process (CTRL+Z in shell console)', async () => {
-      const {reloadStrategy} = prepare();
+      const { reloadStrategy } = prepare();
 
       const fakeStdin = createFakeStdin();
 
@@ -657,12 +625,12 @@ describe('util/extension-runners', () => {
       const fakeKill = sinon.spy(() => {});
 
       try {
-        reloadStrategy({}, {stdin: fakeStdin, kill: fakeKill});
+        reloadStrategy({}, { stdin: fakeStdin, kill: fakeKill });
 
         // Wait for one tick.
         await Promise.resolve();
 
-        fakeStdin.emit('keypress', 'z', {name: 'z', ctrl: true});
+        fakeStdin.emit('keypress', 'z', { name: 'z', ctrl: true });
 
         // Wait for one tick.
         await Promise.resolve();
@@ -682,7 +650,5 @@ describe('util/extension-runners', () => {
         exitKeypressLoop(fakeStdin);
       }
     });
-
   });
-
 });

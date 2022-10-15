@@ -7,7 +7,7 @@ import { promisify } from 'util';
 import fetch, { FormData, fileFromSync, Response } from 'node-fetch';
 import { SignJWT } from 'jose';
 
-import {createLogger} from './../util/logger.js';
+import { createLogger } from './../util/logger.js';
 
 const log = createLogger(import.meta.url);
 
@@ -17,7 +17,7 @@ export type SignResult = {|
 |};
 
 export interface ApiAuth {
-  getAuthHeader(): Promise<string>
+  getAuthHeader(): Promise<string>;
 }
 
 export class JwtApiAuth {
@@ -29,21 +29,27 @@ export class JwtApiAuth {
     apiKey,
     apiSecret,
     apiJwtExpiresIn = 60 * 5, // 5 minutes
-  }: {apiKey: string, apiSecret: string, apiJwtExpiresIn?: number}) {
+  }: {
+    apiKey: string,
+    apiSecret: string,
+    apiJwtExpiresIn?: number,
+  }) {
     this.#apiKey = apiKey;
     this.#apiSecret = apiSecret;
     this.#apiJwtExpiresIn = apiJwtExpiresIn;
   }
 
   async signJWT(): Promise<string> {
-    return new SignJWT({ iss: this.#apiKey })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      // jose expects either:
-      // a number, which is treated an absolute timestamp - so must be after now, or
-      // a string, which is parsed as a relative time from now.
-      .setExpirationTime(`${this.#apiJwtExpiresIn}seconds`)
-      .sign(Uint8Array.from(Buffer.from(this.#apiSecret, 'utf8')));
+    return (
+      new SignJWT({ iss: this.#apiKey })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        // jose expects either:
+        // a number, which is treated an absolute timestamp - so must be after now, or
+        // a string, which is parsed as a relative time from now.
+        .setExpirationTime(`${this.#apiJwtExpiresIn}seconds`)
+        .sign(Uint8Array.from(Buffer.from(this.#apiSecret, 'utf8')))
+    );
   }
 
   async getAuthHeader(): Promise<string> {
@@ -95,10 +101,14 @@ export default class Client {
 
   nodeFetch(
     url: URL,
-    { method, headers, body }: {
+    {
+      method,
+      headers,
+      body,
+    }: {
       method: string,
       headers: { [key: string]: string },
-      body?: typeof FormData | string
+      body?: typeof FormData | string,
     }
   ): Promise<typeof Response> {
     return fetch(url, { method, headers, body });
@@ -118,7 +128,7 @@ export default class Client {
     checkUrl: URL,
     checkInterval: number,
     abortInterval: number,
-    context: string,
+    context: string
   ): Promise<string> {
     let checkTimeout;
 
@@ -131,7 +141,11 @@ export default class Client {
       const pollStatus = async () => {
         try {
           const responseData = await this.fetchJson(
-            checkUrl, 'GET', undefined, 'Getting details failed.');
+            checkUrl,
+            'GET',
+            undefined,
+            'Getting details failed.'
+          );
 
           const success = successFunc(responseData);
           if (success) {
@@ -167,20 +181,21 @@ export default class Client {
         log.info('Validation failed.');
         throw new Error(
           'Validation failed, open the following URL for more information: ' +
-          `${detailResponseData.url}`
+            `${detailResponseData.url}`
         );
       },
       new URL(`upload/${uuid}/`, this.apiUrl),
       this.validationCheckInterval,
       this.validationCheckTimeout,
-      'Validation',
+      'Validation'
     );
   }
 
   async doNewAddonSubmit(uuid: string, metaDataJson: Object): Promise<any> {
     const url = new URL('addon/', this.apiUrl);
     const jsonData = {
-      ...metaDataJson, version: { upload: uuid, ...metaDataJson.version },
+      ...metaDataJson,
+      version: { upload: uuid, ...metaDataJson.version },
     };
     return this.fetchJson(url, 'POST', JSON.stringify(jsonData));
   }
@@ -188,11 +203,12 @@ export default class Client {
   doNewAddonOrVersionSubmit(
     addonId: string,
     uuid: string,
-    metaDataJson: Object,
+    metaDataJson: Object
   ): Promise<typeof Response> {
     const url = new URL(`addon/${addonId}/`, this.apiUrl);
     const jsonData = {
-      ...metaDataJson, version: { upload: uuid, ...metaDataJson.version },
+      ...metaDataJson,
+      version: { upload: uuid, ...metaDataJson.version },
     };
     return this.fetch(url, 'PUT', JSON.stringify(jsonData));
   }
@@ -201,7 +217,7 @@ export default class Client {
     log.info('Waiting for Approval...');
     return this.waitRetry(
       (detailResponseData): string | null => {
-        const {file} = detailResponseData;
+        const { file } = detailResponseData;
         if (file && file.status === 'public') {
           return file.url;
         }
@@ -211,7 +227,7 @@ export default class Client {
       new URL(`addon/${addonId}/versions/${versionId}/`, this.apiUrl),
       this.approvalCheckInterval,
       this.approvalCheckTimeout,
-      'Approval',
+      'Approval'
     );
   }
 
@@ -232,7 +248,8 @@ export default class Client {
     if (!response.ok) {
       log.info('Server Response:', data);
       throw new Error(
-        `${errorMsg}: ${response.statusText || response.status}.`);
+        `${errorMsg}: ${response.statusText || response.status}.`
+      );
     }
     return data;
   }
@@ -240,7 +257,7 @@ export default class Client {
   async fetch(
     url: URL,
     method: string = 'GET',
-    body?: typeof FormData | string,
+    body?: typeof FormData | string
   ): Promise<typeof Response> {
     log.info(`Fetching URL: ${url.href}`);
     let headers = {
@@ -256,10 +273,7 @@ export default class Client {
     return this.nodeFetch(url, { method, body, headers });
   }
 
-  async downloadSignedFile(
-    fileUrl: URL,
-    addonId: string
-  ): Promise<SignResult> {
+  async downloadSignedFile(fileUrl: URL, addonId: string): Promise<SignResult> {
     const filename = fileUrl.pathname.split('/').pop(); // get the name from fileUrl
     const dest = `${this.downloadDir}/${filename}`;
     try {
@@ -279,7 +293,9 @@ export default class Client {
   }
 
   async saveToFile(
-    contents: typeof Response.body, destPath: string): Promise<any> {
+    contents: typeof Response.body,
+    destPath: string
+  ): Promise<any> {
     return promisify(pipeline)(contents, createWriteStream(destPath));
   }
 
@@ -288,7 +304,7 @@ export default class Client {
     channel: string,
     savedIdPath: string,
     metaDataJson: Object,
-    saveIdToFileFunc: (string, string) => Promise<void> = saveIdToFile,
+    saveIdToFileFunc: (string, string) => Promise<void> = saveIdToFile
   ): Promise<SignResult> {
     const uploadUuid = await this.doUploadSubmit(xpiPath, channel);
 
@@ -296,7 +312,7 @@ export default class Client {
       channel === 'listed' ? 'current_version' : 'latest_unlisted_version';
     const {
       guid: addonId,
-      [versionObject]: {id: newVersionId},
+      [versionObject]: { id: newVersionId },
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
 
     await saveIdToFileFunc(savedIdPath, addonId);
@@ -320,9 +336,12 @@ export default class Client {
     await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
     const url = new URL(
-      `addon/${addonId}/versions/?filter=all_with_unlisted`, this.apiUrl
+      `addon/${addonId}/versions/?filter=all_with_unlisted`,
+      this.apiUrl
     );
-    const {results: [{id: newVersionId}]} = await this.fetchJson(url);
+    const {
+      results: [{ id: newVersionId }],
+    } = await this.fetchJson(url);
 
     const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
 
@@ -343,7 +362,7 @@ type signAddonParams = {|
   metaDataJson?: Object,
   SubmitClient?: typeof Client,
   ApiAuthClass?: typeof JwtApiAuth,
-|}
+|};
 
 export async function signAddon({
   apiKey,
@@ -394,13 +413,17 @@ export async function signAddon({
 }
 
 export async function saveIdToFile(
-  filePath: string, id: string
+  filePath: string,
+  id: string
 ): Promise<void> {
-  await fsPromises.writeFile(filePath, [
-    '# This file was created by https://github.com/mozilla/web-ext',
-    '# Your auto-generated extension ID for addons.mozilla.org is:',
-    id.toString(),
-  ].join('\n'));
+  await fsPromises.writeFile(
+    filePath,
+    [
+      '# This file was created by https://github.com/mozilla/web-ext',
+      '# Your auto-generated extension ID for addons.mozilla.org is:',
+      id.toString(),
+    ].join('\n')
+  );
 
   log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
 }

@@ -1,10 +1,10 @@
 /* @flow */
-import {it, describe} from 'mocha';
+import { it, describe } from 'mocha';
 import * as sinon from 'sinon';
 
-import {showDesktopNotification} from '../../../src/util/desktop-notifier.js';
-import {createLogger} from '../../../src/util/logger.js';
-import {makeSureItFails} from '../helpers.js';
+import { showDesktopNotification } from '../../../src/util/desktop-notifier.js';
+import { createLogger } from '../../../src/util/logger.js';
+import { makeSureItFails } from '../helpers.js';
 
 describe('util/desktop-notifier', () => {
   describe('desktopNotifications()', () => {
@@ -19,15 +19,12 @@ describe('util/desktop-notifier', () => {
       };
       return showDesktopNotification(expectedNotification, {
         notifier: fakeNotifier,
-      })
-        .then(() => {
-          sinon.assert.calledWithMatch(
-            fakeNotifier.notify, {
-              title: 'web-ext run: title',
-              message: 'message',
-            }
-          );
+      }).then(() => {
+        sinon.assert.calledWithMatch(fakeNotifier.notify, {
+          title: 'web-ext run: title',
+          message: 'message',
         });
+      });
     });
 
     it('logs error when notifier fails', () => {
@@ -49,9 +46,9 @@ describe('util/desktop-notifier', () => {
           sinon.assert.calledWith(
             fakeLog.debug,
             `Desktop notifier error: ${expectedError.message}, ` +
-            'response: response');
+              'response: response'
+          );
         });
     });
-
   });
 });

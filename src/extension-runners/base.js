@@ -1,9 +1,7 @@
 /* @flow */
 
-import {
-  showDesktopNotification as defaultDesktopNotifications,
-} from '../util/desktop-notifier';
-import type {ExtensionManifest} from '../util/manifest';
+import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier';
+import type { ExtensionManifest } from '../util/manifest';
 
 export type Extension = {|
   sourceDir: string,
@@ -29,12 +27,12 @@ export type ExtensionRunnerReloadResult = {|
 |};
 
 export interface IExtensionRunner {
-  getName(): string,
-  run(): Promise<void>,
-  reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>>,
+  getName(): string;
+  run(): Promise<void>;
+  reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>>;
   reloadExtensionBySourceDir(
     extensionSourceDir: string
-  ): Promise<Array<ExtensionRunnerReloadResult>>,
-  registerCleanup(fn: Function): void,
-  exit(): Promise<void>,
+  ): Promise<Array<ExtensionRunnerReloadResult>>;
+  registerCleanup(fn: Function): void;
+  exit(): Promise<void>;
 }

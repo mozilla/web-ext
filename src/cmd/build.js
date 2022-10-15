@@ -1,26 +1,26 @@
 /* @flow */
 import path from 'path';
-import {createWriteStream} from 'fs';
+import { createWriteStream } from 'fs';
 
-import {fs} from 'mz';
+import { fs } from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import defaultFromEvent from 'promise-toolbox/fromEvent';
 import zipDir from 'zip-dir';
 
 import defaultSourceWatcher from '../watcher.js';
-import getValidatedManifest, {getManifestId} from '../util/manifest.js';
-import {prepareArtifactsDir} from '../util/artifacts.js';
-import {createLogger} from '../util/logger.js';
-import {UsageError, isErrorWithCode} from '../errors.js';
+import getValidatedManifest, { getManifestId } from '../util/manifest.js';
+import { prepareArtifactsDir } from '../util/artifacts.js';
+import { createLogger } from '../util/logger.js';
+import { UsageError, isErrorWithCode } from '../errors.js';
 import {
   createFileFilter as defaultFileFilterCreator,
   FileFilter,
 } from '../util/file-filter.js';
 // Import flow types.
-import type {OnSourceChangeFn} from '../watcher.js';
-import type {ExtensionManifest} from '../util/manifest.js';
-import type {FileFilterCreatorFn} from '../util/file-filter.js';
+import type { OnSourceChangeFn } from '../watcher.js';
+import type { ExtensionManifest } from '../util/manifest.js';
+import type { FileFilterCreatorFn } from '../util/file-filter.js';
 
 const log = createLogger(import.meta.url);
 const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';
@@ -28,7 +28,6 @@ const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';
 export function safeFileName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9.-]+/g, '_');
 }
-
 
 // defaultPackageCreator types and implementation.
 
@@ -49,7 +48,7 @@ export type PackageCreatorParams = {|
 export type LocalizedNameParams = {|
   messageFile: string,
   manifestData: ExtensionManifest,
-|}
+|};
 
 export type PackageCreatorOptions = {
   fromEvent: typeof defaultFromEvent,
@@ -62,54 +61,53 @@ type LocalizedMessageData = {|
     description: string,
     message: string,
   |},
-|}
+|};
 
-export async function getDefaultLocalizedName(
-  {messageFile, manifestData}: LocalizedNameParams
-): Promise<string> {
-
+export async function getDefaultLocalizedName({
+  messageFile,
+  manifestData,
+}: LocalizedNameParams): Promise<string> {
   let messageData: LocalizedMessageData;
   let messageContents: string | Buffer;
   let extensionName: string = manifestData.name;
 
   try {
-    messageContents = await fs.readFile(messageFile, {encoding: 'utf-8'});
+    messageContents = await fs.readFile(messageFile, { encoding: 'utf-8' });
   } catch (error) {
     throw new UsageError(
-      `Error reading messages.json file at ${messageFile}: ${error}`);
+      `Error reading messages.json file at ${messageFile}: ${error}`
+    );
   }
 
   messageContents = stripBom(messageContents);
 
-  const {default: stripJsonComments } = await import('strip-json-comments');
+  const { default: stripJsonComments } = await import('strip-json-comments');
   try {
     messageData = parseJSON(stripJsonComments(messageContents));
   } catch (error) {
     throw new UsageError(
-      `Error parsing messages.json file at ${messageFile}: ${error}`);
+      `Error parsing messages.json file at ${messageFile}: ${error}`
+    );
   }
 
   extensionName = manifestData.name.replace(
     /__MSG_([A-Za-z0-9@_]+?)__/g,
     (match, messageName) => {
-      if (!(messageData[messageName]
-            && messageData[messageName].message)) {
+      if (!(messageData[messageName] && messageData[messageName].message)) {
         const error = new UsageError(
-          `The locale file ${messageFile} ` +
-            `is missing key: ${messageName}`);
+          `The locale file ${messageFile} ` + `is missing key: ${messageName}`
+        );
         throw error;
       } else {
         return messageData[messageName].message;
       }
-    });
+    }
+  );
   return Promise.resolve(extensionName);
 }
 
 // https://stackoverflow.com/a/22129960
-export function getStringPropertyValue(
-  prop: string,
-  obj: Object,
-): string {
+export function getStringPropertyValue(prop: string, obj: Object): string {
   const properties = prop.split('.');
   const value = properties.reduce((prev, curr) => prev && prev[curr], obj);
   if (!['string', 'number'].includes(typeof value)) {
@@ -132,7 +130,8 @@ function getPackageNameFromTemplate(
     /{([A-Za-z0-9._]+?)}/g,
     (match, manifestProperty) => {
       return safeFileName(
-        getStringPropertyValue(manifestProperty, manifestData));
+        getStringPropertyValue(manifestProperty, manifestData)
+      );
     }
   );
 
@@ -142,21 +141,22 @@ function getPackageNameFromTemplate(
   if (parsed.dir) {
     throw new UsageError(
       `Invalid filename template "${filenameTemplate}". ` +
-      `Filename "${packageName}" should not contain a path`
+        `Filename "${packageName}" should not contain a path`
     );
   }
   if (!['.zip', '.xpi'].includes(parsed.ext)) {
     throw new UsageError(
       `Invalid filename template "${filenameTemplate}". ` +
-      `Filename "${packageName}" should have a zip or xpi extension`
+        `Filename "${packageName}" should have a zip or xpi extension`
     );
   }
 
   return packageName;
 }
 
-export type PackageCreatorFn =
-    (params: PackageCreatorParams) => Promise<ExtensionBuildResult>;
+export type PackageCreatorFn = (
+  params: PackageCreatorParams
+) => Promise<ExtensionBuildResult>;
 
 export async function defaultPackageCreator(
   {
@@ -168,9 +168,7 @@ export async function defaultPackageCreator(
     showReadyMessage,
     filename = DEFAULT_FILENAME_TEMPLATE,
   }: PackageCreatorParams,
-  {
-    fromEvent = defaultFromEvent,
-  }: PackageCreatorOptions = {}
+  { fromEvent = defaultFromEvent }: PackageCreatorOptions = {}
 ): Promise<ExtensionBuildResult> {
   let id;
   if (manifestData) {
@@ -186,16 +184,19 @@ export async function defaultPackageCreator(
 
   let filenameTemplate = filename;
 
-  let {default_locale} = manifestData;
+  let { default_locale } = manifestData;
   if (default_locale) {
     default_locale = default_locale.replace(/-/g, '_');
     const messageFile = path.join(
-      sourceDir, '_locales',
-      default_locale, 'messages.json'
+      sourceDir,
+      '_locales',
+      default_locale,
+      'messages.json'
     );
     log.debug('Manifest declared default_locale, localizing extension name');
     const extensionName = await getDefaultLocalizedName({
-      messageFile, manifestData,
+      messageFile,
+      manifestData,
     });
     // allow for a localized `{name}`, without mutating `manifestData`
     filenameTemplate = filenameTemplate.replace(/{name}/g, extensionName);
@@ -207,7 +208,7 @@ export async function defaultPackageCreator(
   const extensionPath = path.join(artifactsDir, packageName);
 
   // Added 'wx' flags to avoid overwriting of existing package.
-  const stream = createWriteStream(extensionPath, {flags: 'wx'});
+  const stream = createWriteStream(extensionPath, { flags: 'wx' });
 
   stream.write(buffer, () => {
     stream.end();
@@ -222,7 +223,8 @@ export async function defaultPackageCreator(
     if (!overwriteDest) {
       throw new UsageError(
         `Extension exists at the destination path: ${extensionPath}\n` +
-        'Use --overwrite-dest to enable overwriting.');
+          'Use --overwrite-dest to enable overwriting.'
+      );
     }
     log.info(`Destination exists, overwriting: ${extensionPath}`);
     const overwriteStream = createWriteStream(extensionPath);
@@ -235,9 +237,8 @@ export async function defaultPackageCreator(
   if (showReadyMessage) {
     log.info(`Your web extension is ready: ${extensionPath}`);
   }
-  return {extensionPath};
+  return { extensionPath };
 }
-
 
 // Build command types and implementation.
 
@@ -282,19 +283,19 @@ export default async function build(
     showReadyMessage = true,
   }: BuildCmdOptions = {}
 ): Promise<ExtensionBuildResult> {
-
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 
-  const createPackage = () => packageCreator({
-    manifestData,
-    sourceDir,
-    fileFilter,
-    artifactsDir,
-    overwriteDest,
-    showReadyMessage,
-    filename,
-  });
+  const createPackage = () =>
+    packageCreator({
+      manifestData,
+      sourceDir,
+      fileFilter,
+      artifactsDir,
+      overwriteDest,
+      showReadyMessage,
+      filename,
+    });
 
   await prepareArtifactsDir(artifactsDir);
   const result = await createPackage();

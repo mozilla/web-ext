@@ -1,7 +1,7 @@
 /* @flow */
-import {fs} from 'mz';
+import { fs } from 'mz';
 
-import {onlyErrorsWithCode} from '../errors.js';
+import { onlyErrorsWithCode } from '../errors.js';
 
 /*
  * Resolves true if the path is a readable directory.
@@ -15,9 +15,12 @@ import {onlyErrorsWithCode} from '../errors.js';
  *
  * */
 export default function isDirectory(path: string): Promise<boolean> {
-  return fs.stat(path)
+  return fs
+    .stat(path)
     .then((stats) => stats.isDirectory())
-    .catch(onlyErrorsWithCode(['ENOENT', 'ENOTDIR'], () => {
-      return false;
-    }));
+    .catch(
+      onlyErrorsWithCode(['ENOENT', 'ENOTDIR'], () => {
+        return false;
+      })
+    );
 }

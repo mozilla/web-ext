@@ -1,10 +1,10 @@
 /* @flow */
-import {promisify} from 'util';
+import { promisify } from 'util';
 
 import tmp from 'tmp';
 
-import {createLogger} from './logger.js';
-import {multiArgsPromisedFn, promisifyCustom} from './promisify.js';
+import { createLogger } from './logger.js';
+import { multiArgsPromisedFn, promisifyCustom } from './promisify.js';
 
 const log = createLogger(import.meta.url);
 
@@ -31,7 +31,8 @@ const createTempDir = promisify(tmp.dir);
  */
 export function withTempDir(makePromise: MakePromiseCallback): Promise<any> {
   const tmpDir = new TempDir();
-  return tmpDir.create()
+  return tmpDir
+    .create()
     .then(() => {
       return makePromise(tmpDir);
     })
@@ -68,23 +69,22 @@ export class TempDir {
    * been created.
    */
   create(): Promise<TempDir> {
-    return createTempDir(
-      {
-        prefix: 'tmp-web-ext-',
-        // This allows us to remove a non-empty tmp dir.
-        unsafeCleanup: true,
-      })
-      .then(([tmpPath, removeTempDir]) => {
-        this._path = tmpPath;
-        this._removeTempDir = () => new Promise((resolve, reject) => {
+    return createTempDir({
+      prefix: 'tmp-web-ext-',
+      // This allows us to remove a non-empty tmp dir.
+      unsafeCleanup: true,
+    }).then(([tmpPath, removeTempDir]) => {
+      this._path = tmpPath;
+      this._removeTempDir = () =>
+        new Promise((resolve, reject) => {
           // `removeTempDir` parameter is a `next` callback which
           // is called once the dir has been removed.
-          const next = (err) => err ? reject(err) : resolve();
+          const next = (err) => (err ? reject(err) : resolve());
           removeTempDir(next);
         });
-        log.debug(`Created temporary directory: ${this.path()}`);
-        return this;
-      });
+      log.debug(`Created temporary directory: ${this.path()}`);
+      return this;
+    });
   }
 
   /*
@@ -134,5 +134,4 @@ export class TempDir {
     log.debug(`Removing temporary directory: ${this.path()}`);
     return this._removeTempDir && this._removeTempDir();
   }
-
 }

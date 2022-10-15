@@ -1,7 +1,6 @@
 /* @flow */
 import ExtendableError from 'es6-error';
 
-
 /*
  * Base error for all custom web-ext errors.
  */
@@ -10,7 +9,6 @@ export class WebExtError extends ExtendableError {
     super(message);
   }
 }
-
 
 /*
  * The class for errors that can be fixed by the developer.
@@ -21,7 +19,6 @@ export class UsageError extends WebExtError {
   }
 }
 
-
 /*
  * The manifest for the extension is invalid (or missing).
  */
@@ -30,7 +27,6 @@ export class InvalidManifest extends UsageError {
     super(message);
   }
 }
-
 
 /*
  * The remote Firefox does not support temporary add-on installation.
@@ -73,7 +69,8 @@ export class MultiExtensionsReloadError extends WebExtError {
  *
  */
 export function onlyInstancesOf(
-  predicate: Function, errorHandler: Function
+  predicate: Function,
+  errorHandler: Function
 ): Function {
   return (error) => {
     if (error instanceof predicate) {
@@ -83,7 +80,6 @@ export function onlyInstancesOf(
     }
   };
 }
-
 
 /*
  * Sugar-y way to catch only errors having certain code(s).
@@ -113,8 +109,10 @@ export function onlyErrorsWithCode(
     let throwError = true;
 
     if (Array.isArray(codeWanted)) {
-      if (codeWanted.indexOf(error.code) !== -1 ||
-          codeWanted.indexOf(error.errno) !== -1) {
+      if (
+        codeWanted.indexOf(error.code) !== -1 ||
+        codeWanted.indexOf(error.errno) !== -1
+      ) {
         throwError = false;
       }
     } else if (error.code === codeWanted || error.errno === codeWanted) {
@@ -131,7 +129,7 @@ export function onlyErrorsWithCode(
 
 export function isErrorWithCode(
   codeWanted: string | Array<string>,
-  error: Object,
+  error: Object
 ): boolean {
   if (Array.isArray(codeWanted) && codeWanted.indexOf(error.code) !== -1) {
     return true;

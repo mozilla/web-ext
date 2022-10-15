@@ -10,7 +10,10 @@
 import shell from 'shelljs';
 import stripJsonComments from 'strip-json-comments';
 
-const npmVersion = parseInt(shell.exec('npm --version', {silent: true}).stdout.split('.')[0], 10);
+const npmVersion = parseInt(
+  shell.exec('npm --version', { silent: true }).stdout.split('.')[0],
+  10
+);
 const npmCmd = npmVersion >= 6 ? 'npm' : 'npx npm@latest';
 
 if (npmCmd.startsWith('npx') && !shell.which('npx')) {
@@ -25,7 +28,7 @@ if (!shell.test('-f', 'package-lock.json')) {
 
 // Collect audit results and split them into blocking and ignored issues.
 function getNpmAuditJSON() {
-  const res = shell.exec(`${npmCmd} audit --json`, {silent: true});
+  const res = shell.exec(`${npmCmd} audit --json`, { silent: true });
   if (res.code !== 0) {
     try {
       return JSON.parse(res.stdout);
@@ -44,11 +47,14 @@ let auditReport = getNpmAuditJSON();
 
 if (auditReport) {
   const cmdres = shell.cat('.nsprc');
-  const {exceptions} = JSON.parse(stripJsonComments(cmdres.stdout));
+  const { exceptions } = JSON.parse(stripJsonComments(cmdres.stdout));
 
   if (auditReport.error) {
     if (auditReport.error.code === 'ENETUNREACH') {
-      console.log('npm was not able to reach the api endpoint:', auditReport.error.summary);
+      console.log(
+        'npm was not able to reach the api endpoint:',
+        auditReport.error.summary
+      );
       console.log('Retrying...');
       auditReport = getNpmAuditJSON();
     }
@@ -100,7 +106,10 @@ function formatAdvisoryV1(adv) {
   function formatFinding(desc) {
     return `${desc.version}, paths: ${desc.paths.join(', ')}`;
   }
-  const findings = adv.findings.map(formatFinding).map((msg) => `  ${msg}`).join('\n');
+  const findings = adv.findings
+    .map(formatFinding)
+    .map((msg) => `  ${msg}`)
+    .join('\n');
   return `${adv.module_name} (${adv.url}):\n${findings}`;
 }
 
@@ -108,7 +117,10 @@ function formatAdvisoryV2(adv) {
   function formatVia(via) {
     return `${via.url}\n    ${via.dependency} ${via.range}\n    ${via.title}`;
   }
-  const entryVia = adv.via.map(formatVia).map((msg) => `  ${msg}`).join('\n');
+  const entryVia = adv.via
+    .map(formatVia)
+    .map((msg) => `  ${msg}`)
+    .join('\n');
   const fixAvailable = Boolean(adv.fixAvailable);
   const entryDetails = `isDirect: ${adv.isDirect}, severity: ${adv.severity}, fixAvailable: ${fixAvailable}`;
   return `${adv.name} (${entryDetails}):\n${entryVia}`;
@@ -121,7 +133,9 @@ function formatAdvisory(adv) {
 }
 
 if (ignoredIssues.length > 0) {
-  console.log('\n== audit-deps: ignored security issues (based on .nsprc exceptions)\n');
+  console.log(
+    '\n== audit-deps: ignored security issues (based on .nsprc exceptions)\n'
+  );
 
   for (const adv of ignoredIssues) {
     console.log(formatAdvisory(adv));
