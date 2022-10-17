@@ -124,6 +124,7 @@ describe('sign', () => {
         const stubs = getStubs();
         const sourceDir = path.join(tmpDir.path(), 'source-dir');
         const copyDirAsPromised = promisify(copyDir);
+        const apiProxy = 'https://proxy.url';
         return copyDirAsPromised(fixturePath('minimal-web-ext'), sourceDir)
           .then(() =>
             completeSignCommand(
@@ -133,6 +134,7 @@ describe('sign', () => {
                 ...stubs.signingConfig,
                 useSubmissionApi: true,
                 channel: 'listed',
+                apiProxy,
               },
               {
                 submitAddon: stubs.submitAddon,
@@ -362,24 +364,26 @@ describe('sign', () => {
       );
     }));
 
-  it('does not support apiProxy with submission API', () =>
-    withTempDir(async (tmpDir) => {
+  it('passes the apiProxy parameter to the signer', () =>
+    withTempDir((tmpDir) => {
       const stubs = getStubs();
-      const signPromise = sign(tmpDir, stubs, {
-        extraArgs: {
-          useSubmissionApi: true,
-          apiProxy: 'http://yourproxy:6000',
-          channel: 'listed',
-        },
-        extraOptions: {
-          preValidatedManifest: manifestWithoutApps,
-        },
+      const apiProxy = 'https://proxy.url';
+      return sign(tmpDir, stubs, { extraArgs: { apiProxy } }).then(() => {
+        sinon.assert.called(stubs.signAddon);
+        sinon.assert.calledWithMatch(stubs.signAddon, { apiProxy });
       });
-      await assert.isRejected(signPromise, UsageError);
-      await assert.isRejected(
-        signPromise,
-        /apiProxy isn't yet supported for the addon submission API/
-      );
+    }));
+
+  it('passes the apiProxy parameter to submissionAPI signer', () =>
+    withTempDir((tmpDir) => {
+      const stubs = getStubs();
+      const apiProxy = 'https://proxy.url';
+      return sign(tmpDir, stubs, {
+        extraArgs: { apiProxy, useSubmissionApi: true, channel: 'unlisted' },
+      }).then(() => {
+        sinon.assert.called(stubs.submitAddon);
+        sinon.assert.calledWithMatch(stubs.submitAddon, { apiProxy });
+      });
     }));
 
   it('returns a signing result', () =>

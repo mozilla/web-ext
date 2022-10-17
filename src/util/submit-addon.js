@@ -8,6 +8,7 @@ import { promisify } from 'util';
 import fetch, { FormData, fileFromSync, Response } from 'node-fetch';
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
+import HttpsProxyAgent from 'https-proxy-agent';
 
 import { isErrorWithCode } from '../errors.js';
 import { createLogger } from './../util/logger.js';
@@ -65,6 +66,7 @@ export class JwtApiAuth {
 
 type ClientConstructorParams = {|
   apiAuth: ApiAuth,
+  apiProxy?: string,
   baseUrl: URL,
   validationCheckInterval?: number,
   validationCheckTimeout?: number,
@@ -76,6 +78,7 @@ type ClientConstructorParams = {|
 
 export default class Client {
   apiAuth: ApiAuth;
+  apiProxy: string;
   apiUrl: URL;
   validationCheckInterval: number;
   validationCheckTimeout: number;
@@ -86,6 +89,7 @@ export default class Client {
 
   constructor({
     apiAuth,
+    apiProxy,
     baseUrl,
     validationCheckInterval = 1000,
     validationCheckTimeout = 300000, // 5 minutes.
@@ -95,6 +99,9 @@ export default class Client {
     userAgentString,
   }: ClientConstructorParams) {
     this.apiAuth = apiAuth;
+    if (apiProxy) {
+      this.apiProxy = apiProxy;
+    }
     if (!baseUrl.pathname.endsWith('/')) {
       baseUrl = new URL(baseUrl.href);
       baseUrl.pathname += '/';
@@ -118,13 +125,15 @@ export default class Client {
       method,
       headers,
       body,
+      agent,
     }: {
       method: string,
       headers: { [key: string]: string },
       body?: typeof FormData | string,
+      agent?: typeof HttpsProxyAgent,
     }
   ): Promise<typeof Response> {
-    return fetch(url, { method, headers, body });
+    return fetch(url, { method, headers, body, agent });
   }
 
   async doUploadSubmit(xpiPath: string, channel: string): Promise<string> {
@@ -284,7 +293,11 @@ export default class Client {
         'Content-Type': 'application/json',
       };
     }
-    return this.nodeFetch(url, { method, body, headers });
+    let agent;
+    if (this.apiProxy) {
+      agent = new HttpsProxyAgent(this.apiProxy);
+    }
+    return this.nodeFetch(url, { method, body, headers, agent });
   }
 
   async downloadSignedFile(fileUrl: URL, addonId: string): Promise<SignResult> {
@@ -421,6 +434,7 @@ export default class Client {
 type signAddonParams = {|
   apiKey: string,
   apiSecret: string,
+  apiProxy?: string,
   amoBaseUrl: string,
   timeout: number,
   id?: string,
@@ -438,6 +452,7 @@ type signAddonParams = {|
 export async function signAddon({
   apiKey,
   apiSecret,
+  apiProxy,
   amoBaseUrl,
   timeout,
   id,
@@ -470,6 +485,7 @@ export async function signAddon({
 
   const client = new SubmitClient({
     apiAuth: new ApiAuthClass({ apiKey, apiSecret }),
+    apiProxy,
     baseUrl,
     validationCheckTimeout: timeout,
     approvalCheckTimeout: timeout,
