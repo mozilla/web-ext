@@ -246,7 +246,7 @@ describe('util.submit-addon', () => {
         const nodeFetchStub = sinon.stub(client, 'nodeFetch');
         mockNodeFetch(
           nodeFetchStub,
-          new URL('/addons/upload/', baseUrl),
+          new URL('addons/upload/', baseUrl),
           'POST',
           [
             {
@@ -292,7 +292,7 @@ describe('util.submit-addon', () => {
         const uploadUuid = '@some-guid';
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
+          new URL(`addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             {
@@ -315,7 +315,7 @@ describe('util.submit-addon', () => {
         const uploadUuid = '@some-guid';
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
+          new URL(`addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             { body: {}, status: 200 },
@@ -338,10 +338,10 @@ describe('util.submit-addon', () => {
           validationCheckInterval: 1,
         });
         const uploadUuid = '@some-guid';
-        const validationUrl = new URL('/to/validation/report', baseUrl);
+        const validationUrl = new URL('to/validation/report', baseUrl);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
+          new URL(`addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             { body: {}, status: 200 },
@@ -364,7 +364,7 @@ describe('util.submit-addon', () => {
         const client = new Client(clientDefaults);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          new URL('/addons/addon/', baseUrl),
+          new URL('addons/addon/', baseUrl),
           'POST',
           [
             { body: sampleAddonDetail, status: 202 },
@@ -405,7 +405,7 @@ describe('util.submit-addon', () => {
         const guid = '@some-addon-guid';
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
-          new URL(`/addons/addon/${guid}/`, baseUrl),
+          new URL(`addons/addon/${guid}/`, baseUrl),
           'POST',
           [
             { body: sampleAddonDetail, status: 202 },
@@ -451,7 +451,7 @@ describe('util.submit-addon', () => {
         const addonId = '@random-addon';
         const versionId = 0;
         const detailUrl =
-          new URL(`/addons/addon/${addonId}/versions/${versionId}/`, baseUrl);
+          new URL(`addons/addon/${addonId}/versions/${versionId}/`, baseUrl);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
           detailUrl,
@@ -471,8 +471,8 @@ describe('util.submit-addon', () => {
         const addonId = '@random-addon';
         const versionId = 0;
         const detailUrl =
-          new URL(`/addons/addon/${addonId}/versions/${versionId}/`, baseUrl);
-        const url = new URL('/file/download/url', baseUrl);
+          new URL(`addons/addon/${addonId}/versions/${versionId}/`, baseUrl);
+        const url = new URL('file/download/url', baseUrl);
         mockNodeFetch(
           sinon.stub(client, 'nodeFetch'),
           detailUrl,
@@ -585,13 +585,13 @@ describe('util.submit-addon', () => {
       const addUploadMocks = () => {
         mockNodeFetch(
           nodeFetchStub,
-          new URL('/addons/upload/', baseUrl),
+          new URL('addons/upload/', baseUrl),
           'POST',
           [{ body: sampleUploadDetail, status: 200 }]
         );
         mockNodeFetch(
           nodeFetchStub,
-          new URL(`/addons/upload/${uploadUuid}/`, baseUrl),
+          new URL(`addons/upload/${uploadUuid}/`, baseUrl),
           'GET',
           [
             {
@@ -606,7 +606,7 @@ describe('util.submit-addon', () => {
         const url = (new URL(downloadPath, baseUrl).toString());
         mockNodeFetch(
           nodeFetchStub,
-          new URL(`/addons/addon/${addonId}/versions/${versionId}/`, baseUrl),
+          new URL(`addons/addon/${addonId}/versions/${versionId}/`, baseUrl),
           'GET',
           [
             {
@@ -636,7 +636,7 @@ describe('util.submit-addon', () => {
             const idFile = 'id.file';
             mockNodeFetch(
               nodeFetchStub,
-              new URL('/addons/addon/', baseUrl),
+              new URL('addons/addon/', baseUrl),
               'POST',
               [{ body: sampleAddonDetail, status: 200 }]
             );
@@ -654,13 +654,13 @@ describe('util.submit-addon', () => {
 
         mockNodeFetch(
           nodeFetchStub,
-          new URL(`/addons/addon/${addonId}/`, baseUrl),
+          new URL(`addons/addon/${addonId}/`, baseUrl),
           'PUT',
           [{ body: sampleAddonDetail, status: 200 }]
         );
         mockNodeFetch(
           nodeFetchStub,
-          new URL(`/addons/addon/${addonId}/versions/${query}`, baseUrl),
+          new URL(`addons/addon/${addonId}/versions/${query}`, baseUrl),
           'GET',
           [
             {

@@ -81,7 +81,7 @@ export default class Client {
     downloadDir = process.cwd(),
   }: ClientConstructorParams) {
     this.apiAuth = apiAuth;
-    this.apiUrl = new URL('/addons/', baseUrl);
+    this.apiUrl = new URL('addons/', baseUrl);
     this.validationCheckInterval = validationCheckInterval;
     this.validationCheckTimeout = validationCheckTimeout;
     this.approvalCheckInterval = approvalCheckInterval;
@@ -302,7 +302,7 @@ export default class Client {
     await saveIdToFileFunc(savedIdPath, addonId);
     log.info(`Generated extension ID: ${addonId}.`);
     log.info('You must add the following to your manifest:');
-    log.info(`"browser_specific_settings": {"gecko": "${addonId}"}`);
+    log.info(`"browser_specific_settings": {"gecko": {"id": "${addonId}"}}`);
 
     const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
 
