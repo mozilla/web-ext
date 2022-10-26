@@ -307,6 +307,23 @@ describe('program.Program', () => {
       });
   });
 
+  it('passes on webextVersion', () => {
+    let valueReceived;
+    const program = new Program(['cmd']).command(
+      'cmd',
+      'some command',
+      ({ webextVersion }) => {
+        valueReceived = webextVersion;
+      },
+      {}
+    );
+
+    return execProgram(program, { shouldExitProgram: true }).then(() => {
+      assert.equal(valueReceived, 'not-a-real-version');
+      delete process.env.WEB_EXT_SOME_OPT;
+    });
+  });
+
   it('checks for updates automatically', () => {
     const handler = spy();
     const getVersion = async () => 'some-package-version';

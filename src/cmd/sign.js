@@ -43,6 +43,7 @@ export type SignParams = {|
   verbose?: boolean,
   channel?: string,
   amoMetadata?: string,
+  webextVersion: string,
 |};
 
 export type SignOptions = {
@@ -70,6 +71,7 @@ export default function sign(
     verbose,
     channel,
     amoMetadata,
+    webextVersion,
   }: SignParams,
   {
     build = defaultBuilder,
@@ -162,6 +164,7 @@ export default function sign(
         throw new UsageError('Invalid JSON in listing metadata');
       }
     }
+    const userAgentString = `web-ext/${webextVersion}`;
 
     const signSubmitArgs = {
       apiKey,
@@ -183,6 +186,7 @@ export default function sign(
           channel,
           savedIdPath,
           metaDataJson,
+          userAgentString,
         });
       } else {
         const {
@@ -195,6 +199,7 @@ export default function sign(
           apiProxy,
           verbose,
           version: manifestData.version,
+          apiRequestConfig: { headers: { 'User-Agent': userAgentString } },
         });
         if (!success) {
           throw new Error('The extension could not be signed');

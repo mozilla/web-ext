@@ -28,6 +28,7 @@ describe('sign', () => {
       apiSecret: 'AMO JWT secret',
       apiUrlPrefix: 'http://not-the-real-amo.com/api/v4',
       timeout: 999,
+      webextVersion: '12.34',
     };
 
     const buildResult = {
@@ -408,6 +409,8 @@ describe('sign', () => {
       const apiProxy = 'http://yourproxy:6000';
       const applications: ExtensionManifestApplications = stubs
         .preValidatedManifest.applications || { gecko: {} };
+      const userAgentString = `web-ext/${stubs.signingConfig.webextVersion}`;
+      const apiRequestConfig = { headers: { 'User-Agent': userAgentString } };
       return sign(tmpDir, stubs, {
         extraArgs: { artifactsDir, apiProxy },
       }).then(() => {
@@ -422,6 +425,33 @@ describe('sign', () => {
           timeout: stubs.signingConfig.timeout,
           version: stubs.preValidatedManifest.version,
           xpiPath: stubs.buildResult.extensionPath,
+          apiRequestConfig,
+        });
+      });
+    }));
+
+  it('calls the add-on submission api signer', () =>
+    withTempDir((tmpDir) => {
+      const stubs = getStubs();
+      const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
+      const applications: ExtensionManifestApplications = stubs
+        .preValidatedManifest.applications || { gecko: {} };
+      const userAgentString = `web-ext/${stubs.signingConfig.webextVersion}`;
+      const channel = 'unlisted';
+      return sign(tmpDir, stubs, {
+        extraArgs: { artifactsDir, useSubmissionApi: true, channel },
+      }).then(() => {
+        sinon.assert.called(stubs.submitAddon);
+        sinon.assert.calledWithMatch(stubs.submitAddon, {
+          apiKey: stubs.signingConfig.apiKey,
+          apiSecret: stubs.signingConfig.apiSecret,
+          amoBaseUrl: stubs.signingConfig.amoBaseUrl,
+          downloadDir: artifactsDir,
+          id: applications.gecko?.id,
+          timeout: stubs.signingConfig.timeout,
+          xpiPath: stubs.buildResult.extensionPath,
+          channel,
+          userAgentString,
         });
       });
     }));

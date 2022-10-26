@@ -66,6 +66,7 @@ type ClientConstructorParams = {|
   approvalCheckInterval?: number,
   approvalCheckTimeout?: number,
   downloadDir?: string,
+  userAgentString?: string,
 |};
 
 export default class Client {
@@ -76,6 +77,7 @@ export default class Client {
   approvalCheckInterval: number;
   approvalCheckTimeout: number;
   downloadDir: string;
+  userAgentString: string;
 
   constructor({
     apiAuth,
@@ -85,6 +87,7 @@ export default class Client {
     approvalCheckInterval = 1000,
     approvalCheckTimeout = 900000, // 15 minutes.
     downloadDir = process.cwd(),
+    userAgentString = 'webext',
   }: ClientConstructorParams) {
     this.apiAuth = apiAuth;
     this.apiUrl = new URL('addons/', baseUrl);
@@ -93,6 +96,7 @@ export default class Client {
     this.approvalCheckInterval = approvalCheckInterval;
     this.approvalCheckTimeout = approvalCheckTimeout;
     this.downloadDir = downloadDir;
+    this.userAgentString = userAgentString;
   }
 
   fileFromSync(path: string): File {
@@ -263,6 +267,7 @@ export default class Client {
     let headers = {
       Authorization: await this.apiAuth.getAuthHeader(),
       Accept: 'application/json',
+      'User-Agent': this.userAgentString,
     };
     if (typeof body === 'string') {
       headers = {
@@ -360,6 +365,7 @@ type signAddonParams = {|
   channel: string,
   savedIdPath: string,
   metaDataJson?: Object,
+  userAgentString?: string,
   SubmitClient?: typeof Client,
   ApiAuthClass?: typeof JwtApiAuth,
 |};
@@ -375,6 +381,7 @@ export async function signAddon({
   channel,
   savedIdPath,
   metaDataJson = {},
+  userAgentString,
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
 }: signAddonParams): Promise<SignResult> {
@@ -401,6 +408,7 @@ export async function signAddon({
     validationCheckTimeout: timeout,
     approvalCheckTimeout: timeout,
     downloadDir,
+    userAgentString,
   });
 
   // We specifically need to know if `id` has not been passed as a parameter because
