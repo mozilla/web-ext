@@ -1,14 +1,14 @@
 /* @flow */
-import {beforeEach, afterEach} from 'mocha';
+import { beforeEach, afterEach } from 'mocha';
 
-import {consoleStream} from '../../src/util/logger.js';
+import { consoleStream } from '../../src/util/logger.js';
 
-beforeEach(function() {
+beforeEach(function () {
   consoleStream.makeVerbose();
   consoleStream.startCapturing();
 });
 
-afterEach(function() {
+afterEach(function () {
   if (this.currentTest.state !== 'passed') {
     consoleStream.flushCapturedLogs();
   }

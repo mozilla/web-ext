@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {Readable} from 'stream';
+import type { Readable } from 'stream';
 
 export function isTTY(stream: Readable): boolean {
   // $FlowFixMe: flow complains that stream may not provide isTTY as a property.

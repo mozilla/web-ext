@@ -1,17 +1,16 @@
 /* @flow */
-import {describe, it} from 'mocha';
-import {assert} from 'chai';
+import { describe, it } from 'mocha';
+import { assert } from 'chai';
 
-import {WebExtError, UsageError} from '../../../src/errors.js';
+import { WebExtError, UsageError } from '../../../src/errors.js';
 import {
-  getPrefs, coerceCLICustomPreference, nonOverridablePreferences,
+  getPrefs,
+  coerceCLICustomPreference,
+  nonOverridablePreferences,
 } from '../../../src/firefox/preferences.js';
 
-
 describe('firefox/preferences', () => {
-
   describe('getPrefs', () => {
-
     it('gets Firefox prefs with some defaults', () => {
       const prefs = getPrefs();
       // This is a commonly shared pref.
@@ -32,15 +31,16 @@ describe('firefox/preferences', () => {
     });
 
     it('throws an error for unsupported apps', () => {
-      // $FlowIgnore: ignore type errors on testing nonexistent 'thunderbird' prefs
-      assert.throws(() => getPrefs('thunderbird'),
-                    WebExtError, /Unsupported application: thunderbird/);
+      assert.throws(
+        // $FlowIgnore: ignore type errors on testing nonexistent 'thunderbird' prefs
+        () => getPrefs('thunderbird'),
+        WebExtError,
+        /Unsupported application: thunderbird/
+      );
     });
-
   });
 
   describe('coerceCLICustomPreference', () => {
-
     it('converts a single --pref cli option from string to object', () => {
       const prefs = coerceCLICustomPreference(['valid.preference=true']);
       assert.isObject(prefs);
@@ -49,7 +49,8 @@ describe('firefox/preferences', () => {
 
     it('converts array of --pref cli option values into object', () => {
       const prefs = coerceCLICustomPreference([
-        'valid.preference=true', 'valid.preference2=false',
+        'valid.preference=true',
+        'valid.preference2=false',
       ]);
       assert.isObject(prefs);
       assert.equal(prefs['valid.preference'], true);
@@ -72,15 +73,15 @@ describe('firefox/preferences', () => {
     });
 
     it('supports string values with "=" chars', () => {
-      const prefs = coerceCLICustomPreference(
-        ['valid.preference=value=withequals=chars']
-      );
+      const prefs = coerceCLICustomPreference([
+        'valid.preference=value=withequals=chars',
+      ]);
       assert.equal(prefs['valid.preference'], 'value=withequals=chars');
     });
 
     it('does not allow certain default preferences to be customized', () => {
       const nonChangeablePrefs = nonOverridablePreferences.map((prop) => {
-        return prop += '=true';
+        return (prop += '=true');
       });
       const prefs = coerceCLICustomPreference(nonChangeablePrefs);
       for (const pref of nonChangeablePrefs) {
@@ -93,14 +94,14 @@ describe('firefox/preferences', () => {
         () => coerceCLICustomPreference(['test.invalid.prop']),
         UsageError,
         'Incomplete custom preference: "test.invalid.prop". ' +
-        'Syntax expected: "prefname=prefvalue".'
+          'Syntax expected: "prefname=prefvalue".'
       );
 
-      assert.throws(() => coerceCLICustomPreference(['*&%£=true']),
-                    UsageError,
-                    'Invalid custom preference name: *&%£');
+      assert.throws(
+        () => coerceCLICustomPreference(['*&%£=true']),
+        UsageError,
+        'Invalid custom preference name: *&%£'
+      );
     });
-
   });
-
 });

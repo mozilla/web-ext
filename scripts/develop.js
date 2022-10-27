@@ -7,11 +7,12 @@ import notifier from 'node-notifier';
 
 import config from './lib/config.js';
 import eslint from './lib/eslint.js';
-import {flowStatus} from './lib/flow.js';
-import {mochaUnit, mochaFunctional} from './lib/mocha.js';
+import { flowStatus } from './lib/flow.js';
+import { mochaUnit, mochaFunctional } from './lib/mocha.js';
 import babel from './lib/babel.js';
 
-const COVERAGE = process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
+const COVERAGE =
+  process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
 
 console.log('Starting flow server...');
 if (!flowStatus()) {
@@ -22,13 +23,15 @@ const wp = new Watchpack();
 wp.watch(config.watch.files, config.watch.dirs);
 
 function notify(message) {
-  notifier.notify({title: 'web-ext develop: ', message});
+  notifier.notify({ title: 'web-ext develop: ', message });
 }
 
 let changed = new Set();
 
 async function runTasks(changes) {
-  const changesDetected = `\nChanges detected. ${changes.slice(0, 5).join(' ')}...`;
+  const changesDetected = `\nChanges detected. ${changes
+    .slice(0, 5)
+    .join(' ')}...`;
   console.log(changesDetected);
   notify(changesDetected);
 

@@ -1,0 +1,19 @@
+{
+  "arrowParens": "always",
+  "singleQuote": true,
+  "proseWrap": "never",
+  "overrides": [
+    {
+      "files": "scripts/*",
+      "options": {
+        "parser": "babel"
+      }
+    },
+    {
+      "files": "*.md",
+      "options": {
+        "proseWrap": "preserve"
+      }
+    }
+  ]
+}

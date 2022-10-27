@@ -15,21 +15,21 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 
 ## Documentation
 
-* [Getting started with web-ext][web-ext-user-docs]
-* [Command reference](https://extensionworkshop.com/documentation/develop/web-ext-command-reference)
+- [Getting started with web-ext][web-ext-user-docs]
+- [Command reference](https://extensionworkshop.com/documentation/develop/web-ext-command-reference)
 
 Here are the commands you can run. Click on each one for detailed documentation or use `--help` on the command line, such as `web-ext build --help`.
 
-* [`run`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-run)
-  * Run the extension
-* [`lint`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-lint)
-  * Validate the extension source
-* [`sign`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-sign)
-  * Sign the extension so it can be installed in Firefox
-* [`build`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-build)
-  * Create an extension package from source
-* [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-docs)
-  * Open the `web-ext` documentation in a browser
+- [`run`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-run)
+  - Run the extension
+- [`lint`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-lint)
+  - Validate the extension source
+- [`sign`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-sign)
+  - Sign the extension so it can be installed in Firefox
+- [`build`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-build)
+  - Create an extension package from source
+- [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-docs)
+  - Open the `web-ext` documentation in a browser
 
 ## Installation from npm
 
@@ -48,7 +48,7 @@ You can install this command onto your machine globally with:
 
 Alternatively, you can install this command as one of the
 [`devDependencies`](https://docs.npmjs.com/files/package.json#devdependencies)
-of your project.  This method can help you control the version of `web-ext`
+of your project. This method can help you control the version of `web-ext`
 as used by your team.
 
     npm install --save-dev web-ext
@@ -59,6 +59,7 @@ Here is an example where the `--source-dir` argument specifies where to find
 the source code for your extension.
 
 `package.json`
+
 ```json
 "scripts": {
   "start:firefox": "web-ext run --source-dir ./extension-dist/",
@@ -74,11 +75,13 @@ version on the command line with this:
 ## Installation from source
 
 You'll need:
-* [Node.js](https://nodejs.org/en/), 14.0.0 or higher
-* [npm](https://www.npmjs.com/), 6.9.0 or higher is recommended
+
+- [Node.js](https://nodejs.org/en/), 14.0.0 or higher
+- [npm](https://www.npmjs.com/), 6.9.0 or higher is recommended
 
 Optionally, you may like:
-* [nvm](https://github.com/creationix/nvm), which helps manage node versions
+
+- [nvm](https://github.com/creationix/nvm), which helps manage node versions
 
 If you had already installed `web-ext` from npm,
 you may need to uninstall it first:
@@ -125,17 +128,21 @@ You are able to execute command functions without any argument validation. If yo
 ```js
 import webExt from 'web-ext';
 
-webExt.cmd.run({
-  // These are command options derived from their CLI conterpart.
-  // In this example, --source-dir is specified as sourceDir.
-  firefox: '/path/to/Firefox-executable',
-  sourceDir: '/path/to/your/extension/source/',
-}, {
-  // These are non CLI related options for each function.
-  // You need to specify this one so that your NodeJS application
-  // can continue running after web-ext is finished.
-  shouldExitProgram: false,
-})
+webExt.cmd
+  .run(
+    {
+      // These are command options derived from their CLI conterpart.
+      // In this example, --source-dir is specified as sourceDir.
+      firefox: '/path/to/Firefox-executable',
+      sourceDir: '/path/to/your/extension/source/',
+    },
+    {
+      // These are non CLI related options for each function.
+      // You need to specify this one so that your NodeJS application
+      // can continue running after web-ext is finished.
+      shouldExitProgram: false,
+    }
+  )
   .then((extensionRunner) => {
     // The command has finished. Each command resolves its
     // promise with a different value.
@@ -173,33 +180,32 @@ webExt.cmd.run({
 If you would like to control logging, you can access the logger object. Here is an example of turning on verbose logging:
 
 ```js
-import * as webExtLogger from "web-ext/util/logger";
+import * as webExtLogger from 'web-ext/util/logger';
 
 webExtLogger.consoleStream.makeVerbose();
-webExt.cmd.run({sourceDir: './src'}, {shouldExitProgram: false});
+webExt.cmd.run({ sourceDir: './src' }, { shouldExitProgram: false });
 ```
 
 You can also disable the use of standard input:
 
 ```js
-webExt.cmd.run({noInput: true}, {shouldExitProgram: false});
+webExt.cmd.run({ noInput: true }, { shouldExitProgram: false });
 ```
 
 `web-ext` is designed for WebExtensions but you can try disabling manifest validation to work with legacy extensions. This is not officially supported.
 
 ```js
 webExt.cmd.run(
-  {sourceDir: './src'},
+  { sourceDir: './src' },
   {
     getValidatedManifest: () => ({
       name: 'some-fake-name',
       version: '1.0.0',
     }),
     shouldExitProgram: false,
-  },
+  }
 );
 ```
-
 
 ## Should I Use It?
 
@@ -224,11 +230,11 @@ feature. Most WebExtension functionality is baked into the browsers
 themselves but a complimentary command line tool will still be helpful.
 Here is a partial list of examples:
 
-* File watching.
-  * When you edit a file, you may need to trigger certain commands (tests,
+- File watching.
+  - When you edit a file, you may need to trigger certain commands (tests,
     installation, etc).
-* Integrating with services.
-  * Mozilla offers some useful services such as
+- Integrating with services.
+  - Mozilla offers some useful services such as
     [linting](https://github.com/mozilla/addons-linter) and
     [signing](https://addons-server.readthedocs.io/en/latest/topics/api/signing.html)
     extensions.

@@ -3,7 +3,7 @@ import path from 'path';
 
 import multimatch from 'multimatch';
 
-import {createLogger} from './logger.js';
+import { createLogger } from './logger.js';
 
 const log = createLogger(import.meta.url);
 
@@ -62,12 +62,9 @@ export class FileFilter {
       artifactsDir = path.resolve(artifactsDir);
       log.debug(
         `Ignoring artifacts directory "${artifactsDir}" ` +
-        'and all its subdirectories'
+          'and all its subdirectories'
       );
-      this.addToIgnoreList([
-        artifactsDir,
-        path.join(artifactsDir, '**', '*'),
-      ]);
+      this.addToIgnoreList([artifactsDir, path.join(artifactsDir, '**', '*')]);
     }
   }
 
@@ -78,7 +75,7 @@ export class FileFilter {
     const resolvedPath = path.resolve(this.sourceDir, file);
     log.debug(
       `Resolved path ${file} with sourceDir ${this.sourceDir} ` +
-      `to ${resolvedPath}`
+        `to ${resolvedPath}`
     );
     return resolvedPath;
   }
@@ -120,8 +117,7 @@ export class FileFilter {
 
 // a helper function to make mocking easier
 
-export const createFileFilter = (
-  (params: FileFilterOptions): FileFilter => new FileFilter(params)
-);
+export const createFileFilter = (params: FileFilterOptions): FileFilter =>
+  new FileFilter(params);
 
 export type FileFilterCreatorFn = typeof createFileFilter;

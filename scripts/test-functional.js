@@ -5,7 +5,7 @@ import path from 'path';
 import shell from 'shelljs';
 import tmp from 'tmp';
 
-import {mochaFunctional} from './lib/mocha.js';
+import { mochaFunctional } from './lib/mocha.js';
 
 const pkg = JSON.parse(shell.cat('package.json'));
 
@@ -17,12 +17,17 @@ const testLegacyBundling = process.env.TEST_LEGACY_BUNDLING === '1';
 
 let execMochaOptions = {};
 
-shell.exec('npm run build', testProductionMode ? {
-  env: {
-    ...process.env,
-    NODE_ENV: 'production',
-  },
-} : {});
+shell.exec(
+  'npm run build',
+  testProductionMode
+    ? {
+        env: {
+          ...process.env,
+          NODE_ENV: 'production',
+        },
+      }
+    : {}
+);
 
 if (testProductionMode) {
   const srcDir = process.cwd();
@@ -38,7 +43,13 @@ if (testProductionMode) {
   execMochaOptions = {
     env: {
       ...process.env,
-      TEST_WEB_EXT_BIN: path.join(destDir, 'node_modules', 'web-ext', 'bin', 'web-ext'),
+      TEST_WEB_EXT_BIN: path.join(
+        destDir,
+        'node_modules',
+        'web-ext',
+        'bin',
+        'web-ext'
+      ),
     },
   };
 
@@ -59,7 +70,9 @@ let ok = mochaFunctional(execMochaOptions);
 
 // Try to re-run the functional tests once more if they fails on a CI windows worker (#1510).
 if (!ok && process.env.CI_RETRY_ONCE) {
-  console.log('*** Functional tests failure on a CI window worker, trying to re-run once more...');
+  console.log(
+    '*** Functional tests failure on a CI window worker, trying to re-run once more...'
+  );
   ok = mochaFunctional(execMochaOptions);
 }
 

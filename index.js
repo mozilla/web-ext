@@ -9,4 +9,4 @@
 import webext from './lib/main.js';
 
 export default webext;
-export const {cmd, main} = webext;
+export const { cmd, main } = webext;

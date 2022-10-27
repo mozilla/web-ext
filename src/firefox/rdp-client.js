@@ -6,24 +6,24 @@ import domain from 'domain';
 export type RDPRequest = {
   to: string,
   type: string,
-}
+};
 
 export type RDPResult = {
   from: string,
   type: string,
-}
+};
 
 export type Deferred = {|
   resolve: Function,
   reject: Function,
-|}
+|};
 
 type ParseResult = {|
   data: Buffer,
   rdpMessage?: Object,
   error?: Error,
   fatal?: boolean,
-|}
+|};
 
 export const DEFAULT_PORT = 6000;
 export const DEFAULT_HOST = '127.0.0.1';
@@ -45,18 +45,18 @@ export function parseRDPMessage(data: Buffer): ParseResult {
   const str = data.toString();
   const sepIdx = str.indexOf(':');
   if (sepIdx < 1) {
-    return {data};
+    return { data };
   }
 
   const byteLen = parseInt(str.slice(0, sepIdx));
   if (isNaN(byteLen)) {
     const error = new Error('Error parsing RDP message length');
-    return {data, error, fatal: true};
+    return { data, error, fatal: true };
   }
 
   if (data.length - (sepIdx + 1) < byteLen) {
     // Can't parse yet, will retry once more data has been received.
-    return {data};
+    return { data };
   }
 
   data = data.slice(sepIdx + 1);
@@ -64,9 +64,9 @@ export function parseRDPMessage(data: Buffer): ParseResult {
   data = data.slice(byteLen);
 
   try {
-    return {data, rdpMessage: JSON.parse(msg.toString())};
+    return { data, rdpMessage: JSON.parse(msg.toString()) };
   } catch (error) {
-    return {data, error, fatal: false};
+    return { data, error, fatal: false };
   }
 }
 
@@ -119,7 +119,7 @@ export default class FirefoxRDPClient extends EventEmitter {
 
         // Resolve once the expected initial root message
         // has been received.
-        this._expectReply('root', {resolve, reject});
+        this._expectReply('root', { resolve, reject });
       });
     });
   }
@@ -145,7 +145,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     }
     this._active.clear();
 
-    for (const {deferred} of this._pending) {
+    for (const { deferred } of this._pending) {
       deferred.reject(error);
     }
     this._pending = [];
@@ -155,7 +155,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     let request: RDPRequest;
 
     if (typeof requestProps === 'string') {
-      request = {to: 'root', type: requestProps};
+      request = { to: 'root', type: requestProps };
     } else {
       request = requestProps;
     }
@@ -167,14 +167,14 @@ export default class FirefoxRDPClient extends EventEmitter {
     }
 
     return new Promise((resolve, reject) => {
-      const deferred = {resolve, reject};
-      this._pending.push({request, deferred});
+      const deferred = { resolve, reject };
+      this._pending.push({ request, deferred });
       this._flushPendingRequests();
     });
   }
 
   _flushPendingRequests(): void {
-    this._pending = this._pending.filter(({request, deferred}) => {
+    this._pending = this._pending.filter(({ request, deferred }) => {
       if (this._active.has(request.to)) {
         // Keep in the pending requests until there are no requests
         // active on the target RDP actor.
@@ -215,11 +215,14 @@ export default class FirefoxRDPClient extends EventEmitter {
         return;
       }
 
-      this.emit('error', new Error(
-        `Received an RDP message without a sender actor: ${
-          JSON.stringify(rdpData)
-        }`
-      ));
+      this.emit(
+        'error',
+        new Error(
+          `Received an RDP message without a sender actor: ${JSON.stringify(
+            rdpData
+          )}`
+        )
+      );
       return;
     }
 
@@ -240,15 +243,14 @@ export default class FirefoxRDPClient extends EventEmitter {
       return;
     }
 
-    this.emit('error', new Error(
-      `Unexpected RDP message received: ${JSON.stringify(rdpData)}`
-    ));
+    this.emit(
+      'error',
+      new Error(`Unexpected RDP message received: ${JSON.stringify(rdpData)}`)
+    );
   }
 
   _readMessage(): boolean {
-    const {
-      data, rdpMessage, error, fatal,
-    } = parseRDPMessage(this._incoming);
+    const { data, rdpMessage, error, fatal } = parseRDPMessage(this._incoming);
 
     this._incoming = data;
 

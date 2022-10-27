@@ -1,12 +1,8 @@
 /* @flow */
 import ADBKit from '@devicefarmer/adbkit';
 
-import {
-  isErrorWithCode,
-  UsageError,
-  WebExtError,
-} from '../errors.js';
-import {createLogger} from '../util/logger.js';
+import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
+import { createLogger } from '../util/logger.js';
 import packageIdentifiers, {
   defaultApkComponents,
 } from '../firefox/package-identifiers.js';
@@ -37,12 +33,15 @@ async function wrapADBCall(asyncFn: (...any) => Promise<any>): Promise<any> {
   try {
     return await asyncFn();
   } catch (error) {
-    if (isErrorWithCode('ENOENT', error) &&
-        error.message.includes('spawn adb')) {
+    if (
+      isErrorWithCode('ENOENT', error) &&
+      error.message.includes('spawn adb')
+    ) {
       throw new UsageError(
         'No adb executable has been found. ' +
           'You can Use --adb-bin, --adb-host/--adb-port ' +
-          'to configure it manually if needed.');
+          'to configure it manually if needed.'
+      );
     }
 
     throw error;
@@ -63,12 +62,7 @@ export default class ADBUtils {
   constructor(params: ADBUtilsParams) {
     this.params = params;
 
-    const {
-      adb,
-      adbBin,
-      adbHost,
-      adbPort,
-    } = params;
+    const { adb, adbBin, adbHost, adbPort } = params;
 
     this.adb = adb || defaultADB;
 
@@ -84,21 +78,23 @@ export default class ADBUtils {
   }
 
   runShellCommand(
-    deviceId: string, cmd: string | Array<string>
+    deviceId: string,
+    cmd: string | Array<string>
   ): Promise<string> {
-    const {adb, adbClient} = this;
+    const { adb, adbClient } = this;
 
     log.debug(`Run adb shell command on ${deviceId}: ${JSON.stringify(cmd)}`);
 
     return wrapADBCall(async () => {
-      return await adbClient.getDevice(deviceId).shell(cmd).then(
-        adb.util.readAll
-      );
+      return await adbClient
+        .getDevice(deviceId)
+        .shell(cmd)
+        .then(adb.util.readAll);
     }).then((res) => res.toString());
   }
 
   async discoverDevices(): Promise<Array<string>> {
-    const {adbClient} = this;
+    const { adbClient } = this;
 
     let devices = [];
 
@@ -115,10 +111,13 @@ export default class ADBUtils {
     log.debug(`Listing installed Firefox APKs on ${deviceId}`);
 
     const pmList = await this.runShellCommand(deviceId, [
-      'pm', 'list', 'packages',
+      'pm',
+      'list',
+      'packages',
     ]);
 
-    return pmList.split('\n')
+    return pmList
+      .split('\n')
       .map((line) => line.replace('package:', '').trim())
       .filter((line) => {
         // Look for an exact match if firefoxApk is defined.
@@ -137,9 +136,9 @@ export default class ADBUtils {
   }
 
   async getAndroidVersionNumber(deviceId: string): Promise<number> {
-    const androidVersion = (await this.runShellCommand(deviceId, [
-      'getprop', 'ro.build.version.sdk',
-    ])).trim();
+    const androidVersion = (
+      await this.runShellCommand(deviceId, ['getprop', 'ro.build.version.sdk'])
+    ).trim();
 
     const androidVersionNumber = parseInt(androidVersion);
 
@@ -147,7 +146,7 @@ export default class ADBUtils {
     if (isNaN(androidVersionNumber)) {
       throw new WebExtError(
         'Unable to discovery android version on ' +
-        `${deviceId}: ${androidVersion}`
+          `${deviceId}: ${androidVersion}`
       );
     }
 
@@ -156,7 +155,9 @@ export default class ADBUtils {
 
   // Raise an UsageError when the given APK does not have the required runtime permissions.
   async ensureRequiredAPKRuntimePermissions(
-    deviceId: string, apk: string, permissions: Array<string>
+    deviceId: string,
+    apk: string,
+    permissions: Array<string>
   ): Promise<void> {
     const permissionsMap = {};
 
@@ -166,15 +167,17 @@ export default class ADBUtils {
     }
 
     // Retrieve the permissions information for the given apk.
-    const pmDumpLogs = (await this.runShellCommand(deviceId, [
-      'pm', 'dump', apk,
-    ])).split('\n');
+    const pmDumpLogs = (
+      await this.runShellCommand(deviceId, ['pm', 'dump', apk])
+    ).split('\n');
 
     // Set to true the required permissions that have been granted.
     for (const line of pmDumpLogs) {
       for (const perm of permissions) {
-        if (line.includes(`${perm}: granted=true`) ||
-            line.includes(`${perm}, granted=true`)) {
+        if (
+          line.includes(`${perm}: granted=true`) ||
+          line.includes(`${perm}, granted=true`)
+        ) {
           permissionsMap[perm] = true;
         }
       }
@@ -184,18 +187,16 @@ export default class ADBUtils {
       if (!permissionsMap[perm]) {
         throw new UsageError(
           `Required ${perm} has not be granted for ${apk}. ` +
-          'Please grant them using the Android Settings ' +
-          'or using the following adb command:\n' +
-          `\t adb shell pm grant ${apk} ${perm}\n`
+            'Please grant them using the Android Settings ' +
+            'or using the following adb command:\n' +
+            `\t adb shell pm grant ${apk} ${perm}\n`
         );
       }
     }
   }
 
   async amForceStopAPK(deviceId: string, apk: string): Promise<void> {
-    await this.runShellCommand(deviceId, [
-      'am', 'force-stop', apk,
-    ]);
+    await this.runShellCommand(deviceId, ['am', 'force-stop', apk]);
   }
 
   async getOrCreateArtifactsDir(deviceId: string): Promise<string> {
@@ -207,14 +208,14 @@ export default class ADBUtils {
 
     artifactsDir = `${DEVICE_DIR_BASE}${ARTIFACTS_DIR_PREFIX}${Date.now()}`;
 
-    const testDirOut = (await this.runShellCommand(
-      deviceId, `test -d ${artifactsDir} ; echo $?`
-    )).trim();
+    const testDirOut = (
+      await this.runShellCommand(deviceId, `test -d ${artifactsDir} ; echo $?`)
+    ).trim();
 
     if (testDirOut !== '1') {
       throw new WebExtError(
         `Cannot create artifacts directory ${artifactsDir} ` +
-        `because it exists on ${deviceId}.`
+          `because it exists on ${deviceId}.`
       );
     }
 
@@ -226,21 +227,24 @@ export default class ADBUtils {
   }
 
   async detectOrRemoveOldArtifacts(
-    deviceId: string, removeArtifactDirs?: boolean = false
+    deviceId: string,
+    removeArtifactDirs?: boolean = false
   ): Promise<boolean> {
-    const {adbClient} = this;
+    const { adbClient } = this;
 
     log.debug('Checking adb device for existing web-ext artifacts dirs');
 
     return wrapADBCall(async () => {
-      const files = await adbClient.getDevice(deviceId).readdir(
-        DEVICE_DIR_BASE
-      );
+      const files = await adbClient
+        .getDevice(deviceId)
+        .readdir(DEVICE_DIR_BASE);
       let found = false;
 
       for (const file of files) {
-        if (!file.isDirectory() ||
-            !file.name.startsWith(ARTIFACTS_DIR_PREFIX)) {
+        if (
+          !file.isDirectory() ||
+          !file.name.startsWith(ARTIFACTS_DIR_PREFIX)
+        ) {
           continue;
         }
 
@@ -283,15 +287,19 @@ export default class ADBUtils {
   }
 
   async pushFile(
-    deviceId: string, localPath: string, devicePath: string
+    deviceId: string,
+    localPath: string,
+    devicePath: string
   ): Promise<void> {
-    const {adbClient} = this;
+    const { adbClient } = this;
 
     log.debug(`Pushing ${localPath} to ${devicePath} on ${deviceId}`);
 
     await wrapADBCall(async () => {
-      await adbClient.getDevice(deviceId).push(localPath, devicePath)
-        .then(function(transfer) {
+      await adbClient
+        .getDevice(deviceId)
+        .push(localPath, devicePath)
+        .then(function (transfer) {
           return new Promise((resolve) => {
             transfer.on('end', resolve);
           });
@@ -303,21 +311,21 @@ export default class ADBUtils {
     deviceId: string,
     apk: string,
     apkComponent: ?string,
-    deviceProfileDir: string,
+    deviceProfileDir: string
   ): Promise<void> {
-    const {adbClient} = this;
+    const { adbClient } = this;
 
-    log.debug(
-      `Starting ${apk} on ${deviceId}`
-    );
+    log.debug(`Starting ${apk} on ${deviceId}`);
 
     // Fenix does ignore the -profile parameter, on the contrary Fennec
     // would run using the given path as the profile to be used during
     // this execution.
-    const extras = [{
-      key: 'args',
-      value: `-profile ${deviceProfileDir}`,
-    }];
+    const extras = [
+      {
+        key: 'args',
+        value: `-profile ${deviceProfileDir}`,
+      },
+    ];
 
     if (!apkComponent) {
       apkComponent = '.App';
@@ -358,17 +366,17 @@ export default class ADBUtils {
   }
 
   async discoverRDPUnixSocket(
-    deviceId: string, apk: string,
-    {maxDiscoveryTime, retryInterval}: DiscoveryParams = {}
+    deviceId: string,
+    apk: string,
+    { maxDiscoveryTime, retryInterval }: DiscoveryParams = {}
   ): Promise<string> {
     let rdpUnixSockets = [];
 
     const discoveryStartedAt = Date.now();
-    const msg = (
+    const msg =
       `Waiting for ${apk} Remote Debugging Server...` +
       '\nMake sure to enable "Remote Debugging via USB" ' +
-      'from Settings -> Developer Tools if it is not yet enabled.'
-    );
+      'from Settings -> Developer Tools if it is not yet enabled.';
 
     while (rdpUnixSockets.length === 0) {
       log.info(msg);
@@ -384,13 +392,15 @@ export default class ADBUtils {
         );
       }
 
-      rdpUnixSockets = (await this.runShellCommand(deviceId, [
-        'cat', '/proc/net/unix',
-      ])).split('\n').filter((line) => {
-        // The RDP unix socket is expected to be a path in the form:
-        //   /data/data/org.mozilla.fennec_rpl/firefox-debugger-socket
-        return line.trim().endsWith(`${apk}/firefox-debugger-socket`);
-      });
+      rdpUnixSockets = (
+        await this.runShellCommand(deviceId, ['cat', '/proc/net/unix'])
+      )
+        .split('\n')
+        .filter((line) => {
+          // The RDP unix socket is expected to be a path in the form:
+          //   /data/data/org.mozilla.fennec_rpl/firefox-debugger-socket
+          return line.trim().endsWith(`${apk}/firefox-debugger-socket`);
+        });
 
       if (rdpUnixSockets.length === 0) {
         await new Promise((resolve) => setTimeout(resolve, retryInterval));
@@ -405,7 +415,7 @@ export default class ADBUtils {
     if (rdpUnixSockets.length > 1) {
       throw new WebExtError(
         'Unexpected multiple RDP sockets: ' +
-        `${JSON.stringify(rdpUnixSockets)}`
+          `${JSON.stringify(rdpUnixSockets)}`
       );
     }
 
@@ -413,7 +423,7 @@ export default class ADBUtils {
   }
 
   async setupForward(deviceId: string, remote: string, local: string) {
-    const {adbClient} = this;
+    const { adbClient } = this;
 
     // TODO(rpl): we should use adb.listForwards and reuse the existing one if any (especially
     // because adbkit doesn't seem to support `adb forward --remote` yet).
@@ -426,7 +436,7 @@ export default class ADBUtils {
 }
 
 export async function listADBDevices(adbBin?: string): Promise<Array<string>> {
-  const adbUtils = new ADBUtils({adbBin});
+  const adbUtils = new ADBUtils({ adbBin });
   return adbUtils.discoverDevices();
 }
 
@@ -434,6 +444,6 @@ export async function listADBFirefoxAPKs(
   deviceId: string,
   adbBin?: string
 ): Promise<Array<string>> {
-  const adbUtils = new ADBUtils({adbBin});
+  const adbUtils = new ADBUtils({ adbBin });
   return adbUtils.discoverInstalledFirefoxAPKs(deviceId);
 }

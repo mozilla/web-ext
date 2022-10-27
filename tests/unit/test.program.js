@@ -1,13 +1,13 @@
 /* @flow */
 import path from 'path';
 
-import {describe, it} from 'mocha';
+import { describe, it } from 'mocha';
 import git from 'git-rev-sync';
-import {fs} from 'mz';
+import { fs } from 'mz';
 import * as sinon from 'sinon';
-import {assert} from 'chai';
+import { assert } from 'chai';
 
-import {applyConfigToArgv} from '../../src/config.js';
+import { applyConfigToArgv } from '../../src/config.js';
 import {
   defaultVersionGetter,
   main,
@@ -15,10 +15,7 @@ import {
   throwUsageErrorIfArray,
 } from '../../src/program.js';
 import commands from '../../src/cmd/index.js';
-import {
-  onlyInstancesOf,
-  UsageError,
-} from '../../src/errors.js';
+import { onlyInstancesOf, UsageError } from '../../src/errors.js';
 import {
   createFakeProcess,
   fake,
@@ -31,10 +28,9 @@ import {
   ConsoleStream,
 } from '../../src/util/logger.js';
 
-const {spy} = sinon;
+const { spy } = sinon;
 
 describe('program.Program', () => {
-
   function execProgram(program, options = {}) {
     const fakeProcess = createFakeProcess();
     const absolutePackageDir = path.join(
@@ -56,51 +52,59 @@ describe('program.Program', () => {
 
   it('executes a command callback', () => {
     const thing = spy(() => Promise.resolve());
-    const program = new Program(['thing'])
-      .command('thing', 'does a thing', thing, null);
-    return execProgram(program)
-      .then(() => {
-        sinon.assert.called(thing);
-      });
+    const program = new Program(['thing']).command(
+      'thing',
+      'does a thing',
+      thing,
+      null
+    );
+    return execProgram(program).then(() => {
+      sinon.assert.called(thing);
+    });
   });
 
   it('reports unknown commands', () => {
     const program = new Program(['thing']);
     return execProgram(program)
       .then(makeSureItFails())
-      .catch(onlyInstancesOf(UsageError, (error) => {
-        assert.match(error.message, /Unknown argument: thing/);
-      }));
+      .catch(
+        onlyInstancesOf(UsageError, (error) => {
+          assert.match(error.message, /Unknown argument: thing/);
+        })
+      );
   });
 
   it('reports missing command', () => {
     const program = new Program([]);
     return execProgram(program)
       .then(makeSureItFails())
-      .catch(onlyInstancesOf(UsageError, (error) => {
-        assert.match(error.message, /No sub-command was specified/);
-      }));
+      .catch(
+        onlyInstancesOf(UsageError, (error) => {
+          assert.match(error.message, /No sub-command was specified/);
+        })
+      );
   });
 
   it('exits 1 on a thrown error', () => {
     const fakeProcess = createFakeProcess();
-    const program = new Program(['cmd'])
-      .command('cmd', 'some command', () => {
-        throw new Error('this is an error from a command handler');
-      });
+    const program = new Program(['cmd']).command('cmd', 'some command', () => {
+      throw new Error('this is an error from a command handler');
+    });
     return execProgram(program, {
       systemProcess: fakeProcess,
       shouldExitProgram: true,
-    })
-      .then(() => {
-        sinon.assert.calledOnce(fakeProcess.exit);
-        sinon.assert.calledWith(fakeProcess.exit, 1);
-      });
+    }).then(() => {
+      sinon.assert.calledOnce(fakeProcess.exit);
+      sinon.assert.calledWith(fakeProcess.exit, 1);
+    });
   });
 
   it('throws an error if sub-command is given an argument', () => {
-    const program = new Program(['thing', 'nope'])
-      .command('thing', '', () => {});
+    const program = new Program(['thing', 'nope']).command(
+      'thing',
+      '',
+      () => {}
+    );
     return execProgram(program)
       .then(makeSureItFails())
       .catch((error) => {
@@ -109,12 +113,10 @@ describe('program.Program', () => {
   });
 
   it('handles errors that have codes', () => {
-
-    const program = new Program(['cmd'])
-      .command('cmd', 'some command', () => {
-        const error = new ErrorWithCode();
-        throw error;
-      });
+    const program = new Program(['cmd']).command('cmd', 'some command', () => {
+      const error = new ErrorWithCode();
+      throw error;
+    });
     // This is just a smoke test to make sure the error code doesn't
     // introduce an unexpected exception.
     return execProgram(program)
@@ -126,19 +128,22 @@ describe('program.Program', () => {
 
   it('lets commands define options', () => {
     const handler = spy(() => Promise.resolve());
-    const program = new Program(['cmd'])
-      .command('cmd', 'some command', handler, {
+    const program = new Program(['cmd']).command(
+      'cmd',
+      'some command',
+      handler,
+      {
         'some-option': {
           type: 'string',
           default: 'default value',
         },
-      });
-    return execProgram(program)
-      .then(() => {
-        // This ensures that the default configuration for the option has
-        // been applied.
-        sinon.assert.calledWithMatch(handler, {someOption: 'default value'});
-      });
+      }
+    );
+    return execProgram(program).then(() => {
+      // This ensures that the default configuration for the option has
+      // been applied.
+      sinon.assert.calledWithMatch(handler, { someOption: 'default value' });
+    });
   });
 
   it('preserves global option configuration', () => {
@@ -156,37 +161,37 @@ describe('program.Program', () => {
           default: 'default value',
         },
       });
-    return execProgram(program)
-      .then(() => {
-        // By checking the global default, it ensures that default configuration
-        // will be applied to sub commands.
-        sinon.assert.calledWithMatch(
-          handler,
-          {
-            someOption: 'default value',
-            globalOption: 'the default',
-          });
+    return execProgram(program).then(() => {
+      // By checking the global default, it ensures that default configuration
+      // will be applied to sub commands.
+      sinon.assert.calledWithMatch(handler, {
+        someOption: 'default value',
+        globalOption: 'the default',
       });
+    });
   });
 
   it('reads option values from env vars in sub commands', () => {
     // Set an env var that mimics web-ext cmd --some-opt=value
     process.env.WEB_EXT_SOME_OPT = 'value';
     let valueReceived;
-    const program = new Program(['cmd'])
-      .command('cmd', 'some command', ({someOpt}) => {
+    const program = new Program(['cmd']).command(
+      'cmd',
+      'some command',
+      ({ someOpt }) => {
         valueReceived = someOpt;
-      }, {
+      },
+      {
         'some-opt': {
           type: 'string',
           describe: 'example option',
         },
-      });
-    return execProgram(program, {shouldExitProgram: true})
-      .then(() => {
-        assert.equal(valueReceived, 'value');
-        delete process.env.WEB_EXT_SOME_OPT;
-      });
+      }
+    );
+    return execProgram(program, { shouldExitProgram: true }).then(() => {
+      assert.equal(valueReceived, 'value');
+      delete process.env.WEB_EXT_SOME_OPT;
+    });
   });
 
   it('configures the logger when verbose', () => {
@@ -203,10 +208,9 @@ describe('program.Program', () => {
     return execProgram(program, {
       getVersion: spy(),
       logStream,
-    })
-      .then(() => {
-        sinon.assert.called(logStream.makeVerbose);
-      });
+    }).then(() => {
+      sinon.assert.called(logStream.makeVerbose);
+    });
   });
 
   it('checks the version when verbose', () => {
@@ -218,12 +222,12 @@ describe('program.Program', () => {
       },
     });
     program.command('thing', 'does a thing', () => {});
-    return execProgram(program, {getVersion: version})
-      .then(() => {
-        sinon.assert.calledWith(version, path.join(
-          moduleURLToDirname(import.meta.url), '..', '..')
-        );
-      });
+    return execProgram(program, { getVersion: version }).then(() => {
+      sinon.assert.calledWith(
+        version,
+        path.join(moduleURLToDirname(import.meta.url), '..', '..')
+      );
+    });
   });
 
   it('does not configure the logger unless verbose', () => {
@@ -235,10 +239,9 @@ describe('program.Program', () => {
         demandOption: false,
       },
     });
-    return execProgram(program, {logStream})
-      .then(() => {
-        sinon.assert.notCalled(logStream.makeVerbose);
-      });
+    return execProgram(program, { logStream }).then(() => {
+      sinon.assert.notCalled(logStream.makeVerbose);
+    });
   });
 
   it('logs UsageErrors into console', () => {
@@ -258,15 +261,17 @@ describe('program.Program', () => {
     });
     return execProgram(program)
       .then(makeSureItFails())
-      .catch(onlyInstancesOf(UsageError, (error) => {
-        const {capturedMessages} = consoleStream;
-        // Stop recording
-        consoleStream.stopCapturing();
-        assert.match(error.message, /some error/);
-        assert.ok(capturedMessages.some(
-          (message) => message.match(/some error/))
-        );
-      }));
+      .catch(
+        onlyInstancesOf(UsageError, (error) => {
+          const { capturedMessages } = consoleStream;
+          // Stop recording
+          consoleStream.stopCapturing();
+          assert.match(error.message, /some error/);
+          assert.ok(
+            capturedMessages.some((message) => message.match(/some error/))
+          );
+        })
+      );
   });
 
   it('throws an error about unknown commands', () => {
@@ -288,8 +293,11 @@ describe('program.Program', () => {
   });
 
   it('throws an error about unknown sub-command options', () => {
-    const program = new Program(['thing', '--nope'])
-      .command('thing', '', () => {});
+    const program = new Program(['thing', '--nope']).command(
+      'thing',
+      '',
+      () => {}
+    );
     return execProgram(program)
       .then(makeSureItFails())
       .catch((error) => {
@@ -303,121 +311,118 @@ describe('program.Program', () => {
     const handler = spy();
     const getVersion = async () => 'some-package-version';
     const checkForUpdates = sinon.stub();
-    const program = new Program(['run'])
-      .command('run', 'some command', handler);
+    const program = new Program(['run']).command(
+      'run',
+      'some command',
+      handler
+    );
     return execProgram(program, {
       checkForUpdates,
       getVersion,
       globalEnv: 'production',
-    })
-      .then(() => {
-        sinon.assert.calledWith(
-          checkForUpdates, {version: 'some-package-version'});
+    }).then(() => {
+      sinon.assert.calledWith(checkForUpdates, {
+        version: 'some-package-version',
       });
+    });
   });
 
   it('does not check for updates during development', () => {
     const handler = spy();
     const getVersion = async () => 'some-package-version';
     const checkForUpdates = sinon.stub();
-    const program = new Program(['run'])
-      .command('run', 'some command', handler);
+    const program = new Program(['run']).command(
+      'run',
+      'some command',
+      handler
+    );
     return execProgram(program, {
       checkForUpdates,
       getVersion,
       globalEnv: 'development',
-    })
-      .then(() => {
-        sinon.assert.notCalled(checkForUpdates);
-      });
+    }).then(() => {
+      sinon.assert.notCalled(checkForUpdates);
+    });
   });
 
-  it('does remove environment vars unsupported by the selected command',
-     async () => {
-       const handlerRun = spy();
-       const handlerSpy = spy();
-       const program = new Program(['run', '--another-run-option=from-cli']);
-       const fakeEnv = {
-         WEB_EXT_RUN_OPTION: 'from-env',
-         WEB_EXT_VERBOSE: 'true',
-         WEB_EXT_SIGN_OPTION: 'from-env',
-         // Also include some environment vars that miss the '_' separator
-         // between envPrefix and option name.
-         WEB_EXTANOTHER_RUN_OPTION: 'from-env',
-         WEB_EXTANOTHER_SIGN_OPTION: 'from-env',
-       };
-       program.setGlobalOptions({
-         verbose: {
-           type: 'boolean',
-           demandOption: false,
-           default: false,
-         },
-       });
-       program.command('run', 'some command', handlerRun, {
-         'run-option': {
-           demandOption: true,
-           type: 'string',
-         },
-         'another-run-option': {
-           demandOption: true,
-           default: 'from-default',
-           type: 'string',
-         },
-       });
-       program.command('sign', 'another command', handlerSpy, {
-         'sign-option': {
-           demandOption: true,
-           default: 'from-default',
-           type: 'string',
-         },
-         'another-sign-option': {
-           demandOption: true,
-           default: 'from-default',
-           type: 'string',
-         },
-       });
+  it('does remove environment vars unsupported by the selected command', async () => {
+    const handlerRun = spy();
+    const handlerSpy = spy();
+    const program = new Program(['run', '--another-run-option=from-cli']);
+    const fakeEnv = {
+      WEB_EXT_RUN_OPTION: 'from-env',
+      WEB_EXT_VERBOSE: 'true',
+      WEB_EXT_SIGN_OPTION: 'from-env',
+      // Also include some environment vars that miss the '_' separator
+      // between envPrefix and option name.
+      WEB_EXTANOTHER_RUN_OPTION: 'from-env',
+      WEB_EXTANOTHER_SIGN_OPTION: 'from-env',
+    };
+    program.setGlobalOptions({
+      verbose: {
+        type: 'boolean',
+        demandOption: false,
+        default: false,
+      },
+    });
+    program.command('run', 'some command', handlerRun, {
+      'run-option': {
+        demandOption: true,
+        type: 'string',
+      },
+      'another-run-option': {
+        demandOption: true,
+        default: 'from-default',
+        type: 'string',
+      },
+    });
+    program.command('sign', 'another command', handlerSpy, {
+      'sign-option': {
+        demandOption: true,
+        default: 'from-default',
+        type: 'string',
+      },
+      'another-sign-option': {
+        demandOption: true,
+        default: 'from-default',
+        type: 'string',
+      },
+    });
 
-       // $FlowIgnore: override systemProcess for testing purpose.
-       program.cleanupProcessEnvConfigs({env: fakeEnv});
-       assert.deepEqual(fakeEnv, {
-         WEB_EXT_RUN_OPTION: 'from-env',
-         WEB_EXTANOTHER_RUN_OPTION: 'from-env',
-         WEB_EXT_VERBOSE: 'true',
-       });
-     });
+    // $FlowIgnore: override systemProcess for testing purpose.
+    program.cleanupProcessEnvConfigs({ env: fakeEnv });
+    assert.deepEqual(fakeEnv, {
+      WEB_EXT_RUN_OPTION: 'from-env',
+      WEB_EXTANOTHER_RUN_OPTION: 'from-env',
+      WEB_EXT_VERBOSE: 'true',
+    });
+  });
 });
 
-
 describe('program.main', () => {
-
   function execProgram(
     argv,
-    {projectRoot = '', runOptions, ...mainOptions}: Object = {}
+    { projectRoot = '', runOptions, ...mainOptions }: Object = {}
   ) {
-    return main(
-      projectRoot,
-      {
-        argv,
-        getVersion: () => 'not-a-real-version',
-        runOptions: {
-          discoverConfigFiles: async () => [],
-          checkForUpdates: spy(),
-          shouldExitProgram: false,
-          systemProcess: createFakeProcess(),
-          ...runOptions,
-        },
-        ...mainOptions,
-      }
-    );
+    return main(projectRoot, {
+      argv,
+      getVersion: () => 'not-a-real-version',
+      runOptions: {
+        discoverConfigFiles: async () => [],
+        checkForUpdates: spy(),
+        shouldExitProgram: false,
+        systemProcess: createFakeProcess(),
+        ...runOptions,
+      },
+      ...mainOptions,
+    });
   }
 
   type MakeConfigLoaderParams = {|
     configObjects: { [fileName: string]: Object },
   |};
 
-  function makeConfigLoader(
-    {configObjects}: MakeConfigLoaderParams
-  ) {
+  function makeConfigLoader({ configObjects }: MakeConfigLoaderParams) {
     return (fileName) => {
       const conf = configObjects[fileName];
       if (!conf) {
@@ -431,18 +436,17 @@ describe('program.main', () => {
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
     });
-    return execProgram(['build'], {commands: fakeCommands})
-      .then(() => {
-        // This is a smoke test mainly to make sure main() configures
-        // options with handlers. It does not extensively test the
-        // configuration of all handlers.
-        sinon.assert.called(fakeCommands.build);
-      });
+    return execProgram(['build'], { commands: fakeCommands }).then(() => {
+      // This is a smoke test mainly to make sure main() configures
+      // options with handlers. It does not extensively test the
+      // configuration of all handlers.
+      sinon.assert.called(fakeCommands.build);
+    });
   });
 
   it('throws an error if no command is given', () => {
     const fakeCommands = fake(commands, {});
-    return execProgram([], {commands: fakeCommands})
+    return execProgram([], { commands: fakeCommands })
       .then(makeSureItFails())
       .catch((error) => {
         assert.match(error.message, /You must specify a command/);
@@ -470,14 +474,13 @@ describe('program.main', () => {
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
     });
-    return execProgram(
-      ['build', '--source-dir', '..'], {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.build,
-          {sourceDir: path.resolve(path.join(process.cwd(), '..'))}
-        );
+    return execProgram(['build', '--source-dir', '..'], {
+      commands: fakeCommands,
+    }).then(() => {
+      sinon.assert.calledWithMatch(fakeCommands.build, {
+        sourceDir: path.resolve(path.join(process.cwd(), '..')),
       });
+    });
   });
 
   it('normalizes the artifactsDir path', () => {
@@ -487,35 +490,32 @@ describe('program.main', () => {
     return execProgram(
       // Add a double slash to the path, which will be fixed by normalization.
       ['build', '--artifacts-dir', process.cwd() + path.sep + path.sep],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.build,
-          {artifactsDir: process.cwd() + path.sep}
-        );
+      { commands: fakeCommands }
+    ).then(() => {
+      sinon.assert.calledWithMatch(fakeCommands.build, {
+        artifactsDir: process.cwd() + path.sep,
       });
+    });
   });
 
   it('passes the path of a firefox binary when specified', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
-    return execProgram(
-      ['run', '--firefox-binary', '/path/to/firefox-binary'],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          {firefox: '/path/to/firefox-binary'}
-        );
+    return execProgram(['run', '--firefox-binary', '/path/to/firefox-binary'], {
+      commands: fakeCommands,
+    }).then(() => {
+      sinon.assert.calledWithMatch(fakeCommands.run, {
+        firefox: '/path/to/firefox-binary',
       });
+    });
   });
 
   it('passes the url of a firefox binary when specified', async () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
-    const opts = {commands: fakeCommands};
+    const opts = { commands: fakeCommands };
 
     await execProgram(['run', '--start-url', 'www.example.com'], opts);
     sinon.assert.calledWithMatch(fakeCommands.run, {
@@ -541,30 +541,22 @@ describe('program.main', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
-    return execProgram(
-      ['run', '--browser-console'],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          {browserConsole: true}
-        );
-      });
+    return execProgram(['run', '--browser-console'], {
+      commands: fakeCommands,
+    }).then(() => {
+      sinon.assert.calledWithMatch(fakeCommands.run, { browserConsole: true });
+    });
   });
 
   it('opens devtools when --devtools is specified', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
-    return execProgram(
-      ['run', '--devtools'],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          {devtools: true}
-        );
-      });
+    return execProgram(['run', '--devtools'], { commands: fakeCommands }).then(
+      () => {
+        sinon.assert.calledWithMatch(fakeCommands.run, { devtools: true });
+      }
+    );
   });
 
   async function testWatchFileOption(watchFile) {
@@ -572,15 +564,11 @@ describe('program.main', () => {
       run: () => Promise.resolve(),
     });
 
-    return execProgram(
-      ['run', '--watch-file', ...watchFile],
-      {commands: fakeCommands})
-      .then(() => {
-        sinon.assert.calledWithMatch(
-          fakeCommands.run,
-          {watchFile}
-        );
-      });
+    return execProgram(['run', '--watch-file', ...watchFile], {
+      commands: fakeCommands,
+    }).then(() => {
+      sinon.assert.calledWithMatch(fakeCommands.run, { watchFile });
+    });
   }
 
   it('calls run with a watched file', () => {
@@ -588,9 +576,7 @@ describe('program.main', () => {
   });
 
   it('calls run with multiple watched files', () => {
-    testWatchFileOption(
-      ['path/to/fake/file.txt', 'path/to/fake/file2.txt']
-    );
+    testWatchFileOption(['path/to/fake/file.txt', 'path/to/fake/file2.txt']);
   });
 
   async function testWatchIgnoredOption(watchIgnored) {
@@ -598,15 +584,13 @@ describe('program.main', () => {
       run: () => Promise.resolve(),
     });
 
-    await execProgram(
-      ['run', '--watch-ignored', ...watchIgnored],
-      {commands: fakeCommands});
+    await execProgram(['run', '--watch-ignored', ...watchIgnored], {
+      commands: fakeCommands,
+    });
 
-    sinon.assert.calledWithMatch(
-      execProgram,
-      fakeCommands.run,
-      {watchIgnored}
-    );
+    sinon.assert.calledWithMatch(execProgram, fakeCommands.run, {
+      watchIgnored,
+    });
   }
 
   it('calls run with a single watchIgnored pattern', () => {
@@ -614,9 +598,7 @@ describe('program.main', () => {
   });
 
   it('calls run with a multiple watchIgnored patterns', () => {
-    testWatchIgnoredOption(
-      ['path/to/fake/file1.txt', 'path/to/fake/pattern*']
-    );
+    testWatchIgnoredOption(['path/to/fake/file1.txt', 'path/to/fake/pattern*']);
   });
 
   it('converts custom preferences into an object', () => {
@@ -625,20 +607,20 @@ describe('program.main', () => {
     });
     return execProgram(
       ['run', '--pref', 'prop=true', '--pref', 'prop2=value2'],
-      {commands: fakeCommands})
-      .then(() => {
-        const {pref} = fakeCommands.run.firstCall.args[0];
-        assert.isObject(pref);
-        assert.equal(pref.prop, true);
-        assert.equal(pref.prop2, 'value2');
-      });
+      { commands: fakeCommands }
+    ).then(() => {
+      const { pref } = fakeCommands.run.firstCall.args[0];
+      assert.isObject(pref);
+      assert.equal(pref.prop, true);
+      assert.equal(pref.prop2, 'value2');
+    });
   });
 
   it('passes shouldExitProgram option to commands', () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
     });
-    return execProgram(['lint'], {commands: fakeCommands}).then(() => {
+    return execProgram(['lint'], { commands: fakeCommands }).then(() => {
       const options = fakeCommands.lint.firstCall.args[1];
       assert.strictEqual(options.shouldExitProgram, false);
     });
@@ -658,21 +640,17 @@ describe('program.main', () => {
       return configObject;
     });
 
-    await execProgram(
-      ['lint', '--config', 'path/to/web-ext-config.js'],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          loadJSConfigFile: fakeLoadJSConfigFile,
-        },
-      }
-    );
+    await execProgram(['lint', '--config', 'path/to/web-ext-config.js'], {
+      commands: fakeCommands,
+      runOptions: {
+        loadJSConfigFile: fakeLoadJSConfigFile,
+      },
+    });
 
     const options = fakeCommands.lint.firstCall.args[0];
     // This makes sure that the config object was applied
     // to the lint command options.
-    assert.equal(
-      options.selfHosted, configObject.lint.selfHosted);
+    assert.equal(options.selfHosted, configObject.lint.selfHosted);
   });
 
   it('discovers config files', async () => {
@@ -690,22 +668,18 @@ describe('program.main', () => {
     });
 
     const discoveredFile = 'fake/config.js';
-    await execProgram(
-      ['lint'],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          discoverConfigFiles: async () => [discoveredFile],
-          loadJSConfigFile: fakeLoadJSConfigFile,
-        },
-      }
-    );
+    await execProgram(['lint'], {
+      commands: fakeCommands,
+      runOptions: {
+        discoverConfigFiles: async () => [discoveredFile],
+        loadJSConfigFile: fakeLoadJSConfigFile,
+      },
+    });
 
     const options = fakeCommands.lint.firstCall.args[0];
     // This makes sure that the config object was applied
     // to the lint command options.
-    assert.equal(
-      options.selfHosted, configObject.lint.selfHosted);
+    assert.equal(options.selfHosted, configObject.lint.selfHosted);
 
     sinon.assert.calledWith(fakeLoadJSConfigFile, discoveredFile);
   });
@@ -716,15 +690,12 @@ describe('program.main', () => {
     });
 
     const discoverConfigFiles = sinon.spy(() => Promise.resolve([]));
-    await execProgram(
-      ['lint', '--no-config-discovery'],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          discoverConfigFiles,
-        },
-      }
-    );
+    await execProgram(['lint', '--no-config-discovery'], {
+      commands: fakeCommands,
+      runOptions: {
+        discoverConfigFiles,
+      },
+    });
 
     sinon.assert.notCalled(discoverConfigFiles);
   });
@@ -755,19 +726,14 @@ describe('program.main', () => {
     });
     const fakeApplyConfigToArgv = sinon.spy(applyConfigToArgv);
 
-    await execProgram(
-      ['lint', '--config', customConfig],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          applyConfigToArgv: fakeApplyConfigToArgv,
-          discoverConfigFiles: async () => [
-            globalConfig, projectConfig,
-          ],
-          loadJSConfigFile,
-        },
-      }
-    );
+    await execProgram(['lint', '--config', customConfig], {
+      commands: fakeCommands,
+      runOptions: {
+        applyConfigToArgv: fakeApplyConfigToArgv,
+        discoverConfigFiles: async () => [globalConfig, projectConfig],
+        loadJSConfigFile,
+      },
+    });
 
     // Check that the config files were all applied to argv.
     const options = fakeCommands.lint.firstCall.args[0];
@@ -809,16 +775,13 @@ describe('program.main', () => {
       },
     });
 
-    await execProgram(
-      ['lint', '--config', customConfig],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          discoverConfigFiles: async () => [globalConfig],
-          loadJSConfigFile,
-        },
-      }
-    );
+    await execProgram(['lint', '--config', customConfig], {
+      commands: fakeCommands,
+      runOptions: {
+        discoverConfigFiles: async () => [globalConfig],
+        loadJSConfigFile,
+      },
+    });
 
     const options = fakeCommands.lint.firstCall.args[0];
     // This should equal the final configured value.
@@ -841,28 +804,27 @@ describe('program.main', () => {
       },
     });
 
-    await execProgram(
-      ['lint', '--config', customConfig],
-      {
-        commands: fakeCommands,
-        runOptions: {
-          discoverConfigFiles: async () => [],
-          loadJSConfigFile,
-          logStream,
-        },
-      }
-    );
+    await execProgram(['lint', '--config', customConfig], {
+      commands: fakeCommands,
+      runOptions: {
+        discoverConfigFiles: async () => [],
+        loadJSConfigFile,
+        logStream,
+      },
+    });
 
     sinon.assert.called(logStream.makeVerbose);
   });
 
   it('requires a parameter after --ignore-files', async () => {
     const fakeCommands = fake(commands);
-    return execProgram(['build', '--ignore-files'], {commands: fakeCommands})
+    return execProgram(['build', '--ignore-files'], { commands: fakeCommands })
       .then(makeSureItFails())
       .catch((error) => {
         assert.match(
-          error.message, /Not enough arguments following: ignore-files/);
+          error.message,
+          /Not enough arguments following: ignore-files/
+        );
       });
   });
 
@@ -872,32 +834,25 @@ describe('program.main', () => {
     });
     return execProgram(
       ['build', '--ignore-files', 'f1', 'f2', '-a', 'xxx', '-i', 'f4', 'f3'],
-      {commands: fakeCommands})
-      .then(() => {
-        const options = fakeCommands.build.firstCall.args[0];
-        assert.deepEqual(options.ignoreFiles, ['f1', 'f2', 'f4', 'f3']);
-        assert.equal(options.artifactsDir, 'xxx');
-      });
+      { commands: fakeCommands }
+    ).then(() => {
+      const options = fakeCommands.build.firstCall.args[0];
+      assert.deepEqual(options.ignoreFiles, ['f1', 'f2', 'f4', 'f3']);
+      assert.equal(options.artifactsDir, 'xxx');
+    });
   });
 
-  it(
-    'does pass a custom apk component with --firefox-apk-component',
-    async () => {
-      const fakeCommands = fake(commands, {
-        build: () => Promise.resolve(),
-      });
-      await execProgram(
-        [
-          'run',
-          '--firefox-apk-component', 'CustomView',
-          '-t', 'firefox-android',
-        ],
-        {commands: fakeCommands}
-      );
-      const options = fakeCommands.run.firstCall.args[0];
-      assert.equal(options.firefoxApkComponent, 'CustomView');
-    }
-  );
+  it('does pass a custom apk component with --firefox-apk-component', async () => {
+    const fakeCommands = fake(commands, {
+      build: () => Promise.resolve(),
+    });
+    await execProgram(
+      ['run', '--firefox-apk-component', 'CustomView', '-t', 'firefox-android'],
+      { commands: fakeCommands }
+    );
+    const options = fakeCommands.run.firstCall.args[0];
+    assert.equal(options.firefoxApkComponent, 'CustomView');
+  });
 
   describe('--no-input', () => {
     const fakeCommands = fake(commands, {
@@ -905,25 +860,23 @@ describe('program.main', () => {
     });
 
     const testCases = [
-      ['--no-input', {noInput: true}],
-      ['--no-input=false', {noInput: false}],
-      ['--no-input=true', {noInput: true}],
-      ['--input', {noInput: false}],
-      ['--input=false', {noInput: true}],
-      ['--input=true', {noInput: false}],
-      ['-v', {noInput: undefined}],
+      ['--no-input', { noInput: true }],
+      ['--no-input=false', { noInput: false }],
+      ['--no-input=true', { noInput: true }],
+      ['--input', { noInput: false }],
+      ['--input=false', { noInput: true }],
+      ['--input=true', { noInput: false }],
+      ['-v', { noInput: undefined }],
     ];
 
     for (const [cliArg, expected] of testCases) {
-      it(`does parse "${cliArg}" cli argument as ${JSON.stringify(expected)}`,
-         async () => {
-           await execProgram(['run', cliArg], {commands: fakeCommands});
-           sinon.assert.calledWithMatch(
-             fakeCommands.run,
-             expected
-           );
-           fakeCommands.run.resetHistory();
-         });
+      it(`does parse "${cliArg}" cli argument as ${JSON.stringify(
+        expected
+      )}`, async () => {
+        await execProgram(['run', cliArg], { commands: fakeCommands });
+        sinon.assert.calledWithMatch(fakeCommands.run, expected);
+        fakeCommands.run.resetHistory();
+      });
     }
   });
 
@@ -932,9 +885,9 @@ describe('program.main', () => {
       run: () => Promise.resolve(),
     });
 
-    await execProgram(['run', '--firefox-preview'], {commands: fakeCommands});
+    await execProgram(['run', '--firefox-preview'], { commands: fakeCommands });
 
-    const {firefoxPreview} = fakeCommands.run.firstCall.args[0];
+    const { firefoxPreview } = fakeCommands.run.firstCall.args[0];
     assert.deepEqual(firefoxPreview, ['mv3']);
   });
 
@@ -943,36 +896,38 @@ describe('program.main', () => {
       run: () => Promise.resolve(),
     });
 
-    await execProgram(['run'], {commands: fakeCommands});
+    await execProgram(['run'], { commands: fakeCommands });
 
-    const {firefoxPreview} = fakeCommands.run.firstCall.args[0];
+    const { firefoxPreview } = fakeCommands.run.firstCall.args[0];
     assert.deepEqual(firefoxPreview, undefined);
   });
-
 });
 
 describe('program.defaultVersionGetter', () => {
   const projectRoot = path.join(
-    moduleURLToDirname(import.meta.url), '..', '..'
+    moduleURLToDirname(import.meta.url),
+    '..',
+    '..'
   );
 
   it('returns the package version in production', () => {
     const pkgFile = path.join(projectRoot, 'package.json');
-    return fs.readFile(pkgFile)
-      .then(async (pkgData) => {
-        const testBuildEnv = {globalEnv: 'production'};
-        assert.equal(await defaultVersionGetter(projectRoot, testBuildEnv),
-                     JSON.parse(pkgData).version);
-      });
+    return fs.readFile(pkgFile).then(async (pkgData) => {
+      const testBuildEnv = { globalEnv: 'production' };
+      assert.equal(
+        await defaultVersionGetter(projectRoot, testBuildEnv),
+        JSON.parse(pkgData).version
+      );
+    });
   });
 
-  it('returns git commit information in development', function() {
+  it('returns git commit information in development', function () {
     return fs.exists(path.join(projectRoot, '.git')).then(async (exists) => {
       if (!exists) {
         this.skip();
       }
       const commit = `${git.branch(projectRoot)}-${git.long(projectRoot)}`;
-      const testBuildEnv = {globalEnv: 'development'};
+      const testBuildEnv = { globalEnv: 'development' };
       assert.equal(
         await defaultVersionGetter(projectRoot, testBuildEnv),
         commit

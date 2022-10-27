@@ -2,26 +2,21 @@
 import { fs } from 'mz';
 
 import defaultBuildExtension from './build.js';
-import {
-  showDesktopNotification as defaultDesktopNotifications,
-} from '../util/desktop-notifier.js';
+import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
 import * as defaultFirefoxApp from '../firefox/index.js';
-import {
-  connectWithMaxRetries as defaultFirefoxClient,
-} from '../firefox/remote.js';
-import {createLogger} from '../util/logger.js';
+import { connectWithMaxRetries as defaultFirefoxClient } from '../firefox/remote.js';
+import { createLogger } from '../util/logger.js';
 import defaultGetValidatedManifest from '../util/manifest.js';
-import {UsageError} from '../errors.js';
+import { UsageError } from '../errors.js';
 import {
   createExtensionRunner,
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
 } from '../extension-runners/index.js';
 // Import objects that are only used as Flow types.
-import type {FirefoxPreferences} from '../firefox/preferences.js';
+import type { FirefoxPreferences } from '../firefox/preferences.js';
 
 const log = createLogger(import.meta.url);
-
 
 // Run command types and implementation.
 
@@ -114,23 +109,28 @@ export default async function run(
     reloadStrategy = defaultReloadStrategy,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
-  }: CmdRunOptions = {}): Promise<DefaultMultiExtensionRunner> {
-
+  }: CmdRunOptions = {}
+): Promise<DefaultMultiExtensionRunner> {
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
-    log.info('Disabled auto-reloading because it\'s not possible with ' +
-             '--pre-install');
+    log.info(
+      "Disabled auto-reloading because it's not possible with " +
+        '--pre-install'
+    );
     noReload = true;
   }
 
-  if (watchFile != null && (!Array.isArray(watchFile) ||
-      !watchFile.every((el) => typeof el === 'string'))) {
+  if (
+    watchFile != null &&
+    (!Array.isArray(watchFile) ||
+      !watchFile.every((el) => typeof el === 'string'))
+  ) {
     throw new UsageError('Unexpected watchFile type');
   }
 
   // Create an alias for --pref since it has been transformed into an
   // object containing one or more preferences.
-  const customPrefs: FirefoxPreferences = {...pref};
+  const customPrefs: FirefoxPreferences = { ...pref };
   if (firefoxPreview.includes('mv3')) {
     log.info('Configuring Firefox preferences for Manifest V3');
     customPrefs['extensions.manifestV3.enabled'] = true;
@@ -144,7 +144,7 @@ export default async function run(
     if (!profileDir) {
       throw new UsageError(
         '--profile-create-if-missing requires ' +
-        '--firefox-profile or --chromium-profile'
+          '--firefox-profile or --chromium-profile'
       );
     }
     const isDir = fs.existsSync(profileDir);
@@ -160,7 +160,7 @@ export default async function run(
 
   const commonRunnerParams = {
     // Common options.
-    extensions: [{sourceDir, manifestData}],
+    extensions: [{ sourceDir, manifestData }],
     keepProfileChanges,
     startUrl,
     args,
@@ -214,17 +214,20 @@ export default async function run(
       firefoxClient,
       desktopNotifications: defaultDesktopNotifications,
       buildSourceDir: (extensionSourceDir: string, tmpArtifactsDir: string) => {
-        return buildExtension({
-          sourceDir: extensionSourceDir,
-          ignoreFiles,
-          asNeeded: false,
-          // Use a separate temporary directory for building the extension zip file
-          // that we are going to upload on the android device.
-          artifactsDir: tmpArtifactsDir,
-        }, {
-          // Suppress the message usually logged by web-ext build.
-          showReadyMessage: false,
-        });
+        return buildExtension(
+          {
+            sourceDir: extensionSourceDir,
+            ignoreFiles,
+            asNeeded: false,
+            // Use a separate temporary directory for building the extension zip file
+            // that we are going to upload on the android device.
+            artifactsDir: tmpArtifactsDir,
+          },
+          {
+            // Suppress the message usually logged by web-ext build.
+            showReadyMessage: false,
+          }
+        );
       },
     };
 
