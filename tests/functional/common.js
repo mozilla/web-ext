@@ -1,7 +1,7 @@
 /* @flow */
 import path from 'path';
-import {ChildProcess, spawn} from 'child_process';
-import {promisify} from 'util';
+import { ChildProcess, spawn } from 'child_process';
+import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 
 import copyDir from 'copy-dir';
@@ -11,62 +11,69 @@ import * as tmpDirUtils from '../../src/util/temp-dir.js';
 
 export const withTempDir = tmpDirUtils.withTempDir;
 
-
 export const functionalTestsDir: string = path.resolve(
   path.dirname(fileURLToPath(import.meta.url || ''))
 );
 export const projectDir: string = path.join(functionalTestsDir, '..', '..');
-export const webExt: string = process.env.TEST_WEB_EXT_BIN ?
-  path.resolve(process.env.TEST_WEB_EXT_BIN) :
-  path.join(projectDir, 'bin', 'web-ext');
-export const fixturesDir: string =
-  path.join(functionalTestsDir, '..', 'fixtures');
-export const minimalAddonPath: string =
-  path.join(fixturesDir, 'minimal-web-ext');
-export const fixturesUseAsLibrary: string =
-  path.join(fixturesDir, 'webext-as-library');
+export const webExt: string = process.env.TEST_WEB_EXT_BIN
+  ? path.resolve(process.env.TEST_WEB_EXT_BIN)
+  : path.join(projectDir, 'bin', 'web-ext');
+export const fixturesDir: string = path.join(
+  functionalTestsDir,
+  '..',
+  'fixtures'
+);
+export const minimalAddonPath: string = path.join(
+  fixturesDir,
+  'minimal-web-ext'
+);
+export const fixturesUseAsLibrary: string = path.join(
+  fixturesDir,
+  'webext-as-library'
+);
 export const fakeFirefoxPath: string = path.join(
   functionalTestsDir,
-  process.platform === 'win32' ?
-    'fake-firefox-binary.bat' : 'fake-firefox-binary.js'
+  process.platform === 'win32'
+    ? 'fake-firefox-binary.bat'
+    : 'fake-firefox-binary.js'
 );
 export const fakeServerPath: string = path.join(
-  functionalTestsDir, 'fake-amo-server.js'
+  functionalTestsDir,
+  'fake-amo-server.js'
 );
-
 
 // withTempAddonDir helper
 
 export type TempAddonParams = {|
   addonPath: string,
-  runFromCwd?: boolean
+  runFromCwd?: boolean,
 |};
 
-export type TempAddonCallback =
-  (tmpAddonDir: string, tmpDir: string) => Promise<any>;
+export type TempAddonCallback = (
+  tmpAddonDir: string,
+  tmpDir: string
+) => Promise<any>;
 
 const copyDirAsPromised = promisify(copyDir);
 
 export function withTempAddonDir(
-  {addonPath}: TempAddonParams,
-  makePromise: TempAddonCallback,
+  { addonPath }: TempAddonParams,
+  makePromise: TempAddonCallback
 ): Promise<any> {
   return withTempDir((tmpDir) => {
     const tempAddonDir = path.join(tmpDir.path(), 'tmp-addon-dir');
-    return copyDirAsPromised(addonPath, tempAddonDir)
-      .then(() => {
-        process.chdir(tmpDir.path());
+    return copyDirAsPromised(addonPath, tempAddonDir).then(() => {
+      process.chdir(tmpDir.path());
 
-        return makePromise(tempAddonDir, tmpDir.path())
-          .then(() => process.chdir(projectDir))
-          .catch((err) => {
-            process.chdir(projectDir);
-            throw err;
-          });
-      });
+      return makePromise(tempAddonDir, tmpDir.path())
+        .then(() => process.chdir(projectDir))
+        .catch((err) => {
+          process.chdir(projectDir);
+          throw err;
+        });
+    });
   });
 }
-
 
 // reportCommandErrors helper
 
@@ -100,9 +107,8 @@ export type RunningWebExt = {|
 
 export function execWebExt(
   argv: Array<string>,
-  spawnOptions: child_process$spawnOpts,
+  spawnOptions: child_process$spawnOpts
 ): RunningWebExt {
-
   if (spawnOptions.env) {
     spawnOptions.env = {
       // Propagate the current environment when redefining it from the `spawnOptions`
@@ -115,15 +121,17 @@ export function execWebExt(
     };
   }
   const spawnedProcess = spawn(
-    process.execPath, [webExt, ...argv], spawnOptions
+    process.execPath,
+    [webExt, ...argv],
+    spawnOptions
   );
 
   const waitForExit = new Promise((resolve) => {
     let errorData = '';
     let outputData = '';
 
-    spawnedProcess.stderr.on('data', (data) => errorData += data);
-    spawnedProcess.stdout.on('data', (data) => outputData += data);
+    spawnedProcess.stderr.on('data', (data) => (errorData += data));
+    spawnedProcess.stdout.on('data', (data) => (outputData += data));
 
     spawnedProcess.on('close', (exitCode) => {
       resolve({
@@ -134,5 +142,5 @@ export function execWebExt(
     });
   });
 
-  return {argv, waitForExit, spawnedProcess};
+  return { argv, waitForExit, spawnedProcess };
 }

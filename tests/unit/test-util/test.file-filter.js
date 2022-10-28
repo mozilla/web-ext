@@ -1,11 +1,10 @@
 /* @flow */
-import {describe, it} from 'mocha';
-import {assert} from 'chai';
+import { describe, it } from 'mocha';
+import { assert } from 'chai';
 
-import {FileFilter, isSubPath} from '../../../src/util/file-filter.js';
+import { FileFilter, isSubPath } from '../../../src/util/file-filter.js';
 
 describe('util/file-filter', () => {
-
   const newFileFilter = (params = {}) => {
     // $FlowIgnore: allow use of inexact object literal for testing purpose.
     return new FileFilter({
@@ -54,14 +53,14 @@ describe('util/file-filter', () => {
     });
 
     it('ignores module content within node_modules by default', () => {
-      assert.equal(defaultFilter.wantFile('node_modules/something/file.js'),
-                   false);
+      assert.equal(
+        defaultFilter.wantFile('node_modules/something/file.js'),
+        false
+      );
     });
-
   });
 
   describe('options', () => {
-
     it('override the defaults with baseIgnoredPatterns', () => {
       const filter = newFileFilter({
         baseIgnoredPatterns: ['manifest.json'],
@@ -100,7 +99,10 @@ describe('util/file-filter', () => {
         sourceDir: '/src',
         artifactsDir: 'artifacts',
         ignoreFiles: [
-          'ignore-dir/', 'some.js', '**/some.log', 'ignore/dir/content/**/*',
+          'ignore-dir/',
+          'some.js',
+          '**/some.log',
+          'ignore/dir/content/**/*',
         ],
       });
       assert.equal(filter.wantFile('/src/artifacts'), true);
@@ -115,7 +117,6 @@ describe('util/file-filter', () => {
       // This file is not ignored because it's not relative to /src:
       assert.equal(filter.wantFile('/some.js'), true);
     });
-
   });
 
   describe('isSubPath', () => {
@@ -135,9 +136,7 @@ describe('util/file-filter', () => {
   describe('negation', () => {
     const filter = newFileFilter({
       sourceDir: '/src',
-      ignoreFiles: [
-        '!node_modules/libdweb/src/**',
-      ],
+      ignoreFiles: ['!node_modules/libdweb/src/**'],
     });
 
     it('ignore paths not captured by negation', () => {
@@ -152,14 +151,16 @@ describe('util/file-filter', () => {
     it('includes paths captured by negation', () => {
       assert.equal(
         filter.wantFile('/src/node_modules/libdweb/src/lib.js'),
-        true);
+        true
+      );
       assert.equal(
         filter.wantFile('/src/node_modules/libdweb/src/sub/lib.js'),
-        true);
+        true
+      );
       assert.equal(
         filter.wantFile('/src/node_modules/libdweb/src/node_modules/lib.js'),
-        true);
+        true
+      );
     });
   });
-
 });

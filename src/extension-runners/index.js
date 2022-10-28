@@ -8,36 +8,33 @@ import type {
   IExtensionRunner, // eslint-disable-line import/named
   ExtensionRunnerReloadResult,
 } from './base';
-import {WebExtError} from '../errors.js';
-import {
-  showDesktopNotification as defaultDesktopNotifications,
-} from '../util/desktop-notifier.js';
-import type {FirefoxAndroidExtensionRunnerParams} from './firefox-android.js';
-import type {FirefoxDesktopExtensionRunnerParams} from './firefox-desktop.js';
-import type {ChromiumExtensionRunnerParams} from './chromium.js';
-import {createLogger} from '../util/logger.js';
-import type {FileFilterCreatorFn} from '../util/file-filter.js';
-import {
-  createFileFilter as defaultFileFilterCreator,
-} from '../util/file-filter.js';
-import {
-  isTTY, setRawMode,
-} from '../util/stdin.js';
+import { WebExtError } from '../errors.js';
+import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
+import type { FirefoxAndroidExtensionRunnerParams } from './firefox-android.js';
+import type { FirefoxDesktopExtensionRunnerParams } from './firefox-desktop.js';
+import type { ChromiumExtensionRunnerParams } from './chromium.js';
+import { createLogger } from '../util/logger.js';
+import type { FileFilterCreatorFn } from '../util/file-filter.js';
+import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
+import { isTTY, setRawMode } from '../util/stdin.js';
 import defaultSourceWatcher from '../watcher.js';
-import type {OnSourceChangeFn} from '../watcher';
+import type { OnSourceChangeFn } from '../watcher';
 
 const log = createLogger(import.meta.url);
 
-export type ExtensionRunnerConfig = {|
-  target: 'firefox-desktop',
-  params: FirefoxDesktopExtensionRunnerParams,
-|} | {|
-  target: 'firefox-android',
-  params: FirefoxAndroidExtensionRunnerParams,
-|} | {|
-  target: 'chromium',
-  params: ChromiumExtensionRunnerParams,
-|};
+export type ExtensionRunnerConfig =
+  | {|
+      target: 'firefox-desktop',
+      params: FirefoxDesktopExtensionRunnerParams,
+    |}
+  | {|
+      target: 'firefox-android',
+      params: FirefoxAndroidExtensionRunnerParams,
+    |}
+  | {|
+      target: 'chromium',
+      params: ChromiumExtensionRunnerParams,
+    |};
 
 export type MultiExtensionRunnerParams = {|
   runners: Array<IExtensionRunner>,
@@ -49,19 +46,19 @@ export async function createExtensionRunner(
 ): Promise<IExtensionRunner> {
   switch (config.target) {
     case 'firefox-desktop': {
-      const {
-        FirefoxDesktopExtensionRunner,
-      } = await import('./firefox-desktop.js');
+      const { FirefoxDesktopExtensionRunner } = await import(
+        './firefox-desktop.js'
+      );
       return new FirefoxDesktopExtensionRunner(config.params);
     }
     case 'firefox-android': {
-      const {
-        FirefoxAndroidExtensionRunner,
-      } = await import('./firefox-android.js');
+      const { FirefoxAndroidExtensionRunner } = await import(
+        './firefox-android.js'
+      );
       return new FirefoxAndroidExtensionRunner(config.params);
     }
     case 'chromium': {
-      const {ChromiumExtensionRunner} = await import('./chromium.js');
+      const { ChromiumExtensionRunner } = await import('./chromium.js');
       return new ChromiumExtensionRunner(config.params);
     }
     default:
@@ -120,7 +117,7 @@ export class MultiExtensionRunner {
     for (const runner of this.extensionRunners) {
       const reloadPromise = runner.reloadAllExtensions().then(
         () => {
-          return {runnerName: runner.getName()};
+          return { runnerName: runner.getName() };
         },
         (error) => {
           return {
@@ -156,7 +153,7 @@ export class MultiExtensionRunner {
     for (const runner of this.extensionRunners) {
       const reloadPromise = runner.reloadExtensionBySourceDir(sourceDir).then(
         () => {
-          return {runnerName: runner.getName(), sourceDir};
+          return { runnerName: runner.getName(), sourceDir };
         },
         (error) => {
           return {
@@ -186,9 +183,11 @@ export class MultiExtensionRunner {
     // the promise will be resolved when the particular runner calls its
     // registered cleanup callbacks.
     for (const runner of this.extensionRunners) {
-      promises.push(new Promise((resolve) => {
-        runner.registerCleanup(resolve);
-      }));
+      promises.push(
+        new Promise((resolve) => {
+          runner.registerCleanup(resolve);
+        })
+      );
     }
 
     // Wait for all the created promises to be resolved or rejected
@@ -212,7 +211,7 @@ export class MultiExtensionRunner {
   // Private helper methods.
 
   handleReloadResults(results: Array<ExtensionRunnerReloadResult>): void {
-    for (const {runnerName, reloadError, sourceDir} of results) {
+    for (const { runnerName, reloadError, sourceDir } of results) {
       if (reloadError instanceof Error) {
         let message = 'Error occurred while reloading';
         if (sourceDir) {
@@ -248,17 +247,17 @@ export type WatcherCreatorParams = {|
 
 export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
 
-export function defaultWatcherCreator(
-  {
-    reloadExtension, sourceDir, watchFile,
-    watchIgnored, artifactsDir, ignoreFiles,
-    onSourceChange = defaultSourceWatcher,
-    createFileFilter = defaultFileFilterCreator,
-  }: WatcherCreatorParams
-): Watchpack {
-  const fileFilter = createFileFilter(
-    {sourceDir, artifactsDir, ignoreFiles}
-  );
+export function defaultWatcherCreator({
+  reloadExtension,
+  sourceDir,
+  watchFile,
+  watchIgnored,
+  artifactsDir,
+  ignoreFiles,
+  onSourceChange = defaultSourceWatcher,
+  createFileFilter = defaultFileFilterCreator,
+}: WatcherCreatorParams): Watchpack {
+  const fileFilter = createFileFilter({ sourceDir, artifactsDir, ignoreFiles });
   return onSourceChange({
     sourceDir,
     watchFile,
@@ -268,7 +267,6 @@ export function defaultWatcherCreator(
     shouldWatchFile: (file) => fileFilter.wantFile(file),
   });
 }
-
 
 // defaultReloadStrategy types and implementation.
 
@@ -337,7 +335,7 @@ export function defaultReloadStrategy(
     // NOTE: this `Promise.resolve().then(...)` is basically used to spawn a "co-routine"
     // that is executed before the callback attached to the Promise returned by this function
     // (and it allows the `run` function to not be stuck in the while loop).
-    Promise.resolve().then(async function() {
+    Promise.resolve().then(async function () {
       log.info(keypressUsageInfo);
 
       let userExit = false;

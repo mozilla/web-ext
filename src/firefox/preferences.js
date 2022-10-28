@@ -1,11 +1,12 @@
 /* @flow */
-import {WebExtError, UsageError} from '../errors.js';
-import {createLogger} from '../util/logger.js';
+import { WebExtError, UsageError } from '../errors.js';
+import { createLogger } from '../util/logger.js';
 
 const log = createLogger(import.meta.url);
 
 export const nonOverridablePreferences = [
-  'devtools.debugger.remote-enabled', 'devtools.debugger.prompt-connection',
+  'devtools.debugger.remote-enabled',
+  'devtools.debugger.prompt-connection',
   'xpinstall.signatures.required',
 ];
 
@@ -16,7 +17,6 @@ export type FirefoxPreferences = {
 };
 
 export type PreferencesAppName = 'firefox' | 'fennec';
-
 
 // Preferences Maps
 
@@ -112,11 +112,11 @@ const prefs = {
   firefox: prefsFirefox,
 };
 
-
 // Module exports
 
-export type PreferencesGetterFn =
-  (appName: PreferencesAppName) => FirefoxPreferences;
+export type PreferencesGetterFn = (
+  appName: PreferencesAppName
+) => FirefoxPreferences;
 
 export function getPrefs(
   app: PreferencesAppName = 'firefox'
@@ -142,7 +142,7 @@ export function coerceCLICustomPreference(
     if (prefsAry.length < 2) {
       throw new UsageError(
         `Incomplete custom preference: "${pref}". ` +
-        'Syntax expected: "prefname=prefvalue".'
+          'Syntax expected: "prefname=prefvalue".'
       );
     }
 
@@ -156,7 +156,7 @@ export function coerceCLICustomPreference(
     if (value === `${parseInt(value)}`) {
       value = parseInt(value, 10);
     } else if (value === 'true' || value === 'false') {
-      value = (value === 'true');
+      value = value === 'true';
     }
 
     if (nonOverridablePreferences.includes(key)) {

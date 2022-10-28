@@ -1,8 +1,8 @@
 /* @flow */
 import net from 'net';
 
-import {describe, it, beforeEach, afterEach} from 'mocha';
-import {assert} from 'chai';
+import { describe, it, beforeEach, afterEach } from 'mocha';
+import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import FirefoxRDPClient, {
@@ -15,10 +15,7 @@ function createFakeRDPServer() {
 
   function sendRDPMessage(msg: Object) {
     let data = Buffer.from(JSON.stringify(msg));
-    data = Buffer.concat([
-      Buffer.from(`${data.length}:`),
-      data,
-    ]);
+    data = Buffer.concat([Buffer.from(`${data.length}:`), data]);
     lastSocket.write(data);
   }
 
@@ -26,7 +23,7 @@ function createFakeRDPServer() {
     lastSocket?.destroy();
     lastSocket = socket;
     // Send the initial RDP root message.
-    sendRDPMessage({from: 'root'});
+    sendRDPMessage({ from: 'root' });
   });
 
   return {
@@ -80,7 +77,7 @@ describe('rdp-client', () => {
     });
 
     it('does parse RDP message when all expected data is available', () => {
-      const rdpObj = {from: 'fake-actor'};
+      const rdpObj = { from: 'fake-actor' };
       const rdpBuffer = Buffer.from(JSON.stringify(rdpObj));
       // Create a buffer with an incomplete rdp message.
       const incompleteData = Buffer.concat([
@@ -147,17 +144,21 @@ describe('rdp-client', () => {
       };
       for (const name of forwardedEvents) {
         const promiseEvent = new Promise((resolve) =>
-          client.once(name, (evt) => resolve(evt)));
+          client.once(name, (evt) => resolve(evt))
+        );
         client._rdpConnection.emit(name, expectedData[name]);
-        assert.equal(await promiseEvent, expectedData[name],
-                     `${name} event got forwarded as expected`);
+        assert.equal(
+          await promiseEvent,
+          expectedData[name],
+          `${name} event got forwarded as expected`
+        );
       }
     });
 
     describe('request', () => {
       it('sends an RDP request', async () => {
-        const expectedRequest = {to: 'root', type: 'getRoot'};
-        const expectedResponse = {from: 'root', addonsActor: 'fake-actor-id'};
+        const expectedRequest = { to: 'root', type: 'getRoot' };
+        const expectedResponse = { from: 'root', addonsActor: 'fake-actor-id' };
         await getConnectedRDPClient();
 
         // Assert expected data received by the RDP server when sending
@@ -175,7 +176,10 @@ describe('rdp-client', () => {
 
         // Send another RDP request by passing the entire RDP message.
         const promiseServerData2 = fakeRDPServer.awaitData;
-        const promiseResponse2 = client.request({to: 'root', type: 'getRoot'});
+        const promiseResponse2 = client.request({
+          to: 'root',
+          type: 'getRoot',
+        });
         const res2 = parseRDPMessage(await promiseServerData2);
         assert.isUndefined(res2.error);
         assert.deepEqual(res2.rdpMessage, expectedRequest);
@@ -187,7 +191,7 @@ describe('rdp-client', () => {
         await getConnectedRDPClient();
         await assert.isRejected(
           // $FlowIgnore: ignore flowtype error for testing purpose.
-          client.request({type: 'getRoot'}),
+          client.request({ type: 'getRoot' }),
           /Unexpected RDP request without target actor/
         );
       });
@@ -195,7 +199,11 @@ describe('rdp-client', () => {
       it('rejects on RDP request on source actor RDP error reply', async () => {
         await getConnectedRDPClient();
         const promiseRes = client.request('getRoot');
-        const serverReply = {from: 'root', error: 'fake-error', message: 'msg'};
+        const serverReply = {
+          from: 'root',
+          error: 'fake-error',
+          message: 'msg',
+        };
         fakeRDPServer.sendRDPMessage(serverReply);
 
         const rdpReply = await assert.isRejected(promiseRes);
@@ -206,7 +214,7 @@ describe('rdp-client', () => {
       it('does disconnect on fatal parsing error', async () => {
         await getConnectedRDPClient();
         let error;
-        client.once('error', (err) => error = err);
+        client.once('error', (err) => (error = err));
         const promiseRes = client.request('getRoot');
         fakeRDPServer.socket.write(Buffer.from('NaN:fakerdpdata'));
         await assert.isRejected(promiseRes, /RDP connection closed/);
@@ -220,7 +228,7 @@ describe('rdp-client', () => {
         const promiseRDPError = new Promise((resolve) => {
           client.once('rdp-error', (err) => resolve(err));
         });
-        const rdpError = {error: 'fake-err', message: 'fake-msg'};
+        const rdpError = { error: 'fake-err', message: 'fake-msg' };
         fakeRDPServer.sendRDPMessage(rdpError);
         assert.deepEqual(await promiseRDPError, rdpError);
       });
@@ -246,21 +254,18 @@ describe('rdp-client', () => {
         fakeRDPServer.sendRDPMessage(rdpMsg);
         const error = await promiseError;
         assert.instanceOf(error, Error);
-        assert.match(
-          error?.message,
-          expectedErrorMessage
-        );
+        assert.match(error?.message, expectedErrorMessage);
       }
 
       it('emits an error event on messages with no source actor', () =>
         testHandleMessageError(
-          {message: 'fake-msg'},
+          { message: 'fake-msg' },
           /Received an RDP message without a sender actor/
         ));
 
       it('emits error event on unexpected source actor', () =>
         testHandleMessageError(
-          {message: 'fake-msg', from: 'unexpected-actor'},
+          { message: 'fake-msg', from: 'unexpected-actor' },
           /Unexpected RDP message received/
         ));
     });
@@ -275,8 +280,8 @@ describe('rdp-client', () => {
         assert.equal(client._active.size, 1);
         assert.equal(client._pending.length, 1);
 
-        const response1 = {from: 'root', resultFor: 'request1'};
-        const response2 = {from: 'root', resultFor: 'request2'};
+        const response1 = { from: 'root', resultFor: 'request1' };
+        const response2 = { from: 'root', resultFor: 'request2' };
 
         fakeRDPServer.sendRDPMessage(response1);
         assert.deepEqual(await promiseResponse1, response1);
@@ -291,10 +296,7 @@ describe('rdp-client', () => {
 
       it('rejects requests if not connected', async () => {
         const c = new FirefoxRDPClient();
-        await assert.isRejected(
-          c.request('getRoot'),
-          /RDP connection closed/
-        );
+        await assert.isRejected(c.request('getRoot'), /RDP connection closed/);
       });
 
       it('rejects all requests on closed connection', async () => {
@@ -310,7 +312,7 @@ describe('rdp-client', () => {
       it('rejects request if fails to stringify', async () => {
         // Create an object with a circular dependency to trigger a stringify.
         // exception.
-        const req = {to: 'root'};
+        const req = { to: 'root' };
         // $FlowIgnore: ignore flowtype error for testing purpose.
         req.circular = req;
 
@@ -318,7 +320,7 @@ describe('rdp-client', () => {
         await assert.isRejected(
           // $FlowIgnore: ignore flowtype error for testing purpose.
           client.request(req),
-          Error,
+          Error
         );
         assertClientHasNoRequests();
       });
@@ -330,7 +332,7 @@ describe('rdp-client', () => {
           client.request('getRoot');
           const expectedActive = client._active.get('root');
 
-          const fakeDeferred = {resolve: () => {}, reject: () => {}};
+          const fakeDeferred = { resolve: () => {}, reject: () => {} };
           assert.throws(
             () => client._expectReply('root', fakeDeferred),
             /root does already have an active request/
@@ -370,5 +372,4 @@ describe('rdp-client', () => {
       sinon.assert.calledWith(fakeConn.off, 'timeout', c._onTimeout);
     });
   });
-
 });

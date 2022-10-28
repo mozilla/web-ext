@@ -1,16 +1,15 @@
 /* @flow */
 import path from 'path';
 
-import {fs} from 'mz';
+import { fs } from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
 
-import {InvalidManifest} from '../errors.js';
-import {createLogger} from './logger.js';
+import { InvalidManifest } from '../errors.js';
+import { createLogger } from './logger.js';
 
 const log = createLogger(import.meta.url);
-
 
 // getValidatedManifest helper types and implementation
 
@@ -41,10 +40,11 @@ export default async function getValidatedManifest(
   let manifestContents;
 
   try {
-    manifestContents = await fs.readFile(manifestFile, {encoding: 'utf-8'});
+    manifestContents = await fs.readFile(manifestFile, { encoding: 'utf-8' });
   } catch (error) {
     throw new InvalidManifest(
-      `Could not read manifest.json file at ${manifestFile}: ${error}`);
+      `Could not read manifest.json file at ${manifestFile}: ${error}`
+    );
   }
 
   manifestContents = stripBom(manifestContents);
@@ -55,7 +55,8 @@ export default async function getValidatedManifest(
     manifestData = parseJSON(stripJsonComments(manifestContents));
   } catch (error) {
     throw new InvalidManifest(
-      `Error parsing manifest.json file at ${manifestFile}: ${error}`);
+      `Error parsing manifest.json file at ${manifestFile}: ${error}`
+    );
   }
 
   const errors = [];
@@ -78,12 +79,12 @@ export default async function getValidatedManifest(
 
   if (errors.length) {
     throw new InvalidManifest(
-      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`);
+      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`
+    );
   }
 
   return manifestData;
 }
-
 
 export function getManifestId(manifestData: ExtensionManifest): string | void {
   const manifestApps = [

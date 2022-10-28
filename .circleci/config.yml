@@ -17,7 +17,7 @@ version: 2.1
 orbs:
   # Used in the `test-windows` job to run the test on windows.
   win: circleci/windows@4.1.1
-  codecov: codecov/codecov@3.2.3
+  codecov: codecov/codecov@3.2.4
 
 references:
   # NOTE: update the nodejs version strings that follows to change the
@@ -195,6 +195,7 @@ jobs:
           condition:
             equal: [*nodejs_current, << parameters.nodejs >>]
           steps:
+            - run: npm run prettier-ci
             - run:
                 name: run linting check and unit tests with coverage
                 command: npm run test-coverage

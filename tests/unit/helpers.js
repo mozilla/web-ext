@@ -3,8 +3,8 @@ import path from 'path';
 import EventEmitter from 'events';
 import tty from 'tty';
 import stream from 'stream';
-import {promisify} from 'util';
-import {fileURLToPath, pathToFileURL} from 'url';
+import { promisify } from 'util';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 import deepcopy from 'deepcopy';
 import * as sinon from 'sinon';
@@ -12,12 +12,11 @@ import yauzl from 'yauzl';
 import ExtendableError from 'es6-error';
 import * as td from 'testdouble';
 
-import {createLogger} from '../../src/util/logger.js';
+import { createLogger } from '../../src/util/logger.js';
 import * as defaultFirefoxApp from '../../src/firefox/index.js';
-import {RemoteFirefox} from '../../src/firefox/remote.js';
+import { RemoteFirefox } from '../../src/firefox/remote.js';
 
 const log = createLogger(import.meta.url);
-
 
 /*
  * A way to read zip files using promises for all the things.
@@ -36,13 +35,12 @@ export class ZipFile {
    * zipfile object.
    */
   open(...args: Array<any>): Promise<void> {
-    return promisify(yauzl.open)(...args)
-      .then((zip) => {
-        this._zip = zip;
-        this._close = new Promise((resolve) => {
-          zip.once('close', resolve);
-        });
+    return promisify(yauzl.open)(...args).then((zip) => {
+      this._zip = zip;
+      this._close = new Promise((resolve) => {
+        zip.once('close', resolve);
       });
+    });
   }
 
   /**
@@ -61,10 +59,10 @@ export class ZipFile {
    */
   readEach(onRead: Function): Promise<void> {
     return new Promise((resolve, reject) => {
-
       if (!this._zip) {
         throw new Error(
-          'Cannot operate on a falsey zip file. Call open() first.');
+          'Cannot operate on a falsey zip file. Call open() first.'
+        );
       }
 
       this._zip.on('entry', (entry) => {
@@ -87,10 +85,9 @@ export class ZipFile {
   extractFilenames(): Promise<Array<String>> {
     return new Promise((resolve, reject) => {
       var fileNames = [];
-      this.readEach(
-        (entry) => {
-          fileNames.push(entry.fileName);
-        })
+      this.readEach((entry) => {
+        fileNames.push(entry.fileName);
+      })
         .then(() => {
           resolve(fileNames);
         })
@@ -101,16 +98,17 @@ export class ZipFile {
   }
 }
 
-
 /*
  * Returns a path to a test fixture file. Invoke it the same as path.join().
  */
 export function fixturePath(...pathParts: Array<string>): string {
   return path.join(
-    moduleURLToDirname(import.meta.url), '..', 'fixtures', ...pathParts
+    moduleURLToDirname(import.meta.url),
+    '..',
+    'fixtures',
+    ...pathParts
   );
 }
-
 
 /*
  * Test helper to make sure a promise chain really fails.
@@ -127,7 +125,6 @@ export function makeSureItFails(): Function {
     throw new Error('This test unexpectedly succeeded without an error');
   };
 }
-
 
 /*
  * Return a fake version of an object for testing.
@@ -160,7 +157,9 @@ export function makeSureItFails(): Function {
 
 // $FlowIgnore: fake can return any kind of object and fake a defined set of methods for testing.
 export function fake<T>(
-  original: Object, methods: Object = {}, skipProperties: Array<string> = []
+  original: Object,
+  methods: Object = {},
+  skipProperties: Array<string> = []
 ): T {
   const stub = {};
   // Provide stubs for all original members (fallback to Object if original
@@ -183,7 +182,8 @@ export function fake<T>(
   Object.keys(methods).forEach((key) => {
     if (!original[key]) {
       throw new Error(
-        `Cannot define method "${key}"; it does not exist on the original`);
+        `Cannot define method "${key}"; it does not exist on the original`
+      );
     }
     stub[key] = methods[key];
   });
@@ -218,7 +218,6 @@ export function fakeFirefoxClient(): any {
     request: sinon.stub().resolves({}),
   };
 }
-
 
 /*
  * A simulated TCP connection error.
@@ -281,13 +280,14 @@ export class FakeExtensionRunner {
   }
   async reloadExtensionBySourceDir(sourceDir: string): Promise<any> {
     const runnerName = this.getName();
-    return [{runnerName, sourceDir}];
+    return [{ runnerName, sourceDir }];
   }
   registerCleanup(fn: Function) {} // eslint-disable-line no-unused-vars
 }
 
 export function getFakeFirefox(
-  implementations: Object = {}, port: number = 6005
+  implementations: Object = {},
+  port: number = 6005
 ): any {
   const profile = {}; // empty object just to avoid errors.
   const firefox = () => Promise.resolve();
@@ -296,7 +296,7 @@ export function getFakeFirefox(
     copyProfile: () => Promise.resolve(profile),
     useProfile: () => Promise.resolve(profile),
     installExtension: () => Promise.resolve(),
-    run: () => Promise.resolve({firefox, debuggerPort: port}),
+    run: () => Promise.resolve({ firefox, debuggerPort: port }),
     ...implementations,
   };
   return fake(defaultFirefoxApp, allImplementations);

@@ -10,7 +10,6 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Picking an issue](#picking-an-issue)
 - [Installation](#installation)
   - [Develop all the things](#develop-all-the-things)
@@ -36,8 +35,6 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-
-
 # Picking an issue
 
 If you're looking for a small task to work on so you can get familiar with the
@@ -45,7 +42,6 @@ process of contributing patches, have a read through these
 [good first bugs](https://github.com/mozilla/web-ext/issues?q=is%3Aissue+is%3Aopen+label%3A%22contrib%3A+good+first+bug%22).
 
 If you'd like to work on a bug, please comment on it to let the maintainers know. If someone else has already commented and taken up that bug, please refrain from working on it and submitting a PR without asking the maintainers as it leads to unnecessary duplication of effort.
-
 
 # Installation
 
@@ -230,18 +226,19 @@ This section will show you how to add a new commands and options.
 their options. The commands are defined in `src/program.js` in the `main` function.
 For example, the `build` command is defined like this:
 
-````javascript
-program
-  .command(
-    'build',
-    'Create a web extension package from source',
-    commands.build, {
-      'as-needed': {
-        describe: 'Watch for file changes and re-build as needed',
-        type: 'boolean',
-      },
-    })
-````
+```javascript
+program.command(
+  'build',
+  'Create a web extension package from source',
+  commands.build,
+  {
+    'as-needed': {
+      describe: 'Watch for file changes and re-build as needed',
+      type: 'boolean',
+    },
+  }
+);
+```
 
 The first argument to `program.command()` is the command name, the second is the
 description (shown for `--help`), the third is a callback that executes the
@@ -257,12 +254,13 @@ converted from hyphenated words to [camelCase](https://en.wikipedia.org/wiki/Cam
 words. So, the
 `--as-needed` and `--source-dir` options would be passed like:
 
-````javascript
-commands.build({asNeeded: true, sourceDir: './src/extension'})
+```javascript
+commands
+  .build({ asNeeded: true, sourceDir: './src/extension' })
   .then((result) => {
     // ...
   });
-````
+```
 
 ### Adding a command option
 
@@ -270,7 +268,7 @@ To add a command option, locate the relevant command definition (i.e. `run`)
 and specify a new option definition as an object.
 Here is an example of adding the `--file-path` option:
 
-````javascript
+```javascript
 program
   // other commands...
   .command('run', 'Run the web extension', commands.run, {
@@ -282,8 +280,8 @@ program
       requiresArg: true,
       type: 'string',
     },
-  })
-````
+  });
+```
 
 This option can be used like `web-ext run --file-path=./path/to/file` or
 `--fp=./path/to/file`. Since Yargs can be pretty powerful yet not completely
@@ -299,22 +297,23 @@ to use a development version of the
 [signing API](http://addons-server.readthedocs.io/en/latest/topics/api/signing.html)
 so as not to disturb any real `addons.mozilla.org` data.
 
-* Read through how to use the
+- Read through how to use the
   [web-ext sign](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext#Distributing_your_own_WebExtension)
   command so you understand it.
-* Create an API key on the development version of the
+- Create an API key on the development version of the
   [Manage API Keys](https://addons-dev.allizom.org/en-US/developers/addon/api/key/)
   page. You will need to register an account if you don't have one already. Make
   sure you use a password that is different from your production account.
-* Let's say your generated *JWT issuer* is `user:123` and your *JWT secret* is
+- Let's say your generated _JWT issuer_ is `user:123` and your _JWT secret_ is
   `abc1234`. Here is an example of a command you can run that will use the
   development API:
 
-  ````
+  ```
   web-ext sign --api-key user:123 --api-secret abc1234 \
       --api-url-prefix https://addons-dev.allizom.org/api/v4
-  ````
-* Signed add-ons created with the development API are hard to install into
+  ```
+
+- Signed add-ons created with the development API are hard to install into
   Firefox. If you need to test installation of add-ons (you probably don't)
   then you'd have to use our staging API server. File an issue for information
   on that.
@@ -331,7 +330,7 @@ this at the top of your description:
     Fixes #123
 
 The issue number in this case is "123."
-The word *Fixes* is magical; github will automatically close the issue when your
+The word _Fixes_ is magical; github will automatically close the issue when your
 pull request is merged.
 
 ## Writing commit messages
@@ -343,14 +342,15 @@ Additionally, write the commit message in past tense so it will read
 naturally as a historic changelog.
 
 Examples:
-* `feat: Added a systematic dysfunctioner`
-* `fix: Fixed hang in systematic dysfunctioner`
-* `docs: Improved contributor docs`
-* `style: Added no-console linting, cleaned up code`
-* `refactor: Split out dysfunctioner for testability`
-* `perf: Systematic dysfunctioner is now 2x faster`
-* `test: Added more tests for systematic dysfunctioner`
-* `chore: Upgraded yargs to 3.x.x`
+
+- `feat: Added a systematic dysfunctioner`
+- `fix: Fixed hang in systematic dysfunctioner`
+- `docs: Improved contributor docs`
+- `style: Added no-console linting, cleaned up code`
+- `refactor: Split out dysfunctioner for testability`
+- `perf: Systematic dysfunctioner is now 2x faster`
+- `test: Added more tests for systematic dysfunctioner`
+- `chore: Upgraded yargs to 3.x.x`
 
 If you want to use scopes then it would look more like:
 `feat(dysfunctioner): Added --quiet option`.
@@ -364,23 +364,23 @@ each time you commit to your work branch to make continuous integration smoother
 
 To release a new version of `web-ext`, follow these steps:
 
-* Pull from master to make sure you're up to date.
-* Bump the version in `package.json`.
-* Commit and push the version change
+- Pull from master to make sure you're up to date.
+- Bump the version in `package.json`.
+- Commit and push the version change
   (or create and merge a pull request for it).
-* Create a changelog by running `npm run changelog`.
+- Create a changelog by running `npm run changelog`.
   This will output Markdown of all unreleased changes.
-* Create a [new release](https://github.com/mozilla/web-ext/releases/new)
+- Create a [new release](https://github.com/mozilla/web-ext/releases/new)
   and paste in the changelog Markdown.
   It may require some manual editing. For example, some commit messages
   might have been truncated.
   Title the github release after the new version you just
   added to `package.json` in the previous commit (example: `1.0.4`).
-* When you publish the release, github creates a tag.
+- When you publish the release, github creates a tag.
   When TravisCI builds the tag,
   it will automatically publish the package to
   [npm](https://www.npmjs.com/package/web-ext).
-* After the package has been published, check the
+- After the package has been published, check the
   [needs: docs](https://github.com/mozilla/web-ext/issues?utf8=%E2%9C%93&q=is%3Aclosed%20label%3A%22needs%3A%20docs%22%20)
   label to see if
   [the user docs](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext)
@@ -398,4 +398,4 @@ If the issue you're working on involves changing any of the headings in this doc
 before making a commit and submitting a pull request, please remember to update the table of contents.
 To update the TOC, run the command `npm run gen-contributing-toc` from your root directory and you will auto generate a new TOC.
 
-[Flow]: http://flowtype.org/
+[flow]: http://flowtype.org/

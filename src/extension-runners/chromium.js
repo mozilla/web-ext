@@ -13,10 +13,10 @@ import {
   Launcher as ChromeLauncher,
   launch as defaultChromiumLaunch,
 } from 'chrome-launcher';
-import WebSocket, {WebSocketServer} from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 
-import {createLogger} from '../util/logger.js';
-import {TempDir} from '../util/temp-dir.js';
+import { createLogger } from '../util/logger.js';
+import { TempDir } from '../util/temp-dir.js';
 import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
@@ -25,9 +25,9 @@ import isDirectory from '../util/is-directory.js';
 import fileExists from '../util/file-exists.js';
 
 type ChromiumSpecificRunnerParams = {|
-   chromiumBinary?: string,
-   chromiumProfile?: string,
-   chromiumLaunch?: typeof defaultChromiumLaunch,
+  chromiumBinary?: string,
+  chromiumProfile?: string,
+  chromiumLaunch?: typeof defaultChromiumLaunch,
 |};
 
 export type ChromiumExtensionRunnerParams = {|
@@ -38,13 +38,12 @@ export type ChromiumExtensionRunnerParams = {|
 
 const log = createLogger(import.meta.url);
 
-const EXCLUDED_CHROME_FLAGS = [
-  '--disable-extensions',
-  '--mute-audio',
-];
+const EXCLUDED_CHROME_FLAGS = ['--disable-extensions', '--mute-audio'];
 
-export const DEFAULT_CHROME_FLAGS: Array<string> = ChromeLauncher.defaultFlags()
-  .filter((flag) => !EXCLUDED_CHROME_FLAGS.includes(flag));
+export const DEFAULT_CHROME_FLAGS: Array<string> =
+  ChromeLauncher.defaultFlags().filter(
+    (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag)
+  );
 
 /**
  * Implements an IExtensionRunner which manages a Chromium instance.
@@ -60,9 +59,7 @@ export class ChromiumExtensionRunner {
   _promiseSetupDone: ?Promise<void>;
 
   constructor(params: ChromiumExtensionRunnerParams) {
-    const {
-      chromiumLaunch = defaultChromiumLaunch,
-    } = params;
+    const { chromiumLaunch = defaultChromiumLaunch } = params;
     this.params = params;
     this.chromiumLaunch = chromiumLaunch;
     this.cleanupCallbacks = new Set();
@@ -87,20 +84,20 @@ export class ChromiumExtensionRunner {
     const localStatePath = path.join(dirPath, 'Local State');
     const defaultPath = path.join(dirPath, 'Default');
     // Local State and Default are typical for the user-data-dir
-    return (await fileExists(localStatePath))
-      && (await isDirectory(defaultPath));
+    return (
+      (await fileExists(localStatePath)) && (await isDirectory(defaultPath))
+    );
   }
 
   static async isProfileDir(dirPath: string): Promise<boolean> {
-    const securePreferencesPath = path.join(
-      dirPath, 'Secure Preferences');
+    const securePreferencesPath = path.join(dirPath, 'Secure Preferences');
     //Secure Preferences is typical for a profile dir inside a user data dir
     return await fileExists(securePreferencesPath);
   }
 
   static async getProfilePaths(chromiumProfile: ?string): Promise<{
     userDataDir: ?string,
-    profileDirName: ?string
+    profileDirName: ?string,
   }> {
     if (!chromiumProfile) {
       return {
@@ -110,11 +107,11 @@ export class ChromiumExtensionRunner {
     }
 
     const isProfileDirAndNotUserData =
-      (await ChromiumExtensionRunner.isProfileDir(chromiumProfile))
-      && !(await ChromiumExtensionRunner.isUserDataDir(chromiumProfile));
+      (await ChromiumExtensionRunner.isProfileDir(chromiumProfile)) &&
+      !(await ChromiumExtensionRunner.isUserDataDir(chromiumProfile));
 
     if (isProfileDirAndNotUserData) {
-      const {dir: userDataDir, base: profileDirName} =
+      const { dir: userDataDir, base: profileDirName } =
         path.parse(chromiumProfile);
       return {
         userDataDir,
@@ -126,7 +123,6 @@ export class ChromiumExtensionRunner {
       userDataDir: chromiumProfile,
       profileDirName: null,
     };
-
   }
 
   /**
@@ -138,15 +134,16 @@ export class ChromiumExtensionRunner {
       const server = new WebSocketServer(
         // Use a ipv4 host so we don't need to escape ipv6 address
         // https://github.com/mozilla/web-ext/issues/2331
-        {port: 0, host: '127.0.0.1', clientTracking: true},
+        { port: 0, host: '127.0.0.1', clientTracking: true },
         // Wait the server to be listening (so that the extension
         // runner can successfully retrieve server address and port).
-        () => resolve(server));
+        () => resolve(server)
+      );
     });
 
     // Prevent unhandled socket error (e.g. when chrome
     // is exiting, See https://github.com/websockets/ws/issues/1256).
-    this.wss.on('connection', function(socket) {
+    this.wss.on('connection', function (socket) {
       socket.on('error', (err) => {
         log.debug(`websocket connection error: ${err}`);
       });
@@ -156,11 +153,11 @@ export class ChromiumExtensionRunner {
     this.reloadManagerExtension = await this.createReloadManagerExtension();
 
     // Start chrome pointing it to a given profile dir
-    const extensions = [this.reloadManagerExtension].concat(
-      this.params.extensions.map(({sourceDir}) => sourceDir)
-    ).join(',');
+    const extensions = [this.reloadManagerExtension]
+      .concat(this.params.extensions.map(({ sourceDir }) => sourceDir))
+      .join(',');
 
-    const {chromiumBinary} = this.params;
+    const { chromiumBinary } = this.params;
 
     log.debug('Starting Chromium instance...');
 
@@ -177,17 +174,22 @@ export class ChromiumExtensionRunner {
     }
 
     // eslint-disable-next-line prefer-const
-    let {userDataDir, profileDirName} =
+    let { userDataDir, profileDirName } =
       await ChromiumExtensionRunner.getProfilePaths(
-        this.params.chromiumProfile);
+        this.params.chromiumProfile
+      );
 
     if (userDataDir && this.params.keepProfileChanges) {
-      if (profileDirName
-        && !(await ChromiumExtensionRunner.isUserDataDir(userDataDir))) {
-        throw new Error('The profile you provided is not in a ' +
-          'user-data-dir. The changes cannot be kept. Please either ' +
-          'remove --keep-profile-changes or use a profile in a ' +
-          'user-data-dir directory');
+      if (
+        profileDirName &&
+        !(await ChromiumExtensionRunner.isUserDataDir(userDataDir))
+      ) {
+        throw new Error(
+          'The profile you provided is not in a ' +
+            'user-data-dir. The changes cannot be kept. Please either ' +
+            'remove --keep-profile-changes or use a profile in a ' +
+            'user-data-dir directory'
+        );
       }
     } else if (!this.params.keepProfileChanges) {
       // the user provided an existing profile directory but doesn't want
@@ -199,11 +201,9 @@ export class ChromiumExtensionRunner {
 
       if (userDataDir && profileDirName) {
         // copy profile dir to this temp user data dir.
-        await fs.copy(path.join(
-          userDataDir,
-          profileDirName), path.join(
-          tmpDirPath,
-          profileDirName),
+        await fs.copy(
+          path.join(userDataDir, profileDirName),
+          path.join(tmpDirPath, profileDirName)
         );
       } else if (userDataDir) {
         await fs.copy(userDataDir, tmpDirPath);
@@ -217,8 +217,9 @@ export class ChromiumExtensionRunner {
 
     let startingUrl;
     if (this.params.startUrl) {
-      const startingUrls = Array.isArray(this.params.startUrl) ?
-        this.params.startUrl : [this.params.startUrl];
+      const startingUrls = Array.isArray(this.params.startUrl)
+        ? this.params.startUrl
+        : [this.params.startUrl];
       startingUrl = startingUrls.shift();
       chromeFlags.push(...startingUrls);
     }
@@ -363,10 +364,11 @@ export class ChromiumExtensionRunner {
     });
 
     process.stdout.write(
-      `\rLast extension reload: ${(new Date()).toTimeString()}`);
+      `\rLast extension reload: ${new Date().toTimeString()}`
+    );
     log.debug('\n');
 
-    return [{runnerName}];
+    return [{ runnerName }];
   }
 
   /**
@@ -421,7 +423,8 @@ export class ChromiumExtensionRunner {
         }
       }
       await new Promise((resolve) =>
-        this.wss ? this.wss.close(resolve) : resolve());
+        this.wss ? this.wss.close(resolve) : resolve()
+      );
       this.wss = null;
     }
 

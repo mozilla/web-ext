@@ -1,7 +1,7 @@
 /* @flow */
 import os from 'os';
 import path from 'path';
-import {readFileSync} from 'fs';
+import { readFileSync } from 'fs';
 
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
@@ -9,13 +9,13 @@ import yargs from 'yargs';
 import { Parser as yargsParser } from 'yargs/helpers';
 
 import defaultCommands from './cmd/index.js';
-import {UsageError} from './errors.js';
+import { UsageError } from './errors.js';
 import {
   createLogger,
   consoleStream as defaultLogStream,
 } from './util/logger.js';
-import {coerceCLICustomPreference} from './firefox/preferences.js';
-import {checkForUpdates as defaultUpdateChecker} from './util/updates.js';
+import { coerceCLICustomPreference } from './firefox/preferences.js';
+import { checkForUpdates as defaultUpdateChecker } from './util/updates.js';
 import {
   discoverConfigFiles as defaultConfigDiscovery,
   loadJSConfigFile as defaultLoadJSConfigFile,
@@ -28,10 +28,9 @@ const envPrefix = 'WEB_EXT';
 // by babel-plugin-transform-inline-environment-variables).
 const defaultGlobalEnv = process.env.WEBEXT_BUILD_ENV || 'development';
 
-
 type ProgramOptions = {
   absolutePackageDir?: string,
-}
+};
 
 export type VersionGetterFn = (absolutePackageDir: string) => Promise<string>;
 
@@ -47,8 +46,7 @@ type ExecuteOptions = {
   loadJSConfigFile?: typeof defaultLoadJSConfigFile,
   shouldExitProgram?: boolean,
   globalEnv?: string | void,
-}
-
+};
 
 /*
  * The command line program.
@@ -65,9 +63,7 @@ export class Program {
 
   constructor(
     argv: ?Array<string>,
-    {
-      absolutePackageDir = process.cwd(),
-    }: ProgramOptions = {}
+    { absolutePackageDir = process.cwd() }: ProgramOptions = {}
   ) {
     // This allows us to override the process argv which is useful for
     // testing.
@@ -101,7 +97,9 @@ export class Program {
   }
 
   command(
-    name: string, description: string, executor: Function,
+    name: string,
+    description: string,
+    executor: Function,
     commandOptions: Object = {}
   ): Program {
     this.options[camelCase(name)] = commandOptions;
@@ -110,18 +108,24 @@ export class Program {
       if (!commandOptions) {
         return;
       }
-      return yargsForCmd
-        // Make sure the user does not add any extra commands. For example,
-        // this would be a mistake because lint does not accept arguments:
-        // web-ext lint ./src/path/to/file.js
-        .demandCommand(0, 0, undefined,
-                       'This command does not take any arguments')
-        .strict()
-        .exitProcess(this.shouldExitProgram)
-        // Calling env() will be unnecessary after
-        // https://github.com/yargs/yargs/issues/486 is fixed
-        .env(envPrefix)
-        .options(commandOptions);
+      return (
+        yargsForCmd
+          // Make sure the user does not add any extra commands. For example,
+          // this would be a mistake because lint does not accept arguments:
+          // web-ext lint ./src/path/to/file.js
+          .demandCommand(
+            0,
+            0,
+            undefined,
+            'This command does not take any arguments'
+          )
+          .strict()
+          .exitProcess(this.shouldExitProgram)
+          // Calling env() will be unnecessary after
+          // https://github.com/yargs/yargs/issues/486 is fixed
+          .env(envPrefix)
+          .options(commandOptions)
+      );
     });
     this.commands[name] = executor;
     return this;
@@ -131,7 +135,7 @@ export class Program {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
-    this.options = {...this.options, ...options};
+    this.options = { ...this.options, ...options };
     Object.keys(options).forEach((key) => {
       options[key].global = true;
       if (options[key].demandOption === undefined) {
@@ -144,10 +148,7 @@ export class Program {
     return this;
   }
 
-  enableVerboseMode(
-    logStream: typeof defaultLogStream,
-    version: string
-  ): void {
+  enableVerboseMode(logStream: typeof defaultLogStream, version: string): void {
     if (this.verboseEnabled) {
       return;
     }
@@ -169,8 +170,9 @@ export class Program {
     // regressions are located at: tests/functional/test.cli.sign.js
     //
     // Replace hack if possible:  https://github.com/mozilla/web-ext/issues/1930
-    const validationInstance =
-      this.yargs.getInternalMethods().getValidationInstance();
+    const validationInstance = this.yargs
+      .getInternalMethods()
+      .getValidationInstance();
     const { requiredArguments } = validationInstance;
     // Initialize demandedOptions (which is going to be set to an object with one
     // property for each mandatory global options, then the arrow function below
@@ -184,8 +186,10 @@ export class Program {
     try {
       argv = this.yargs.argv;
     } catch (err) {
-      if (err.name === 'YError' &&
-          err.message.startsWith('Unknown argument: ')) {
+      if (
+        err.name === 'YError' &&
+        err.message.startsWith('Unknown argument: ')
+      ) {
         throw new UsageError(err.message);
       }
       throw err;
@@ -233,8 +237,9 @@ export class Program {
   // must call checkRequiredArguments() to ensure that required parameters are
   // defined (in the CLI or in a config file).
   checkRequiredArguments(adjustedArgv: Object): void {
-    const validationInstance =
-      this.yargs.getInternalMethods().getValidationInstance();
+    const validationInstance = this.yargs
+      .getInternalMethods()
+      .getValidationInstance();
     validationInstance.requiredArguments(adjustedArgv, this.demandedOptions);
   }
 
@@ -243,9 +248,8 @@ export class Program {
   cleanupProcessEnvConfigs(systemProcess: typeof process) {
     const cmd = yargsParser(this.programArgv)._[0];
     const env = systemProcess.env || {};
-    const toOptionKey = (k) => decamelize(
-      camelCase(k.replace(envPrefix, '')), {separator: '-'}
-    );
+    const toOptionKey = (k) =>
+      decamelize(camelCase(k.replace(envPrefix, '')), { separator: '-' });
 
     if (cmd) {
       Object.keys(env)
@@ -263,19 +267,17 @@ export class Program {
     }
   }
 
-  async execute(
-    {
-      checkForUpdates = defaultUpdateChecker,
-      systemProcess = process,
-      logStream = defaultLogStream,
-      getVersion = defaultVersionGetter,
-      applyConfigToArgv = defaultApplyConfigToArgv,
-      discoverConfigFiles = defaultConfigDiscovery,
-      loadJSConfigFile = defaultLoadJSConfigFile,
-      shouldExitProgram = true,
-      globalEnv = defaultGlobalEnv,
-    }: ExecuteOptions = {}
-  ): Promise<void> {
+  async execute({
+    checkForUpdates = defaultUpdateChecker,
+    systemProcess = process,
+    logStream = defaultLogStream,
+    getVersion = defaultVersionGetter,
+    applyConfigToArgv = defaultApplyConfigToArgv,
+    discoverConfigFiles = defaultConfigDiscovery,
+    loadJSConfigFile = defaultLoadJSConfigFile,
+    shouldExitProgram = true,
+    globalEnv = defaultGlobalEnv,
+  }: ExecuteOptions = {}): Promise<void> {
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
 
@@ -291,7 +293,7 @@ export class Program {
       this.enableVerboseMode(logStream, version);
     }
 
-    let adjustedArgv = {...argv};
+    let adjustedArgv = { ...argv };
 
     try {
       if (cmd === undefined) {
@@ -301,15 +303,15 @@ export class Program {
         throw new UsageError(`Unknown command: ${cmd}`);
       }
       if (globalEnv === 'production') {
-        checkForUpdates({version});
+        checkForUpdates({ version });
       }
 
       const configFiles = [];
 
       if (argv.configDiscovery) {
         log.debug(
-          'Discovering config files. ' +
-          'Set --no-config-discovery to disable');
+          'Discovering config files. ' + 'Set --no-config-discovery to disable'
+        );
         const discoveredConfigs = await discoverConfigFiles();
         configFiles.push(...discoveredConfigs);
       } else {
@@ -327,8 +329,9 @@ export class Program {
           .join(', ');
         log.info(
           'Applying config file' +
-          `${configFiles.length !== 1 ? 's' : ''}: ` +
-          `${niceFileList}`);
+            `${configFiles.length !== 1 ? 's' : ''}: ` +
+            `${niceFileList}`
+        );
       }
 
       configFiles.forEach((configFileName) => {
@@ -349,8 +352,7 @@ export class Program {
 
       this.checkRequiredArguments(adjustedArgv);
 
-      await runCommand(adjustedArgv, {shouldExitProgram});
-
+      await runCommand(adjustedArgv, { shouldExitProgram });
     } catch (error) {
       if (!(error instanceof UsageError) || adjustedArgv.verbose) {
         log.error(`\n${error.stack}\n`);
@@ -379,12 +381,13 @@ type VersionGetterOptions = {
 
 export async function defaultVersionGetter(
   absolutePackageDir: string,
-  {globalEnv = defaultGlobalEnv}: VersionGetterOptions = {}
+  { globalEnv = defaultGlobalEnv }: VersionGetterOptions = {}
 ): Promise<string> {
   if (globalEnv === 'production') {
     log.debug('Getting the version from package.json');
     const packageData: any = readFileSync(
-      path.join(absolutePackageDir, 'package.json'));
+      path.join(absolutePackageDir, 'package.json')
+    );
     return JSON.parse(packageData).version;
   } else {
     log.debug('Getting version from the git revision');
@@ -404,7 +407,7 @@ type MainParams = {
   commands?: Object,
   argv: Array<any>,
   runOptions?: Object,
-}
+};
 
 export function throwUsageErrorIfArray(errorMessage: string): any {
   return (value: any): any => {
@@ -418,18 +421,20 @@ export function throwUsageErrorIfArray(errorMessage: string): any {
 export async function main(
   absolutePackageDir: string,
   {
-    getVersion = defaultVersionGetter, commands = defaultCommands, argv,
+    getVersion = defaultVersionGetter,
+    commands = defaultCommands,
+    argv,
     runOptions = {},
   }: MainParams = {}
 ): Promise<any> {
-  const program = new Program(argv, {absolutePackageDir});
+  const program = new Program(argv, { absolutePackageDir });
   const version = await getVersion(absolutePackageDir);
 
   // This is an option shared by some commands but not all of them, hence why
   // it isn't a global option.
   const firefoxPreviewOption = {
-    describe: 'Turn on developer preview features in Firefox' +
-    ' (defaults to "mv3")',
+    describe:
+      'Turn on developer preview features in Firefox' + ' (defaults to "mv3")',
     demandOption: false,
     type: 'array',
   };
@@ -438,7 +443,8 @@ export async function main(
   // final argv object. For example, the 'artifacts-dir' option is alternatively
   // available as argv.artifactsDir.
   program.yargs
-    .usage(`Usage: $0 [options] command
+    .usage(
+      `Usage: $0 [options] command
 
 Option values can also be set by declaring an environment variable prefixed
 with $${envPrefix}_. For example: $${envPrefix}_SOURCE_DIR=/path is the same as
@@ -446,7 +452,8 @@ with $${envPrefix}_. For example: $${envPrefix}_SOURCE_DIR=/path is the same as
 
 To view specific help for any given command, add the command name.
 Example: $0 --help run.
-`)
+`
+    )
     .help('help')
     .alias('h', 'help')
     .env(envPrefix)
@@ -462,7 +469,7 @@ Example: $0 --help run.
       default: process.cwd(),
       requiresArg: true,
       type: 'string',
-      coerce: (arg) => arg != null ? path.resolve(arg) : undefined,
+      coerce: (arg) => (arg != null ? path.resolve(arg) : undefined),
     },
     'artifacts-dir': {
       alias: 'a',
@@ -472,7 +479,7 @@ Example: $0 --help run.
       requiresArg: true,
       type: 'string',
     },
-    'verbose': {
+    verbose: {
       alias: 'v',
       describe: 'Show verbose output',
       type: 'boolean',
@@ -480,9 +487,10 @@ Example: $0 --help run.
     },
     'ignore-files': {
       alias: 'i',
-      describe: 'A list of glob patterns to define which files should be ' +
-                'ignored. (Example: --ignore-files=path/to/first.js ' +
-                'path/to/second.js "**/*.log")',
+      describe:
+        'A list of glob patterns to define which files should be ' +
+        'ignored. (Example: --ignore-files=path/to/first.js ' +
+        'path/to/second.js "**/*.log")',
       demandOption: false,
       // The following option prevents yargs>=11 from parsing multiple values,
       // so the minimum value requirement is enforced in execute instead.
@@ -495,24 +503,24 @@ Example: $0 --help run.
       type: 'boolean',
       demandOption: false,
     },
-    'input': {
+    input: {
       // This option is defined to make yargs to accept the --no-input
       // defined above, but we hide it from the yargs help output.
       hidden: true,
       type: 'boolean',
       demandOption: false,
     },
-    'config': {
+    config: {
       alias: 'c',
-      describe: 'Path to a CommonJS config file to set ' +
-        'option defaults',
+      describe: 'Path to a CommonJS config file to set ' + 'option defaults',
       default: undefined,
       demandOption: false,
       requiresArg: true,
       type: 'string',
     },
     'config-discovery': {
-      describe: 'Discover config files in home directory and ' +
+      describe:
+        'Discover config files in home directory and ' +
         'working directory. Disable with --no-config-discovery.',
       demandOption: false,
       default: true,
@@ -524,12 +532,13 @@ Example: $0 --help run.
     .command(
       'build',
       'Create an extension package from source',
-      commands.build, {
+      commands.build,
+      {
         'as-needed': {
           describe: 'Watch for file changes and re-build as needed',
           type: 'boolean',
         },
-        'filename': {
+        filename: {
           alias: 'n',
           describe: 'Name of the created extension package file.',
           default: undefined,
@@ -537,21 +546,25 @@ Example: $0 --help run.
           demandOption: false,
           requiresArg: true,
           type: 'string',
-          coerce: (arg) => arg == null ?
-            undefined : throwUsageErrorIfArray(
-              'Multiple --filename/-n option are not allowed'
-            )(arg),
+          coerce: (arg) =>
+            arg == null
+              ? undefined
+              : throwUsageErrorIfArray(
+                  'Multiple --filename/-n option are not allowed'
+                )(arg),
         },
         'overwrite-dest': {
           alias: 'o',
           describe: 'Overwrite destination package if it exists.',
           type: 'boolean',
         },
-      })
+      }
+    )
     .command(
       'sign',
       'Sign the extension so it can be installed in Firefox',
-      commands.sign, {
+      commands.sign,
+      {
         'amo-base-url': {
           describe:
             'Signing API URL prefix - only used with `use-submission-api`',
@@ -583,61 +596,74 @@ Example: $0 --help run.
           type: 'string',
         },
         'use-submission-api': {
-          describe:
-            'Sign using the addon submission API',
+          describe: 'Sign using the addon submission API',
           demandOption: false,
           type: 'boolean',
         },
-        'id': {
+        id: {
           describe:
             'A custom ID for the extension. This has no effect if the ' +
             'extension already declares an explicit ID in its manifest.',
           demandOption: false,
           type: 'string',
         },
-        'timeout': {
+        timeout: {
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },
-        'channel': {
-          describe: 'The channel for which to sign the addon. Either ' +
-          '\'listed\' or \'unlisted\'',
+        channel: {
+          describe:
+            'The channel for which to sign the addon. Either ' +
+            "'listed' or 'unlisted'",
+        },
+        'amo-metadata': {
+          describe:
+            'Path to a JSON file containing an object with metadata ' +
+            'to be passed to the API. ' +
+            'See https://addons-server.readthedocs.io' +
+            '/en/latest/topics/api/addons.html for details. ' +
+            'Only used with `use-submission-api`',
           type: 'string',
         },
-      })
+      }
+    )
     .command('run', 'Run the extension', commands.run, {
-      'target': {
+      target: {
         alias: 't',
-        describe: 'The extensions runners to enable. Specify this option ' +
-                  'multiple times to run against multiple targets.',
+        describe:
+          'The extensions runners to enable. Specify this option ' +
+          'multiple times to run against multiple targets.',
         default: 'firefox-desktop',
         demandOption: false,
         type: 'array',
         choices: ['firefox-desktop', 'firefox-android', 'chromium'],
       },
-      'firefox': {
+      firefox: {
         alias: ['f', 'firefox-binary'],
-        describe: 'Path or alias to a Firefox executable such as firefox-bin ' +
-                  'or firefox.exe. ' +
-                  'If not specified, the default Firefox will be used. ' +
-                  'You can specify the following aliases in lieu of a path: ' +
-                  'firefox, beta, nightly, firefoxdeveloperedition. ' +
-                  'For Flatpak, use `flatpak:org.mozilla.firefox` where ' +
-                  '`org.mozilla.firefox` is the application ID.',
+        describe:
+          'Path or alias to a Firefox executable such as firefox-bin ' +
+          'or firefox.exe. ' +
+          'If not specified, the default Firefox will be used. ' +
+          'You can specify the following aliases in lieu of a path: ' +
+          'firefox, beta, nightly, firefoxdeveloperedition. ' +
+          'For Flatpak, use `flatpak:org.mozilla.firefox` where ' +
+          '`org.mozilla.firefox` is the application ID.',
         demandOption: false,
         type: 'string',
       },
       'firefox-profile': {
         alias: 'p',
-        describe: 'Run Firefox using a copy of this profile. The profile ' +
-                  'can be specified as a directory or a name, such as one ' +
-                  'you would see in the Profile Manager. If not specified, ' +
-                  'a new temporary profile will be created.',
+        describe:
+          'Run Firefox using a copy of this profile. The profile ' +
+          'can be specified as a directory or a name, such as one ' +
+          'you would see in the Profile Manager. If not specified, ' +
+          'a new temporary profile will be created.',
         demandOption: false,
         type: 'string',
       },
       'chromium-binary': {
-        describe: 'Path or alias to a Chromium executable such as ' +
+        describe:
+          'Path or alias to a Chromium executable such as ' +
           'google-chrome, google-chrome.exe or opera.exe etc. ' +
           'If not specified, the default Google Chrome will be used.',
         demandOption: false,
@@ -654,13 +680,15 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'keep-profile-changes': {
-        describe: 'Run Firefox directly in custom profile. Any changes to ' +
-                  'the profile will be saved.',
+        describe:
+          'Run Firefox directly in custom profile. Any changes to ' +
+          'the profile will be saved.',
         demandOption: false,
         type: 'boolean',
       },
-      'reload': {
-        describe: 'Reload the extension when source files change.' +
+      reload: {
+        describe:
+          'Reload the extension when source files change.' +
           'Disable with --no-reload.',
         demandOption: false,
         default: true,
@@ -668,38 +696,42 @@ Example: $0 --help run.
       },
       'watch-file': {
         alias: ['watch-files'],
-        describe: 'Reload the extension only when the contents of this' +
-                  ' file changes. This is useful if you use a custom' +
-                  ' build process for your extension',
+        describe:
+          'Reload the extension only when the contents of this' +
+          ' file changes. This is useful if you use a custom' +
+          ' build process for your extension',
         demandOption: false,
         type: 'array',
       },
       'watch-ignored': {
-        describe: 'Paths and globs patterns that should not be ' +
-                  'watched for changes. This is useful if you want ' +
-                  'to explicitly prevent web-ext from watching part ' +
-                  'of the extension directory tree, ' +
-                  'e.g. the node_modules folder.',
+        describe:
+          'Paths and globs patterns that should not be ' +
+          'watched for changes. This is useful if you want ' +
+          'to explicitly prevent web-ext from watching part ' +
+          'of the extension directory tree, ' +
+          'e.g. the node_modules folder.',
         demandOption: false,
         type: 'array',
       },
       'pre-install': {
-        describe: 'Pre-install the extension into the profile before ' +
-                  'startup. This is only needed to support older versions ' +
-                  'of Firefox.',
+        describe:
+          'Pre-install the extension into the profile before ' +
+          'startup. This is only needed to support older versions ' +
+          'of Firefox.',
         demandOption: false,
         type: 'boolean',
       },
-      'pref': {
-        describe: 'Launch firefox with a custom preference ' +
-                  '(example: --pref=general.useragent.locale=fr-FR). ' +
-                  'You can repeat this option to set more than one ' +
-                  'preference.',
+      pref: {
+        describe:
+          'Launch firefox with a custom preference ' +
+          '(example: --pref=general.useragent.locale=fr-FR). ' +
+          'You can repeat this option to set more than one ' +
+          'preference.',
         demandOption: false,
         requiresArg: true,
         type: 'array',
-        coerce: (arg) => arg != null ?
-          coerceCLICustomPreference(arg) : undefined,
+        coerce: (arg) =>
+          arg != null ? coerceCLICustomPreference(arg) : undefined,
       },
       'start-url': {
         alias: ['u', 'url'],
@@ -707,9 +739,10 @@ Example: $0 --help run.
         demandOption: false,
         type: 'array',
       },
-      'devtools': {
-        describe: 'Open the DevTools for the installed add-on ' +
-                  '(Firefox 106 and later)',
+      devtools: {
+        describe:
+          'Open the DevTools for the installed add-on ' +
+          '(Firefox 106 and later)',
         demandOption: false,
         type: 'boolean',
       },
@@ -719,7 +752,7 @@ Example: $0 --help run.
         demandOption: false,
         type: 'boolean',
       },
-      'args': {
+      args: {
         alias: ['arg'],
         describe: 'Additional CLI options passed to the Browser binary',
         demandOption: false,
@@ -764,10 +797,9 @@ Example: $0 --help run.
         type: 'boolean',
       },
       'firefox-apk': {
-        describe: (
+        describe:
           'Run a specific Firefox for Android APK. ' +
-          'Example: org.mozilla.fennec_aurora'
-        ),
+          'Example: org.mozilla.fennec_aurora',
         demandOption: false,
         type: 'string',
         requiresArg: true,
@@ -781,14 +813,14 @@ Example: $0 --help run.
       },
     })
     .command('lint', 'Validate the extension source', commands.lint, {
-      'output': {
+      output: {
         alias: 'o',
         describe: 'The type of output to generate',
         type: 'string',
         default: 'text',
         choices: ['json', 'text'],
       },
-      'metadata': {
+      metadata: {
         describe: 'Output only metadata as JSON',
         type: 'boolean',
         default: false,
@@ -799,12 +831,12 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
-      'pretty': {
+      pretty: {
         describe: 'Prettify JSON output',
         type: 'boolean',
         default: false,
       },
-      'privileged': {
+      privileged: {
         describe: 'Treat your extension as a privileged extension',
         type: 'boolean',
         default: false,
@@ -816,15 +848,19 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
-      'boring': {
+      boring: {
         describe: 'Disables colorful shell output',
         type: 'boolean',
         default: false,
       },
       'firefox-preview': firefoxPreviewOption,
     })
-    .command('docs', 'Open the web-ext documentation in a browser',
-             commands.docs, {});
+    .command(
+      'docs',
+      'Open the web-ext documentation in a browser',
+      commands.docs,
+      {}
+    );
 
-  return program.execute({getVersion, ...runOptions});
+  return program.execute({ getVersion, ...runOptions });
 }

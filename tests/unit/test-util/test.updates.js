@@ -1,8 +1,8 @@
 /* @flow */
-import {it, describe} from 'mocha';
+import { it, describe } from 'mocha';
 import * as sinon from 'sinon';
 
-import {checkForUpdates} from '../../../src/util/updates.js';
+import { checkForUpdates } from '../../../src/util/updates.js';
 
 describe('util/updates', () => {
   describe('checkForUpdates()', () => {
@@ -18,12 +18,10 @@ describe('util/updates', () => {
         updateNotifier: updateNotifierStub,
       });
 
-      sinon.assert.calledWithMatch(
-        updateNotifierStub, {
-          updateCheckInterval: 1000 * 60 * 60 * 24 * 3,
-          pkg: { name: 'web-ext', version: '1.0.0' },
-        }
-      );
+      sinon.assert.calledWithMatch(updateNotifierStub, {
+        updateCheckInterval: 1000 * 60 * 60 * 24 * 3,
+        pkg: { name: 'web-ext', version: '1.0.0' },
+      });
     });
   });
 });

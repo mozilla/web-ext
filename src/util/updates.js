@@ -6,13 +6,11 @@ type CheckForUpdatesParams = {|
   updateNotifier?: typeof defaultUpdateNotifier,
 |};
 
-export function checkForUpdates(
-  {
-    version,
-    updateNotifier = defaultUpdateNotifier,
-  }: CheckForUpdatesParams
-) {
-  const pkg = {name: 'web-ext', version};
+export function checkForUpdates({
+  version,
+  updateNotifier = defaultUpdateNotifier,
+}: CheckForUpdatesParams) {
+  const pkg = { name: 'web-ext', version };
 
   updateNotifier({
     pkg,

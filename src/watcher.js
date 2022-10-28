@@ -1,13 +1,12 @@
 /* @flow */
-import {fs} from 'mz';
+import { fs } from 'mz';
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
 import { UsageError } from './errors.js';
-import {createLogger} from './util/logger.js';
+import { createLogger } from './util/logger.js';
 
 const log = createLogger(import.meta.url);
-
 
 // onSourceChange types and implementation
 
@@ -27,35 +26,32 @@ export type OnSourceChangeParams = {|
 
 export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
 
-export default function onSourceChange(
-  {
-    sourceDir,
-    watchFile,
-    watchIgnored,
-    artifactsDir,
-    onChange,
-    shouldWatchFile,
-    debounceTime = 500,
-  }: OnSourceChangeParams
-): Watchpack {
+export default function onSourceChange({
+  sourceDir,
+  watchFile,
+  watchIgnored,
+  artifactsDir,
+  onChange,
+  shouldWatchFile,
+  debounceTime = 500,
+}: OnSourceChangeParams): Watchpack {
   // When running on Windows, transform the ignored paths and globs
   // as Watchpack does translate the changed files path internally
   // (See https://github.com/webpack/watchpack/blob/v2.1.1/lib/DirectoryWatcher.js#L99-L103).
-  const ignored = (watchIgnored && process.platform === 'win32')
-    ? watchIgnored.map((it) => it.replace(/\\/g, '/'))
-    : watchIgnored;
+  const ignored =
+    watchIgnored && process.platform === 'win32'
+      ? watchIgnored.map((it) => it.replace(/\\/g, '/'))
+      : watchIgnored;
 
   // TODO: For network disks, we would need to add {poll: true}.
-  const watcher = ignored ?
-    new Watchpack({ignored}) :
-    new Watchpack();
+  const watcher = ignored ? new Watchpack({ ignored }) : new Watchpack();
 
   // Allow multiple files to be changed before reloading the extension
   const executeImmediately = false;
   onChange = debounce(onChange, debounceTime, executeImmediately);
 
   watcher.on('change', (filePath) => {
-    proxyFileChanges({artifactsDir, onChange, filePath, shouldWatchFile});
+    proxyFileChanges({ artifactsDir, onChange, filePath, shouldWatchFile });
   });
 
   log.debug(
@@ -68,8 +64,9 @@ export default function onSourceChange(
   if (watchFile) {
     for (const filePath of watchFile) {
       if (fs.existsSync(filePath) && !fs.lstatSync(filePath).isFile()) {
-        throw new UsageError('Invalid --watch-file value: ' +
-          `"${filePath}" is not a file.`);
+        throw new UsageError(
+          'Invalid --watch-file value: ' + `"${filePath}" is not a file.`
+        );
       }
 
       watchedFiles.push(filePath);
@@ -91,7 +88,6 @@ export default function onSourceChange(
   return watcher;
 }
 
-
 // proxyFileChanges types and implementation.
 
 export type ProxyFileChangesParams = {|
@@ -101,14 +97,17 @@ export type ProxyFileChangesParams = {|
   shouldWatchFile: ShouldWatchFn,
 |};
 
-export function proxyFileChanges(
-  {artifactsDir, onChange, filePath, shouldWatchFile}: ProxyFileChangesParams
-): void {
+export function proxyFileChanges({
+  artifactsDir,
+  onChange,
+  filePath,
+  shouldWatchFile,
+}: ProxyFileChangesParams): void {
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
     log.debug(`Ignoring change to: ${filePath}`);
   } else {
     log.debug(`Changed: ${filePath}`);
-    log.debug(`Last change detection: ${(new Date()).toTimeString()}`);
+    log.debug(`Last change detection: ${new Date().toTimeString()}`);
     onChange();
   }
 }

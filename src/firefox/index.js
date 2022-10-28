@@ -1,28 +1,27 @@
 /* @flow */
 import nodeFs from 'fs';
 import path from 'path';
-import {promisify} from 'util';
+import { promisify } from 'util';
 
-import {default as defaultFxRunner} from 'fx-runner';
+import { default as defaultFxRunner } from 'fx-runner';
 import FirefoxProfile from 'firefox-profile';
-import {fs} from 'mz';
+import { fs } from 'mz';
 import fromEvent from 'promise-toolbox/fromEvent';
 
 import isDirectory from '../util/is-directory.js';
-import {isErrorWithCode, UsageError, WebExtError} from '../errors.js';
-import {getPrefs as defaultPrefGetter} from './preferences.js';
-import {getManifestId} from '../util/manifest.js';
-import {findFreeTcpPort as defaultRemotePortFinder} from './remote.js';
-import {createLogger} from '../util/logger.js';
+import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
+import { getPrefs as defaultPrefGetter } from './preferences.js';
+import { getManifestId } from '../util/manifest.js';
+import { findFreeTcpPort as defaultRemotePortFinder } from './remote.js';
+import { createLogger } from '../util/logger.js';
 // Import flow types
 import type {
   PreferencesAppName,
   PreferencesGetterFn,
   FirefoxPreferences,
 } from './preferences';
-import type {ExtensionManifest} from '../util/manifest.js';
-import type {Extension} from '../extension-runners/base.js';
-
+import type { ExtensionManifest } from '../util/manifest.js';
+import type { Extension } from '../extension-runners/base.js';
 
 const log = createLogger(import.meta.url);
 
@@ -37,9 +36,7 @@ export const defaultFirefoxEnv = {
 
 // defaultRemotePortFinder types and implementation.
 
-
-export type RemotePortFinderFn =
-  () => Promise<number>;
+export type RemotePortFinderFn = () => Promise<number>;
 
 // Declare the needed 'fx-runner' module flow types.
 
@@ -48,16 +45,16 @@ export type FirefoxRunnerParams = {|
   profile?: string,
   'new-instance'?: boolean,
   'no-remote'?: boolean,
-  'foreground'?: boolean,
-  'listen': number,
+  foreground?: boolean,
+  listen: number,
   'binary-args'?: Array<string> | string,
   'binary-args-first'?: boolean,
-  'env'?: {
+  env?: {
     // This match the flowtype signature for process.env (and prevent flow
     // from complaining about differences between their type signature)
-    [key: string]: string | void
+    [key: string]: string | void,
   },
-  'verbose'?: boolean,
+  verbose?: boolean,
 |};
 
 export interface FirefoxProcess extends events$EventEmitter {
@@ -70,16 +67,16 @@ export type FirefoxRunnerResults = {|
   process: FirefoxProcess,
   binary: string,
   args: Array<string>,
-|}
+|};
 
-export type FirefoxRunnerFn =
-  (params: FirefoxRunnerParams) => Promise<FirefoxRunnerResults>;
-
+export type FirefoxRunnerFn = (
+  params: FirefoxRunnerParams
+) => Promise<FirefoxRunnerResults>;
 
 export type FirefoxInfo = {|
   firefox: FirefoxProcess,
   debuggerPort: number,
-|}
+|};
 
 // Run command types and implementaion.
 
@@ -107,7 +104,6 @@ export async function run(
     devtools,
   }: FirefoxRunOptions = {}
 ): Promise<FirefoxInfo> {
-
   log.debug(`Running Firefox with profile at ${profile.path()}`);
 
   const remotePort = await findRemotePort();
@@ -136,7 +132,7 @@ export async function run(
 
   const results = await fxRunner({
     // if this is falsey, fxRunner tries to find the default one.
-    'binary': firefoxBinary,
+    binary: firefoxBinary,
     'binary-args': binaryArgs,
     // For Flatpak we need to respect the order of the command arguments because
     // we have arguments for Flapack (first) and then Firefox.
@@ -144,14 +140,14 @@ export async function run(
     // This ensures a new instance of Firefox is created. It has nothing
     // to do with the devtools remote debugger.
     'no-remote': true,
-    'listen': remotePort,
-    'foreground': true,
-    'profile': profile.path(),
-    'env': {
+    listen: remotePort,
+    foreground: true,
+    profile: profile.path(),
+    env: {
       ...process.env,
       ...defaultFirefoxEnv,
     },
-    'verbose': true,
+    verbose: true,
   });
 
   const firefox = results.process;
@@ -189,18 +185,14 @@ export async function run(
   return { firefox, debuggerPort: remotePort };
 }
 
-
 // isDefaultProfile types and implementation.
 
-const DEFAULT_PROFILES_NAMES = [
-  'default',
-  'dev-edition-default',
-];
+const DEFAULT_PROFILES_NAMES = ['default', 'dev-edition-default'];
 
 export type IsDefaultProfileFn = (
   profilePathOrName: string,
   ProfileFinder?: typeof FirefoxProfile.Finder,
-  fsStat?: typeof fs.stat,
+  fsStat?: typeof fs.stat
 ) => Promise<boolean>;
 
 /*
@@ -212,7 +204,7 @@ export type IsDefaultProfileFn = (
 export async function isDefaultProfile(
   profilePathOrName: string,
   ProfileFinder?: typeof FirefoxProfile.Finder = FirefoxProfile.Finder,
-  fsStat?: typeof fs.stat = fs.stat,
+  fsStat?: typeof fs.stat = fs.stat
 ): Promise<boolean> {
   if (DEFAULT_PROFILES_NAMES.includes(profilePathOrName)) {
     return true;
@@ -248,8 +240,10 @@ export async function isDefaultProfile(
   for (const profile of finder.profiles) {
     // Check if the profile dir path or name is one of the default profiles
     // defined in the profiles.ini file.
-    if (DEFAULT_PROFILES_NAMES.includes(profile.Name) ||
-        profile.Default === '1') {
+    if (
+      DEFAULT_PROFILES_NAMES.includes(profile.Name) ||
+      profile.Default === '1'
+    ) {
       let profileFullPath;
 
       // Check for profile name.
@@ -299,7 +293,7 @@ export function configureProfile(
     app = 'firefox',
     getPrefs = defaultPrefGetter,
     customPrefs = {},
-  }: ConfigureProfileOptions = {},
+  }: ConfigureProfileOptions = {}
 ): Promise<FirefoxProfile> {
   // Set default preferences. Some of these are required for the add-on to
   // operate, such as disabling signatures.
@@ -322,23 +316,22 @@ export type getProfileFn = (profileName: string) => Promise<string | void>;
 
 export type CreateProfileFinderParams = {
   userDirectoryPath?: string,
-  FxProfile?: typeof FirefoxProfile
-}
+  FxProfile?: typeof FirefoxProfile,
+};
 
-export function defaultCreateProfileFinder(
-  {
-    userDirectoryPath,
-    FxProfile = FirefoxProfile,
-  }: CreateProfileFinderParams = {}
-): getProfileFn {
+export function defaultCreateProfileFinder({
+  userDirectoryPath,
+  FxProfile = FirefoxProfile,
+}: CreateProfileFinderParams = {}): getProfileFn {
   const finder = new FxProfile.Finder(userDirectoryPath);
   const readProfiles = promisify((...args) => finder.readProfiles(...args));
   const getPath = promisify((...args) => finder.getPath(...args));
   return async (profileName: string): Promise<string | void> => {
     try {
       await readProfiles();
-      const hasProfileName = finder.profiles.filter(
-        (profileDef) => profileDef.Name === profileName).length !== 0;
+      const hasProfileName =
+        finder.profiles.filter((profileDef) => profileDef.Name === profileName)
+          .length !== 0;
       if (hasProfileName) {
         return await getPath(profileName);
       }
@@ -371,15 +364,15 @@ export async function useProfile(
     isFirefoxDefaultProfile = isDefaultProfile,
     customPrefs = {},
     createProfileFinder = defaultCreateProfileFinder,
-  }: UseProfileParams = {},
+  }: UseProfileParams = {}
 ): Promise<FirefoxProfile> {
   const isForbiddenProfile = await isFirefoxDefaultProfile(profilePath);
   if (isForbiddenProfile) {
     throw new UsageError(
       'Cannot use --keep-profile-changes on a default profile' +
-      ` ("${profilePath}")` +
-      ' because web-ext will make it insecure and unsuitable for daily use.' +
-      '\nSee https://github.com/mozilla/web-ext/issues/1005'
+        ` ("${profilePath}")` +
+        ' because web-ext will make it insecure and unsuitable for daily use.' +
+        '\nSee https://github.com/mozilla/web-ext/issues/1005'
     );
   }
 
@@ -396,15 +389,14 @@ export async function useProfile(
     if (!destinationDirectory) {
       throw new UsageError(
         `The request "${profilePath}" profile name ` +
-        'cannot be resolved to a profile path'
+          'cannot be resolved to a profile path'
       );
     }
   }
 
-  const profile = new FirefoxProfile({destinationDirectory});
-  return await configureThisProfile(profile, {app, customPrefs});
+  const profile = new FirefoxProfile({ destinationDirectory });
+  return await configureThisProfile(profile, { app, customPrefs });
 }
-
 
 // createProfile types and implementation.
 
@@ -419,17 +411,14 @@ export type CreateProfileParams = {
  *
  * The profile will be deleted when the system process exits.
  */
-export async function createProfile(
-  {
-    app,
-    configureThisProfile = configureProfile,
-    customPrefs = {},
-  }: CreateProfileParams = {},
-): Promise<FirefoxProfile> {
+export async function createProfile({
+  app,
+  configureThisProfile = configureProfile,
+  customPrefs = {},
+}: CreateProfileParams = {}): Promise<FirefoxProfile> {
   const profile = new FirefoxProfile();
-  return await configureThisProfile(profile, {app, customPrefs});
+  return await configureThisProfile(profile, { app, customPrefs });
 }
-
 
 // copyProfile types and implementation.
 
@@ -459,9 +448,8 @@ export async function copyProfile(
     configureThisProfile = configureProfile,
     copyFromUserProfile = defaultUserProfileCopier,
     customPrefs = {},
-  }: CopyProfileOptions = {},
+  }: CopyProfileOptions = {}
 ): Promise<FirefoxProfile> {
-
   const copy = promisify(FirefoxProfile.copy);
   const copyByName = promisify(copyFromUserProfile);
 
@@ -472,19 +460,19 @@ export async function copyProfile(
 
     if (dirExists) {
       log.debug(`Copying profile directory from "${profileDirectory}"`);
-      profile = await copy({profileDirectory});
+      profile = await copy({ profileDirectory });
     } else {
       log.debug(`Assuming ${profileDirectory} is a named profile`);
-      profile = await copyByName({name: profileDirectory});
+      profile = await copyByName({ name: profileDirectory });
     }
 
-    return configureThisProfile(profile, {app, customPrefs});
+    return configureThisProfile(profile, { app, customPrefs });
   } catch (error) {
     throw new WebExtError(
-      `Could not copy Firefox profile from ${profileDirectory}: ${error}`);
+      `Could not copy Firefox profile from ${profileDirectory}: ${error}`
+    );
   }
 }
-
 
 // installExtension types and implementation.
 
@@ -507,14 +495,13 @@ export type InstallExtensionParams = {|
  * When asProxy is true, a special proxy file will be installed. This is a
  * text file that contains the path to the extension source.
  */
-export async function installExtension(
-  {
-    asProxy = false,
-    manifestData,
-    profile,
-    extensionPath,
-    asyncFsStat = defaultAsyncFsStat,
-  }: InstallExtensionParams): Promise<any> {
+export async function installExtension({
+  asProxy = false,
+  manifestData,
+  profile,
+  extensionPath,
+  asyncFsStat = defaultAsyncFsStat,
+}: InstallExtensionParams): Promise<any> {
   // This more or less follows
   // https://github.com/saadtazi/firefox-profile-js/blob/master/lib/firefox_profile.js#L531
   // (which is broken for web extensions).
@@ -539,7 +526,8 @@ export async function installExtension(
   if (!id) {
     throw new UsageError(
       'An explicit extension ID is required when installing to ' +
-      'a profile (applications.gecko.id not found in manifest.json)');
+        'a profile (applications.gecko.id not found in manifest.json)'
+    );
   }
 
   if (asProxy) {
@@ -549,7 +537,8 @@ export async function installExtension(
     if (!isDir) {
       throw new WebExtError(
         'proxy install: extensionPath must be the extension source ' +
-        `directory; got: ${extensionPath}`);
+          `directory; got: ${extensionPath}`
+      );
     }
 
     // Write a special extension proxy file containing the source

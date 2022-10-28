@@ -1,6 +1,6 @@
 /* @flow */
 
-import {promisify} from 'util';
+import { promisify } from 'util';
 
 // promisify.custom is missing from the node types know to flow,
 // and it triggers flow-check errors if used directly.

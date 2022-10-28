@@ -1,15 +1,12 @@
 /* @flow */
-import {createInstance as defaultLinterCreator} from 'addons-linter';
+import { createInstance as defaultLinterCreator } from 'addons-linter';
 
-import {createLogger} from '../util/logger.js';
-import {
-  createFileFilter as defaultFileFilterCreator,
-} from '../util/file-filter.js';
+import { createLogger } from '../util/logger.js';
+import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
 // import flow types
-import type {FileFilterCreatorFn} from '../util/file-filter.js';
+import type { FileFilterCreatorFn } from '../util/file-filter.js';
 
 const log = createLogger(import.meta.url);
-
 
 // Define the needed 'addons-linter' module flow types.
 
@@ -39,7 +36,6 @@ export type Linter = {|
 |};
 
 export type LinterCreatorFn = (params: LinterCreatorParams) => Linter;
-
 
 // Lint command types and implementation.
 
@@ -85,7 +81,7 @@ export default function lint(
     shouldExitProgram = true,
   }: LintCmdOptions = {}
 ): Promise<void> {
-  const fileFilter = createFileFilter({sourceDir, ignoreFiles, artifactsDir});
+  const fileFilter = createFileFilter({ sourceDir, ignoreFiles, artifactsDir });
 
   const config = {
     logLevel: verbose ? 'debug' : 'fatal',

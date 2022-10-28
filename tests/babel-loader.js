@@ -21,7 +21,7 @@
  */
 
 import path from 'path';
-import {fileURLToPath, pathToFileURL} from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 import babel from '@babel/core';
 import * as td from 'testdouble';
@@ -50,7 +50,6 @@ function hasMock(url) {
   return global.__webextMocks.has(cleanURL);
 }
 
-
 /**
  * @param {string} url
  * @param {{ format: string, url: string }} context
@@ -66,7 +65,7 @@ export async function load(url, context, defaultLoad) {
 
   const result = {
     format: 'module',
-    ...(await transformSource(rawSource, {url, format: 'module'})),
+    ...(await transformSource(rawSource, { url, format: 'module' })),
   };
   return result;
 }
@@ -78,12 +77,12 @@ export async function load(url, context, defaultLoad) {
  * @returns {Promise<{ source: (string | SharedArrayBuffer | Uint8Array) }>}
  */
 export async function transformSource(source, context, defaultTransformSource) {
-  const {url, format} = context;
+  const { url, format } = context;
   if (!MODULE_TYPES.includes(format) || !needsTranspile(url) || hasMock(url)) {
     if (defaultTransformSource) {
       return defaultTransformSource(source, context, defaultTransformSource);
     } else {
-      return {source};
+      return { source };
     }
   }
 
@@ -92,15 +91,13 @@ export async function transformSource(source, context, defaultTransformSource) {
     typeof source === 'string'
       ? source
       : Buffer.isBuffer(source)
-        ? source.toString('utf-8')
-        : Buffer.from(source).toString('utf-8');
+      ? source.toString('utf-8')
+      : Buffer.from(source).toString('utf-8');
 
-  let sourceCode = (
-    await babel.transformAsync(stringSource, {
-      sourceType: 'module',
-      filename: fileURLToPath(url),
-    })
-  );
+  let sourceCode = await babel.transformAsync(stringSource, {
+    sourceType: 'module',
+    filename: fileURLToPath(url),
+  });
 
   sourceCode = sourceCode ? sourceCode.code : undefined;
 

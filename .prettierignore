@@ -1,0 +1,18 @@
+# exclude everything by default
+*.*
+
+# exclude these files
+package-lock.json
+LICENSE
+
+# exclude these directories
+/artifacts/
+/coverage/
+/flow-typed/
+/lib/
+/node_modules/
+/tests/fixtures/
+
+# allow files we want to process
+!*.js
+!*.md

@@ -14,21 +14,16 @@ import {
   WebExtError,
 } from '../errors.js';
 import * as defaultFirefoxApp from '../firefox/index.js';
-import {
-  connectWithMaxRetries as defaultFirefoxConnector,
-} from '../firefox/remote.js';
-import {createLogger} from '../util/logger.js';
+import { connectWithMaxRetries as defaultFirefoxConnector } from '../firefox/remote.js';
+import { createLogger } from '../util/logger.js';
 // Import flow types from project files.
-import type {
-  FirefoxRDPResponseAddon,
-  RemoteFirefox,
-} from '../firefox/remote';
+import type { FirefoxRDPResponseAddon, RemoteFirefox } from '../firefox/remote';
 import type {
   ExtensionRunnerParams,
   ExtensionRunnerReloadResult,
 } from './base';
-import type {FirefoxPreferences} from '../firefox/preferences';
-import type {FirefoxInfo} from '../firefox/index'; // eslint-disable-line import/named
+import type { FirefoxPreferences } from '../firefox/preferences';
+import type { FirefoxInfo } from '../firefox/index'; // eslint-disable-line import/named
 
 type FirefoxDesktopSpecificRunnerParams = {|
   customPrefs?: FirefoxPreferences,
@@ -49,7 +44,6 @@ export type FirefoxDesktopExtensionRunnerParams = {|
 |};
 
 const log = createLogger(import.meta.url);
-
 
 /**
  * Implements an IExtensionRunner which manages a Firefox Desktop instance.
@@ -101,7 +95,7 @@ export class FirefoxDesktopExtensionRunner {
   async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
     const runnerName = this.getName();
     const reloadErrors = new Map();
-    for (const {sourceDir} of this.params.extensions) {
+    for (const { sourceDir } of this.params.extensions) {
       const [res] = await this.reloadExtensionBySourceDir(sourceDir);
       if (res.reloadError instanceof Error) {
         reloadErrors.set(sourceDir, res.reloadError);
@@ -109,13 +103,15 @@ export class FirefoxDesktopExtensionRunner {
     }
 
     if (reloadErrors.size > 0) {
-      return [{
-        runnerName,
-        reloadError: new MultiExtensionsReloadError(reloadErrors),
-      }];
+      return [
+        {
+          runnerName,
+          reloadError: new MultiExtensionsReloadError(reloadErrors),
+        },
+      ];
     }
 
-    return [{runnerName}];
+    return [{ runnerName }];
   }
 
   /**
@@ -129,27 +125,31 @@ export class FirefoxDesktopExtensionRunner {
     const addonId = this.reloadableExtensions.get(extensionSourceDir);
 
     if (!addonId) {
-      return [{
-        sourceDir: extensionSourceDir,
-        reloadError: new WebExtError(
-          'Extension not reloadable: ' +
-          `no addonId has been mapped to "${extensionSourceDir}"`
-        ),
-        runnerName,
-      }];
+      return [
+        {
+          sourceDir: extensionSourceDir,
+          reloadError: new WebExtError(
+            'Extension not reloadable: ' +
+              `no addonId has been mapped to "${extensionSourceDir}"`
+          ),
+          runnerName,
+        },
+      ];
     }
 
     try {
       await this.remoteFirefox.reloadAddon(addonId);
     } catch (error) {
-      return [{
-        sourceDir: extensionSourceDir,
-        reloadError: error,
-        runnerName,
-      }];
+      return [
+        {
+          sourceDir: extensionSourceDir,
+          reloadError: error,
+          runnerName,
+        },
+      ];
     }
 
-    return [{runnerName, sourceDir: extensionSourceDir}];
+    return [{ runnerName, sourceDir: extensionSourceDir }];
   }
 
   /**
@@ -187,14 +187,18 @@ export class FirefoxDesktopExtensionRunner {
     if (profilePath) {
       if (keepProfileChanges) {
         log.debug(`Using Firefox profile from ${profilePath}`);
-        this.profile = await firefoxApp.useProfile(profilePath, {customPrefs});
+        this.profile = await firefoxApp.useProfile(profilePath, {
+          customPrefs,
+        });
       } else {
         log.debug(`Copying Firefox profile from ${profilePath}`);
-        this.profile = await firefoxApp.copyProfile(profilePath, {customPrefs});
+        this.profile = await firefoxApp.copyProfile(profilePath, {
+          customPrefs,
+        });
       }
     } else {
       log.debug('Creating new Firefox profile');
-      this.profile = await firefoxApp.createProfile({customPrefs});
+      this.profile = await firefoxApp.createProfile({ customPrefs });
     }
 
     // preInstall the extensions if needed.
@@ -257,19 +261,18 @@ export class FirefoxDesktopExtensionRunner {
     });
 
     if (!preInstall) {
-      const remoteFirefox = this.remoteFirefox = await firefoxClient({
+      const remoteFirefox = (this.remoteFirefox = await firefoxClient({
         port: this.runningInfo.debuggerPort,
-      });
+      }));
 
       // Install all the temporary addons.
       for (const extension of extensions) {
         try {
-          const addonId = await (
-            remoteFirefox.installTemporaryAddon(extension.sourceDir, devtools)
-              .then((installResult: FirefoxRDPResponseAddon) => {
-                return installResult.addon.id;
-              })
-          );
+          const addonId = await remoteFirefox
+            .installTemporaryAddon(extension.sourceDir, devtools)
+            .then((installResult: FirefoxRDPResponseAddon) => {
+              return installResult.addon.id;
+            });
 
           if (!addonId) {
             throw new WebExtError(
@@ -283,8 +286,8 @@ export class FirefoxDesktopExtensionRunner {
             log.debug(`Caught: ${String(error)}`);
             throw new WebExtError(
               'Temporary add-on installation is not supported in this version' +
-              ' of Firefox (you need Firefox 49 or higher). For older Firefox' +
-              ' versions, use --pre-install'
+                ' of Firefox (you need Firefox 49 or higher). For older Firefox' +
+                ' versions, use --pre-install'
             );
           } else {
             throw error;

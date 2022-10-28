@@ -1,12 +1,11 @@
 /* @flow */
-import {afterEach, describe, it} from 'mocha';
-import {assert} from 'chai';
+import { afterEach, describe, it } from 'mocha';
+import { assert } from 'chai';
 import * as sinon from 'sinon';
 
-import {mockModule, resetMockModules} from './helpers.js';
+import { mockModule, resetMockModules } from './helpers.js';
 import webExt from '../../src/main.js';
-import {main} from '../../src/program.js';
-
+import { main } from '../../src/program.js';
 
 describe('webExt', () => {
   it('exposes main', () => {
@@ -23,7 +22,7 @@ describe('webExt', () => {
       it(`lazily loads cmd/${cmd}`, async () => {
         // $FlowIgnore: non string literal imports are not supported by flow.
         const cmdModule = await import(`../../src/cmd/${cmd}.js`);
-        stub = sinon.stub({default: cmdModule.default}, 'default');
+        stub = sinon.stub({ default: cmdModule.default }, 'default');
 
         mockModule({
           moduleURL: `../../src/cmd/${cmd}.js`,
@@ -37,7 +36,7 @@ describe('webExt', () => {
         const expectedResult = {};
         stub?.returns(expectedResult);
 
-        const {default: webExtModule} = await import('../../src/main.js');
+        const { default: webExtModule } = await import('../../src/main.js');
         const runCommand: Function = webExtModule.cmd[cmd];
         const result = await runCommand(params, options);
 
