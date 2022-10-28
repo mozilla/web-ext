@@ -364,18 +364,18 @@ export default class ADBUtils {
         component,
         extras,
       });
-    }).then(() => {
-      exception = null;
-    }).catch((err) => {
-      exception = err;
-    });
+    })
+      .then(() => {
+        exception = null;
+      })
+      .catch((err) => {
+        exception = err;
+      });
 
     // Wait for the activity to be started.
     while (exception === undefined) {
       if (this.userAbortStartActivity) {
-        throw new UsageError(
-          'Exiting Firefox Start Activity on user request'
-        );
+        throw new UsageError('Exiting Firefox Start Activity on user request');
       }
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }

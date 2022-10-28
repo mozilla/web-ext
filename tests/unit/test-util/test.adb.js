@@ -1146,7 +1146,7 @@ describe('utils/adb', () => {
           readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
         },
       });
-      const adbUtils = new ADBUtils({adb});
+      const adbUtils = new ADBUtils({ adb });
 
       adbUtils.setUserAbortStartActivity(true);
 
