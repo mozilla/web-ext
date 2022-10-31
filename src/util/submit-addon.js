@@ -66,7 +66,7 @@ type ClientConstructorParams = {|
   approvalCheckInterval?: number,
   approvalCheckTimeout?: number,
   downloadDir?: string,
-  userAgentString?: string,
+  userAgentString: string,
 |};
 
 export default class Client {
@@ -87,7 +87,7 @@ export default class Client {
     approvalCheckInterval = 1000,
     approvalCheckTimeout = 900000, // 15 minutes.
     downloadDir = process.cwd(),
-    userAgentString = 'webext',
+    userAgentString,
   }: ClientConstructorParams) {
     this.apiAuth = apiAuth;
     this.apiUrl = new URL('addons/', baseUrl);
@@ -365,7 +365,7 @@ type signAddonParams = {|
   channel: string,
   savedIdPath: string,
   metaDataJson?: Object,
-  userAgentString?: string,
+  userAgentString: string,
   SubmitClient?: typeof Client,
   ApiAuthClass?: typeof JwtApiAuth,
 |};

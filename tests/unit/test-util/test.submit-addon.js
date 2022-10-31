@@ -197,6 +197,7 @@ describe('util.submit-addon', () => {
       baseUrl,
       approvalCheckInterval: 0,
       validationCheckInterval: 0,
+      userAgentString: 'web-ext/12.34',
     };
 
     const sampleUploadDetail = {
