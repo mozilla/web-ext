@@ -58,7 +58,7 @@
     "opera"
   ],
   "dependencies": {
-    "@babel/runtime": "7.19.4",
+    "@babel/runtime": "7.20.1",
     "@devicefarmer/adbkit": "3.2.3",
     "addons-linter": "5.18.0",
     "bunyan": "1.8.15",
@@ -93,9 +93,9 @@
   },
   "devDependencies": {
     "@babel/cli": "7.19.3",
-    "@babel/core": "7.19.3",
+    "@babel/core": "7.20.2",
     "@babel/eslint-parser": "7.19.1",
-    "@babel/preset-env": "7.19.4",
+    "@babel/preset-env": "7.20.2",
     "@babel/preset-flow": "7.18.6",
     "@babel/register": "7.18.9",
     "@commitlint/cli": "17.1.2",
