@@ -109,7 +109,7 @@
     "deepcopy": "2.1.0",
     "eslint": "8.25.0",
     "eslint-plugin-async-await": "0.0.0",
-    "eslint-plugin-ft-flow": "2.0.1",
+    "eslint-plugin-ft-flow": "2.0.3",
     "eslint-plugin-import": "2.26.0",
     "flow-bin": "0.182.0",
     "git-rev-sync": "3.0.2",
