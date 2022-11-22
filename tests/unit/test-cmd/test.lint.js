@@ -143,7 +143,7 @@ describe('lint', () => {
           boring: true,
           selfHosted: true,
           minManifestVersion: 2,
-          maxManifestVersion: 2,
+          maxManifestVersion: 3,
         },
       });
     });
@@ -165,21 +165,6 @@ describe('lint', () => {
       const { shouldScanFile } = createLinter.firstCall.args[0].config;
       shouldScanFile('path/to/file');
       sinon.assert.calledWith(fileFilter.wantFile, 'path/to/file');
-    });
-  });
-
-  describe('firefox-preview', () => {
-    it('enables MV3 support in addons-linter', async () => {
-      const { lint, createLinter } = setUp();
-
-      await lint({ firefoxPreview: ['mv3'] });
-
-      sinon.assert.calledWithMatch(createLinter, {
-        config: {
-          minManifestVersion: 2,
-          maxManifestVersion: 3,
-        },
-      });
     });
   });
 });
