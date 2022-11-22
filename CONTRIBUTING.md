@@ -27,6 +27,7 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
     - [Adding a command option](#adding-a-command-option)
   - [Working on `web-ext sign`](#working-on-web-ext-sign)
   - [Creating a pull request](#creating-a-pull-request)
+    - [Checking code formatting](#checking-code-formatting)
   - [Writing commit messages](#writing-commit-messages)
     - [Checking commit message formatting](#checking-commit-message-formatting)
   - [Creating a release](#creating-a-release)
@@ -332,6 +333,16 @@ this at the top of your description:
 The issue number in this case is "123."
 The word _Fixes_ is magical; github will automatically close the issue when your
 pull request is merged.
+
+### Checking code formatting
+
+Make sure to run the following command to automatically format all your changes
+before submitting your pull request:
+
+    npm run prettier-dev
+
+A continuous integration job will verify that the code is formatted and will
+alert you when it isn't.
 
 ## Writing commit messages
 
