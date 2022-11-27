@@ -674,6 +674,11 @@ Example: $0 --help run.
         demandOption: false,
         type: 'string',
       },
+      'chromium-debugger-port': {
+        describe: 'Listen port number of the Chromium debugger',
+        demandOption: false,
+        type: 'number',
+      },
       'profile-create-if-missing': {
         describe: 'Create the profile directory if it does not already exist',
         demandOption: false,

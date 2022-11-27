@@ -54,6 +54,7 @@ export type CmdRunParams = {|
   // Chromium Desktop CLI options.
   chromiumBinary?: string,
   chromiumProfile?: string,
+  chromiumDebuggerPort?: number,
 |};
 
 export type CmdRunOptions = {
@@ -100,6 +101,7 @@ export default async function run(
     // Chromium CLI options.
     chromiumBinary,
     chromiumProfile,
+    chromiumDebuggerPort,
   }: CmdRunParams,
   {
     buildExtension = defaultBuildExtension,
@@ -243,6 +245,7 @@ export default async function run(
       ...commonRunnerParams,
       chromiumBinary,
       chromiumProfile,
+      chromiumDebuggerPort,
     };
 
     const chromiumRunner = await createExtensionRunner({

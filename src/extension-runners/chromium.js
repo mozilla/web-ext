@@ -28,6 +28,7 @@ type ChromiumSpecificRunnerParams = {|
   chromiumBinary?: string,
   chromiumProfile?: string,
   chromiumLaunch?: typeof defaultChromiumLaunch,
+  chromiumDebuggerPort?: number,
 |};
 
 export type ChromiumExtensionRunnerParams = {|
@@ -232,6 +233,7 @@ export class ChromiumExtensionRunner {
       userDataDir,
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
+      port: this.params.chromiumDebuggerPort,
     });
 
     this.chromiumInstance.process.once('close', () => {

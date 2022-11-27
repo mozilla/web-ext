@@ -329,6 +329,26 @@ describe('run', () => {
     );
   });
 
+  it('provides a chromiumDebuggerPort option to the Chromium runner', async () => {
+    const fakeChromiumDebuggerPort = 59222;
+    const cmd = await prepareRun();
+    await cmd.run({
+      target: ['chromium'],
+      chromiumDebuggerPort: fakeChromiumDebuggerPort,
+    });
+
+    sinon.assert.calledWithMatch(chromiumRunnerStub, {
+      chromiumDebuggerPort: sinon.match.number,
+    });
+
+    const { chromiumDebuggerPort } = chromiumRunnerStub.firstCall.args[0];
+    assert.equal(
+      chromiumDebuggerPort,
+      fakeChromiumDebuggerPort,
+      'Got the expected chromiumDebuggerPort option'
+    );
+  });
+
   it('creates multiple extension runners', async () => {
     const cmd = await prepareRun();
     await cmd.run({ target: ['firefox-android', 'firefox-desktop'] });
