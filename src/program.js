@@ -615,6 +615,7 @@ Example: $0 --help run.
           describe:
             'The channel for which to sign the addon. Either ' +
             "'listed' or 'unlisted'",
+          type: 'string',
         },
         'amo-metadata': {
           describe:
