@@ -62,7 +62,7 @@
     "@devicefarmer/adbkit": "3.2.3",
     "addons-linter": "5.24.0",
     "bunyan": "1.8.15",
-    "camelcase": "7.0.0",
+    "camelcase": "7.0.1",
     "chrome-launcher": "0.15.1",
     "debounce": "1.2.1",
     "decamelize": "6.0.0",
