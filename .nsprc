@@ -1,4 +1,6 @@
 {
   "exceptions": [
+    // See: https://github.com/mozilla/web-ext/issues/2589
+    "https://github.com/advisories/GHSA-8gh8-hqwg-xf34"
   ]
 }
