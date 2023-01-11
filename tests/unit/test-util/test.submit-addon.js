@@ -75,6 +75,7 @@ describe('util.submit-addon', () => {
       xpiPath: '/some.xpi',
       channel: 'some-channel',
       savedIdPath: '.id-file',
+      userAgentString: 'web-ext/12.34',
     };
 
     it('creates Client with parameters', async () => {
@@ -85,6 +86,7 @@ describe('util.submit-addon', () => {
       const downloadDir = '/foo';
       const clientSpy = sinon.spy(Client);
       const apiAuthSpy = sinon.spy(JwtApiAuth);
+      const userAgentString = 'web-ext/666.a.b';
 
       await signAddon({
         ...signAddonDefaults,
@@ -92,6 +94,7 @@ describe('util.submit-addon', () => {
         apiSecret,
         amoBaseUrl,
         downloadDir,
+        userAgentString,
         SubmitClient: clientSpy,
         ApiAuthClass: apiAuthSpy,
       });
@@ -108,6 +111,7 @@ describe('util.submit-addon', () => {
         validationCheckTimeout: signAddonDefaults.timeout,
         approvalCheckTimeout: signAddonDefaults.timeout,
         downloadDir,
+        userAgentString,
       });
     });
 
@@ -193,6 +197,7 @@ describe('util.submit-addon', () => {
       baseUrl,
       approvalCheckInterval: 0,
       validationCheckInterval: 0,
+      userAgentString: 'web-ext/12.34',
     };
 
     const sampleUploadDetail = {
@@ -752,6 +757,18 @@ describe('util.submit-addon', () => {
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
           undefined
+        );
+        sinon.assert.calledOnce(nodeFetchStub);
+      });
+
+      it('sends special user agent string', async () => {
+        nodeFetchStub.resolves(new JSONResponse({}, 200));
+
+        await client.fetch(baseUrl, 'POST');
+
+        assert.equal(
+          nodeFetchStub.firstCall.args[1].headers['User-Agent'],
+          client.userAgentString
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });

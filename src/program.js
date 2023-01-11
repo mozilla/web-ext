@@ -293,7 +293,7 @@ export class Program {
       this.enableVerboseMode(logStream, version);
     }
 
-    let adjustedArgv = { ...argv };
+    let adjustedArgv = { ...argv, webextVersion: version };
 
     try {
       if (cmd === undefined) {
