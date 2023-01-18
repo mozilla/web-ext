@@ -267,9 +267,14 @@ describe('build', () => {
         .then(makeSureItFails())
         .catch((error) => {
           assert.instanceOf(error, UsageError);
+          // Matching error messages from either Node.js < 19 or Node.js >= 19
+          // Node.js 19.0 includes V8 10.7 [1], and the latter includes changes to make JSON.parse errors user-friendly
+          // [1] https://github.com/nodejs/node/pull/44741
+          // [2] https://chromium-review.googlesource.com/c/v8/v8/+/3513684
+          // [3] https://chromium-review.googlesource.com/c/v8/v8/+/3652254
           assert.match(
             error.message,
-            /Unexpected string in JSON at position 14/
+            /Unexpected string in JSON at position 14|Expected ':' after property name in JSON at position 14/
           );
           assert.match(error.message, /^Error parsing messages\.json/);
           assert.include(error.message, messageFileName);

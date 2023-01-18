@@ -68,9 +68,11 @@ describe('util/manifest', () => {
                 error.message,
                 /Error parsing manifest\.json file at /
               );
-              assert.include(
+              // Matching error messages from either Node.js < 19 or Node.js >= 19
+              // See comments in tests/unit/test-cmd/test.build.js
+              assert.match(
                 error.message,
-                'Unexpected token "," (0x2C) in JSON at position 51'
+                /Unexpected token "," \(0x2C\) in JSON at position 51|Expected double-quoted property name in JSON at position 51/
               );
               assert.include(error.message, manifestFile);
             })
