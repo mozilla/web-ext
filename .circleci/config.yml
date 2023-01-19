@@ -27,7 +27,7 @@ references:
   nodejs_versions:
     - &nodejs_current "14.19"
     - &nodejs_next "16.14"
-    - &nodejs_experimental "17.7"
+    - &nodejs_experimental "18.13"
 
   nodejs_enum: &nodejs_enum
     type: enum
@@ -280,9 +280,6 @@ workflows:
       - build:
           name: build-nodejs-experimental
           nodejs: *nodejs_experimental
-          ## workaround `npm run build` issue triggered by webpack
-          ## on nodejs 17.
-          node_options: --openssl-legacy-provider
           filters:
             tags:
               only: /.*/
