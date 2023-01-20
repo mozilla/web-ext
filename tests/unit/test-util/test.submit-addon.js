@@ -69,7 +69,7 @@ describe('util.submit-addon', () => {
     const signAddonDefaults = {
       apiKey: 'some-key',
       apiSecret: 'ffff',
-      amoBaseUrl: 'https://some.url/api/v5',
+      amoBaseUrl: 'https://some.url/api/v5/',
       timeout: 1,
       downloadDir: '/some-dir/',
       xpiPath: '/some.xpi',
@@ -81,7 +81,7 @@ describe('util.submit-addon', () => {
     it('creates Client with parameters', async () => {
       const apiKey = 'fooKey';
       const apiSecret = '4321';
-      const amoBaseUrl = 'https://foo.host/api/v5';
+      const amoBaseUrl = 'https://foo.host/api/v5/';
       const baseUrl = new URL(amoBaseUrl);
       const downloadDir = '/foo';
       const clientSpy = sinon.spy(Client);
@@ -186,7 +186,7 @@ describe('util.submit-addon', () => {
   });
 
   describe('Client', () => {
-    const baseUrl = new URL('http://not-a-real-amo-api.com/api/v5');
+    const baseUrl = new URL('http://not-a-real-amo-api.com/api/v5/');
 
     const apiAuth = new JwtApiAuth({
       apiKey: 'fake-api-key',
@@ -239,6 +239,15 @@ describe('util.submit-addon', () => {
 
     afterEach(() => {
       getAuthHeaderSpy.resetHistory();
+    });
+
+    it('adds a missing trailing slash to baseUrl before setting apiUrl', () => {
+      const noSlashBaseUrl = new URL('http://url.without/trailing/slash');
+      const client = new Client({ ...clientDefaults, baseUrl: noSlashBaseUrl });
+      assert.equal(
+        client.apiUrl.href,
+        new URL(`${noSlashBaseUrl.href}/addons/`).href
+      );
     });
 
     describe('doUploadSubmit', () => {

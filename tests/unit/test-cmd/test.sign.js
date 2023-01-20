@@ -23,7 +23,7 @@ import type { ExtensionManifestApplications } from '../../../src/util/manifest';
 describe('sign', () => {
   function getStubs() {
     const signingConfig = {
-      amoBaseUrl: 'http://not-the-real-amo.com/api/v5',
+      amoBaseUrl: 'http://not-the-real-amo.com/api/v5/',
       apiKey: 'AMO JWT issuer',
       apiSecret: 'AMO JWT secret',
       apiUrlPrefix: 'http://not-the-real-amo.com/api/v4',

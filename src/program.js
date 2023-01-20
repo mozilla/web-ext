@@ -568,7 +568,7 @@ Example: $0 --help run.
         'amo-base-url': {
           describe:
             'Signing API URL prefix - only used with `use-submission-api`',
-          default: 'https://addons.mozilla.org/api/v5',
+          default: 'https://addons.mozilla.org/api/v5/',
           demandOption: true,
           type: 'string',
         },
