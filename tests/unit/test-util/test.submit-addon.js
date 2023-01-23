@@ -8,6 +8,7 @@ import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
 import { File, FormData, Response } from 'node-fetch';
 
+import { AMO_BASE_URL } from '../../../src/program.js';
 import Client, {
   JwtApiAuth,
   saveIdToFile,
@@ -69,7 +70,7 @@ describe('util.submit-addon', () => {
     const signAddonDefaults = {
       apiKey: 'some-key',
       apiSecret: 'ffff',
-      amoBaseUrl: 'https://some.url/api/v5/',
+      amoBaseUrl: AMO_BASE_URL,
       timeout: 1,
       downloadDir: '/some-dir/',
       xpiPath: '/some.xpi',
@@ -81,7 +82,7 @@ describe('util.submit-addon', () => {
     it('creates Client with parameters', async () => {
       const apiKey = 'fooKey';
       const apiSecret = '4321';
-      const amoBaseUrl = 'https://foo.host/api/v5/';
+      const amoBaseUrl = AMO_BASE_URL;
       const baseUrl = new URL(amoBaseUrl);
       const downloadDir = '/foo';
       const clientSpy = sinon.spy(Client);
@@ -186,7 +187,7 @@ describe('util.submit-addon', () => {
   });
 
   describe('Client', () => {
-    const baseUrl = new URL('http://not-a-real-amo-api.com/api/v5/');
+    const baseUrl = new URL(AMO_BASE_URL);
 
     const apiAuth = new JwtApiAuth({
       apiKey: 'fake-api-key',
