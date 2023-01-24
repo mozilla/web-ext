@@ -253,7 +253,7 @@ describe('util.submit-addon', () => {
 
     it('drops extra characters on baseUrl before setting apiUrl', () => {
       const cleanUrl = 'http://url.with/extra';
-      const extraBaseUrl = new URL(`${cleanUrl}#?`);
+      const extraBaseUrl = new URL(`${cleanUrl}?#`);
       const client = new Client({ ...clientDefaults, baseUrl: extraBaseUrl });
       assert.equal(client.apiUrl.href, new URL(`${cleanUrl}/addons/`).href);
     });
