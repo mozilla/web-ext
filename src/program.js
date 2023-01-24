@@ -48,6 +48,8 @@ type ExecuteOptions = {
   globalEnv?: string | void,
 };
 
+export const AMO_BASE_URL = 'https://addons.mozilla.org/api/v5/';
+
 /*
  * The command line program.
  */
@@ -568,7 +570,7 @@ Example: $0 --help run.
         'amo-base-url': {
           describe:
             'Signing API URL prefix - only used with `use-submission-api`',
-          default: 'https://addons.mozilla.org/api/v5',
+          default: AMO_BASE_URL,
           demandOption: true,
           type: 'string',
         },

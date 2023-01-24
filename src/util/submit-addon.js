@@ -90,6 +90,10 @@ export default class Client {
     userAgentString,
   }: ClientConstructorParams) {
     this.apiAuth = apiAuth;
+    if (!baseUrl.pathname.endsWith('/')) {
+      baseUrl = new URL(baseUrl.href);
+      baseUrl.pathname += '/';
+    }
     this.apiUrl = new URL('addons/', baseUrl);
     this.validationCheckInterval = validationCheckInterval;
     this.validationCheckTimeout = validationCheckTimeout;

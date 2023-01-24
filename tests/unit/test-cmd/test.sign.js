@@ -9,6 +9,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import { UsageError, WebExtError } from '../../../src/errors.js';
+import { AMO_BASE_URL } from '../../../src/program.js';
 import { getManifestId } from '../../../src/util/manifest.js';
 import { saveIdToFile } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
@@ -23,7 +24,7 @@ import type { ExtensionManifestApplications } from '../../../src/util/manifest';
 describe('sign', () => {
   function getStubs() {
     const signingConfig = {
-      amoBaseUrl: 'http://not-the-real-amo.com/api/v5',
+      amoBaseUrl: AMO_BASE_URL,
       apiKey: 'AMO JWT issuer',
       apiSecret: 'AMO JWT secret',
       apiUrlPrefix: 'http://not-the-real-amo.com/api/v4',
