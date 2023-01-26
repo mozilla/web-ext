@@ -16,6 +16,7 @@ import {
 } from '../util/submit-addon.js';
 import type { SignResult } from '../util/submit-addon.js';
 import { withTempDir } from '../util/temp-dir.js';
+import { isTTY } from '../util/stdin.js';
 
 export type { SignResult };
 
@@ -69,7 +70,7 @@ export default function sign(
     ignoreFiles = [],
     sourceDir,
     timeout,
-    quiet = false,
+    quiet = !isTTY(process.stdin),
     verbose,
     channel,
     amoMetadata,
