@@ -613,7 +613,7 @@ Example: $0 --help run.
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },
-        quiet: {
+        'disable-progress-bar': {
           describe: 'Quieter signing process by hiding progress bars',
           demandOption: false,
           type: 'boolean',
