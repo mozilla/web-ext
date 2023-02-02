@@ -482,9 +482,13 @@ describe('sign', () => {
   it('passes the disableProgressBar flag to the signer', () =>
     withTempDir((tmpDir) => {
       const stubs = getStubs();
-      return sign(tmpDir, stubs, { extraArgs: { disableProgressBar: true } }).then(() => {
+      return sign(tmpDir, stubs, {
+        extraArgs: { disableProgressBar: true },
+      }).then(() => {
         sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.signAddon, { disableProgressBar: true });
+        sinon.assert.calledWithMatch(stubs.signAddon, {
+          disableProgressBar: true,
+        });
       });
     }));
 
