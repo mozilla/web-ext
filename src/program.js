@@ -614,7 +614,7 @@ Example: $0 --help run.
           type: 'number',
         },
         'disable-progress-bar': {
-          describe: 'Quieter signing process by hiding progress bars',
+          describe: 'Disable the progress bar in sign-addon',
           demandOption: false,
           type: 'boolean',
         },
