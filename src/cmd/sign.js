@@ -16,6 +16,7 @@ import {
 } from '../util/submit-addon.js';
 import type { SignResult } from '../util/submit-addon.js';
 import { withTempDir } from '../util/temp-dir.js';
+import { isTTY } from '../util/stdin.js';
 
 export type { SignResult };
 
@@ -40,6 +41,7 @@ export type SignParams = {|
   ignoreFiles?: Array<string>,
   sourceDir: string,
   timeout: number,
+  disableProgressBar?: boolean,
   verbose?: boolean,
   channel?: string,
   amoMetadata?: string,
@@ -68,6 +70,7 @@ export default function sign(
     ignoreFiles = [],
     sourceDir,
     timeout,
+    disableProgressBar = !isTTY(process.stdin),
     verbose,
     channel,
     amoMetadata,
@@ -197,6 +200,7 @@ export default function sign(
           ...signSubmitArgs,
           apiUrlPrefix,
           apiProxy,
+          disableProgressBar,
           verbose,
           version: manifestData.version,
           apiRequestConfig: { headers: { 'User-Agent': userAgentString } },
