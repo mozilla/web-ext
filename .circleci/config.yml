@@ -27,7 +27,8 @@ references:
   nodejs_versions:
     - &nodejs_current "14.19"
     - &nodejs_next "16.14"
-    - &nodejs_experimental "18.13"
+    # nodejs 19.3 comes with npm 9.0, which breaks "npm config set python" below
+    - &nodejs_experimental "19.2"
 
   nodejs_enum: &nodejs_enum
     type: enum
