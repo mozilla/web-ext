@@ -217,8 +217,9 @@ which was released in April of 2016.
 ## Get Involved
 
 Hi! This tool is under active development. To get involved you can watch the repo,
-file issues, create pull requests, or ask a question on
-[dev-addons](https://mail.mozilla.org/listinfo/dev-addons).
+file issues, create pull requests, or
+[contact us](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/Contact_us)
+to ask a question.
 Read the [contributing section](CONTRIBUTING.md) for how to develop new features.
 
 ## Some Questions and Answers
