@@ -99,7 +99,7 @@
     "@babel/preset-flow": "7.18.6",
     "@babel/register": "7.18.9",
     "@commitlint/cli": "17.4.2",
-    "@commitlint/config-conventional": "17.4.2",
+    "@commitlint/config-conventional": "17.4.3",
     "babel-plugin-istanbul": "6.1.1",
     "babel-plugin-transform-inline-environment-variables": "0.4.4",
     "chai": "4.3.7",
