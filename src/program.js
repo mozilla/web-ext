@@ -675,7 +675,9 @@ Example: $0 --help run.
         type: 'string',
       },
       'chromium-debugger-port': {
-        describe: 'Listen port number of the Chromium debugger',
+        describe:
+          'An unused port number, for use by the Chromium debugger. ' +
+          'If not specified, a random port will be used.',
         demandOption: false,
         type: 'number',
       },
