@@ -6,6 +6,7 @@ import { fs } from 'mz';
 import { assert, expect } from 'chai';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
+// eslint-disable-next-line no-shadow
 import { File, FormData, Response } from 'node-fetch';
 
 import { AMO_BASE_URL } from '../../../src/program.js';
