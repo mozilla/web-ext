@@ -79,6 +79,18 @@ if (auditReport) {
     // New npm audit json format introduced in npm v8.
     for (const vulnerablePackage of Object.keys(auditReport.vulnerabilities)) {
       const item = auditReport.vulnerabilities[vulnerablePackage];
+      // `item.via` can be either objects or (string) names of vulnerable
+      // packages in the audit json report. We need to normalize the data so
+      // that we always deal with a list of objects.
+      item.via = item.via.reduce((acc, via) => {
+        if (typeof via === 'object') {
+          acc.push(via);
+        } else {
+          acc.push(...auditReport.vulnerabilities[via].via);
+        }
+
+        return acc;
+      }, []);
 
       if (item.via.every((via) => exceptions.includes(via.url))) {
         ignoredIssues.push(item);
