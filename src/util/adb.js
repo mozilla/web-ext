@@ -336,20 +336,23 @@ export default class ADBUtils {
       apkComponent = `.${apkComponent}`;
     }
 
-    // if `apk` is a browser package or the `apk` has a
-    // browser package prefix: prepend the package identifier
-    // before `apkComponent`
+    // If `apk` is a browser package or the `apk` has a browser package prefix:
+    // prepend the package identifier before `apkComponent`.
     if (apkComponent.startsWith('.')) {
       for (const browser of packageIdentifiers) {
         if (apk === browser || apk.startsWith(`${browser}.`)) {
           apkComponent = browser + apkComponent;
+          break;
         }
       }
     }
 
-    // if `apkComponent` starts with a '.', then adb will expand
-    // the following to: `${apk}/${apk}.${apkComponent}`
-    const component = `${apk}/${apkComponent}`;
+    // If `apkComponent` starts with a '.', then adb will expand the following
+    // to: `${apk}/${apk}.${apkComponent}`
+    let component = `${apk}`;
+    if (apkComponent) {
+      component += `/${apkComponent}`;
+    }
 
     await wrapADBCall(async () => {
       await adbClient.getDevice(deviceId).startActivity({
