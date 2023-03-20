@@ -1102,6 +1102,44 @@ describe('utils/adb', () => {
       }
     );
 
+    it(
+      'starts a fully-qualified APK component on the build-variant: ' +
+        'org.mozilla.fenix.debug',
+      async () => {
+        const adb = getFakeADBKit({
+          adbDevice: {
+            startActivity: sinon.spy(() => Promise.resolve()),
+          },
+          adbkitUtil: {
+            readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+          },
+        });
+        const adbUtils = new ADBUtils({ adb });
+
+        const promise = adbUtils.startFirefoxAPK(
+          'device1',
+          'org.mozilla.fenix.debug',
+          null, // firefoxApkComponent
+          '/fake/custom/profile/path'
+        );
+
+        await assert.isFulfilled(promise);
+
+        sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
+        sinon.assert.calledWithMatch(adb.fakeADBDevice.startActivity, {
+          action: 'android.activity.MAIN',
+          component: 'org.mozilla.fenix.debug/' + 'org.mozilla.fenix.debug.App',
+          extras: [
+            {
+              key: 'args',
+              value: '-profile /fake/custom/profile/path',
+            },
+          ],
+          wait: true,
+        });
+      }
+    );
+
     it('starts a given APK component that begins with a period', async () => {
       const adb = getFakeADBKit({
         adbDevice: {
