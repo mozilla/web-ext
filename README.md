@@ -76,8 +76,8 @@ version on the command line with this:
 
 You'll need:
 
-- [Node.js](https://nodejs.org/en/), 14.0.0 or higher
-- [npm](https://www.npmjs.com/), 6.9.0 or higher is recommended
+- [Node.js](https://nodejs.org/en/), 16.0.0 or higher
+- [npm](https://www.npmjs.com/), 8.0.0 or higher is recommended
 
 Optionally, you may like:
 

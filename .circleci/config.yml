@@ -16,7 +16,7 @@ version: 2.1
 
 orbs:
   # Used in the `test-windows` job to run the test on windows.
-  win: circleci/windows@4.1.1
+  win: circleci/windows@5.0.0
   codecov: codecov/codecov@3.2.4
 
 references:
@@ -25,10 +25,10 @@ references:
   # The nodejs version set as `nodejs_current` is the one used to
   # release the package on npm.
   nodejs_versions:
-    - &nodejs_current "14.19"
-    - &nodejs_next "16.14"
-    # nodejs 19.3 comes with npm 9.0, which breaks "npm config set python" below
-    - &nodejs_experimental "19.2"
+    # nvm-windows wants a full Node version, not just `<major>.<minor>`.
+    - &nodejs_current "16.14.2"
+    - &nodejs_next "18.15"
+    - &nodejs_experimental "19.3"
 
   nodejs_enum: &nodejs_enum
     type: enum
@@ -113,15 +113,15 @@ commands:
         # of the test.lib.imports.js).
         default: 30000
     steps:
-      ## NOTE: by setting the configured python to /bin/false we are forcing
-      ## the production mode tests to fail if any of the dependencies is a
-      ## binary dependency that is built using node-gyp.
-      - run: npm config set python /bin/false
       - run:
           ## (See #1082 for rationale).
           name: run functional tests in npm production environment
           command: npm run test-functional
           environment:
+            ## NOTE: by setting the configured python to /bin/false we are
+            # forcing the production mode tests to fail if any of the
+            # dependencies is a binary dependency that is built using node-gyp.
+            NODE_GYP_FORCE_PYTHON: /bin/false
             TEST_PRODUCTION_MODE: 1
             CI_RETRY_ONCE: << parameters.retry_once >>
             MOCHA_TIMEOUT: << parameters.mocha_timeout >>
@@ -137,7 +137,6 @@ commands:
                   TEST_LEGACY_BUNDLING: 1
                   CI_RETRY_ONCE: << parameters.retry_once >>
                   MOCHA_TIMEOUT: << parameters.mocha_timeout >>
-      - run: npm config delete python
 
   audit_deps:
     description: audit npm deps
