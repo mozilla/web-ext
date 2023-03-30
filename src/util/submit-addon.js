@@ -218,7 +218,7 @@ export default class Client {
       ...metaDataJson,
       version: { upload: uuid, ...metaDataJson.version },
     };
-    return this.fetch(url, 'PUT', JSON.stringify(jsonData));
+    return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
   }
 
   waitForApproval(addonId: string, versionId: number): Promise<string> {
@@ -317,11 +317,9 @@ export default class Client {
   ): Promise<SignResult> {
     const uploadUuid = await this.doUploadSubmit(xpiPath, channel);
 
-    const versionObject =
-      channel === 'listed' ? 'current_version' : 'latest_unlisted_version';
     const {
       guid: addonId,
-      [versionObject]: { id: newVersionId },
+      version: { id: newVersionId },
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
 
     await saveIdToFileFunc(savedIdPath, addonId);
@@ -342,15 +340,9 @@ export default class Client {
   ): Promise<SignResult> {
     const uploadUuid = await this.doUploadSubmit(xpiPath, channel);
 
-    await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
-
-    const url = new URL(
-      `addon/${addonId}/versions/?filter=all_with_unlisted`,
-      this.apiUrl
-    );
     const {
-      results: [{ id: newVersionId }],
-    } = await this.fetchJson(url);
+      version: { id: newVersionId },
+    } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
     const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
 
