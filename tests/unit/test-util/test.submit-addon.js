@@ -225,16 +225,14 @@ describe('util.submit-addon', () => {
       },
       version: '1.0',
     };
-    const sampleVersionDetail2 = { ...sampleVersionDetail, id: 457 };
 
     const sampleAddonDetail = {
       // Note: most of the fields are ommited here, these are just the essentials.
       id: 9876,
-      current_version: sampleVersionDetail,
-      latest_unlisted_version: sampleVersionDetail2,
       guid: '@this-guid',
       slug: 'this_addon',
       status: 'unreviewed',
+      version: sampleVersionDetail,
     };
 
     const getAuthHeaderSpy = sinon.spy(apiAuth, 'getAuthHeader');
@@ -426,14 +424,24 @@ describe('util.submit-addon', () => {
       it('puts the upload uuid to the addon detail', async () => {
         const client = new Client(clientDefaults);
         const guid = '@some-addon-guid';
+        const nodeFetchStub = sinon.stub(client, 'nodeFetch');
         mockNodeFetch(
-          sinon.stub(client, 'nodeFetch'),
+          nodeFetchStub,
           new URL(`addons/addon/${guid}/`, baseUrl),
-          'POST',
+          'PUT',
           [{ body: sampleAddonDetail, status: 202 }]
         );
-        const uploadUuid = 'some-uuid';
+        const uploadUuid = 'some-other-uuid';
+
         await client.doNewAddonOrVersionSubmit(guid, uploadUuid, {});
+        sinon.assert.calledWith(
+          nodeFetchStub,
+          sinon.match.instanceOf(URL),
+          sinon.match({
+            method: 'PUT',
+            body: JSON.stringify({ version: { upload: uploadUuid } }),
+          })
+        );
       });
 
       it('combines provided metaDataJson with upload uuid', async () => {
@@ -612,7 +620,12 @@ describe('util.submit-addon', () => {
           'GET',
           [
             {
-              body: { processed: true, valid: true, uuid: uploadUuid },
+              body: {
+                processed: true,
+                valid: true,
+                uuid: uploadUuid,
+                validation: { thing: 'good' },
+              },
               status: 200,
             },
           ]
@@ -637,11 +650,9 @@ describe('util.submit-addon', () => {
         ]);
       };
 
-      [
-        { channel: 'listed', versionId: sampleVersionDetail.id },
-        { channel: 'unlisted', versionId: sampleVersionDetail2.id },
-      ].forEach(({ channel, versionId }) =>
+      [{ channel: 'listed' }, { channel: 'unlisted' }].forEach(({ channel }) =>
         it(`uploads new ${channel} add-on; downloads the signed xpi`, async () => {
+          const versionId = sampleVersionDetail.id;
           addUploadMocks();
           const saveIdStub = sinon.stub();
           saveIdStub.resolves();
@@ -661,7 +672,6 @@ describe('util.submit-addon', () => {
       it('uploads a new version; then downloads the signed xpi', async () => {
         const channel = 'listed';
         const versionId = sampleVersionDetail.id;
-        const query = '?filter=all_with_unlisted';
 
         addUploadMocks();
 
@@ -671,20 +681,8 @@ describe('util.submit-addon', () => {
           'PUT',
           [{ body: sampleAddonDetail, status: 200 }]
         );
-        mockNodeFetch(
-          nodeFetchStub,
-          new URL(`addons/addon/${addonId}/versions/${query}`, baseUrl),
-          'GET',
-          [
-            {
-              body: { results: [sampleVersionDetail] },
-              status: 200,
-            },
-          ]
-        );
 
         addApprovalMocks(versionId);
-
         await client.putVersion(xpiPath, channel, `${addonId}`, {});
       });
     });
