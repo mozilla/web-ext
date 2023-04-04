@@ -1,15 +1,22 @@
 /* @flow */
+import { createHash } from 'crypto';
 import { createWriteStream, promises as fsPromises } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
 
 // eslint-disable-next-line no-shadow
 import fetch, { FormData, fileFromSync, Response } from 'node-fetch';
+import { fs } from 'mz';
 import { SignJWT } from 'jose';
+import JSZip from 'jszip';
 
+import { isErrorWithCode } from '../errors.js';
 import { createLogger } from './../util/logger.js';
 
 const log = createLogger(import.meta.url);
+
+export const defaultAsyncFsReadFile: (string) => Promise<Buffer> =
+  fs.readFile.bind(fs);
 
 export type SignResult = {|
   id: string,
@@ -308,15 +315,60 @@ export default class Client {
     return promisify(pipeline)(contents, createWriteStream(destPath));
   }
 
-  async postNewAddon(
+  async hashXpiCrcs(
+    filePath: string,
+    asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile
+  ): Promise<string> {
+    const zip = await JSZip.loadAsync(asyncFsReadFile(filePath));
+    const hash = createHash('sha256');
+    zip.forEach((relativePath, entry) =>
+      hash.update(entry._data.crc32.toString())
+    );
+    return hash.digest('hex');
+  }
+
+  async getPreviousUuidOrUploadXpi(
     xpiPath: string,
     channel: string,
+    savedUploadUuidPath: string,
+    saveUploadUuidToFileFunc: (
+      string,
+      uploadUuidDataType
+    ) => Promise<void> = saveUploadUuidToFile,
+    getUploadUuidFromFileFunc: (string) => Promise<uploadUuidDataType> = getUploadUuidFromFile
+  ): Promise<string> {
+    const [
+      {
+        uploadUuid: previousUuid,
+        channel: previousChannel,
+        xpiCrcHash: previousHash,
+      },
+      xpiCrcHash,
+    ] = await Promise.all([
+      getUploadUuidFromFileFunc(xpiPath),
+      this.hashXpiCrcs(xpiPath),
+    ]);
+
+    let uploadUuid;
+    if (previousChannel !== channel || xpiCrcHash !== previousHash) {
+      uploadUuid = await this.doUploadSubmit(xpiPath, channel);
+      await saveUploadUuidToFileFunc(savedUploadUuidPath, {
+        uploadUuid,
+        channel,
+        xpiCrcHash,
+      });
+    } else {
+      uploadUuid = previousUuid;
+    }
+    return uploadUuid;
+  }
+
+  async postNewAddon(
+    uploadUuid: string,
     savedIdPath: string,
     metaDataJson: Object,
     saveIdToFileFunc: (string, string) => Promise<void> = saveIdToFile
   ): Promise<SignResult> {
-    const uploadUuid = await this.doUploadSubmit(xpiPath, channel);
-
     const {
       guid: addonId,
       version: { id: newVersionId },
@@ -333,13 +385,10 @@ export default class Client {
   }
 
   async putVersion(
-    xpiPath: string,
-    channel: string,
+    uploadUuid: string,
     addonId: string,
     metaDataJson: Object
   ): Promise<SignResult> {
-    const uploadUuid = await this.doUploadSubmit(xpiPath, channel);
-
     const {
       version: { id: newVersionId },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
@@ -360,6 +409,7 @@ type signAddonParams = {|
   downloadDir: string,
   channel: string,
   savedIdPath: string,
+  savedUploadUuidPath: string,
   metaDataJson?: Object,
   userAgentString: string,
   SubmitClient?: typeof Client,
@@ -376,6 +426,7 @@ export async function signAddon({
   downloadDir,
   channel,
   savedIdPath,
+  savedUploadUuidPath,
   metaDataJson = {},
   userAgentString,
   SubmitClient = Client,
@@ -406,14 +457,19 @@ export async function signAddon({
     downloadDir,
     userAgentString,
   });
+  const uploadUuid = await client.getPreviousUuidOrUploadXpi(
+    xpiPath,
+    channel,
+    savedUploadUuidPath
+  );
 
   // We specifically need to know if `id` has not been passed as a parameter because
   // it's the indication that a new add-on should be created, rather than a new version.
   if (id === undefined) {
-    return client.postNewAddon(xpiPath, channel, savedIdPath, metaDataJson);
+    return client.postNewAddon(uploadUuid, savedIdPath, metaDataJson);
   }
 
-  return client.putVersion(xpiPath, channel, id, metaDataJson);
+  return client.putVersion(uploadUuid, id, metaDataJson);
 }
 
 export async function saveIdToFile(
@@ -430,4 +486,45 @@ export async function saveIdToFile(
   );
 
   log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
+}
+
+type uploadUuidDataType = {
+  uploadUuid: string,
+  channel: string,
+  xpiCrcHash: string,
+};
+
+export async function saveUploadUuidToFile(
+  filePath: string,
+  { uploadUuid, channel, xpiCrcHash }: uploadUuidDataType
+): Promise<void> {
+  await fsPromises.writeFile(
+    filePath,
+    JSON.stringify({ uploadUuid, channel, xpiCrcHash })
+  );
+  log.debug(
+    `Saved upload UUID ${uploadUuid}, xpi crc hash ${xpiCrcHash}, and channel ${channel} to ${filePath}`
+  );
+}
+
+export async function getUploadUuidFromFile(
+  filePath: string,
+  asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile
+): Promise<uploadUuidDataType> {
+  try {
+    const content = await asyncFsReadFile(filePath);
+    const { uploadUuid, channel, xpiCrcHash } = JSON.parse(content.toString());
+    log.debug(
+      `Found upload uuid:${uploadUuid}, channel:${channel}, hash:${xpiCrcHash} in ${filePath}`
+    );
+    return { uploadUuid, channel, xpiCrcHash };
+  } catch (error) {
+    if (isErrorWithCode('ENOENT', error)) {
+      log.debug(`No upload uuid file found at: ${filePath}`);
+    } else {
+      log.debug(`Invalid upload uuid file contents in ${filePath}`);
+    }
+  }
+
+  return { uploadUuid: '', channel: '', xpiCrcHash: '' };
 }

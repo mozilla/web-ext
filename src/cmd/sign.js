@@ -1,7 +1,6 @@
 /* @flow */
 import path from 'path';
 
-import { fs } from 'mz';
 import { signAddon as defaultAddonSigner } from 'sign-addon';
 
 import defaultBuilder from './build.js';
@@ -11,6 +10,7 @@ import { createLogger } from '../util/logger.js';
 import getValidatedManifest, { getManifestId } from '../util/manifest.js';
 import type { ExtensionManifest } from '../util/manifest.js';
 import {
+  defaultAsyncFsReadFile,
   signAddon as defaultSubmitAddonSigner,
   saveIdToFile,
 } from '../util/submit-addon.js';
@@ -22,10 +22,8 @@ export type { SignResult };
 
 const log = createLogger(import.meta.url);
 
-const defaultAsyncFsReadFile: (string) => Promise<Buffer> =
-  fs.readFile.bind(fs);
-
 export const extensionIdFile = '.web-extension-id';
+export const uploadUuidFile = '.amo-upload-uuid';
 
 // Sign command types and implementation.
 
@@ -89,6 +87,7 @@ export default function sign(
 
     let manifestData;
     const savedIdPath = path.join(sourceDir, extensionIdFile);
+    const savedUploadUuidPath = path.join(sourceDir, uploadUuidFile);
 
     if (preValidatedManifest) {
       manifestData = preValidatedManifest;
@@ -188,6 +187,7 @@ export default function sign(
           // $FlowIgnore: we verify 'channel' is set above
           channel,
           savedIdPath,
+          savedUploadUuidPath,
           metaDataJson,
           userAgentString,
         });
