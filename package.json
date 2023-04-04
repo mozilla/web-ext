@@ -59,7 +59,7 @@
   ],
   "dependencies": {
     "@babel/runtime": "7.21.0",
-    "@devicefarmer/adbkit": "3.2.3",
+    "@devicefarmer/adbkit": "3.2.4",
     "addons-linter": "6.0.0",
     "bunyan": "1.8.15",
     "camelcase": "7.0.1",
