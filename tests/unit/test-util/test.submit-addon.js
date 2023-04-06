@@ -293,6 +293,7 @@ describe('util.submit-addon', () => {
         );
 
         assert.equal(returnedUuid, newUuid);
+        sinon.assert.calledWith(getUploadUuidStub, uuidFilePath);
         sinon.assert.calledWith(doUploadStub, xpiPath, channel);
         sinon.assert.calledWith(saveUploadUuidStub, uuidFilePath, {
           uploadUuid: newUuid,
@@ -324,6 +325,7 @@ describe('util.submit-addon', () => {
         );
 
         assert.equal(returnedUuid, uploadUuid);
+        sinon.assert.calledWith(getUploadUuidStub, uuidFilePath);
         sinon.assert.notCalled(doUploadStub);
         sinon.assert.notCalled(saveUploadUuidStub);
       });
@@ -355,6 +357,7 @@ describe('util.submit-addon', () => {
         );
 
         assert.equal(returnedUuid, newUuid);
+        sinon.assert.calledWith(getUploadUuidStub, uuidFilePath);
         sinon.assert.calledWith(doUploadStub, xpiPath, newChannel);
         sinon.assert.calledWith(saveUploadUuidStub, uuidFilePath, {
           uploadUuid: newUuid,

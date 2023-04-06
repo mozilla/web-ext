@@ -345,7 +345,7 @@ export default class Client {
       },
       xpiCrcHash,
     ] = await Promise.all([
-      getUploadUuidFromFileFunc(xpiPath),
+      getUploadUuidFromFileFunc(savedUploadUuidPath),
       this.hashXpiCrcs(xpiPath),
     ]);
 
