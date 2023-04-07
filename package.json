@@ -78,7 +78,7 @@
     "node-fetch": "3.3.1",
     "node-notifier": "10.0.1",
     "open": "9.1.0",
-    "parse-json": "6.0.2",
+    "parse-json": "7.0.0",
     "promise-toolbox": "0.21.0",
     "sign-addon": "6.0.0",
     "source-map-support": "0.5.21",
