@@ -27,18 +27,18 @@ Here are the commands you can run. Click on each one for detailed documentation 
 - [`sign`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-sign)
   - Sign the extension so it can be installed in Firefox
 - [`build`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-build)
-  - Create an extension package from source
+  - Create an extension package from the source
 - [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-docs)
   - Open the `web-ext` documentation in a browser
 
 ## Installation from npm
 
-First, make sure you are running the current
+First, ensure you are running the current
 [LTS](https://github.com/nodejs/LTS)
-(long term support) version of
+(long-term support) version of
 [NodeJS](https://nodejs.org/en/).
 
-### Global command
+### Global Command
 
 You can install this command onto your machine globally with:
 
@@ -53,7 +53,7 @@ as used by your team.
 
     npm install --save-dev web-ext
 
-Next you can use the `web-ext` command in your project as an
+Next, you can use the `web-ext` command in your project as an
 [npm script](https://docs.npmjs.com/misc/scripts).
 Here is an example where the `--source-dir` argument specifies where to find
 the source code for your extension.
@@ -83,7 +83,7 @@ Optionally, you may like:
 
 - [nvm](https://github.com/creationix/nvm), which helps manage node versions
 
-If you had already installed `web-ext` from npm,
+If you have already installed `web-ext` from npm,
 you may need to uninstall it first:
 
     npm uninstall --global web-ext
@@ -212,7 +212,7 @@ webExt.cmd.run(
 Yes! The web-ext tool enables you to build and ship extensions for Firefox.
 This platform stabilized in
 [Firefox 48](https://blog.mozilla.org/addons/2016/04/29/webextensions-in-firefox-48/)
-which was released in April of 2016.
+which was released in April 2016.
 
 ## Get Involved
 
