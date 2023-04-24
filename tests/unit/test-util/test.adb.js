@@ -1174,6 +1174,33 @@ describe('utils/adb', () => {
         wait: true,
       });
     });
+
+    it('rejects an UsageError on setUserAbortStartActivity call', async () => {
+      const adb = getFakeADBKit({
+        adbDevice: {
+          startActivity: sinon.spy(() => Promise.resolve()),
+        },
+        adbkitUtil: {
+          readAll: sinon.spy(() => Promise.resolve(Buffer.from('\n'))),
+        },
+      });
+      const adbUtils = new ADBUtils({ adb });
+
+      adbUtils.setUserAbortStartActivity(true);
+
+      const promise = adbUtils.startFirefoxAPK(
+        'device1',
+        'org.mozilla.firefox_mybuild',
+        undefined, // firefoxApkComponent/*
+        '/fake/custom/profile/path'
+      );
+
+      await assert.isRejected(promise, UsageError);
+      await assert.isRejected(
+        promise,
+        'Exiting Firefox Start Activity on user request'
+      );
+    });
   });
 
   describe('discoverRDPUnixSocket', () => {
