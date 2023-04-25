@@ -355,12 +355,26 @@ export default class ADBUtils {
     }
 
     await wrapADBCall(async () => {
-      await adbClient.getDevice(deviceId).startActivity({
-        wait: true,
-        action: 'android.activity.MAIN',
-        component,
-        extras,
-      });
+      try {
+        // TODO: once Fenix (release) uses Android 13, we can get rid of this
+        // call and only use the second call in the `catch` block.
+        await adbClient.getDevice(deviceId).startActivity({
+          wait: true,
+          action: 'android.activity.MAIN',
+          component,
+          extras,
+        });
+      } catch {
+        // Android 13+ requires a different action/category but we still need
+        // to support older Fenix builds.
+        await adbClient.getDevice(deviceId).startActivity({
+          wait: true,
+          action: 'android.intent.action.MAIN',
+          category: 'android.intent.category.LAUNCHER',
+          component,
+          extras,
+        });
+      }
     });
   }
 
