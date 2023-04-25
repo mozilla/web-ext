@@ -1,6 +1,6 @@
 {
   "name": "web-ext",
-  "version": "7.6.1",
+  "version": "7.6.2",
   "description": "A command line tool to help build, run, and test web extensions",
   "type": "module",
   "main": "index.js",
