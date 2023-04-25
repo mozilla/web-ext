@@ -819,9 +819,21 @@ describe('utils/adb', () => {
         },
       });
 
-      sinon.assert.calledOnce(adb.fakeADBDevice.startActivity);
+      sinon.assert.calledTwice(adb.fakeADBDevice.startActivity);
       sinon.assert.calledWithMatch(adb.fakeADBDevice.startActivity, {
         action: 'android.activity.MAIN',
+        component: 'org.mozilla.firefox_mybuild/.App',
+        extras: [
+          {
+            key: 'args',
+            value: '-profile /fake/custom/profile/path',
+          },
+        ],
+        wait: true,
+      });
+      sinon.assert.calledWithMatch(adb.fakeADBDevice.startActivity, {
+        action: 'android.intent.action.MAIN',
+        category: 'android.intent.category.LAUNCHER',
         component: 'org.mozilla.firefox_mybuild/.App',
         extras: [
           {
