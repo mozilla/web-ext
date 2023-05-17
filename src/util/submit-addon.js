@@ -6,7 +6,6 @@ import { promisify } from 'util';
 
 // eslint-disable-next-line no-shadow
 import fetch, { FormData, fileFromSync, Response } from 'node-fetch';
-import { fs } from 'mz';
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
 
@@ -15,8 +14,7 @@ import { createLogger } from './../util/logger.js';
 
 const log = createLogger(import.meta.url);
 
-export const defaultAsyncFsReadFile: (string) => Promise<Buffer> =
-  fs.readFile.bind(fs);
+export const defaultAsyncFsReadFile = fsPromises.readFile;
 
 export type SignResult = {|
   id: string,
@@ -315,15 +313,35 @@ export default class Client {
     return promisify(pipeline)(contents, createWriteStream(destPath));
   }
 
+  /*
+  This function aims to quickly hash the contents of the zip file that's being uploaded,
+  to compare it to the previous zip file that was uploaded, so we can skip the upload for
+  efficiency.
+
+  CRCs are used from the zip to avoid having to extract and hash  all the files.
+
+  Two zips that have different byte contents in their files must have a different hash;
+  but returning a different hash when the contents are the same in some cases is acceptable
+  - a false mismatch does not result in lost data.
+  */
   async hashXpiCrcs(
     filePath: string,
     asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile
   ): Promise<string> {
-    const zip = await JSZip.loadAsync(asyncFsReadFile(filePath));
-    const hash = createHash('sha256');
-    zip.forEach((relativePath, entry) =>
-      hash.update(entry._data.crc32.toString())
+    const zip = await JSZip.loadAsync(
+      asyncFsReadFile(filePath, { createFolders: true })
     );
+    const hash = createHash('sha256');
+    const entries = [];
+    zip.forEach((relativePath, entry) => {
+      let path = relativePath;
+      if (entry.dir) {
+        path += '/';
+      }
+      entries.push({ path, crc32: entry._data?.crc32 || 0 });
+    });
+    entries.sort((a, b) => (a.path === b.path ? 0 : a.path > b.path ? 1 : -1));
+    hash.update(JSON.stringify(entries));
     return hash.digest('hex');
   }
 
@@ -512,8 +530,8 @@ export async function getUploadUuidFromFile(
   asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile
 ): Promise<uploadUuidDataType> {
   try {
-    const content = await asyncFsReadFile(filePath);
-    const { uploadUuid, channel, xpiCrcHash } = JSON.parse(content.toString());
+    const content = await asyncFsReadFile(filePath, 'utf-8');
+    const { uploadUuid, channel, xpiCrcHash } = JSON.parse(content);
     log.debug(
       `Found upload uuid:${uploadUuid}, channel:${channel}, hash:${xpiCrcHash} in ${filePath}`
     );
@@ -522,7 +540,7 @@ export async function getUploadUuidFromFile(
     if (isErrorWithCode('ENOENT', error)) {
       log.debug(`No upload uuid file found at: ${filePath}`);
     } else {
-      log.debug(`Invalid upload uuid file contents in ${filePath}`);
+      log.debug(`Invalid upload uuid file contents in ${filePath}: ${error}`);
     }
   }
 

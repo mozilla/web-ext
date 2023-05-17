@@ -3,7 +3,6 @@ import { createHash } from 'crypto';
 import { promises as fsPromises, readFileSync } from 'fs';
 import path from 'path';
 
-import { fs } from 'mz';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import CRC32 from 'crc-32';
 import { assert, expect } from 'chai';
@@ -368,26 +367,161 @@ describe('util.submit-addon', () => {
     });
 
     describe('hashXpiCrcs', () => {
+      const buildZip = async (zipFilePath, files) => {
+        const zip = new JSZip();
+        files.forEach((args) => {
+          zip.file(...args);
+        });
+        await fsPromises.writeFile(
+          zipFilePath,
+          await zip.generateAsync({ type: 'nodebuffer' })
+        );
+        return zip;
+      };
+
       it('returns a sha256 hash of the crc32 hashes of the zip entries', async () => {
         await withTempDir(async (tmpDir) => {
-          const zipFilePath = path.join(tmpDir.path(), 'someextension.zip');
-          const zip = new JSZip();
+          const client = new Client(clientDefaults);
           const jsFileContents = 'something();';
           const manifestContents = JSON.stringify({ manifest_version: 2 });
-          zip.file('foo.js', jsFileContents);
-          zip.file('manifest.json', manifestContents);
+          const jsFileName = 'foo.js';
+          const manifestFileName = 'manifest.json';
+
+          const files = [
+            [jsFileName, jsFileContents],
+            [manifestFileName, manifestContents],
+          ];
+          const zipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(zipFilePath, files);
+
           const originalHash = createHash('sha256');
-          originalHash.update(CRC32.str(jsFileContents).toString());
-          originalHash.update(CRC32.str(manifestContents).toString());
-          await fsPromises.writeFile(
-            zipFilePath,
-            await zip.generateAsync({ type: 'nodebuffer' })
+          originalHash.update(
+            JSON.stringify([
+              {
+                path: jsFileName,
+                crc32: CRC32.str(jsFileContents),
+              },
+              {
+                path: manifestFileName,
+                crc32: CRC32.str(manifestContents),
+              },
+            ])
           );
+
+          assert.equal(
+            await client.hashXpiCrcs(zipFilePath),
+            originalHash.digest('hex')
+          );
+        });
+      });
+
+      it('returns a different hash when a directory is added to the zip', async () => {
+        await withTempDir(async (tmpDir) => {
           const client = new Client(clientDefaults);
+          const files = [
+            ['manifest.json', JSON.stringify({ manifest_version: 2 })],
+            ['foo.js', 'something();'],
+          ];
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, files);
 
-          const zipHash = await client.hashXpiCrcs(zipFilePath);
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            ...files,
+            ['dir/', null, { dir: true }],
+          ]);
 
-          assert.equal(zipHash, originalHash.digest('hex'));
+          assert.notEqual(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
+        });
+      });
+
+      it('returns a different hash when a directory is replaced with an empty file', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const files = [
+            ['manifest.json', JSON.stringify({ manifest_version: 2 })],
+            ['foo.js', 'something();'],
+          ];
+          const emptyName = 'dir';
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, [...files, [emptyName, '']]);
+
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            ...files,
+            [emptyName, null, { dir: true }],
+          ]);
+
+          assert.notEqual(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
+        });
+      });
+
+      it('returns a different hash when a file is renamed', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const jsFileContents = 'something();';
+          const manifestContents = JSON.stringify({ manifest_version: 2 });
+          const manifestFileName = 'manifest.json';
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, [
+            [manifestFileName, manifestContents],
+            ['a.js', jsFileContents],
+          ]);
+
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            [manifestFileName, manifestContents],
+            ['A.js', jsFileContents],
+          ]);
+
+          assert.notEqual(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
+        });
+      });
+
+      it('returns the same hash when file order changes', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const jsFileName = 'foo.js';
+          const jsFileContents = 'something();';
+          const manifestContents = JSON.stringify({ manifest_version: 2 });
+          const manifestFileName = 'manifest.json';
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, [
+            [manifestFileName, manifestContents],
+            [jsFileName, jsFileContents],
+          ]);
+
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            [jsFileName, jsFileContents],
+            [manifestFileName, manifestContents],
+          ]);
+
+          assert.equal(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
         });
       });
     });
@@ -676,7 +810,7 @@ describe('util.submit-addon', () => {
             downloadedFiles: [filename],
           });
           const fullPath = path.join(tmpDir.path(), filename);
-          const stat = await fs.stat(fullPath);
+          const stat = await fsPromises.stat(fullPath);
           assert.equal(stat.isFile(), true);
           assert.equal(readFileSync(fullPath), fileData);
         }));
@@ -900,7 +1034,7 @@ describe('util.submit-addon', () => {
       withTempDir((tmpDir) => {
         const idFile = path.join(tmpDir.path(), 'extensionId.File');
         return saveIdToFile(idFile, 'some-id')
-          .then(() => fs.readFile(idFile))
+          .then(() => fsPromises.readFile(idFile))
           .then((content) => {
             assert.include(content.toString(), 'some-id');
           });
@@ -911,7 +1045,7 @@ describe('util.submit-addon', () => {
         const idFile = path.join(tmpDir.path(), 'extensionId.File');
         return saveIdToFile(idFile, 'first-id')
           .then(() => saveIdToFile(idFile, 'second-id'))
-          .then(() => fs.readFile(idFile))
+          .then(() => fsPromises.readFile(idFile))
           .then((content) => {
             assert.include(content.toString(), 'second-id');
           });
@@ -928,9 +1062,9 @@ describe('util.submit-addon', () => {
       withTempDir((tmpDir) => {
         const uuidFile = path.join(tmpDir.path(), 'uploadUuid.File');
         return saveUploadUuidToFile(uuidFile, data)
-          .then(() => fs.readFile(uuidFile))
+          .then(() => fsPromises.readFile(uuidFile))
           .then((content) => {
-            assert.include(content.toString(), JSON.stringify(data));
+            assert.equal(content.toString(), JSON.stringify(data));
           });
       });
     });
@@ -950,9 +1084,9 @@ describe('util.submit-addon', () => {
         const uuidFile = path.join(tmpDir.path(), 'uploadUuid.File');
         return saveUploadUuidToFile(uuidFile, firstData)
           .then(() => saveUploadUuidToFile(uuidFile, secondData))
-          .then(() => fs.readFile(uuidFile))
+          .then(() => fsPromises.readFile(uuidFile))
           .then((content) => {
-            assert.include(content.toString(), JSON.stringify(secondData));
+            assert.equal(content.toString(), JSON.stringify(secondData));
           });
       }));
   });
@@ -988,7 +1122,7 @@ describe('util.submit-addon', () => {
     it('returns empty strings for uuid and hash if file is malformed', () => {
       withTempDir(async (tmpDir) => {
         const uuidFile = path.join(tmpDir.path(), 'uploadUuid.File');
-        await fs.writeFile(uuidFile, 'not json');
+        await fsPromises.writeFile(uuidFile, 'not json');
         return getUploadUuidFromFile(uuidFile).then((returnedData) => {
           assert.equal(returnedData, {
             uploadUuid: '',
