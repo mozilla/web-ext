@@ -334,10 +334,11 @@ export default class Client {
     const hash = createHash('sha256');
     const entries = [];
     zip.forEach((relativePath, entry) => {
-      let path = relativePath;
+      let path = relativePath.replace(/\/+$/, '');
       if (entry.dir) {
         path += '/';
       }
+      // if the file is 0 bytes or a dir `_data` is missing so assume crc is 0
       entries.push({ path, crc32: entry._data?.crc32 || 0 });
     });
     entries.sort((a, b) => (a.path === b.path ? 0 : a.path > b.path ? 1 : -1));
