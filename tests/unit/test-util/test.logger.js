@@ -1,4 +1,3 @@
-/* @flow */
 import { Writable as WritableStream } from 'stream';
 import { pathToFileURL } from 'url';
 

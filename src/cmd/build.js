@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 import { createWriteStream } from 'fs';
 
@@ -13,63 +12,25 @@ import getValidatedManifest, { getManifestId } from '../util/manifest.js';
 import { prepareArtifactsDir } from '../util/artifacts.js';
 import { createLogger } from '../util/logger.js';
 import { UsageError, isErrorWithCode } from '../errors.js';
-import {
-  createFileFilter as defaultFileFilterCreator,
-  FileFilter,
-} from '../util/file-filter.js';
+import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
 // Import flow types.
-import type { OnSourceChangeFn } from '../watcher.js';
-import type { ExtensionManifest } from '../util/manifest.js';
-import type { FileFilterCreatorFn } from '../util/file-filter.js';
 
 const log = createLogger(import.meta.url);
 const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';
 
-export function safeFileName(name: string): string {
+export function safeFileName(name) {
   return name.toLowerCase().replace(/[^a-z0-9.-]+/g, '_');
 }
 
 // defaultPackageCreator types and implementation.
 
-export type ExtensionBuildResult = {|
-  extensionPath: string,
-|};
-
-export type PackageCreatorParams = {|
-  manifestData?: ExtensionManifest,
-  sourceDir: string,
-  fileFilter: FileFilter,
-  artifactsDir: string,
-  overwriteDest: boolean,
-  showReadyMessage: boolean,
-  filename?: string,
-|};
-
-export type LocalizedNameParams = {|
-  messageFile: string,
-  manifestData: ExtensionManifest,
-|};
-
-export type PackageCreatorOptions = {
-  fromEvent: typeof defaultFromEvent,
-};
-
 // This defines the _locales/messages.json type. See:
 // https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Internationalization#Providing_localized_strings_in__locales
-type LocalizedMessageData = {|
-  [messageName: string]: {|
-    description: string,
-    message: string,
-  |},
-|};
 
-export async function getDefaultLocalizedName({
-  messageFile,
-  manifestData,
-}: LocalizedNameParams): Promise<string> {
-  let messageData: LocalizedMessageData;
-  let messageContents: string | Buffer;
-  let extensionName: string = manifestData.name;
+export async function getDefaultLocalizedName({ messageFile, manifestData }) {
+  let messageData;
+  let messageContents;
+  let extensionName = manifestData.name;
 
   try {
     messageContents = await fs.readFile(messageFile, { encoding: 'utf-8' });
@@ -107,7 +68,7 @@ export async function getDefaultLocalizedName({
 }
 
 // https://stackoverflow.com/a/22129960
-export function getStringPropertyValue(prop: string, obj: Object): string {
+export function getStringPropertyValue(prop, obj) {
   const properties = prop.split('.');
   const value = properties.reduce((prev, curr) => prev && prev[curr], obj);
   if (!['string', 'number'].includes(typeof value)) {
@@ -122,10 +83,7 @@ export function getStringPropertyValue(prop: string, obj: Object): string {
   return stringValue;
 }
 
-function getPackageNameFromTemplate(
-  filenameTemplate: string,
-  manifestData: ExtensionManifest
-): string {
+function getPackageNameFromTemplate(filenameTemplate, manifestData) {
   const packageName = filenameTemplate.replace(
     /{([A-Za-z0-9._]+?)}/g,
     (match, manifestProperty) => {
@@ -154,10 +112,6 @@ function getPackageNameFromTemplate(
   return packageName;
 }
 
-export type PackageCreatorFn = (
-  params: PackageCreatorParams
-) => Promise<ExtensionBuildResult>;
-
 export async function defaultPackageCreator(
   {
     manifestData,
@@ -167,9 +121,9 @@ export async function defaultPackageCreator(
     overwriteDest,
     showReadyMessage,
     filename = DEFAULT_FILENAME_TEMPLATE,
-  }: PackageCreatorParams,
-  { fromEvent = defaultFromEvent }: PackageCreatorOptions = {}
-): Promise<ExtensionBuildResult> {
+  },
+  { fromEvent = defaultFromEvent } = {}
+) {
   let id;
   if (manifestData) {
     id = getManifestId(manifestData);
@@ -242,25 +196,6 @@ export async function defaultPackageCreator(
 
 // Build command types and implementation.
 
-export type BuildCmdParams = {|
-  sourceDir: string,
-  artifactsDir: string,
-  asNeeded?: boolean,
-  overwriteDest?: boolean,
-  ignoreFiles?: Array<string>,
-  filename?: string,
-|};
-
-export type BuildCmdOptions = {
-  manifestData?: ExtensionManifest,
-  fileFilter?: FileFilter,
-  onSourceChange?: OnSourceChangeFn,
-  packageCreator?: PackageCreatorFn,
-  showReadyMessage?: boolean,
-  createFileFilter?: FileFilterCreatorFn,
-  shouldExitProgram?: boolean,
-};
-
 export default async function build(
   {
     sourceDir,
@@ -269,7 +204,7 @@ export default async function build(
     overwriteDest = false,
     ignoreFiles = [],
     filename = DEFAULT_FILENAME_TEMPLATE,
-  }: BuildCmdParams,
+  },
   {
     manifestData,
     createFileFilter = defaultFileFilterCreator,
@@ -281,8 +216,8 @@ export default async function build(
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
     showReadyMessage = true,
-  }: BuildCmdOptions = {}
-): Promise<ExtensionBuildResult> {
+  } = {}
+) {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);
 

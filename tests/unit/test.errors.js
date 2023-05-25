@@ -1,4 +1,3 @@
-/* @flow */
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
 
@@ -35,7 +34,7 @@ describe('errors', () => {
 
   describe('onlyErrorsWithCode', () => {
     class ErrorWithErrno extends Error {
-      errno: number;
+      errno;
       constructor() {
         super('pretend this is a system error');
         this.errno = 53;

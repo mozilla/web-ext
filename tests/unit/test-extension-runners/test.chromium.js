@@ -1,5 +1,3 @@
-/* @flow */
-
 import path from 'path';
 import EventEmitter from 'events';
 
@@ -16,7 +14,6 @@ import {
   ChromiumExtensionRunner,
   DEFAULT_CHROME_FLAGS,
 } from '../../../src/extension-runners/chromium.js';
-import type { ChromiumExtensionRunnerParams } from '../../../src/extension-runners/chromium';
 import {
   consoleStream, // instance is imported to inspect logged messages
 } from '../../../src/util/logger.js';
@@ -29,7 +26,7 @@ function prepareExtensionRunnerParams({ params } = {}) {
     process: new StubChildProcess(),
     kill: sinon.spy(async () => {}),
   };
-  const runnerParams: ChromiumExtensionRunnerParams = {
+  const runnerParams = {
     extensions: [
       {
         sourceDir: '/fake/sourceDir',
@@ -622,8 +619,8 @@ describe('util/extension-runners/chromium', async () => {
   );
 
   describe('reloadAllExtensions', () => {
-    let runnerInstance: ChromiumExtensionRunner;
-    let wsClient: WebSocket;
+    let runnerInstance;
+    let wsClient;
 
     beforeEach(async () => {
       const { params } = prepareExtensionRunnerParams();

@@ -1,4 +1,3 @@
-/* @flow */
 import { fs } from 'mz';
 
 import { onlyErrorsWithCode } from '../errors.js';
@@ -14,7 +13,7 @@ import { onlyErrorsWithCode } from '../errors.js';
  *  });
  *
  * */
-export default function isDirectory(path: string): Promise<boolean> {
+export default function isDirectory(path) {
   return fs
     .stat(path)
     .then((stats) => stats.isDirectory())

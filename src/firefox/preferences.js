@@ -1,4 +1,3 @@
-/* @flow */
 import { WebExtError, UsageError } from '../errors.js';
 import { createLogger } from '../util/logger.js';
 
@@ -12,15 +11,9 @@ export const nonOverridablePreferences = [
 
 // Flow Types
 
-export type FirefoxPreferences = {
-  [key: string]: boolean | string | number,
-};
-
-export type PreferencesAppName = 'firefox' | 'fennec';
-
 // Preferences Maps
 
-const prefsCommon: FirefoxPreferences = {
+const prefsCommon = {
   // Allow debug output via dump to be printed to the system console
   'browser.dom.window.dump.enabled': true,
 
@@ -69,14 +62,14 @@ const prefsCommon: FirefoxPreferences = {
 };
 
 // Prefs specific to Firefox for Android.
-const prefsFennec: FirefoxPreferences = {
+const prefsFennec = {
   'browser.console.showInPanel': true,
   'browser.firstrun.show.uidiscovery': false,
   'devtools.remote.usb.enabled': true,
 };
 
 // Prefs specific to Firefox for desktop.
-const prefsFirefox: FirefoxPreferences = {
+const prefsFirefox = {
   'browser.startup.homepage': 'about:blank',
   'startup.homepage_welcome_url': 'about:blank',
   'startup.homepage_welcome_url.additional': '',
@@ -114,13 +107,7 @@ const prefs = {
 
 // Module exports
 
-export type PreferencesGetterFn = (
-  appName: PreferencesAppName
-) => FirefoxPreferences;
-
-export function getPrefs(
-  app: PreferencesAppName = 'firefox'
-): FirefoxPreferences {
+export function getPrefs(app = 'firefox') {
   const appPrefs = prefs[app];
   if (!appPrefs) {
     throw new WebExtError(`Unsupported application: ${app}`);
@@ -131,9 +118,7 @@ export function getPrefs(
   };
 }
 
-export function coerceCLICustomPreference(
-  cliPrefs: Array<string>
-): FirefoxPreferences {
+export function coerceCLICustomPreference(cliPrefs) {
   const customPrefs = {};
 
   for (const pref of cliPrefs) {

@@ -1,5 +1,3 @@
-/* @flow */
-
 import EventEmitter from 'events';
 
 import chai from 'chai';
@@ -54,15 +52,7 @@ android.permission.WRITE_EXTERNAL_STORAGE, granted=true
 
 const { assert } = chai;
 
-function getFakeADBKit({
-  adbClient = {},
-  adbkitUtil = {},
-  adbDevice = {},
-}: {
-  adbClient?: Object,
-  adbkitUtil?: Object,
-  adbDevice?: Object,
-}) {
+function getFakeADBKit({ adbClient = {}, adbkitUtil = {}, adbDevice = {} }) {
   const fakeTransfer = new EventEmitter();
   const adbUtilReadAllStub = sinon.stub();
 
@@ -112,11 +102,6 @@ async function testSpawnADBUsageError({
   adbClient,
   adbkitUtil,
   adbDevice,
-}: {
-  testFn: Function,
-  adbClient?: Object,
-  adbkitUtil?: Object,
-  adbDevice?: Object,
 }) {
   const adb = getFakeADBKit({ adbClient, adbkitUtil, adbDevice });
   const adbUtils = new ADBUtils({ adb });
@@ -665,7 +650,7 @@ describe('utils/adb', () => {
   });
 
   describe('detectOrRemoveOldArtifacts', () => {
-    function createFakeReaddirFile(artifactName: string, isDirectory: boolean) {
+    function createFakeReaddirFile(artifactName, isDirectory) {
       return {
         name: artifactName,
         isDirectory: () => {
@@ -992,8 +977,8 @@ describe('utils/adb', () => {
     });
 
     async function testReferenceBrowserApkComponent(
-      firefoxApkComponent?: string,
-      expectedApkComponent: string
+      firefoxApkComponent,
+      expectedApkComponent
     ) {
       const adb = getFakeADBKit({
         adbDevice: {

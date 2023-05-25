@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { fs } from 'mz';
@@ -63,9 +62,9 @@ async function prepareRun(fakeInstallResult) {
 }
 
 describe('run', () => {
-  let androidRunnerStub: any;
-  let desktopRunnerStub: any;
-  let chromiumRunnerStub: any;
+  let androidRunnerStub;
+  let desktopRunnerStub;
+  let chromiumRunnerStub;
 
   beforeEach(async () => {
     const firefoxAndroidModule = {

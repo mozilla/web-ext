@@ -1,5 +1,3 @@
-/* @flow */
-
 /**
  * This module provide an ExtensionRunner subclass that manage an extension executed
  * in a Chromium-based browser instance.
@@ -17,48 +15,31 @@ import WebSocket, { WebSocketServer } from 'ws';
 
 import { createLogger } from '../util/logger.js';
 import { TempDir } from '../util/temp-dir.js';
-import type {
-  ExtensionRunnerParams,
-  ExtensionRunnerReloadResult,
-} from './base';
 import isDirectory from '../util/is-directory.js';
 import fileExists from '../util/file-exists.js';
-
-type ChromiumSpecificRunnerParams = {|
-  chromiumBinary?: string,
-  chromiumProfile?: string,
-  chromiumLaunch?: typeof defaultChromiumLaunch,
-|};
-
-export type ChromiumExtensionRunnerParams = {|
-  ...ExtensionRunnerParams,
-  // Chromium desktop CLI params.
-  ...ChromiumSpecificRunnerParams,
-|};
 
 const log = createLogger(import.meta.url);
 
 const EXCLUDED_CHROME_FLAGS = ['--disable-extensions', '--mute-audio'];
 
-export const DEFAULT_CHROME_FLAGS: Array<string> =
-  ChromeLauncher.defaultFlags().filter(
-    (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag)
-  );
+export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
+  (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag)
+);
 
 /**
  * Implements an IExtensionRunner which manages a Chromium instance.
  */
 export class ChromiumExtensionRunner {
-  cleanupCallbacks: Set<Function>;
-  params: ChromiumExtensionRunnerParams;
-  chromiumInstance: ?ChromeLauncher;
-  chromiumLaunch: typeof defaultChromiumLaunch;
-  reloadManagerExtension: string;
-  wss: ?WebSocketServer;
-  exiting: boolean;
-  _promiseSetupDone: ?Promise<void>;
+  cleanupCallbacks;
+  params;
+  chromiumInstance;
+  chromiumLaunch;
+  reloadManagerExtension;
+  wss;
+  exiting;
+  _promiseSetupDone;
 
-  constructor(params: ChromiumExtensionRunnerParams) {
+  constructor(params) {
     const { chromiumLaunch = defaultChromiumLaunch } = params;
     this.params = params;
     this.chromiumLaunch = chromiumLaunch;
@@ -70,17 +51,17 @@ export class ChromiumExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName(): string {
+  getName() {
     return 'Chromium';
   }
 
-  async run(): Promise<void> {
+  async run() {
     // Run should never be called more than once.
     this._promiseSetupDone = this.setupInstance();
     await this._promiseSetupDone;
   }
 
-  static async isUserDataDir(dirPath: string): Promise<boolean> {
+  static async isUserDataDir(dirPath) {
     const localStatePath = path.join(dirPath, 'Local State');
     const defaultPath = path.join(dirPath, 'Default');
     // Local State and Default are typical for the user-data-dir
@@ -89,16 +70,13 @@ export class ChromiumExtensionRunner {
     );
   }
 
-  static async isProfileDir(dirPath: string): Promise<boolean> {
+  static async isProfileDir(dirPath) {
     const securePreferencesPath = path.join(dirPath, 'Secure Preferences');
     //Secure Preferences is typical for a profile dir inside a user data dir
     return await fileExists(securePreferencesPath);
   }
 
-  static async getProfilePaths(chromiumProfile: ?string): Promise<{
-    userDataDir: ?string,
-    profileDirName: ?string,
-  }> {
+  static async getProfilePaths(chromiumProfile) {
     if (!chromiumProfile) {
       return {
         userDataDir: null,
@@ -128,7 +106,7 @@ export class ChromiumExtensionRunner {
   /**
    * Setup the Chromium Profile and run a Chromium instance.
    */
-  async setupInstance(): Promise<void> {
+  async setupInstance() {
     // Start a websocket server on a free localhost TCP port.
     this.wss = await new Promise((resolve) => {
       const server = new WebSocketServer(
@@ -244,7 +222,7 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  async wssBroadcast(data: Object): Promise<void> {
+  async wssBroadcast(data) {
     return new Promise((resolve) => {
       const clients = this.wss ? new Set(this.wss.clients) : new Set();
 
@@ -283,7 +261,7 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  async createReloadManagerExtension(): Promise<string> {
+  async createReloadManagerExtension() {
     const tmpDir = new TempDir();
     await tmpDir.create();
     this.registerCleanup(() => tmpDir.remove());
@@ -356,7 +334,7 @@ export class ChromiumExtensionRunner {
    * Reloads all the extensions, collect any reload error and resolves to
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
-  async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
+  async reloadAllExtensions() {
     const runnerName = this.getName();
 
     await this.wssBroadcast({
@@ -376,8 +354,8 @@ export class ChromiumExtensionRunner {
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
   async reloadExtensionBySourceDir(
-    extensionSourceDir: string // eslint-disable-line no-unused-vars
-  ): Promise<Array<ExtensionRunnerReloadResult>> {
+    extensionSourceDir // eslint-disable-line no-unused-vars
+  ) {
     // TODO(rpl): detect the extension ids assigned to the
     // target extensions and map it to the extensions source dir
     // (https://github.com/mozilla/web-ext/issues/1687).
@@ -389,14 +367,14 @@ export class ChromiumExtensionRunner {
    * (e.g. the Chromium instance exits or the user has requested web-ext
    * to exit).
    */
-  registerCleanup(fn: Function): void {
+  registerCleanup(fn) {
     this.cleanupCallbacks.add(fn);
   }
 
   /**
    * Exits the runner, by closing the managed Chromium instance.
    */
-  async exit(): Promise<void> {
+  async exit() {
     this.exiting = true;
 
     // Wait for the setup to complete if the extension runner is already

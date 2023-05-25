@@ -1,5 +1,3 @@
-/* @flow */
-
 import { promisify } from 'util';
 
 // promisify.custom is missing from the node types know to flow,
@@ -21,8 +19,8 @@ export const promisifyCustom = promisify.custom;
  *    aCallbackBasedFn[promisify.custom] = multiArgsPromisedFn(tmp.dir);
  *    ...
  */
-export function multiArgsPromisedFn(fn: Function): Function {
-  return (...callerArgs: Array<any>): Promise<any> => {
+export function multiArgsPromisedFn(fn) {
+  return (...callerArgs) => {
     return new Promise((resolve, reject) => {
       fn(...callerArgs, (err, ...rest) => {
         if (err) {

@@ -1,4 +1,3 @@
-/* @flow */
 import { fs } from 'mz';
 import defaultAsyncMkdirp from 'mkdirp';
 
@@ -7,20 +6,15 @@ import { createLogger } from './logger.js';
 
 const log = createLogger(import.meta.url);
 
-const defaultAsyncFsAccess: typeof fs.access = fs.access.bind(fs);
-
-type PrepareArtifactsDirOptions = {
-  asyncMkdirp?: typeof defaultAsyncMkdirp,
-  asyncFsAccess?: typeof defaultAsyncFsAccess,
-};
+const defaultAsyncFsAccess = fs.access.bind(fs);
 
 export async function prepareArtifactsDir(
-  artifactsDir: string,
+  artifactsDir,
   {
     asyncMkdirp = defaultAsyncMkdirp,
     asyncFsAccess = defaultAsyncFsAccess,
-  }: PrepareArtifactsDirOptions = {}
-): Promise<string> {
+  } = {}
+) {
   try {
     const stats = await fs.stat(artifactsDir);
     if (!stats.isDirectory()) {

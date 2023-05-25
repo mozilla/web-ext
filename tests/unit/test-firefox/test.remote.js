@@ -1,4 +1,3 @@
-/* @flow */
 import net from 'net';
 
 import { describe, it } from 'mocha';
@@ -506,7 +505,7 @@ describe('firefox.remote', () => {
   });
 
   describe('findFreeTcpPort', () => {
-    async function promiseServerOnPort(port): Promise<net.Server> {
+    async function promiseServerOnPort(port) {
       return new Promise((resolve) => {
         const srv = net.createServer();
         // $FlowFixMe: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290

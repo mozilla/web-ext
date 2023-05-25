@@ -1,9 +1,6 @@
-/* @flow */
 import net from 'net';
 
-import FirefoxRDPClient, {
-  connectToFirefox as defaultFirefoxConnector,
-} from './rdp-client.js';
+import { connectToFirefox as defaultFirefoxConnector } from './rdp-client.js';
 import { createLogger } from '../util/logger.js';
 import {
   isErrorWithCode,
@@ -14,35 +11,10 @@ import {
 
 const log = createLogger(import.meta.url);
 
-export type FirefoxConnectorFn = (port: number) => Promise<FirefoxRDPClient>;
-
-export type FirefoxRDPAddonActor = {|
-  id: string,
-  actor: string,
-|};
-
-export type FirefoxRDPResponseError = {|
-  error: string,
-  message: string,
-|};
-
-export type FirefoxRDPResponseAddon = {|
-  addon: FirefoxRDPAddonActor,
-|};
-
-export type FirefoxRDPResponseRequestTypes = {|
-  requestTypes: Array<string>,
-|};
-
 // NOTE: this type aliases Object to catch any other possible response.
-export type FirefoxRDPResponseAny = Object;
-
-export type FirefoxRDPResponseMaybe =
-  | FirefoxRDPResponseRequestTypes
-  | FirefoxRDPResponseAny;
 
 // Convert a request rejection to a message string.
-function requestErrorToMessage(err: Error | FirefoxRDPResponseError) {
+function requestErrorToMessage(err) {
   if (err instanceof Error) {
     return String(err);
   }
@@ -50,10 +22,10 @@ function requestErrorToMessage(err: Error | FirefoxRDPResponseError) {
 }
 
 export class RemoteFirefox {
-  client: Object;
-  checkedForAddonReloading: boolean;
+  client;
+  checkedForAddonReloading;
 
-  constructor(client: FirefoxRDPClient) {
+  constructor(client) {
     this.client = client;
     this.checkedForAddonReloading = false;
 
@@ -78,10 +50,7 @@ export class RemoteFirefox {
     this.client.disconnect();
   }
 
-  async addonRequest(
-    addon: FirefoxRDPAddonActor,
-    request: string
-  ): Promise<FirefoxRDPResponseMaybe> {
+  async addonRequest(addon, request) {
     try {
       const response = await this.client.request({
         to: addon.actor,
@@ -95,7 +64,7 @@ export class RemoteFirefox {
     }
   }
 
-  async getAddonsActor(): Promise<string> {
+  async getAddonsActor() {
     try {
       // getRoot should work since Firefox 55 (bug 1352157).
       const response = await this.client.request('getRoot');
@@ -137,10 +106,7 @@ export class RemoteFirefox {
     }
   }
 
-  async installTemporaryAddon(
-    addonPath: string,
-    openDevTools?: boolean
-  ): Promise<FirefoxRDPResponseAddon> {
+  async installTemporaryAddon(addonPath, openDevTools) {
     const addonsActor = await this.getAddonsActor();
 
     try {
@@ -159,7 +125,7 @@ export class RemoteFirefox {
     }
   }
 
-  async getInstalledAddon(addonId: string): Promise<FirefoxRDPAddonActor> {
+  async getInstalledAddon(addonId) {
     try {
       const response = await this.client.request('listAddons');
       for (const addon of response.addons) {
@@ -181,9 +147,7 @@ export class RemoteFirefox {
     }
   }
 
-  async checkForAddonReloading(
-    addon: FirefoxRDPAddonActor
-  ): Promise<FirefoxRDPAddonActor> {
+  async checkForAddonReloading(addon) {
     if (this.checkedForAddonReloading) {
       // We only need to check once if reload() is supported.
       return addon;
@@ -204,7 +168,7 @@ export class RemoteFirefox {
     }
   }
 
-  async reloadAddon(addonId: string): Promise<void> {
+  async reloadAddon(addonId) {
     const addon = await this.getInstalledAddon(addonId);
     await this.checkForAddonReloading(addon);
     await this.addonRequest(addon, 'reload');
@@ -217,14 +181,10 @@ export class RemoteFirefox {
 
 // Connect types and implementation
 
-export type ConnectOptions = {
-  connectToFirefox: FirefoxConnectorFn,
-};
-
 export async function connect(
-  port: number,
-  { connectToFirefox = defaultFirefoxConnector }: ConnectOptions = {}
-): Promise<RemoteFirefox> {
+  port,
+  { connectToFirefox = defaultFirefoxConnector } = {}
+) {
   log.debug(`Connecting to Firefox on port ${port}`);
   const client = await connectToFirefox(port);
   log.debug(`Connected to the remote Firefox debugger on port ${port}`);
@@ -233,21 +193,11 @@ export async function connect(
 
 // ConnectWithMaxRetries types and implementation
 
-export type ConnectWithMaxRetriesParams = {|
-  maxRetries?: number,
-  retryInterval?: number,
-  port: number,
-|};
-
-export type ConnectWithMaxRetriesDeps = {
-  connectToFirefox: typeof connect,
-};
-
 export async function connectWithMaxRetries(
   // A max of 250 will try connecting for 30 seconds.
-  { maxRetries = 250, retryInterval = 120, port }: ConnectWithMaxRetriesParams,
-  { connectToFirefox = connect }: ConnectWithMaxRetriesDeps = {}
-): Promise<RemoteFirefox> {
+  { maxRetries = 250, retryInterval = 120, port },
+  { connectToFirefox = connect } = {}
+) {
   async function establishConnection() {
     var lastError;
 
@@ -280,7 +230,7 @@ export async function connectWithMaxRetries(
   return establishConnection();
 }
 
-export function findFreeTcpPort(): Promise<number> {
+export function findFreeTcpPort() {
   return new Promise((resolve) => {
     const srv = net.createServer();
     // $FlowFixMe: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290

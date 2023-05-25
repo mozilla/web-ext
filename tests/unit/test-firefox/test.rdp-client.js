@@ -1,4 +1,3 @@
-/* @flow */
 import net from 'net';
 
 import { describe, it, beforeEach, afterEach } from 'mocha';
@@ -13,7 +12,7 @@ import FirefoxRDPClient, {
 function createFakeRDPServer() {
   let lastSocket;
 
-  function sendRDPMessage(msg: Object) {
+  function sendRDPMessage(msg) {
     let data = Buffer.from(JSON.stringify(msg));
     data = Buffer.concat([Buffer.from(`${data.length}:`), data]);
     lastSocket.write(data);
@@ -104,7 +103,7 @@ describe('rdp-client', () => {
 
   describe('FirefoxRDPClient', () => {
     let fakeRDPServer;
-    let client: FirefoxRDPClient;
+    let client;
 
     beforeEach(() => {
       fakeRDPServer = createFakeRDPServer();

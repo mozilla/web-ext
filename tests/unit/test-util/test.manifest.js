@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { describe, it } from 'mocha';
@@ -223,7 +222,7 @@ describe('util/manifest', () => {
   describe('getManifestId', () => {
     const id = 'basic-manifest@web-ext-test-suite';
 
-    ['applications', 'browser_specific_settings'].forEach((key: string) => {
+    ['applications', 'browser_specific_settings'].forEach((key) => {
       describe(`with ${key}`, () => {
         it('returns gecko.id if present', () => {
           assert.equal(

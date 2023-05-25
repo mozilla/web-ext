@@ -1,17 +1,11 @@
-/* @flow */
 import { it, describe } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import defaultLintCommand from '../../../src/cmd/lint.js';
 
-type setUpParams = {
-  createLinter?: Function,
-  createFileFilter?: Function,
-};
-
 describe('lint', () => {
-  function setUp({ createLinter, createFileFilter }: setUpParams = {}) {
+  function setUp({ createLinter, createFileFilter } = {}) {
     const lintResult = '<lint.run() result placeholder>';
     const runLinter = sinon.spy(() => Promise.resolve(lintResult));
     if (!createLinter) {

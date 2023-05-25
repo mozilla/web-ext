@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-/* @flow */
 import path from 'path';
 
 import { it, describe } from 'mocha';
@@ -15,13 +14,8 @@ import {
 import { withTempDir } from '../../src/util/temp-dir.js';
 import { makeSureItFails } from './helpers.js';
 
-type AssertWatchedParams = {
-  watchFile?: Array<string>,
-  touchedFile: string,
-};
-
 describe('watcher', () => {
-  const watchChange = ({ watchFile, touchedFile }: AssertWatchedParams = {}) =>
+  const watchChange = ({ watchFile, touchedFile } = {}) =>
     withTempDir(async (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
       const someFile = path.join(tmpDir.path(), touchedFile);

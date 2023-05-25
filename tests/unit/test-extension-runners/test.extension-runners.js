@@ -1,4 +1,3 @@
-/* @flow */
 import stream from 'stream';
 
 import { describe, it } from 'mocha';
@@ -12,17 +11,8 @@ import {
   MultiExtensionRunner,
 } from '../../../src/extension-runners/index.js';
 import { createFakeStdin, FakeExtensionRunner } from '../helpers.js';
-import type {
-  IExtensionRunner, // eslint-disable-line import/named
-} from '../../../src/extension-runners/base';
 
-function createFakeExtensionRunner({
-  params = {},
-  overriddenMethods = {},
-}: {
-  params?: Object,
-  overriddenMethods?: Object,
-}): IExtensionRunner {
+function createFakeExtensionRunner({ params = {}, overriddenMethods = {} }) {
   const runner = new FakeExtensionRunner(params);
 
   for (const [fnName, fn] of Object.entries(overriddenMethods)) {

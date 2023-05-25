@@ -1,11 +1,10 @@
-/* @flow */
 import { createHash } from 'crypto';
 import { createWriteStream, promises as fsPromises } from 'fs';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
 
 // eslint-disable-next-line no-shadow
-import fetch, { FormData, fileFromSync, Response } from 'node-fetch';
+import fetch, { FormData, fileFromSync } from 'node-fetch';
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
 
@@ -16,35 +15,22 @@ const log = createLogger(import.meta.url);
 
 export const defaultAsyncFsReadFile = fsPromises.readFile;
 
-export type SignResult = {|
-  id: string,
-  downloadedFiles: Array<string>,
-|};
-
-export interface ApiAuth {
-  getAuthHeader(): Promise<string>;
-}
-
 export class JwtApiAuth {
-  #apiKey: string;
-  #apiSecret: string;
-  #apiJwtExpiresIn: number;
+  #apiKey;
+  #apiSecret;
+  #apiJwtExpiresIn;
 
   constructor({
     apiKey,
     apiSecret,
     apiJwtExpiresIn = 60 * 5, // 5 minutes
-  }: {
-    apiKey: string,
-    apiSecret: string,
-    apiJwtExpiresIn?: number,
   }) {
     this.#apiKey = apiKey;
     this.#apiSecret = apiSecret;
     this.#apiJwtExpiresIn = apiJwtExpiresIn;
   }
 
-  async signJWT(): Promise<string> {
+  async signJWT() {
     return (
       new SignJWT({ iss: this.#apiKey })
         .setProtectedHeader({ alg: 'HS256' })
@@ -57,32 +43,21 @@ export class JwtApiAuth {
     );
   }
 
-  async getAuthHeader(): Promise<string> {
+  async getAuthHeader() {
     const authToken = await this.signJWT();
     return `JWT ${authToken}`;
   }
 }
 
-type ClientConstructorParams = {|
-  apiAuth: ApiAuth,
-  baseUrl: URL,
-  validationCheckInterval?: number,
-  validationCheckTimeout?: number,
-  approvalCheckInterval?: number,
-  approvalCheckTimeout?: number,
-  downloadDir?: string,
-  userAgentString: string,
-|};
-
 export default class Client {
-  apiAuth: ApiAuth;
-  apiUrl: URL;
-  validationCheckInterval: number;
-  validationCheckTimeout: number;
-  approvalCheckInterval: number;
-  approvalCheckTimeout: number;
-  downloadDir: string;
-  userAgentString: string;
+  apiAuth;
+  apiUrl;
+  validationCheckInterval;
+  validationCheckTimeout;
+  approvalCheckInterval;
+  approvalCheckTimeout;
+  downloadDir;
+  userAgentString;
 
   constructor({
     apiAuth,
@@ -93,7 +68,7 @@ export default class Client {
     approvalCheckTimeout = 900000, // 15 minutes.
     downloadDir = process.cwd(),
     userAgentString,
-  }: ClientConstructorParams) {
+  }) {
     this.apiAuth = apiAuth;
     if (!baseUrl.pathname.endsWith('/')) {
       baseUrl = new URL(baseUrl.href);
@@ -108,26 +83,15 @@ export default class Client {
     this.userAgentString = userAgentString;
   }
 
-  fileFromSync(path: string): File {
+  fileFromSync(path) {
     return fileFromSync(path);
   }
 
-  nodeFetch(
-    url: URL,
-    {
-      method,
-      headers,
-      body,
-    }: {
-      method: string,
-      headers: { [key: string]: string },
-      body?: typeof FormData | string,
-    }
-  ): Promise<typeof Response> {
+  nodeFetch(url, { method, headers, body }) {
     return fetch(url, { method, headers, body });
   }
 
-  async doUploadSubmit(xpiPath: string, channel: string): Promise<string> {
+  async doUploadSubmit(xpiPath, channel) {
     const url = new URL('upload/', this.apiUrl);
     const formData = new FormData();
     formData.set('channel', channel);
@@ -136,13 +100,7 @@ export default class Client {
     return this.waitForValidation(uuid);
   }
 
-  waitRetry(
-    successFunc: (detailResponseData: any) => string | null,
-    checkUrl: URL,
-    checkInterval: number,
-    abortInterval: number,
-    context: string
-  ): Promise<string> {
+  waitRetry(successFunc, checkUrl, checkInterval, abortInterval, context) {
     let checkTimeout;
 
     return new Promise((resolve, reject) => {
@@ -178,10 +136,10 @@ export default class Client {
     });
   }
 
-  waitForValidation(uuid: string): Promise<string> {
+  waitForValidation(uuid) {
     log.info('Waiting for Validation...');
     return this.waitRetry(
-      (detailResponseData): string | null => {
+      (detailResponseData) => {
         if (!detailResponseData.processed) {
           return null;
         }
@@ -204,7 +162,7 @@ export default class Client {
     );
   }
 
-  async doNewAddonSubmit(uuid: string, metaDataJson: Object): Promise<any> {
+  async doNewAddonSubmit(uuid, metaDataJson) {
     const url = new URL('addon/', this.apiUrl);
     const jsonData = {
       ...metaDataJson,
@@ -213,11 +171,7 @@ export default class Client {
     return this.fetchJson(url, 'POST', JSON.stringify(jsonData));
   }
 
-  doNewAddonOrVersionSubmit(
-    addonId: string,
-    uuid: string,
-    metaDataJson: Object
-  ): Promise<typeof Response> {
+  doNewAddonOrVersionSubmit(addonId, uuid, metaDataJson) {
     const url = new URL(`addon/${addonId}/`, this.apiUrl);
     const jsonData = {
       ...metaDataJson,
@@ -226,10 +180,10 @@ export default class Client {
     return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
   }
 
-  waitForApproval(addonId: string, versionId: number): Promise<string> {
+  waitForApproval(addonId, versionId) {
     log.info('Waiting for Approval...');
     return this.waitRetry(
-      (detailResponseData): string | null => {
+      (detailResponseData) => {
         const { file } = detailResponseData;
         if (file && file.status === 'public') {
           return file.url;
@@ -244,12 +198,7 @@ export default class Client {
     );
   }
 
-  async fetchJson(
-    url: URL,
-    method: string = 'GET',
-    body?: typeof FormData | string,
-    errorMsg: string = 'Bad Request'
-  ): Promise<any> {
+  async fetchJson(url, method = 'GET', body, errorMsg = 'Bad Request') {
     const response = await this.fetch(url, method, body);
     if (response.status < 200 || response.status >= 500) {
       throw new Error(
@@ -267,11 +216,7 @@ export default class Client {
     return data;
   }
 
-  async fetch(
-    url: URL,
-    method: string = 'GET',
-    body?: typeof FormData | string
-  ): Promise<typeof Response> {
+  async fetch(url, method = 'GET', body) {
     log.info(`Fetching URL: ${url.href}`);
     let headers = {
       Authorization: await this.apiAuth.getAuthHeader(),
@@ -287,7 +232,7 @@ export default class Client {
     return this.nodeFetch(url, { method, body, headers });
   }
 
-  async downloadSignedFile(fileUrl: URL, addonId: string): Promise<SignResult> {
+  async downloadSignedFile(fileUrl, addonId) {
     const filename = fileUrl.pathname.split('/').pop(); // get the name from fileUrl
     const dest = `${this.downloadDir}/${filename}`;
     try {
@@ -306,10 +251,7 @@ export default class Client {
     };
   }
 
-  async saveToFile(
-    contents: typeof Response.body,
-    destPath: string
-  ): Promise<any> {
+  async saveToFile(contents, destPath) {
     return promisify(pipeline)(contents, createWriteStream(destPath));
   }
 
@@ -324,10 +266,7 @@ export default class Client {
   but returning a different hash when the contents are the same in some cases is acceptable
   - a false mismatch does not result in lost data.
   */
-  async hashXpiCrcs(
-    filePath: string,
-    asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile
-  ): Promise<string> {
+  async hashXpiCrcs(filePath, asyncFsReadFile = defaultAsyncFsReadFile) {
     const zip = await JSZip.loadAsync(
       asyncFsReadFile(filePath, { createFolders: true })
     );
@@ -347,15 +286,12 @@ export default class Client {
   }
 
   async getPreviousUuidOrUploadXpi(
-    xpiPath: string,
-    channel: string,
-    savedUploadUuidPath: string,
-    saveUploadUuidToFileFunc: (
-      string,
-      uploadUuidDataType
-    ) => Promise<void> = saveUploadUuidToFile,
-    getUploadUuidFromFileFunc: (string) => Promise<uploadUuidDataType> = getUploadUuidFromFile
-  ): Promise<string> {
+    xpiPath,
+    channel,
+    savedUploadUuidPath,
+    saveUploadUuidToFileFunc = saveUploadUuidToFile,
+    getUploadUuidFromFileFunc = getUploadUuidFromFile
+  ) {
     const [
       {
         uploadUuid: previousUuid,
@@ -383,11 +319,11 @@ export default class Client {
   }
 
   async postNewAddon(
-    uploadUuid: string,
-    savedIdPath: string,
-    metaDataJson: Object,
-    saveIdToFileFunc: (string, string) => Promise<void> = saveIdToFile
-  ): Promise<SignResult> {
+    uploadUuid,
+    savedIdPath,
+    metaDataJson,
+    saveIdToFileFunc = saveIdToFile
+  ) {
     const {
       guid: addonId,
       version: { id: newVersionId },
@@ -403,11 +339,7 @@ export default class Client {
     return this.downloadSignedFile(fileUrl, addonId);
   }
 
-  async putVersion(
-    uploadUuid: string,
-    addonId: string,
-    metaDataJson: Object
-  ): Promise<SignResult> {
+  async putVersion(uploadUuid, addonId, metaDataJson) {
     const {
       version: { id: newVersionId },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
@@ -417,23 +349,6 @@ export default class Client {
     return this.downloadSignedFile(fileUrl, addonId);
   }
 }
-
-type signAddonParams = {|
-  apiKey: string,
-  apiSecret: string,
-  amoBaseUrl: string,
-  timeout: number,
-  id?: string,
-  xpiPath: string,
-  downloadDir: string,
-  channel: string,
-  savedIdPath: string,
-  savedUploadUuidPath: string,
-  metaDataJson?: Object,
-  userAgentString: string,
-  SubmitClient?: typeof Client,
-  ApiAuthClass?: typeof JwtApiAuth,
-|};
 
 export async function signAddon({
   apiKey,
@@ -450,7 +365,7 @@ export async function signAddon({
   userAgentString,
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
-}: signAddonParams): Promise<SignResult> {
+}) {
   try {
     const stats = await fsPromises.stat(xpiPath);
 
@@ -491,10 +406,7 @@ export async function signAddon({
   return client.putVersion(uploadUuid, id, metaDataJson);
 }
 
-export async function saveIdToFile(
-  filePath: string,
-  id: string
-): Promise<void> {
+export async function saveIdToFile(filePath, id) {
   await fsPromises.writeFile(
     filePath,
     [
@@ -507,16 +419,10 @@ export async function saveIdToFile(
   log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
 }
 
-type uploadUuidDataType = {
-  uploadUuid: string,
-  channel: string,
-  xpiCrcHash: string,
-};
-
 export async function saveUploadUuidToFile(
-  filePath: string,
-  { uploadUuid, channel, xpiCrcHash }: uploadUuidDataType
-): Promise<void> {
+  filePath,
+  { uploadUuid, channel, xpiCrcHash }
+) {
   await fsPromises.writeFile(
     filePath,
     JSON.stringify({ uploadUuid, channel, xpiCrcHash })
@@ -527,9 +433,9 @@ export async function saveUploadUuidToFile(
 }
 
 export async function getUploadUuidFromFile(
-  filePath: string,
-  asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile
-): Promise<uploadUuidDataType> {
+  filePath,
+  asyncFsReadFile = defaultAsyncFsReadFile
+) {
   try {
     const content = await asyncFsReadFile(filePath, 'utf-8');
     const { uploadUuid, channel, xpiCrcHash } = JSON.parse(content);

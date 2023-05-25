@@ -1,7 +1,5 @@
-/* @flow */
 import path from 'path';
 import EventEmitter from 'events';
-import tty from 'tty';
 import stream from 'stream';
 import { promisify } from 'util';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -22,8 +20,8 @@ const log = createLogger(import.meta.url);
  * A way to read zip files using promises for all the things.
  */
 export class ZipFile {
-  _zip: any;
-  _close: Promise<void> | null;
+  _zip;
+  _close;
 
   constructor() {
     this._zip = null;
@@ -34,7 +32,7 @@ export class ZipFile {
    * Open a zip file and return a promise that resolves to a yauzl
    * zipfile object.
    */
-  open(...args: Array<any>): Promise<void> {
+  open(...args) {
     return promisify(yauzl.open)(...args).then((zip) => {
       this._zip = zip;
       this._close = new Promise((resolve) => {
@@ -46,7 +44,7 @@ export class ZipFile {
   /**
    * Close the zip file and wait fd to release.
    */
-  close(): Promise<void> | null {
+  close() {
     this._zip.close();
     return this._close;
   }
@@ -57,7 +55,7 @@ export class ZipFile {
    *
    * The onRead callback receives a single argument, a yauzl Entry object.
    */
-  readEach(onRead: Function): Promise<void> {
+  readEach(onRead) {
     return new Promise((resolve, reject) => {
       if (!this._zip) {
         throw new Error(
@@ -82,7 +80,7 @@ export class ZipFile {
   /*
    * Resolve a promise with an array of all file names in the zip archive.
    */
-  extractFilenames(): Promise<Array<String>> {
+  extractFilenames() {
     return new Promise((resolve, reject) => {
       var fileNames = [];
       this.readEach((entry) => {
@@ -101,7 +99,7 @@ export class ZipFile {
 /*
  * Returns a path to a test fixture file. Invoke it the same as path.join().
  */
-export function fixturePath(...pathParts: Array<string>): string {
+export function fixturePath(...pathParts) {
   return path.join(
     moduleURLToDirname(import.meta.url),
     '..',
@@ -120,7 +118,7 @@ export function fixturePath(...pathParts: Array<string>): string {
  *      // Safely make assertions about the error...
  *    });
  */
-export function makeSureItFails(): Function {
+export function makeSureItFails() {
   return () => {
     throw new Error('This test unexpectedly succeeded without an error');
   };
@@ -156,11 +154,7 @@ export function makeSureItFails(): Function {
  */
 
 // $FlowIgnore: fake can return any kind of object and fake a defined set of methods for testing.
-export function fake<T>(
-  original: Object,
-  methods: Object = {},
-  skipProperties: Array<string> = []
-): T {
+export function fake(original, methods = {}, skipProperties = []) {
   const stub = {};
   // Provide stubs for all original members (fallback to Object if original
   // doesn't have a defined prototype):
@@ -198,12 +192,12 @@ export function fake<T>(
 }
 
 export class StubChildProcess extends EventEmitter {
-  stderr: EventEmitter = new EventEmitter();
-  stdout: EventEmitter = new EventEmitter();
-  kill: any = sinon.spy(() => {});
+  stderr = new EventEmitter();
+  stdout = new EventEmitter();
+  kill = sinon.spy(() => {});
 }
 
-export function createFakeProcess(): any {
+export function createFakeProcess() {
   return fake(process, {}, ['EventEmitter', 'stdin']);
 }
 
@@ -211,7 +205,7 @@ export function createFakeProcess(): any {
  * Returns a fake FirefoxRDPClient as would be returned by
  * rdp-module connectToFirefox().
  */
-export function fakeFirefoxClient(): any {
+export function fakeFirefoxClient() {
   return {
     disconnect: sinon.spy(() => {}),
     on: () => {},
@@ -225,16 +219,16 @@ export function fakeFirefoxClient(): any {
  * By default, the error code will be ECONNREFUSED.
  */
 export class TCPConnectError extends ExtendableError {
-  code: string;
-  constructor(msg: string = 'simulated connection error') {
+  code;
+  constructor(msg = 'simulated connection error') {
     super(msg);
     this.code = 'ECONNREFUSED';
   }
 }
 
 export class ErrorWithCode extends Error {
-  code: string;
-  constructor(code: ?string, message: ?string) {
+  code;
+  constructor(code, message) {
     super(`${code || ''}: ${message || 'pretend this is a system error'}`);
     this.code = code || 'SOME_CODE';
   }
@@ -256,39 +250,36 @@ export const basicManifest = {
 /*
  * A basic manifest fixture without an applications property.
  */
-export const manifestWithoutApps: any = deepcopy(basicManifest);
+export const manifestWithoutApps = deepcopy(basicManifest);
 delete manifestWithoutApps.applications;
 
 /*
  * A class that implements an empty IExtensionRunner interface.
  */
 export class FakeExtensionRunner {
-  params: any;
+  params;
 
-  constructor(params: any) {
+  constructor(params) {
     this.params = params;
   }
 
-  getName(): string {
+  getName() {
     return 'Fake Extension Runner';
   }
 
   async run() {}
   async exit() {}
-  async reloadAllExtensions(): Promise<any> {
+  async reloadAllExtensions() {
     return [];
   }
-  async reloadExtensionBySourceDir(sourceDir: string): Promise<any> {
+  async reloadExtensionBySourceDir(sourceDir) {
     const runnerName = this.getName();
     return [{ runnerName, sourceDir }];
   }
-  registerCleanup(fn: Function) {} // eslint-disable-line no-unused-vars
+  registerCleanup(fn) {} // eslint-disable-line no-unused-vars
 }
 
-export function getFakeFirefox(
-  implementations: Object = {},
-  port: number = 6005
-): any {
+export function getFakeFirefox(implementations = {}, port = 6005) {
   const profile = {}; // empty object just to avoid errors.
   const firefox = () => Promise.resolve();
   const allImplementations = {
@@ -302,7 +293,7 @@ export function getFakeFirefox(
   return fake(defaultFirefoxApp, allImplementations);
 }
 
-export function getFakeRemoteFirefox(implementations: Object = {}): any {
+export function getFakeRemoteFirefox(implementations = {}) {
   return fake(RemoteFirefox.prototype, implementations);
 }
 
@@ -316,12 +307,12 @@ class FakeStdin extends stream.Readable {
   _read() {}
 }
 
-export function createFakeStdin(): tty.ReadStream {
+export function createFakeStdin() {
   // $FlowIgnore: flow complains that the return value is incompatible with tty.ReadStream
   return new FakeStdin();
 }
 
-export function moduleURLToDirname(moduleURL: ?string): string {
+export function moduleURLToDirname(moduleURL) {
   if (!moduleURL) {
     throw new Error('Unexpected undefined module url');
   }
@@ -333,12 +324,7 @@ export function mockModule({
   importerModuleURL,
   namedExports,
   defaultExport,
-}: {
-  moduleURL: string,
-  importerModuleURL: ?string,
-  namedExports?: ?Object,
-  defaultExport?: any,
-}): void {
+}) {
   // Compute the full URL to the module to mock, otherwise
   // quibble will compute the wrong module URL when running
   // on windows (which would be looking as "C:\\C:\\Users\\...").
@@ -352,7 +338,7 @@ export function mockModule({
   global.__webextMocks?.add(fullModuleURL);
 }
 
-export function resetMockModules(): void {
+export function resetMockModules() {
   td.reset();
   global.__webextMocks?.clear();
 }

@@ -1,4 +1,3 @@
-/* @flow */
 import os from 'os';
 import path from 'path';
 import { readFileSync } from 'fs';
@@ -28,25 +27,7 @@ const envPrefix = 'WEB_EXT';
 // by babel-plugin-transform-inline-environment-variables).
 const defaultGlobalEnv = process.env.WEBEXT_BUILD_ENV || 'development';
 
-type ProgramOptions = {
-  absolutePackageDir?: string,
-};
-
-export type VersionGetterFn = (absolutePackageDir: string) => Promise<string>;
-
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
-
-type ExecuteOptions = {
-  checkForUpdates?: Function,
-  systemProcess?: typeof process,
-  logStream?: typeof defaultLogStream,
-  getVersion?: VersionGetterFn,
-  applyConfigToArgv?: typeof defaultApplyConfigToArgv,
-  discoverConfigFiles?: typeof defaultConfigDiscovery,
-  loadJSConfigFile?: typeof defaultLoadJSConfigFile,
-  shouldExitProgram?: boolean,
-  globalEnv?: string | void,
-};
 
 export const AMO_BASE_URL = 'https://addons.mozilla.org/api/v5/';
 
@@ -54,19 +35,16 @@ export const AMO_BASE_URL = 'https://addons.mozilla.org/api/v5/';
  * The command line program.
  */
 export class Program {
-  absolutePackageDir: string;
-  yargs: any;
-  commands: { [key: string]: Function };
-  shouldExitProgram: boolean;
-  verboseEnabled: boolean;
-  options: Object;
-  programArgv: Array<string>;
-  demandedOptions: Object;
+  absolutePackageDir;
+  yargs;
+  commands;
+  shouldExitProgram;
+  verboseEnabled;
+  options;
+  programArgv;
+  demandedOptions;
 
-  constructor(
-    argv: ?Array<string>,
-    { absolutePackageDir = process.cwd() }: ProgramOptions = {}
-  ) {
+  constructor(argv, { absolutePackageDir = process.cwd() } = {}) {
     // This allows us to override the process argv which is useful for
     // testing.
     // NOTE: process.argv.slice(2) removes the path to node and web-ext
@@ -98,12 +76,7 @@ export class Program {
     this.options = {};
   }
 
-  command(
-    name: string,
-    description: string,
-    executor: Function,
-    commandOptions: Object = {}
-  ): Program {
+  command(name, description, executor, commandOptions = {}) {
     this.options[camelCase(name)] = commandOptions;
 
     this.yargs.command(name, description, (yargsForCmd) => {
@@ -133,7 +106,7 @@ export class Program {
     return this;
   }
 
-  setGlobalOptions(options: Object): Program {
+  setGlobalOptions(options) {
     // This is a convenience for setting global options.
     // An option is only global (i.e. available to all sub commands)
     // with the `global` flag so this makes sure every option has it.
@@ -150,7 +123,7 @@ export class Program {
     return this;
   }
 
-  enableVerboseMode(logStream: typeof defaultLogStream, version: string): void {
+  enableVerboseMode(logStream, version) {
     if (this.verboseEnabled) {
       return;
     }
@@ -162,7 +135,7 @@ export class Program {
 
   // Retrieve the yargs argv object and apply any further fix needed
   // on the output of the yargs options parsing.
-  getArguments(): Object {
+  getArguments() {
     // To support looking up required parameters via config files, we need to
     // temporarily disable the requiredArguments validation. Otherwise yargs
     // would exit early. Validation is enforced by the checkRequiredArguments()
@@ -238,7 +211,7 @@ export class Program {
   // read parameters from config files first. Before the program continues, it
   // must call checkRequiredArguments() to ensure that required parameters are
   // defined (in the CLI or in a config file).
-  checkRequiredArguments(adjustedArgv: Object): void {
+  checkRequiredArguments(adjustedArgv) {
     const validationInstance = this.yargs
       .getInternalMethods()
       .getValidationInstance();
@@ -247,7 +220,7 @@ export class Program {
 
   // Remove WEB_EXT_* environment vars that are not a global cli options
   // or an option supported by the current command (See #793).
-  cleanupProcessEnvConfigs(systemProcess: typeof process) {
+  cleanupProcessEnvConfigs(systemProcess) {
     const cmd = yargsParser(this.programArgv)._[0];
     const env = systemProcess.env || {};
     const toOptionKey = (k) =>
@@ -279,7 +252,7 @@ export class Program {
     loadJSConfigFile = defaultLoadJSConfigFile,
     shouldExitProgram = true,
     globalEnv = defaultGlobalEnv,
-  }: ExecuteOptions = {}): Promise<void> {
+  } = {}) {
     this.shouldExitProgram = shouldExitProgram;
     this.yargs.exitProcess(this.shouldExitProgram);
 
@@ -377,17 +350,14 @@ export class Program {
 }
 
 //A defintion of type of argument for defaultVersionGetter
-type VersionGetterOptions = {
-  globalEnv?: string,
-};
 
 export async function defaultVersionGetter(
-  absolutePackageDir: string,
-  { globalEnv = defaultGlobalEnv }: VersionGetterOptions = {}
-): Promise<string> {
+  absolutePackageDir,
+  { globalEnv = defaultGlobalEnv } = {}
+) {
   if (globalEnv === 'production') {
     log.debug('Getting the version from package.json');
-    const packageData: any = readFileSync(
+    const packageData = readFileSync(
       path.join(absolutePackageDir, 'package.json')
     );
     return JSON.parse(packageData).version;
@@ -404,15 +374,8 @@ export async function defaultVersionGetter(
 
 // TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
-type MainParams = {
-  getVersion?: VersionGetterFn,
-  commands?: Object,
-  argv: Array<any>,
-  runOptions?: Object,
-};
-
-export function throwUsageErrorIfArray(errorMessage: string): any {
-  return (value: any): any => {
+export function throwUsageErrorIfArray(errorMessage) {
+  return (value) => {
     if (Array.isArray(value)) {
       throw new UsageError(errorMessage);
     }
@@ -421,14 +384,14 @@ export function throwUsageErrorIfArray(errorMessage: string): any {
 }
 
 export async function main(
-  absolutePackageDir: string,
+  absolutePackageDir,
   {
     getVersion = defaultVersionGetter,
     commands = defaultCommands,
     argv,
     runOptions = {},
-  }: MainParams = {}
-): Promise<any> {
+  } = {}
+) {
   const program = new Program(argv, { absolutePackageDir });
   const version = await getVersion(absolutePackageDir);
 

@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { describe, it } from 'mocha';
@@ -419,7 +418,7 @@ describe('program.Program', () => {
 describe('program.main', () => {
   function execProgram(
     argv,
-    { projectRoot = '', runOptions, ...mainOptions }: Object = {}
+    { projectRoot = '', runOptions, ...mainOptions } = {}
   ) {
     return main(projectRoot, {
       argv,
@@ -435,11 +434,7 @@ describe('program.main', () => {
     });
   }
 
-  type MakeConfigLoaderParams = {|
-    configObjects: { [fileName: string]: Object },
-  |};
-
-  function makeConfigLoader({ configObjects }: MakeConfigLoaderParams) {
+  function makeConfigLoader({ configObjects }) {
     return (fileName) => {
       const conf = configObjects[fileName];
       if (!conf) {

@@ -1,49 +1,14 @@
-/* @flow */
-
 import readline from 'readline';
 
-import type Watchpack from 'watchpack';
-
-import type {
-  IExtensionRunner, // eslint-disable-line import/named
-  ExtensionRunnerReloadResult,
-} from './base';
 import { WebExtError } from '../errors.js';
-import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
-import type { FirefoxAndroidExtensionRunnerParams } from './firefox-android.js';
-import type { FirefoxDesktopExtensionRunnerParams } from './firefox-desktop.js';
-import type { ChromiumExtensionRunnerParams } from './chromium.js';
 import { createLogger } from '../util/logger.js';
-import type { FileFilterCreatorFn } from '../util/file-filter.js';
 import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
 import { isTTY, setRawMode } from '../util/stdin.js';
 import defaultSourceWatcher from '../watcher.js';
-import type { OnSourceChangeFn } from '../watcher';
 
 const log = createLogger(import.meta.url);
 
-export type ExtensionRunnerConfig =
-  | {|
-      target: 'firefox-desktop',
-      params: FirefoxDesktopExtensionRunnerParams,
-    |}
-  | {|
-      target: 'firefox-android',
-      params: FirefoxAndroidExtensionRunnerParams,
-    |}
-  | {|
-      target: 'chromium',
-      params: ChromiumExtensionRunnerParams,
-    |};
-
-export type MultiExtensionRunnerParams = {|
-  runners: Array<IExtensionRunner>,
-  desktopNotifications: typeof defaultDesktopNotifications,
-|};
-
-export async function createExtensionRunner(
-  config: ExtensionRunnerConfig
-): Promise<IExtensionRunner> {
+export async function createExtensionRunner(config) {
   switch (config.target) {
     case 'firefox-desktop': {
       const { FirefoxDesktopExtensionRunner } = await import(
@@ -72,10 +37,10 @@ export async function createExtensionRunner(
  * a Firefox Desktop instance alongside to a Firefox for Android instance).
  */
 export class MultiExtensionRunner {
-  extensionRunners: Array<IExtensionRunner>;
-  desktopNotifications: typeof defaultDesktopNotifications;
+  extensionRunners;
+  desktopNotifications;
 
-  constructor(params: MultiExtensionRunnerParams) {
+  constructor(params) {
     this.extensionRunners = params.runners;
     this.desktopNotifications = params.desktopNotifications;
   }
@@ -85,7 +50,7 @@ export class MultiExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName(): string {
+  getName() {
     return 'Multi Extension Runner';
   }
 
@@ -93,7 +58,7 @@ export class MultiExtensionRunner {
    * Call the `run` method on all the managed extension runners,
    * and awaits that all the runners has been successfully started.
    */
-  async run(): Promise<void> {
+  async run() {
     const promises = [];
     for (const runner of this.extensionRunners) {
       promises.push(runner.run());
@@ -110,7 +75,7 @@ export class MultiExtensionRunner {
    * Any detected reload error is also logged on the terminal and shows as a
    * desktop notification.
    */
-  async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
+  async reloadAllExtensions() {
     log.debug('Reloading all reloadable add-ons');
 
     const promises = [];
@@ -144,12 +109,10 @@ export class MultiExtensionRunner {
    * Any detected reload error is also logged on the terminal and shows as a
    * desktop notification.
    */
-  async reloadExtensionBySourceDir(
-    sourceDir: string
-  ): Promise<Array<ExtensionRunnerReloadResult>> {
+  async reloadExtensionBySourceDir(sourceDir) {
     log.debug(`Reloading add-on at ${sourceDir}`);
 
-    const promises: Array<Promise<ExtensionRunnerReloadResult>> = [];
+    const promises = [];
     for (const runner of this.extensionRunners) {
       const reloadPromise = runner.reloadExtensionBySourceDir(sourceDir).then(
         () => {
@@ -176,7 +139,7 @@ export class MultiExtensionRunner {
   /**
    * Register a callback to be called when all the managed runners has been exited.
    */
-  registerCleanup(cleanupCallback: Function): void {
+  registerCleanup(cleanupCallback) {
     const promises = [];
 
     // Create a promise for every extension runner managed by this instance,
@@ -199,7 +162,7 @@ export class MultiExtensionRunner {
   /**
    * Exits all the managed runner has been exited.
    */
-  async exit(): Promise<void> {
+  async exit() {
     const promises = [];
     for (const runner of this.extensionRunners) {
       promises.push(runner.exit());
@@ -210,7 +173,7 @@ export class MultiExtensionRunner {
 
   // Private helper methods.
 
-  handleReloadResults(results: Array<ExtensionRunnerReloadResult>): void {
+  handleReloadResults(results) {
     for (const { runnerName, reloadError, sourceDir } of results) {
       if (reloadError instanceof Error) {
         let message = 'Error occurred while reloading';
@@ -234,19 +197,6 @@ export class MultiExtensionRunner {
 
 // defaultWatcherCreator types and implementation.
 
-export type WatcherCreatorParams = {|
-  reloadExtension: (string) => void,
-  sourceDir: string,
-  watchFile?: Array<string>,
-  watchIgnored?: Array<string>,
-  artifactsDir: string,
-  onSourceChange?: OnSourceChangeFn,
-  ignoreFiles?: Array<string>,
-  createFileFilter?: FileFilterCreatorFn,
-|};
-
-export type WatcherCreatorFn = (params: WatcherCreatorParams) => Watchpack;
-
 export function defaultWatcherCreator({
   reloadExtension,
   sourceDir,
@@ -256,7 +206,7 @@ export function defaultWatcherCreator({
   ignoreFiles,
   onSourceChange = defaultSourceWatcher,
   createFileFilter = defaultFileFilterCreator,
-}: WatcherCreatorParams): Watchpack {
+}) {
   const fileFilter = createFileFilter({ sourceDir, artifactsDir, ignoreFiles });
   return onSourceChange({
     sourceDir,
@@ -270,22 +220,6 @@ export function defaultWatcherCreator({
 
 // defaultReloadStrategy types and implementation.
 
-export type ReloadStrategyParams = {|
-  extensionRunner: IExtensionRunner,
-  sourceDir: string,
-  watchFile?: Array<string>,
-  watchIgnored?: Array<string>,
-  artifactsDir: string,
-  ignoreFiles?: Array<string>,
-  noInput?: boolean,
-|};
-
-export type ReloadStrategyOptions = {
-  createWatcher?: WatcherCreatorFn,
-  stdin?: stream$Readable,
-  kill?: (pid: number, signal?: string | number) => void,
-};
-
 export function defaultReloadStrategy(
   {
     artifactsDir,
@@ -295,20 +229,20 @@ export function defaultReloadStrategy(
     sourceDir,
     watchFile,
     watchIgnored,
-  }: ReloadStrategyParams,
+  },
   {
     createWatcher = defaultWatcherCreator,
     stdin = process.stdin,
     // $FlowIgnore: ignore method-unbinding.
     kill = process.kill,
-  }: ReloadStrategyOptions = {}
-): void {
+  } = {}
+) {
   const allowInput = !noInput;
   if (!allowInput) {
     log.debug('Input has been disabled because of noInput==true');
   }
 
-  const watcher: Watchpack = createWatcher({
+  const watcher = createWatcher({
     reloadExtension: (watchedSourceDir) => {
       extensionRunner.reloadExtensionBySourceDir(watchedSourceDir);
     },

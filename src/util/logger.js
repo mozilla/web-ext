@@ -1,4 +1,3 @@
-/* @flow */
 import { fileURLToPath } from 'url';
 
 import bunyan, {
@@ -8,50 +7,20 @@ import bunyan, {
 
 // Bunyan-related Flow types
 
-export type TRACE = 10;
-export type DEBUG = 20;
-export type INFO = 30;
-export type WARN = 40;
-export type ERROR = 50;
-export type FATAL = 60;
-
-export type BunyanLogLevel = TRACE | DEBUG | INFO | WARN | ERROR | FATAL;
-
-export type BunyanLogEntry = {|
-  name: string,
-  msg: string,
-  level: BunyanLogLevel,
-|};
-
-export type Logger = {
-  debug: (msg: string, ...args: any) => void,
-  error: (msg: string, ...args: any) => void,
-  info: (msg: string, ...args: any) => void,
-  warn: (msg: string, ...args: any) => void,
-};
-
 // ConsoleStream types and implementation.
 
-export type ConsoleStreamParams = {
-  verbose?: boolean,
-};
-
-export type ConsoleOptions = {
-  localProcess?: typeof process,
-};
-
 export class ConsoleStream {
-  verbose: boolean;
-  isCapturing: boolean;
-  capturedMessages: Array<string>;
+  verbose;
+  isCapturing;
+  capturedMessages;
 
-  constructor({ verbose = false }: ConsoleStreamParams = {}) {
+  constructor({ verbose = false } = {}) {
     this.verbose = verbose;
     this.isCapturing = false;
     this.capturedMessages = [];
   }
 
-  format({ name, msg, level }: BunyanLogEntry): string {
+  format({ name, msg, level }) {
     const prefix = this.verbose ? `[${name}][${nameFromLevel[level]}] ` : '';
     return `${prefix}${msg}\n`;
   }
@@ -60,11 +29,8 @@ export class ConsoleStream {
     this.verbose = true;
   }
 
-  write(
-    packet: BunyanLogEntry,
-    { localProcess = process }: ConsoleOptions = {}
-  ): void {
-    const thisLevel: BunyanLogLevel = this.verbose ? bunyan.TRACE : bunyan.INFO;
+  write(packet, { localProcess = process } = {}) {
+    const thisLevel = this.verbose ? bunyan.TRACE : bunyan.INFO;
     if (packet.level >= thisLevel) {
       const msg = this.format(packet);
       if (this.isCapturing) {
@@ -84,7 +50,7 @@ export class ConsoleStream {
     this.capturedMessages = [];
   }
 
-  flushCapturedLogs({ localProcess = process }: ConsoleOptions = {}) {
+  flushCapturedLogs({ localProcess = process } = {}) {
     for (const msg of this.capturedMessages) {
       localProcess.stdout.write(msg);
     }
@@ -92,31 +58,14 @@ export class ConsoleStream {
   }
 }
 
-export const consoleStream: ConsoleStream = new ConsoleStream();
+export const consoleStream = new ConsoleStream();
 
 // createLogger types and implementation.
 
-export type BunyanStreamConfig = {
-  type: string,
-  stream: ConsoleStream,
-};
-
-export type CreateBunyanLogParams = {
-  name: string,
-  level: BunyanLogLevel,
-  streams: Array<BunyanStreamConfig>,
-};
-
-export type CreateBunyanLogFn = (params: CreateBunyanLogParams) => Logger;
-
-export type CreateLoggerOptions = {
-  createBunyanLog: CreateBunyanLogFn,
-};
-
 export function createLogger(
-  moduleURL?: string,
-  { createBunyanLog = defaultLogCreator }: CreateLoggerOptions = {}
-): Logger {
+  moduleURL,
+  { createBunyanLog = defaultLogCreator } = {}
+) {
   return createBunyanLog({
     // Strip the leading src/ from file names (which is in all file names) to
     // make the name less redundant.

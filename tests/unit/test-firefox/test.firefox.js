@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import deepcopy from 'deepcopy';
@@ -53,10 +52,7 @@ function createFakeProfileFinder(profilesDirPath) {
   return FakeProfileFinder;
 }
 
-async function createFakeProfilesIni(
-  dirPath: string,
-  profilesDefs: Array<Object>
-): Promise<void> {
+async function createFakeProfilesIni(dirPath, profilesDefs) {
   let content = '';
 
   for (const [idx, profile] of profilesDefs.entries()) {
@@ -97,15 +93,11 @@ describe('firefox', () => {
 
     // TODO: This object should accept dynamic properties since those are passed to firefox.run()
 
-    type RunFirefoxOptions = {
-      profile?: typeof FirefoxProfile,
-    };
-
     function runFirefox({
       // $FlowIgnore: for the purpose of this test, fakeProfile includes only a subset of the expected properties.
       profile = fakeProfile,
       ...args
-    }: RunFirefoxOptions = {}) {
+    } = {}) {
       // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
@@ -655,11 +647,6 @@ describe('firefox', () => {
 
   describe('defaultCreateProfileFinder', () => {
     // Define the params type for the prepareProfileFinderTest helper.
-    type PrepareProfileFinderTestParams = {
-      readProfiles?: Function,
-      getPath?: Function,
-      profiles?: Array<{ Name: string }>,
-    };
 
     const defaultFakeProfiles = [{ Name: 'someName' }];
 
@@ -675,7 +662,7 @@ describe('firefox', () => {
       readProfiles = defaultReadProfilesMock,
       getPath = defaultGetPathMock,
       profiles = defaultFakeProfiles,
-    }: PrepareProfileFinderTestParams = {}) {
+    } = {}) {
       const fakeReadProfiles = sinon.spy(readProfiles);
       const fakeGetPath = sinon.spy(getPath);
       const fakeProfiles = profiles;
@@ -882,7 +869,7 @@ describe('firefox', () => {
   });
 
   describe('installExtension', () => {
-    function setUp(testPromise: Function) {
+    function setUp(testPromise) {
       return withTempDir((tmpDir) => {
         const data = {
           extensionPath: fixturePath('minimal_extension-1.0.zip'),

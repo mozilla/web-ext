@@ -1,4 +1,3 @@
-/* @flow */
 import { fs } from 'mz';
 
 import defaultBuildExtension from './build.js';
@@ -14,58 +13,10 @@ import {
   MultiExtensionRunner as DefaultMultiExtensionRunner,
 } from '../extension-runners/index.js';
 // Import objects that are only used as Flow types.
-import type { FirefoxPreferences } from '../firefox/preferences.js';
 
 const log = createLogger(import.meta.url);
 
 // Run command types and implementation.
-
-export type CmdRunParams = {|
-  artifactsDir: string,
-  browserConsole: boolean,
-  devtools: boolean,
-  pref?: FirefoxPreferences,
-  firefox: string,
-  firefoxProfile?: string,
-  profileCreateIfMissing?: boolean,
-  ignoreFiles?: Array<string>,
-  keepProfileChanges: boolean,
-  noInput?: boolean,
-  noReload: boolean,
-  preInstall: boolean,
-  sourceDir: string,
-  watchFile?: Array<string>,
-  watchIgnored?: Array<string>,
-  startUrl?: Array<string>,
-  target?: Array<string>,
-  args?: Array<string>,
-  firefoxPreview: Array<string>,
-
-  // Android CLI options.
-  adbBin?: string,
-  adbHost?: string,
-  adbPort?: string,
-  adbDevice?: string,
-  adbDiscoveryTimeout?: number,
-  adbRemoveOldArtifacts?: boolean,
-  firefoxApk?: string,
-  firefoxApkComponent?: string,
-
-  // Chromium Desktop CLI options.
-  chromiumBinary?: string,
-  chromiumProfile?: string,
-|};
-
-export type CmdRunOptions = {
-  buildExtension: typeof defaultBuildExtension,
-  desktopNotifications: typeof defaultDesktopNotifications,
-  firefoxApp: typeof defaultFirefoxApp,
-  firefoxClient: typeof defaultFirefoxClient,
-  reloadStrategy: typeof defaultReloadStrategy,
-  shouldExitProgram?: boolean,
-  MultiExtensionRunner?: typeof DefaultMultiExtensionRunner,
-  getValidatedManifest?: typeof defaultGetValidatedManifest,
-};
 
 export default async function run(
   {
@@ -100,7 +51,7 @@ export default async function run(
     // Chromium CLI options.
     chromiumBinary,
     chromiumProfile,
-  }: CmdRunParams,
+  },
   {
     buildExtension = defaultBuildExtension,
     desktopNotifications = defaultDesktopNotifications,
@@ -109,8 +60,8 @@ export default async function run(
     reloadStrategy = defaultReloadStrategy,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
-  }: CmdRunOptions = {}
-): Promise<DefaultMultiExtensionRunner> {
+  } = {}
+) {
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
     log.info(
@@ -130,7 +81,7 @@ export default async function run(
 
   // Create an alias for --pref since it has been transformed into an
   // object containing one or more preferences.
-  const customPrefs: FirefoxPreferences = { ...pref };
+  const customPrefs = { ...pref };
   if (firefoxPreview.includes('mv3')) {
     log.info('Configuring Firefox preferences for Manifest V3');
     customPrefs['extensions.manifestV3.enabled'] = true;
@@ -213,7 +164,7 @@ export default async function run(
       firefoxApp,
       firefoxClient,
       desktopNotifications: defaultDesktopNotifications,
-      buildSourceDir: (extensionSourceDir: string, tmpArtifactsDir: string) => {
+      buildSourceDir: (extensionSourceDir, tmpArtifactsDir) => {
         return buildExtension(
           {
             sourceDir: extensionSourceDir,

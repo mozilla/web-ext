@@ -1,47 +1,19 @@
-/* @flow */
-
 /**
  * This module provide an ExtensionRunner subclass that manage an extension executed
  * in a Firefox for Desktop instance.
  */
 
 // Import flow types from npm dependencies.
-import type FirefoxProfile from 'firefox-profile';
 
 import {
   MultiExtensionsReloadError,
   RemoteTempInstallNotSupported,
   WebExtError,
 } from '../errors.js';
-import * as defaultFirefoxApp from '../firefox/index.js';
-import { connectWithMaxRetries as defaultFirefoxConnector } from '../firefox/remote.js';
 import { createLogger } from '../util/logger.js';
 // Import flow types from project files.
-import type { FirefoxRDPResponseAddon, RemoteFirefox } from '../firefox/remote';
-import type {
-  ExtensionRunnerParams,
-  ExtensionRunnerReloadResult,
-} from './base';
-import type { FirefoxPreferences } from '../firefox/preferences';
-import type { FirefoxInfo } from '../firefox/index'; // eslint-disable-line import/named
 
-type FirefoxDesktopSpecificRunnerParams = {|
-  customPrefs?: FirefoxPreferences,
-  browserConsole: boolean,
-  devtools: boolean,
-  firefoxBinary: string,
-  preInstall: boolean,
-
-  // Firefox desktop injected dependencies.
-  firefoxApp: typeof defaultFirefoxApp,
-  firefoxClient: typeof defaultFirefoxConnector,
-|};
-
-export type FirefoxDesktopExtensionRunnerParams = {|
-  ...ExtensionRunnerParams,
-  // Firefox desktop CLI params.
-  ...FirefoxDesktopSpecificRunnerParams,
-|};
+// eslint-disable-line import/named
 
 const log = createLogger(import.meta.url);
 
@@ -49,15 +21,15 @@ const log = createLogger(import.meta.url);
  * Implements an IExtensionRunner which manages a Firefox Desktop instance.
  */
 export class FirefoxDesktopExtensionRunner {
-  cleanupCallbacks: Set<Function>;
-  params: FirefoxDesktopExtensionRunnerParams;
-  profile: FirefoxProfile;
+  cleanupCallbacks;
+  params;
+  profile;
   // Map extensions sourceDir to their related addon ids.
-  reloadableExtensions: Map<string, string>;
-  remoteFirefox: RemoteFirefox;
-  runningInfo: FirefoxInfo;
+  reloadableExtensions;
+  remoteFirefox;
+  runningInfo;
 
-  constructor(params: FirefoxDesktopExtensionRunnerParams) {
+  constructor(params) {
     this.params = params;
 
     this.reloadableExtensions = new Map();
@@ -69,14 +41,14 @@ export class FirefoxDesktopExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName(): string {
+  getName() {
     return 'Firefox Desktop';
   }
 
   /**
    * Setup the Firefox Profile and run a Firefox Desktop instance.
    */
-  async run(): Promise<void> {
+  async run() {
     // Get a firefox profile with the custom Prefs set (a new or a cloned one).
     // Pre-install extensions as proxy if needed (and disable auto-reload if you do)
     await this.setupProfileDir();
@@ -92,7 +64,7 @@ export class FirefoxDesktopExtensionRunner {
    * Reloads all the extensions, collect any reload error and resolves to
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
-  async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
+  async reloadAllExtensions() {
     const runnerName = this.getName();
     const reloadErrors = new Map();
     for (const { sourceDir } of this.params.extensions) {
@@ -118,9 +90,7 @@ export class FirefoxDesktopExtensionRunner {
    * Reloads a single extension, collect any reload error and resolves to
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
-  async reloadExtensionBySourceDir(
-    extensionSourceDir: string
-  ): Promise<Array<ExtensionRunnerReloadResult>> {
+  async reloadExtensionBySourceDir(extensionSourceDir) {
     const runnerName = this.getName();
     const addonId = this.reloadableExtensions.get(extensionSourceDir);
 
@@ -157,14 +127,14 @@ export class FirefoxDesktopExtensionRunner {
    * (e.g. the Firefox instance exits or the user has requested web-ext
    * to exit).
    */
-  registerCleanup(fn: Function): void {
+  registerCleanup(fn) {
     this.cleanupCallbacks.add(fn);
   }
 
   /**
    * Exits the runner, by closing the managed Firefox instance.
    */
-  async exit(): Promise<void> {
+  async exit() {
     if (!this.runningInfo || !this.runningInfo.firefox) {
       throw new WebExtError('No firefox instance is currently running');
     }
@@ -270,7 +240,7 @@ export class FirefoxDesktopExtensionRunner {
         try {
           const addonId = await remoteFirefox
             .installTemporaryAddon(extension.sourceDir, devtools)
-            .then((installResult: FirefoxRDPResponseAddon) => {
+            .then((installResult) => {
               return installResult.addon.id;
             });
 

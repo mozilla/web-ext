@@ -1,4 +1,3 @@
-/* @flow */
 import { promisify } from 'util';
 
 import tmp from 'tmp';
@@ -7,8 +6,6 @@ import { createLogger } from './logger.js';
 import { multiArgsPromisedFn, promisifyCustom } from './promisify.js';
 
 const log = createLogger(import.meta.url);
-
-export type MakePromiseCallback = (tmpDir: TempDir) => any;
 
 tmp.dir[promisifyCustom] = multiArgsPromisedFn(tmp.dir);
 
@@ -29,7 +26,7 @@ const createTempDir = promisify(tmp.dir);
  * );
  *
  */
-export function withTempDir(makePromise: MakePromiseCallback): Promise<any> {
+export function withTempDir(makePromise) {
   const tmpDir = new TempDir();
   return tmpDir
     .create()
@@ -56,8 +53,8 @@ export function withTempDir(makePromise: MakePromiseCallback): Promise<any> {
  *
  */
 export class TempDir {
-  _path: string | void;
-  _removeTempDir: Function | void;
+  _path;
+  _removeTempDir;
 
   constructor() {
     this._path = undefined;
@@ -68,7 +65,7 @@ export class TempDir {
    * Returns a promise that is fulfilled when the temp directory has
    * been created.
    */
-  create(): Promise<TempDir> {
+  create() {
     return createTempDir({
       prefix: 'tmp-web-ext-',
       // This allows us to remove a non-empty tmp dir.
@@ -90,7 +87,7 @@ export class TempDir {
   /*
    * Get the absolute path of the temp directory.
    */
-  path(): string {
+  path() {
     if (!this._path) {
       throw new Error('You cannot access path() before calling create()');
     }
@@ -104,7 +101,7 @@ export class TempDir {
    * This is intended for use in a promise like
    * Promise().catch(tmp.errorHandler())
    */
-  errorHandler(): Function {
+  errorHandler() {
     return async (error) => {
       await this.remove();
       throw error;
@@ -117,7 +114,7 @@ export class TempDir {
    * This is intended for use in a promise like
    * Promise().then(tmp.successHandler())
    */
-  successHandler(): Function {
+  successHandler() {
     return async (promiseResult) => {
       await this.remove();
       return promiseResult;
@@ -127,7 +124,7 @@ export class TempDir {
   /*
    * Remove the temp directory.
    */
-  remove(): Promise<void> | void {
+  remove() {
     if (!this._removeTempDir) {
       return;
     }

@@ -1,5 +1,3 @@
-/* @flow */
-
 import EventEmitter from 'events';
 
 import { assert } from 'chai';
@@ -9,7 +7,6 @@ import * as sinon from 'sinon';
 
 import { consoleStream } from '../../../src/util/logger.js';
 import { FirefoxAndroidExtensionRunner } from '../../../src/extension-runners/firefox-android.js';
-import type { FirefoxAndroidExtensionRunnerParams } from '../../../src/extension-runners/firefox-android';
 import { UsageError, WebExtError } from '../../../src/errors.js';
 import {
   basicManifest,
@@ -38,14 +35,6 @@ const fakeRDPUnixSocketFile =
 const fakeRDPUnixAbstractSocketFile =
   '@org.mozilla.firefox/firefox-debugger-socket';
 
-type PrepareParams = {
-  params?: Object,
-  debuggerPort?: number,
-  fakeFirefoxApp?: Object,
-  fakeRemoteFirefox?: Object,
-  fakeADBUtils?: Object,
-};
-
 // Reduce the waiting time during tests.
 FirefoxAndroidExtensionRunner.unixSocketDiscoveryRetryInterval = 0;
 
@@ -55,7 +44,7 @@ function prepareExtensionRunnerParams({
   fakeRemoteFirefox,
   fakeADBUtils,
   params,
-}: PrepareParams = {}) {
+} = {}) {
   const fakeRemoteFirefoxClient = new EventEmitter();
   const remoteFirefox = getFakeRemoteFirefox({
     installTemporaryAddon: sinon.spy(() => Promise.resolve(tempInstallResult)),
@@ -64,7 +53,7 @@ function prepareExtensionRunnerParams({
   remoteFirefox.client = fakeRemoteFirefoxClient;
 
   // $FlowIgnore: allow overriden params for testing purpose.
-  const runnerParams: FirefoxAndroidExtensionRunnerParams = {
+  const runnerParams = {
     extensions: [
       {
         sourceDir: '/fake/sourceDir',
@@ -855,7 +844,7 @@ describe('util/extension-runners/firefox-android', () => {
     });
 
     it('raises an error when unable to find an android version number', async () => {
-      async function expectInvalidVersionError(version: any) {
+      async function expectInvalidVersionError(version) {
         const { params, fakeADBUtils } = prepareSelectedDeviceAndAPKParams();
 
         fakeADBUtils.getAndroidVersionNumber = sinon.spy(() => {

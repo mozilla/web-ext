@@ -1,4 +1,3 @@
-/* @flow */
 import { afterEach, describe, it } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -13,7 +12,7 @@ describe('webExt', () => {
   });
 
   describe('exposes commands', () => {
-    let stub: any;
+    let stub;
     afterEach(() => {
       resetMockModules();
       stub = undefined;
@@ -37,7 +36,7 @@ describe('webExt', () => {
         stub?.returns(expectedResult);
 
         const { default: webExtModule } = await import('../../src/main.js');
-        const runCommand: Function = webExtModule.cmd[cmd];
+        const runCommand = webExtModule.cmd[cmd];
         const result = await runCommand(params, options);
 
         // Check whether parameters and return values are forwarded as-is.

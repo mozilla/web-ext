@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { it, describe } from 'mocha';

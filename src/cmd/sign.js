@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { signAddon as defaultAddonSigner } from 'sign-addon';
@@ -8,17 +7,13 @@ import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
 import { prepareArtifactsDir } from '../util/artifacts.js';
 import { createLogger } from '../util/logger.js';
 import getValidatedManifest, { getManifestId } from '../util/manifest.js';
-import type { ExtensionManifest } from '../util/manifest.js';
 import {
   defaultAsyncFsReadFile,
   signAddon as defaultSubmitAddonSigner,
   saveIdToFile,
 } from '../util/submit-addon.js';
-import type { SignResult } from '../util/submit-addon.js';
 import { withTempDir } from '../util/temp-dir.js';
 import { isTTY } from '../util/stdin.js';
-
-export type { SignResult };
 
 const log = createLogger(import.meta.url);
 
@@ -26,34 +21,6 @@ export const extensionIdFile = '.web-extension-id';
 export const uploadUuidFile = '.amo-upload-uuid';
 
 // Sign command types and implementation.
-
-export type SignParams = {|
-  amoBaseUrl: string,
-  apiKey: string,
-  apiProxy?: string,
-  apiSecret: string,
-  apiUrlPrefix: string,
-  useSubmissionApi?: boolean,
-  artifactsDir: string,
-  id?: string,
-  ignoreFiles?: Array<string>,
-  sourceDir: string,
-  timeout: number,
-  disableProgressBar?: boolean,
-  verbose?: boolean,
-  channel?: string,
-  amoMetadata?: string,
-  webextVersion: string,
-|};
-
-export type SignOptions = {
-  build?: typeof defaultBuilder,
-  signAddon?: typeof defaultAddonSigner,
-  submitAddon?: typeof defaultSubmitAddonSigner,
-  preValidatedManifest?: ExtensionManifest,
-  shouldExitProgram?: boolean,
-  asyncFsReadFile?: typeof defaultAsyncFsReadFile,
-};
 
 export default function sign(
   {
@@ -73,15 +40,15 @@ export default function sign(
     channel,
     amoMetadata,
     webextVersion,
-  }: SignParams,
+  },
   {
     build = defaultBuilder,
     preValidatedManifest,
     signAddon = defaultAddonSigner,
     submitAddon = defaultSubmitAddonSigner,
     asyncFsReadFile = defaultAsyncFsReadFile,
-  }: SignOptions = {}
-): Promise<SignResult> {
+  } = {}
+) {
   return withTempDir(async function (tmpDir) {
     await prepareArtifactsDir(artifactsDir);
 
@@ -225,9 +192,9 @@ export default function sign(
 }
 
 export async function getIdFromFile(
-  filePath: string,
-  asyncFsReadFile: typeof defaultAsyncFsReadFile = defaultAsyncFsReadFile
-): Promise<string | void> {
+  filePath,
+  asyncFsReadFile = defaultAsyncFsReadFile
+) {
   let content;
 
   try {

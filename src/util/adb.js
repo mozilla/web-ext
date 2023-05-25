@@ -1,4 +1,3 @@
-/* @flow */
 import ADBKit from '@devicefarmer/adbkit';
 
 import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
@@ -14,22 +13,8 @@ const defaultADB = ADBKit.default;
 
 const log = createLogger(import.meta.url);
 
-export type ADBUtilsParams = {|
-  adb?: typeof defaultADB,
-  // ADB configs.
-  adbBin?: string,
-  adbHost?: string,
-  adbPort?: string,
-  adbDevice?: string,
-|};
-
-export type DiscoveryParams = {
-  maxDiscoveryTime: number,
-  retryInterval: number,
-};
-
 // Helper function used to raise an UsageError when the adb binary has not been found.
-async function wrapADBCall(asyncFn: (...any) => Promise<any>): Promise<any> {
+async function wrapADBCall(asyncFn) {
   try {
     return await asyncFn();
   } catch (error) {
@@ -49,17 +34,17 @@ async function wrapADBCall(asyncFn: (...any) => Promise<any>): Promise<any> {
 }
 
 export default class ADBUtils {
-  params: ADBUtilsParams;
-  adb: typeof defaultADB;
-  adbClient: any; // TODO: better flow typing here.
+  params;
+  adb;
+  adbClient; // TODO: better flow typing here.
 
   // Map<deviceId -> artifactsDir>
-  artifactsDirMap: Map<string, string>;
+  artifactsDirMap;
   // Toggled when the user wants to abort the RDP Unix Socket discovery loop
   // while it is still executing.
-  userAbortDiscovery: boolean;
+  userAbortDiscovery;
 
-  constructor(params: ADBUtilsParams) {
+  constructor(params) {
     this.params = params;
 
     const { adb, adbBin, adbHost, adbPort } = params;
@@ -77,10 +62,7 @@ export default class ADBUtils {
     this.userAbortDiscovery = false;
   }
 
-  runShellCommand(
-    deviceId: string,
-    cmd: string | Array<string>
-  ): Promise<string> {
+  runShellCommand(deviceId, cmd) {
     const { adb, adbClient } = this;
 
     log.debug(`Run adb shell command on ${deviceId}: ${JSON.stringify(cmd)}`);
@@ -93,7 +75,7 @@ export default class ADBUtils {
     }).then((res) => res.toString());
   }
 
-  async discoverDevices(): Promise<Array<string>> {
+  async discoverDevices() {
     const { adbClient } = this;
 
     let devices = [];
@@ -104,10 +86,7 @@ export default class ADBUtils {
     return devices.map((dev) => dev.id);
   }
 
-  async discoverInstalledFirefoxAPKs(
-    deviceId: string,
-    firefoxApk?: string
-  ): Promise<Array<string>> {
+  async discoverInstalledFirefoxAPKs(deviceId, firefoxApk) {
     log.debug(`Listing installed Firefox APKs on ${deviceId}`);
 
     const pmList = await this.runShellCommand(deviceId, [
@@ -135,7 +114,7 @@ export default class ADBUtils {
       });
   }
 
-  async getAndroidVersionNumber(deviceId: string): Promise<number> {
+  async getAndroidVersionNumber(deviceId) {
     const androidVersion = (
       await this.runShellCommand(deviceId, ['getprop', 'ro.build.version.sdk'])
     ).trim();
@@ -154,11 +133,7 @@ export default class ADBUtils {
   }
 
   // Raise an UsageError when the given APK does not have the required runtime permissions.
-  async ensureRequiredAPKRuntimePermissions(
-    deviceId: string,
-    apk: string,
-    permissions: Array<string>
-  ): Promise<void> {
+  async ensureRequiredAPKRuntimePermissions(deviceId, apk, permissions) {
     const permissionsMap = {};
 
     // Initialize every permission to false in the permissions map.
@@ -195,11 +170,11 @@ export default class ADBUtils {
     }
   }
 
-  async amForceStopAPK(deviceId: string, apk: string): Promise<void> {
+  async amForceStopAPK(deviceId, apk) {
     await this.runShellCommand(deviceId, ['am', 'force-stop', apk]);
   }
 
-  async getOrCreateArtifactsDir(deviceId: string): Promise<string> {
+  async getOrCreateArtifactsDir(deviceId) {
     let artifactsDir = this.artifactsDirMap.get(deviceId);
 
     if (artifactsDir) {
@@ -226,10 +201,7 @@ export default class ADBUtils {
     return artifactsDir;
   }
 
-  async detectOrRemoveOldArtifacts(
-    deviceId: string,
-    removeArtifactDirs?: boolean = false
-  ): Promise<boolean> {
+  async detectOrRemoveOldArtifacts(deviceId, removeArtifactDirs = false) {
     const { adbClient } = this;
 
     log.debug('Checking adb device for existing web-ext artifacts dirs');
@@ -269,7 +241,7 @@ export default class ADBUtils {
     });
   }
 
-  async clearArtifactsDir(deviceId: string): Promise<void> {
+  async clearArtifactsDir(deviceId) {
     const artifactsDir = this.artifactsDirMap.get(deviceId);
 
     if (!artifactsDir) {
@@ -286,11 +258,7 @@ export default class ADBUtils {
     await this.runShellCommand(deviceId, ['rm', '-rf', artifactsDir]);
   }
 
-  async pushFile(
-    deviceId: string,
-    localPath: string,
-    devicePath: string
-  ): Promise<void> {
+  async pushFile(deviceId, localPath, devicePath) {
     const { adbClient } = this;
 
     log.debug(`Pushing ${localPath} to ${devicePath} on ${deviceId}`);
@@ -307,12 +275,7 @@ export default class ADBUtils {
     });
   }
 
-  async startFirefoxAPK(
-    deviceId: string,
-    apk: string,
-    apkComponent: ?string,
-    deviceProfileDir: string
-  ): Promise<void> {
+  async startFirefoxAPK(deviceId, apk, apkComponent, deviceProfileDir) {
     const { adbClient } = this;
 
     log.debug(`Starting ${apk} on ${deviceId}`);
@@ -378,15 +341,15 @@ export default class ADBUtils {
     });
   }
 
-  setUserAbortDiscovery(value: boolean) {
+  setUserAbortDiscovery(value) {
     this.userAbortDiscovery = value;
   }
 
   async discoverRDPUnixSocket(
-    deviceId: string,
-    apk: string,
-    { maxDiscoveryTime, retryInterval }: DiscoveryParams = {}
-  ): Promise<string> {
+    deviceId,
+    apk,
+    { maxDiscoveryTime, retryInterval } = {}
+  ) {
     let rdpUnixSockets = [];
 
     const discoveryStartedAt = Date.now();
@@ -439,7 +402,7 @@ export default class ADBUtils {
     return rdpUnixSockets[0];
   }
 
-  async setupForward(deviceId: string, remote: string, local: string) {
+  async setupForward(deviceId, remote, local) {
     const { adbClient } = this;
 
     // TODO(rpl): we should use adb.listForwards and reuse the existing one if any (especially
@@ -452,15 +415,12 @@ export default class ADBUtils {
   }
 }
 
-export async function listADBDevices(adbBin?: string): Promise<Array<string>> {
+export async function listADBDevices(adbBin) {
   const adbUtils = new ADBUtils({ adbBin });
   return adbUtils.discoverDevices();
 }
 
-export async function listADBFirefoxAPKs(
-  deviceId: string,
-  adbBin?: string
-): Promise<Array<string>> {
+export async function listADBFirefoxAPKs(deviceId, adbBin) {
   const adbUtils = new ADBUtils({ adbBin });
   return adbUtils.discoverInstalledFirefoxAPKs(deviceId);
 }

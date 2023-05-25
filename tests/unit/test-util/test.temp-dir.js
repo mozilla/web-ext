@@ -1,4 +1,3 @@
-/* @flow */
 import { describe, it } from 'mocha';
 import { fs } from 'mz';
 import { assert } from 'chai';

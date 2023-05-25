@@ -1,4 +1,3 @@
-/* @flow */
 import { main } from './program.js';
 import cmd from './cmd/index.js';
 
