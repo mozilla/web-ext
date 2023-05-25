@@ -1,7 +1,7 @@
 export default {
   clean: ['lib/*'],
   watch: {
-    files: ['package.json', 'webpack.config.js', '.flowconfig'],
+    files: ['package.json', 'webpack.config.js'],
     dirs: ['src', 'tests', 'scripts'],
   },
   eslint: {

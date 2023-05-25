@@ -2,5 +2,4 @@ lib/
 !scripts/lib
 coverage/
 artifacts/
-flow-typed/
 commitlint.config.js
