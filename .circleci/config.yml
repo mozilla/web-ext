@@ -171,15 +171,6 @@ jobs:
           suffix: << parameters.nodejs >>
       - run_npm_build:
           node_env: test
-      - unless:
-          condition:
-            equal: [*nodejs_current, << parameters.nodejs >>]
-          steps:
-            # `flow check` does a static analysis, no need to run more than once
-            # per worflow run.
-            - run:
-                name: Turn off flow checks on non current nodejs version
-                command: export CI_SKIP_FLOWCHECK=y
       ## Skip code coverage and the additional legacy bundling tests on jobs
       ## running on the next nodejs versions.
       - unless:
@@ -237,10 +228,6 @@ jobs:
       - run:
           name: run linting checks and unit tests
           command: npm run test
-          environment:
-            # `flow check` does a static analysis, no need to run more than once
-            # per worflow run.
-            CI_SKIP_FLOWCHECK: y
       - run_functional_tests:
           retry_once: "y"
 
