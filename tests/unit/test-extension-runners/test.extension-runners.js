@@ -156,8 +156,8 @@ describe('util/extension-runners', () => {
         },
       });
       const anotherFakeExtensionRunner = createFakeExtensionRunner({
-        getName: () => 'anotherFakeExtensionRunner',
         overriddenMethods: {
+          getName: () => 'anotherFakeExtensionRunner',
           reloadAllExtensions: () => {
             return Promise.reject(new Error('reload error 2'));
           },
