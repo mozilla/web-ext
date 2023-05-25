@@ -1,9 +1,12 @@
 /* @flow */
+import { createHash } from 'crypto';
 import { promises as fsPromises, readFileSync } from 'fs';
 import path from 'path';
 
-import { fs } from 'mz';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import CRC32 from 'crc-32';
 import { assert, expect } from 'chai';
+import JSZip from 'jszip';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
 // eslint-disable-next-line no-shadow
@@ -11,8 +14,10 @@ import { File, FormData, Response } from 'node-fetch';
 
 import { AMO_BASE_URL } from '../../../src/program.js';
 import Client, {
+  getUploadUuidFromFile,
   JwtApiAuth,
   saveIdToFile,
+  saveUploadUuidToFile,
   signAddon,
 } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
@@ -51,19 +56,25 @@ const mockNodeFetch = (
 describe('util.submit-addon', () => {
   describe('signAddon', () => {
     let statStub;
+    let getPreviousUuidOrUploadXpiStub;
     let postNewAddonStub;
     let putVersionStub;
+    const uploadUuid = '{some-upload-uuid}';
 
     beforeEach(() => {
       statStub = sinon
         .stub(fsPromises, 'stat')
         .resolves({ isFile: () => true });
+      getPreviousUuidOrUploadXpiStub = sinon
+        .stub(Client.prototype, 'getPreviousUuidOrUploadXpi')
+        .resolves(uploadUuid);
       postNewAddonStub = sinon.stub(Client.prototype, 'postNewAddon');
       putVersionStub = sinon.stub(Client.prototype, 'putVersion');
     });
 
     afterEach(() => {
       statStub.restore();
+      getPreviousUuidOrUploadXpiStub.restore();
       postNewAddonStub.restore();
       putVersionStub.restore();
     });
@@ -77,6 +88,7 @@ describe('util.submit-addon', () => {
       xpiPath: '/some.xpi',
       channel: 'some-channel',
       savedIdPath: '.id-file',
+      savedUploadUuidPath: '.uuid-file',
       userAgentString: 'web-ext/12.34',
     };
 
@@ -121,20 +133,16 @@ describe('util.submit-addon', () => {
       const xpiPath = 'this/path/xpi.xpi';
       const channel = 'thisChannel';
       const savedIdPath = '.some.id.file';
+      const savedUploadUuidPath = '.some.uuid.file';
       await signAddon({
         ...signAddonDefaults,
         xpiPath,
         channel,
         savedIdPath,
+        savedUploadUuidPath,
       });
       sinon.assert.notCalled(putVersionStub);
-      sinon.assert.calledWith(
-        postNewAddonStub,
-        xpiPath,
-        channel,
-        savedIdPath,
-        {}
-      );
+      sinon.assert.calledWith(postNewAddonStub, uploadUuid, savedIdPath, {});
     });
 
     it('calls putVersion if `id` is defined', async () => {
@@ -148,7 +156,7 @@ describe('util.submit-addon', () => {
         id,
       });
       sinon.assert.notCalled(postNewAddonStub);
-      sinon.assert.calledWith(putVersionStub, xpiPath, channel, id, {});
+      sinon.assert.calledWith(putVersionStub, uploadUuid, id, {});
     });
 
     it('throws error if xpiPath is invalid', async () => {
@@ -179,8 +187,7 @@ describe('util.submit-addon', () => {
       sinon.assert.notCalled(putVersionStub);
       sinon.assert.calledWith(
         postNewAddonStub,
-        signAddonDefaults.xpiPath,
-        signAddonDefaults.channel,
+        uploadUuid,
         signAddonDefaults.savedIdPath,
         metaDataJson
       );
@@ -255,6 +262,268 @@ describe('util.submit-addon', () => {
       const extraBaseUrl = new URL(`${cleanUrl}?#`);
       const client = new Client({ ...clientDefaults, baseUrl: extraBaseUrl });
       assert.equal(client.apiUrl.href, new URL(`${cleanUrl}/addons/`).href);
+    });
+
+    describe('getPreviousUuidOrUploadXpi', () => {
+      it('calls doUploadSubmit if previous hash is different to current', async () => {
+        const oldHash = 'some-hash';
+        const newHash = 'some-other-hash';
+        const oldUuid = '{some-uuid}';
+        const newUuid = '{some-other-uuid}';
+        const channel = 'someChannel';
+        const xpiPath = 'some/path/to/file.xpi';
+        const uuidFilePath = 'some/path/to/.uploadUuid';
+        const client = new Client(clientDefaults);
+        sinon.stub(client, 'hashXpiCrcs').resolves(newHash);
+        const doUploadStub = sinon
+          .stub(client, 'doUploadSubmit')
+          .resolves(newUuid);
+        const saveUploadUuidStub = sinon.stub().resolves();
+        const getUploadUuidStub = sinon
+          .stub()
+          .resolves({ uploadUuid: oldUuid, channel, xpiCrcHash: oldHash });
+
+        const returnedUuid = await client.getPreviousUuidOrUploadXpi(
+          xpiPath,
+          channel,
+          uuidFilePath,
+          saveUploadUuidStub,
+          getUploadUuidStub
+        );
+
+        assert.equal(returnedUuid, newUuid);
+        sinon.assert.calledWith(getUploadUuidStub, uuidFilePath);
+        sinon.assert.calledWith(doUploadStub, xpiPath, channel);
+        sinon.assert.calledWith(saveUploadUuidStub, uuidFilePath, {
+          uploadUuid: newUuid,
+          channel,
+          xpiCrcHash: newHash,
+        });
+      });
+
+      it('skips doUploadSubmit if previous hash is the same as current', async () => {
+        const xpiCrcHash = 'some-hash';
+        const uploadUuid = '{some-uuid}';
+        const xpiPath = 'some/path/to/file.xpi';
+        const uuidFilePath = 'some/path/to/.uploadUuid';
+        const channel = 'someChannel';
+        const client = new Client(clientDefaults);
+        sinon.stub(client, 'hashXpiCrcs').resolves(xpiCrcHash);
+        const doUploadStub = sinon.stub(client, 'doUploadSubmit');
+        const saveUploadUuidStub = sinon.stub();
+        const getUploadUuidStub = sinon
+          .stub()
+          .resolves({ uploadUuid, channel, xpiCrcHash });
+
+        const returnedUuid = await client.getPreviousUuidOrUploadXpi(
+          xpiPath,
+          channel,
+          uuidFilePath,
+          saveUploadUuidStub,
+          getUploadUuidStub
+        );
+
+        assert.equal(returnedUuid, uploadUuid);
+        sinon.assert.calledWith(getUploadUuidStub, uuidFilePath);
+        sinon.assert.notCalled(doUploadStub);
+        sinon.assert.notCalled(saveUploadUuidStub);
+      });
+
+      it('calls doUploadSubmit if the channel is different to current', async () => {
+        const xpiCrcHash = 'some-hash';
+        const oldUuid = '{some-uuid}';
+        const newUuid = '{some-other-uuid}';
+        const xpiPath = 'some/path/to/file.xpi';
+        const uuidFilePath = 'some/path/to/.uploadUuid';
+        const oldChannel = 'someChannel';
+        const newChannel = 'someOtherChannel';
+        const client = new Client(clientDefaults);
+        sinon.stub(client, 'hashXpiCrcs').resolves(xpiCrcHash);
+        const doUploadStub = sinon
+          .stub(client, 'doUploadSubmit')
+          .resolves(newUuid);
+        const saveUploadUuidStub = sinon.stub();
+        const getUploadUuidStub = sinon
+          .stub()
+          .resolves({ uploadUuid: oldUuid, channel: oldChannel, xpiCrcHash });
+
+        const returnedUuid = await client.getPreviousUuidOrUploadXpi(
+          xpiPath,
+          newChannel,
+          uuidFilePath,
+          saveUploadUuidStub,
+          getUploadUuidStub
+        );
+
+        assert.equal(returnedUuid, newUuid);
+        sinon.assert.calledWith(getUploadUuidStub, uuidFilePath);
+        sinon.assert.calledWith(doUploadStub, xpiPath, newChannel);
+        sinon.assert.calledWith(saveUploadUuidStub, uuidFilePath, {
+          uploadUuid: newUuid,
+          channel: newChannel,
+          xpiCrcHash,
+        });
+      });
+    });
+
+    describe('hashXpiCrcs', () => {
+      const buildZip = async (zipFilePath, files) => {
+        const zip = new JSZip();
+        files.forEach((args) => {
+          zip.file(...args);
+        });
+        await fsPromises.writeFile(
+          zipFilePath,
+          await zip.generateAsync({ type: 'nodebuffer' })
+        );
+        return zip;
+      };
+
+      it('returns a sha256 hash of the crc32 hashes of the zip entries', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const jsFileContents = 'something();';
+          const manifestContents = JSON.stringify({ manifest_version: 2 });
+          const jsFileName = 'foo.js';
+          const manifestFileName = 'manifest.json';
+
+          const files = [
+            [jsFileName, jsFileContents],
+            [manifestFileName, manifestContents],
+          ];
+          const zipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(zipFilePath, files);
+
+          const originalHash = createHash('sha256');
+          originalHash.update(
+            JSON.stringify([
+              {
+                path: jsFileName,
+                crc32: CRC32.str(jsFileContents),
+              },
+              {
+                path: manifestFileName,
+                crc32: CRC32.str(manifestContents),
+              },
+            ])
+          );
+
+          assert.equal(
+            await client.hashXpiCrcs(zipFilePath),
+            originalHash.digest('hex')
+          );
+        });
+      });
+
+      it('returns a different hash when a directory is added to the zip', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const files = [
+            ['manifest.json', JSON.stringify({ manifest_version: 2 })],
+            ['foo.js', 'something();'],
+          ];
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, files);
+
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            ...files,
+            ['dir/', null, { dir: true }],
+          ]);
+
+          assert.notEqual(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
+        });
+      });
+
+      it('returns a different hash when a directory is replaced with an empty file', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const files = [
+            ['manifest.json', JSON.stringify({ manifest_version: 2 })],
+            ['foo.js', 'something();'],
+          ];
+          const emptyName = 'dir';
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, [...files, [emptyName, '']]);
+
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            ...files,
+            [emptyName, null, { dir: true }],
+          ]);
+
+          assert.notEqual(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
+        });
+      });
+
+      it('returns a different hash when a file is renamed', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const jsFileContents = 'something();';
+          const manifestContents = JSON.stringify({ manifest_version: 2 });
+          const manifestFileName = 'manifest.json';
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, [
+            [manifestFileName, manifestContents],
+            ['a.js', jsFileContents],
+          ]);
+
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            [manifestFileName, manifestContents],
+            ['A.js', jsFileContents],
+          ]);
+
+          assert.notEqual(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
+        });
+      });
+
+      it('returns the same hash when file order changes', async () => {
+        await withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const jsFileName = 'foo.js';
+          const jsFileContents = 'something();';
+          const manifestContents = JSON.stringify({ manifest_version: 2 });
+          const manifestFileName = 'manifest.json';
+          const someZipFilePath = path.join(tmpDir.path(), 'someextension.zip');
+          await buildZip(someZipFilePath, [
+            [manifestFileName, manifestContents],
+            [jsFileName, jsFileContents],
+          ]);
+
+          const otherZipFilePath = path.join(
+            tmpDir.path(),
+            'otherextension.zip'
+          );
+          await buildZip(otherZipFilePath, [
+            [jsFileName, jsFileContents],
+            [manifestFileName, manifestContents],
+          ]);
+
+          assert.equal(
+            await client.hashXpiCrcs(someZipFilePath),
+            await client.hashXpiCrcs(otherZipFilePath)
+          );
+        });
+      });
     });
 
     describe('doUploadSubmit', () => {
@@ -541,7 +810,7 @@ describe('util.submit-addon', () => {
             downloadedFiles: [filename],
           });
           const fullPath = path.join(tmpDir.path(), filename);
-          const stat = await fs.stat(fullPath);
+          const stat = await fsPromises.stat(fullPath);
           assert.equal(stat.isFile(), true);
           assert.equal(readFileSync(fullPath), fileData);
         }));
@@ -607,31 +876,6 @@ describe('util.submit-addon', () => {
         nodeFetchStub.reset();
       });
 
-      const addUploadMocks = () => {
-        mockNodeFetch(
-          nodeFetchStub,
-          new URL('addons/upload/', baseUrl),
-          'POST',
-          [{ body: sampleUploadDetail, status: 200 }]
-        );
-        mockNodeFetch(
-          nodeFetchStub,
-          new URL(`addons/upload/${uploadUuid}/`, baseUrl),
-          'GET',
-          [
-            {
-              body: {
-                processed: true,
-                valid: true,
-                uuid: uploadUuid,
-                validation: { thing: 'good' },
-              },
-              status: 200,
-            },
-          ]
-        );
-      };
-
       const addApprovalMocks = (versionId) => {
         const url = new URL(downloadPath, baseUrl).toString();
         mockNodeFetch(
@@ -650,30 +894,24 @@ describe('util.submit-addon', () => {
         ]);
       };
 
-      [{ channel: 'listed' }, { channel: 'unlisted' }].forEach(({ channel }) =>
-        it(`uploads new ${channel} add-on; downloads the signed xpi`, async () => {
-          const versionId = sampleVersionDetail.id;
-          addUploadMocks();
-          const saveIdStub = sinon.stub();
-          saveIdStub.resolves();
-          const idFile = 'id.file';
-          mockNodeFetch(
-            nodeFetchStub,
-            new URL('addons/addon/', baseUrl),
-            'POST',
-            [{ body: sampleAddonDetail, status: 200 }]
-          );
-          addApprovalMocks(versionId);
-          await client.postNewAddon(xpiPath, channel, idFile, {}, saveIdStub);
-          sinon.assert.calledWith(saveIdStub, idFile, sampleAddonDetail.guid);
-        })
-      );
-
-      it('uploads a new version; then downloads the signed xpi', async () => {
-        const channel = 'listed';
+      it('creates new add-on; downloads the signed xpi', async () => {
         const versionId = sampleVersionDetail.id;
+        const saveIdStub = sinon.stub();
+        saveIdStub.resolves();
+        const idFile = 'id.file';
+        mockNodeFetch(
+          nodeFetchStub,
+          new URL('addons/addon/', baseUrl),
+          'POST',
+          [{ body: sampleAddonDetail, status: 200 }]
+        );
+        addApprovalMocks(versionId);
+        await client.postNewAddon(uploadUuid, idFile, {}, saveIdStub);
+        sinon.assert.calledWith(saveIdStub, idFile, sampleAddonDetail.guid);
+      });
 
-        addUploadMocks();
+      it('creates a new version; then downloads the signed xpi', async () => {
+        const versionId = sampleVersionDetail.id;
 
         mockNodeFetch(
           nodeFetchStub,
@@ -683,7 +921,7 @@ describe('util.submit-addon', () => {
         );
 
         addApprovalMocks(versionId);
-        await client.putVersion(xpiPath, channel, `${addonId}`, {});
+        await client.putVersion(uploadUuid, `${addonId}`, {});
       });
     });
 
@@ -796,7 +1034,7 @@ describe('util.submit-addon', () => {
       withTempDir((tmpDir) => {
         const idFile = path.join(tmpDir.path(), 'extensionId.File');
         return saveIdToFile(idFile, 'some-id')
-          .then(() => fs.readFile(idFile))
+          .then(() => fsPromises.readFile(idFile))
           .then((content) => {
             assert.include(content.toString(), 'some-id');
           });
@@ -807,10 +1045,92 @@ describe('util.submit-addon', () => {
         const idFile = path.join(tmpDir.path(), 'extensionId.File');
         return saveIdToFile(idFile, 'first-id')
           .then(() => saveIdToFile(idFile, 'second-id'))
-          .then(() => fs.readFile(idFile))
+          .then(() => fsPromises.readFile(idFile))
           .then((content) => {
             assert.include(content.toString(), 'second-id');
           });
       }));
+  });
+
+  describe('saveUploadUuidToFile', () => {
+    it('saves a uuid & hash to file', () => {
+      const data = {
+        uploadUuid: '{some-uuid}',
+        channel: 'someChannel',
+        xpiCrcHash: '123456',
+      };
+      withTempDir((tmpDir) => {
+        const uuidFile = path.join(tmpDir.path(), 'uploadUuid.File');
+        return saveUploadUuidToFile(uuidFile, data)
+          .then(() => fsPromises.readFile(uuidFile))
+          .then((content) => {
+            assert.equal(content.toString(), JSON.stringify(data));
+          });
+      });
+    });
+
+    it('will overwrite an existing file', () =>
+      withTempDir((tmpDir) => {
+        const firstData = {
+          uploadUuid: '{some-uuid}',
+          channel: 'listed',
+          xpiCrcHash: '123456',
+        };
+        const secondData = {
+          uploadUuid: '{other-uuid}',
+          channel: 'unlisted',
+          xpiCrcHash: '987654',
+        };
+        const uuidFile = path.join(tmpDir.path(), 'uploadUuid.File');
+        return saveUploadUuidToFile(uuidFile, firstData)
+          .then(() => saveUploadUuidToFile(uuidFile, secondData))
+          .then(() => fsPromises.readFile(uuidFile))
+          .then((content) => {
+            assert.equal(content.toString(), JSON.stringify(secondData));
+          });
+      }));
+  });
+
+  describe('getUploadUuidFromFile', () => {
+    it('gets an upload uuid and hash from a saved file', () => {
+      const savedData = {
+        uploadUuid: '{some-uuid}',
+        channel: 'someChannel',
+        xpiCrcHash: '123456',
+      };
+      withTempDir((tmpDir) => {
+        const uuidFile = path.join(tmpDir.path(), 'uploadUuid.File');
+        return saveUploadUuidToFile(uuidFile, savedData)
+          .then(() => getUploadUuidFromFile(uuidFile))
+          .then((returnedData) => {
+            assert.equal(returnedData, savedData);
+          });
+      });
+    });
+
+    it('returns empty strings for uuid and hash if file does not exist', () => {
+      getUploadUuidFromFile('some/path/that/doesnt/exist/.file').then(
+        (returnedData) =>
+          assert.equal(returnedData, {
+            uploadUuid: '',
+            channel: '',
+            xpiCrcHash: '',
+          })
+      );
+    });
+
+    it('returns empty strings for uuid and hash if file is malformed', () => {
+      withTempDir(async (tmpDir) => {
+        const uuidFile = path.join(tmpDir.path(), 'uploadUuid.File');
+        await fsPromises.writeFile(uuidFile, 'not json');
+        return getUploadUuidFromFile(uuidFile).then((returnedData) => {
+          assert.equal(returnedData, {
+            uploadUuid: '',
+            channel: '',
+            xpiCrcHash: '',
+          });
+        });
+      });
+    });
   });
 });
