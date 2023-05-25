@@ -5,7 +5,6 @@ import bunyan, {
   createLogger as defaultLogCreator,
 } from 'bunyan';
 
-
 export class ConsoleStream {
   verbose;
   isCapturing;

@@ -87,9 +87,7 @@ describe('util/extension-runners', () => {
       await runnerInstance.reloadAllExtensions();
 
       sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
-      sinon.assert.calledOnce(
-        anotherFakeExtensionRunner.reloadAllExtensions
-      );
+      sinon.assert.calledOnce(anotherFakeExtensionRunner.reloadAllExtensions);
     });
 
     it('calls the "reloadExtensionBySourceDir" on all the created runners', async () => {
@@ -103,8 +101,7 @@ describe('util/extension-runners', () => {
 
       await runnerInstance.reloadExtensionBySourceDir('/fake/source/dir');
 
-      const spyReloadExtension =
-        fakeExtensionRunner.reloadExtensionBySourceDir;
+      const spyReloadExtension = fakeExtensionRunner.reloadExtensionBySourceDir;
       const spyAnotherReloadExtension =
         anotherFakeExtensionRunner.reloadExtensionBySourceDir;
 
@@ -162,9 +159,7 @@ describe('util/extension-runners', () => {
       await runnerInstance.reloadAllExtensions();
 
       sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
-      sinon.assert.calledOnce(
-        anotherFakeExtensionRunner.reloadAllExtensions
-      );
+      sinon.assert.calledOnce(anotherFakeExtensionRunner.reloadAllExtensions);
       sinon.assert.callCount(params.desktopNotifications, 2);
       sinon.assert.calledWith(
         params.desktopNotifications,
@@ -202,9 +197,7 @@ describe('util/extension-runners', () => {
       assert.equal(res.length, 2);
       assert.equal(errors.length, 1);
 
-      sinon.assert.calledOnce(
-        fakeExtensionRunner.reloadExtensionBySourceDir
-      );
+      sinon.assert.calledOnce(fakeExtensionRunner.reloadExtensionBySourceDir);
       sinon.assert.calledOnce(
         anotherFakeExtensionRunner.reloadExtensionBySourceDir
       );

@@ -314,10 +314,7 @@ describe('rdp-client', () => {
         req.circular = req;
 
         await getConnectedRDPClient();
-        await assert.isRejected(
-          client.request(req),
-          Error
-        );
+        await assert.isRejected(client.request(req), Error);
         assertClientHasNoRequests();
       });
 

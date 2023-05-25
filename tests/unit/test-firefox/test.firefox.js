@@ -93,10 +93,7 @@ describe('firefox', () => {
 
     // TODO: This object should accept dynamic properties since those are passed to firefox.run()
 
-    function runFirefox({
-      profile = fakeProfile,
-      ...args
-    } = {}) {
+    function runFirefox({ profile = fakeProfile, ...args } = {}) {
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),
