@@ -27,8 +27,6 @@ const envPrefix = 'WEB_EXT';
 // by babel-plugin-transform-inline-environment-variables).
 const defaultGlobalEnv = process.env.WEBEXT_BUILD_ENV || 'development';
 
-// TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
-
 export const AMO_BASE_URL = 'https://addons.mozilla.org/api/v5/';
 
 /*
@@ -371,8 +369,6 @@ export async function defaultVersionGetter(
     return `${git.branch(absolutePackageDir)}-${git.long(absolutePackageDir)}`;
   }
 }
-
-// TODO: add pipes to Flow type after https://github.com/facebook/flow/issues/2405 is fixed
 
 export function throwUsageErrorIfArray(errorMessage) {
   return (value) => {

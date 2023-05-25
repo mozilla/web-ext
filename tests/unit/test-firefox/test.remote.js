@@ -29,7 +29,6 @@ describe('firefox.remote', () => {
         connectToFirefox: sinon.spy(() => Promise.resolve(fakeFirefoxClient())),
         ...options,
       };
-      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       const connect = defaultConnector(port, options);
       return { options, connect };
     }
@@ -48,7 +47,6 @@ describe('firefox.remote', () => {
     it('lets you configure the port', async () => {
       const { connect, options } = prepareConnection(7000);
       await connect;
-      // $FlowIgnore: flow doesn't know about sinon spy properties.
       assert.equal(options.connectToFirefox.args[0], 7000);
     });
   });
@@ -193,7 +191,6 @@ describe('firefox.remote', () => {
         const conn = makeInstance();
         const addonRequest = sinon.stub().resolves(stubResponse);
 
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest = addonRequest;
 
         const returnedAddon = await conn.checkForAddonReloading(addon);
@@ -211,7 +208,6 @@ describe('firefox.remote', () => {
         const stubResponse = { requestTypes: ['install'] };
         const conn = makeInstance();
 
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest = () => Promise.resolve(stubResponse);
 
         await conn
@@ -231,7 +227,6 @@ describe('firefox.remote', () => {
           .stub()
           .resolves({ requestTypes: ['reload'] });
 
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest = addonRequest;
         const checkedAddon = await conn.checkForAddonReloading(addon);
         const finalAddon = await conn.checkForAddonReloading(checkedAddon);
@@ -403,12 +398,9 @@ describe('firefox.remote', () => {
         const getInstalledAddon = sinon.stub().resolves(addon);
         const addonRequest = sinon.stub().resolves({});
 
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.getInstalledAddon = getInstalledAddon;
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading = (addonToCheck) =>
           Promise.resolve(addonToCheck);
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.addonRequest = addonRequest;
 
         await conn.reloadAddon('some-id');
@@ -430,9 +422,7 @@ describe('firefox.remote', () => {
           Promise.resolve(addonToCheck)
         );
 
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.getInstalledAddon = getInstalledAddon;
-        // $FlowIgnore: allow overwrite not writable property for testing purpose.
         conn.checkForAddonReloading = checkForAddonReloading;
 
         await conn.reloadAddon(addon.id);
@@ -446,7 +436,6 @@ describe('firefox.remote', () => {
   describe('connectWithMaxRetries', () => {
     function firefoxClient(opt = {}, deps) {
       return connectWithMaxRetries(
-        // $FlowIgnore: allow use of inexact object literal for testing purpose.
         {
           maxRetries: 0,
           retryInterval: 1,
@@ -508,7 +497,6 @@ describe('firefox.remote', () => {
     async function promiseServerOnPort(port) {
       return new Promise((resolve) => {
         const srv = net.createServer();
-        // $FlowFixMe: signature for listen() is missing - see https://github.com/facebook/flow/pull/8290
         srv.listen(port, '127.0.0.1', () => {
           resolve(srv);
         });

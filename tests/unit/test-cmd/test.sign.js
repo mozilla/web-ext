@@ -17,7 +17,6 @@ import completeSignCommand, {
   getIdFromFile,
 } from '../../../src/cmd/sign.js';
 import { basicManifest, manifestWithoutApps, fixturePath } from '../helpers.js';
-// Import flow type
 
 describe('sign', () => {
   function getStubs() {

@@ -13,7 +13,6 @@ import { getPrefs as defaultPrefGetter } from './preferences.js';
 import { getManifestId } from '../util/manifest.js';
 import { findFreeTcpPort as defaultRemotePortFinder } from './remote.js';
 import { createLogger } from '../util/logger.js';
-// Import flow types
 
 const log = createLogger(import.meta.url);
 
@@ -25,12 +24,6 @@ export const defaultFirefoxEnv = {
   XPCOM_DEBUG_BREAK: 'stack',
   NS_TRACE_MALLOC_DISABLE_STACKS: '1',
 };
-
-// defaultRemotePortFinder types and implementation.
-
-// Declare the needed 'fx-runner' module flow types.
-
-// Run command types and implementaion.
 
 /*
  * Runs Firefox with the given profile object and resolves a promise on exit.

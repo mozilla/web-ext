@@ -233,7 +233,6 @@ export function defaultReloadStrategy(
   {
     createWatcher = defaultWatcherCreator,
     stdin = process.stdin,
-    // $FlowIgnore: ignore method-unbinding.
     kill = process.kill,
   } = {}
 ) {

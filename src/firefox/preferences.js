@@ -9,8 +9,6 @@ export const nonOverridablePreferences = [
   'xpinstall.signatures.required',
 ];
 
-// Flow Types
-
 // Preferences Maps
 
 const prefsCommon = {

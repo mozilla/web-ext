@@ -13,7 +13,6 @@ import { prepareArtifactsDir } from '../util/artifacts.js';
 import { createLogger } from '../util/logger.js';
 import { UsageError, isErrorWithCode } from '../errors.js';
 import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
-// Import flow types.
 
 const log = createLogger(import.meta.url);
 const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';

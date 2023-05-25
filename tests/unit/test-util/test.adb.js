@@ -91,7 +91,6 @@ function getFakeADBKit({ adbClient = {}, adbkitUtil = {}, adbDevice = {} }) {
 function createSpawnADBErrorSpy() {
   return sinon.spy(() => {
     const fakeADBError = new Error('spawn adb');
-    // $FlowFixMe: reuse ErrorWithCode from other tests
     fakeADBError.code = 'ENOENT';
     return Promise.reject(fakeADBError);
   });

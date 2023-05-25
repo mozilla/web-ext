@@ -24,7 +24,6 @@ describe('lint', () => {
           createFileFilter,
           ...options,
         };
-        // $FlowIgnore: allow use of inexact object literal for testing purpose.
         return defaultLintCommand(mergedArgs, mergedOpts);
       },
     };

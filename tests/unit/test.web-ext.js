@@ -19,7 +19,6 @@ describe('webExt', () => {
     });
     for (const cmd of ['run', 'lint', 'build', 'sign', 'docs']) {
       it(`lazily loads cmd/${cmd}`, async () => {
-        // $FlowIgnore: non string literal imports are not supported by flow.
         const cmdModule = await import(`../../src/cmd/${cmd}.js`);
         stub = sinon.stub({ default: cmdModule.default }, 'default');
 

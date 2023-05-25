@@ -5,7 +5,6 @@ import { FileFilter, isSubPath } from '../../../src/util/file-filter.js';
 
 describe('util/file-filter', () => {
   const newFileFilter = (params = {}) => {
-    // $FlowIgnore: allow use of inexact object literal for testing purpose.
     return new FileFilter({
       sourceDir: '.',
       ...params,

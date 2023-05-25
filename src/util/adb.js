@@ -36,7 +36,7 @@ async function wrapADBCall(asyncFn) {
 export default class ADBUtils {
   params;
   adb;
-  adbClient; // TODO: better flow typing here.
+  adbClient;
 
   // Map<deviceId -> artifactsDir>
   artifactsDirMap;

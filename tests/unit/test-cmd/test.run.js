@@ -56,7 +56,6 @@ async function prepareRun(fakeInstallResult) {
     options,
     errors,
     run: (customArgv = {}, customOpt = {}) =>
-      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       cmdRun.default({ ...argv, ...customArgv }, { ...options, ...customOpt }),
   };
 }
@@ -153,9 +152,7 @@ describe('run', () => {
       firefoxBinary: runOptions.firefox,
       customPrefs: runOptions.pref,
     };
-    // $FlowIgnore: Allow deleting properties for testing purpose.
     delete expectedRunnerParams.firefox;
-    // $FlowIgnore: Allow deleting properties for testing purpose.
     delete expectedRunnerParams.pref;
 
     assert.deepEqual(

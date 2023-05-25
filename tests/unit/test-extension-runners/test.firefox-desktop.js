@@ -38,7 +38,6 @@ function prepareExtensionRunnerParams({
   });
   const firefoxProcess = new StubChildProcess();
 
-  // $FlowIgnore: allow overriden params for testing purpose.
   const runnerParams = {
     extensions: [
       {
@@ -279,7 +278,6 @@ describe('util/extension-runners/firefox-desktop', () => {
         extensionPath: sourceDir,
       })
     );
-    // $FlowIgnore: ignored 'property not found' on sinon spy.
     const install = params.firefoxApp.installExtension.firstCall.args[0];
 
     assert.equal(install.asProxy, true);

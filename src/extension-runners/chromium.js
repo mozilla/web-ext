@@ -288,7 +288,6 @@ export class ChromiumExtensionRunner {
       })
     );
 
-    // $FlowIgnore: this method is only called right after creating the server and so wss should be defined.
     const wssInfo = this.wss.address();
 
     const bgPage = `(function bgPage() {

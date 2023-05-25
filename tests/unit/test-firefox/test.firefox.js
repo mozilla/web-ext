@@ -94,11 +94,9 @@ describe('firefox', () => {
     // TODO: This object should accept dynamic properties since those are passed to firefox.run()
 
     function runFirefox({
-      // $FlowIgnore: for the purpose of this test, fakeProfile includes only a subset of the expected properties.
       profile = fakeProfile,
       ...args
     } = {}) {
-      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),
@@ -109,7 +107,6 @@ describe('firefox', () => {
     it('executes the Firefox runner with a given profile', () => {
       const runner = createFakeFxRunner();
       const profile = fakeProfile;
-      // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
       return runFirefox({ fxRunner: runner, profile }).then(() => {
         sinon.assert.called(runner);
         assert.equal(runner.firstCall.args[0].profile, profile.path());
@@ -209,7 +206,6 @@ describe('firefox', () => {
       const extensions = [{ sourceDir: '/path/to/extension' }];
 
       return runFirefox({
-        // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
         profile,
         fxRunner: runner,
         firefoxBinary,
@@ -689,7 +685,6 @@ describe('firefox', () => {
     it('creates a finder', () => {
       const { FxProfile } = prepareProfileFinderTest();
       FxProfile.Finder = sinon.spy(FxProfile.Finder);
-      // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
       firefox.defaultCreateProfileFinder({ FxProfile });
       sinon.assert.calledWith(FxProfile.Finder, sinon.match(undefined));
     });
@@ -699,7 +694,6 @@ describe('firefox', () => {
       FxProfile.Finder = sinon.spy(FxProfile.Finder);
 
       const userDirectoryPath = '/non/existent/path';
-      // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
       firefox.defaultCreateProfileFinder({ userDirectoryPath, FxProfile });
 
       sinon.assert.called(FxProfile.Finder);
@@ -717,7 +711,6 @@ describe('firefox', () => {
 
       const profileFinder = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
-        // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
         FxProfile,
       });
 
@@ -742,7 +735,6 @@ describe('firefox', () => {
 
       const getter = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
-        // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
         FxProfile,
       });
 
@@ -768,7 +760,6 @@ describe('firefox', () => {
 
       const getter = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
-        // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
         FxProfile,
       });
 

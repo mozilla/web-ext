@@ -405,7 +405,6 @@ describe('program.Program', () => {
       },
     });
 
-    // $FlowIgnore: override systemProcess for testing purpose.
     program.cleanupProcessEnvConfigs({ env: fakeEnv });
     assert.deepEqual(fakeEnv, {
       WEB_EXT_RUN_OPTION: 'from-env',

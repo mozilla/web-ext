@@ -12,7 +12,6 @@ import {
   defaultReloadStrategy,
   MultiExtensionRunner as DefaultMultiExtensionRunner,
 } from '../extension-runners/index.js';
-// Import objects that are only used as Flow types.
 
 const log = createLogger(import.meta.url);
 

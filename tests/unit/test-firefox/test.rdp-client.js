@@ -189,7 +189,6 @@ describe('rdp-client', () => {
       it('rejects on RDP request without a target actor', async () => {
         await getConnectedRDPClient();
         await assert.isRejected(
-          // $FlowIgnore: ignore flowtype error for testing purpose.
           client.request({ type: 'getRoot' }),
           /Unexpected RDP request without target actor/
         );
@@ -312,12 +311,10 @@ describe('rdp-client', () => {
         // Create an object with a circular dependency to trigger a stringify.
         // exception.
         const req = { to: 'root' };
-        // $FlowIgnore: ignore flowtype error for testing purpose.
         req.circular = req;
 
         await getConnectedRDPClient();
         await assert.isRejected(
-          // $FlowIgnore: ignore flowtype error for testing purpose.
           client.request(req),
           Error
         );
@@ -351,15 +348,10 @@ describe('rdp-client', () => {
         off: sinon.spy(),
       };
 
-      // $FlowIgnore: allow overwrite property for testing purpose.
       c._rdpConnection = fakeConn;
-      // $FlowIgnore
       c._onData = function fakeOnData() {};
-      // $FlowIgnore
       c._onError = function fakeOnError() {};
-      // $FlowIgnore
       c._onEnd = function fakeOnEnd() {};
-      // $FlowIgnore
       c._onTimeout = function fakeOnTimeout() {};
 
       c.disconnect();

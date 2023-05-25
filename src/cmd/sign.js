@@ -151,7 +151,6 @@ export default function sign(
         result = await submitAddon({
           ...signSubmitArgs,
           amoBaseUrl,
-          // $FlowIgnore: we verify 'channel' is set above
           channel,
           savedIdPath,
           savedUploadUuidPath,

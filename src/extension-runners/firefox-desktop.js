@@ -3,17 +3,12 @@
  * in a Firefox for Desktop instance.
  */
 
-// Import flow types from npm dependencies.
-
 import {
   MultiExtensionsReloadError,
   RemoteTempInstallNotSupported,
   WebExtError,
 } from '../errors.js';
 import { createLogger } from '../util/logger.js';
-// Import flow types from project files.
-
-// eslint-disable-line import/named
 
 const log = createLogger(import.meta.url);
 

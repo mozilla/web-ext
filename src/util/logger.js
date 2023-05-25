@@ -5,9 +5,6 @@ import bunyan, {
   createLogger as defaultLogCreator,
 } from 'bunyan';
 
-// Bunyan-related Flow types
-
-// ConsoleStream types and implementation.
 
 export class ConsoleStream {
   verbose;

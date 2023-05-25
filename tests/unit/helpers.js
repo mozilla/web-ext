@@ -153,7 +153,6 @@ export function makeSureItFails() {
  *
  */
 
-// $FlowIgnore: fake can return any kind of object and fake a defined set of methods for testing.
 export function fake(original, methods = {}, skipProperties = []) {
   const stub = {};
   // Provide stubs for all original members (fallback to Object if original
@@ -187,7 +186,6 @@ export function fake(original, methods = {}, skipProperties = []) {
     stub[key] = sinon.spy(stub[key]);
   });
 
-  // $FlowIgnore: fake can return any kind of object for testing.
   return stub;
 }
 
@@ -308,7 +306,6 @@ class FakeStdin extends stream.Readable {
 }
 
 export function createFakeStdin() {
-  // $FlowIgnore: flow complains that the return value is incompatible with tty.ReadStream
   return new FakeStdin();
 }
 
@@ -328,7 +325,6 @@ export function mockModule({
   // Compute the full URL to the module to mock, otherwise
   // quibble will compute the wrong module URL when running
   // on windows (which would be looking as "C:\\C:\\Users\\...").
-  // $FlowIgnore: ignore issue with import.meta.url being typed as void or string.
   const baseDir = path.dirname(fileURLToPath(importerModuleURL));
   const fullModuleURL = pathToFileURL(
     path.resolve(path.join(baseDir, moduleURL))

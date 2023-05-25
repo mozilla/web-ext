@@ -2,11 +2,8 @@ import { createInstance as defaultLinterCreator } from 'addons-linter';
 
 import { createLogger } from '../util/logger.js';
 import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
-// import flow types
 
 const log = createLogger(import.meta.url);
-
-// Define the needed 'addons-linter' module flow types.
 
 // Lint command types and implementation.
 

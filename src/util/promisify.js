@@ -1,11 +1,5 @@
 import { promisify } from 'util';
 
-// promisify.custom is missing from the node types know to flow,
-// and it triggers flow-check errors if used directly.
-// By using the value exported here, flow-check passes successfully
-// using a single FLOW_IGNORE suppress comment.
-
-// $FlowIgnore: promisify.custom is missing in flow type signatures.
 export const promisifyCustom = promisify.custom;
 
 /*

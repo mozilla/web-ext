@@ -41,7 +41,6 @@ describe('watcher', () => {
         shouldWatchFile: () => true,
       });
 
-      // $FlowIgnore: retrieve internal Watchpack properties for testing purpose.
       const { fileWatchers, directoryWatchers } = watcher;
       let watchedFilePath;
       let watchedDirPath;

@@ -52,7 +52,6 @@ function exitKeypressLoop(stdin) {
 describe('util/extension-runners', () => {
   describe('createExtensionRunner', () => {
     it('requires a valid target', async () => {
-      // $FlowIgnore: Want to pass invalid argument and check the error.
       const promise = createExtensionRunner({});
       await assert.isRejected(promise, /Unknown target: "undefined"/);
     });
@@ -72,9 +71,7 @@ describe('util/extension-runners', () => {
 
       await runnerInstance.run();
 
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.calledOnce(fakeExtensionRunner.run);
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.calledOnce(anotherFakeExtensionRunner.run);
     });
 
@@ -89,10 +86,8 @@ describe('util/extension-runners', () => {
 
       await runnerInstance.reloadAllExtensions();
 
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
       sinon.assert.calledOnce(
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         anotherFakeExtensionRunner.reloadAllExtensions
       );
     });
@@ -109,10 +104,8 @@ describe('util/extension-runners', () => {
       await runnerInstance.reloadExtensionBySourceDir('/fake/source/dir');
 
       const spyReloadExtension =
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         fakeExtensionRunner.reloadExtensionBySourceDir;
       const spyAnotherReloadExtension =
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         anotherFakeExtensionRunner.reloadExtensionBySourceDir;
 
       sinon.assert.calledOnce(spyReloadExtension);
@@ -139,9 +132,7 @@ describe('util/extension-runners', () => {
 
       await runnerInstance.exit();
 
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.calledOnce(fakeExtensionRunner.exit);
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.calledOnce(anotherFakeExtensionRunner.exit);
     });
 
@@ -170,10 +161,8 @@ describe('util/extension-runners', () => {
 
       await runnerInstance.reloadAllExtensions();
 
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
       sinon.assert.calledOnce(
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         anotherFakeExtensionRunner.reloadAllExtensions
       );
       sinon.assert.callCount(params.desktopNotifications, 2);
@@ -214,11 +203,9 @@ describe('util/extension-runners', () => {
       assert.equal(errors.length, 1);
 
       sinon.assert.calledOnce(
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         fakeExtensionRunner.reloadExtensionBySourceDir
       );
       sinon.assert.calledOnce(
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         anotherFakeExtensionRunner.reloadExtensionBySourceDir
       );
       sinon.assert.calledOnce(params.desktopNotifications);
@@ -249,13 +236,10 @@ describe('util/extension-runners', () => {
           runnerInstance.registerCleanup(resolve);
         });
 
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.calledOnce(fakeExtensionRunner.registerCleanup);
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.calledOnce(anotherFakeExtensionRunner.registerCleanup);
 
         // Call the cleanup callback on the first runner.
-        // $FlowIgnore: ignore method-unbinding, we just access the spy properties here.
         fakeExtensionRunner.registerCleanup.firstCall.args[0]();
 
         const checkIncompleteCleanup = await Promise.race([
@@ -273,7 +257,6 @@ describe('util/extension-runners', () => {
         );
 
         // Call the cleanup callback on the second and last runner.
-        // $FlowIgnore: ignore method-unbinding, we just access the spy properties here.
         anotherFakeExtensionRunner.registerCleanup.firstCall.args[0]();
 
         await waitRegisterCleanup;
@@ -295,7 +278,6 @@ describe('util/extension-runners', () => {
       return {
         config,
         createWatcher: (customConfig = {}) => {
-          // $FlowIgnore: allow use of inexact object literal for testing purpose.
           return defaultWatcherCreator({ ...config, ...customConfig });
         },
       };
@@ -395,7 +377,6 @@ describe('util/extension-runners', () => {
         reloadStrategy: async (argOverride = {}, optOverride = {}) => {
           const mergedArgs = { ...args, ...argOverride };
           const mergedOpts = { ...options, ...optOverride };
-          // $FlowIgnore: allow use of inexact object literal for testing purpose.
           return defaultReloadStrategy(mergedArgs, mergedOpts);
         },
       };
@@ -439,7 +420,6 @@ describe('util/extension-runners', () => {
       const { reloadExtension } = createWatcher.firstCall.args[0];
       reloadExtension(sourceDir);
 
-      // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
       const { reloadExtensionBySourceDir } = extensionRunner;
 
       sinon.assert.calledOnce(reloadExtensionBySourceDir);
@@ -460,7 +440,6 @@ describe('util/extension-runners', () => {
 
       reloadStrategy();
 
-      // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
       const { registerCleanup } = extensionRunner;
 
       sinon.assert.called(registerCleanup);
@@ -471,7 +450,6 @@ describe('util/extension-runners', () => {
       registeredCb();
 
       sinon.assert.called(watcher.close);
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.called(stdin.pause);
     });
 
@@ -489,9 +467,7 @@ describe('util/extension-runners', () => {
         // Wait for one tick.
         await Promise.resolve();
 
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.called(fakeStdin.setRawMode);
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.called(extensionRunner.reloadAllExtensions);
       } finally {
         exitKeypressLoop(fakeStdin);
@@ -509,16 +485,13 @@ describe('util/extension-runners', () => {
       try {
         await reloadStrategy({ noInput: true }, { stdin: fakeStdin });
         // This is meant to test that all input is ignored.
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.notCalled(fakeStdin.setRawMode);
       } finally {
         exitKeypressLoop(fakeStdin);
       }
 
-      // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
       const cleanupCb = extensionRunner.registerCleanup.firstCall.args[0];
       cleanupCb();
-      // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
       sinon.assert.notCalled(fakeStdin.pause);
     });
 
@@ -537,13 +510,11 @@ describe('util/extension-runners', () => {
       // Stub the `fakeStdin.once` method to be able to wait
       // once a promise resolved when the reloadStrategy method
       // did call `stdin.once('keypress', ...)`.
-      // $FlowIgnore: ignore method-unbinding, used here for testing purpose.
       const fakeStdinOnce = fakeStdin.once;
       sinon.stub(fakeStdin, 'once');
 
       function promiseWaitKeypress() {
         return new Promise((resolve) => {
-          // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
           fakeStdin.once.callsFake((...args) => {
             if (args[0] === 'keypress') {
               resolve();
@@ -562,10 +533,8 @@ describe('util/extension-runners', () => {
         fakeStdin.emit('keypress', 'r', { name: 'r', ctrl: false });
         await onceWaitKeypress;
 
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         const { reloadAllExtensions } = extensionRunner;
 
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.called(fakeStdin.setRawMode);
         sinon.assert.calledOnce(reloadAllExtensions);
 
@@ -599,7 +568,6 @@ describe('util/extension-runners', () => {
         // Wait for one tick.
         await Promise.resolve();
 
-        // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
         sinon.assert.called(extensionRunner.exit);
       } finally {
         exitKeypressLoop(fakeStdin);
