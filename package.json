@@ -96,7 +96,7 @@
     "@babel/cli": "7.21.5",
     "@babel/core": "7.22.1",
     "@babel/eslint-parser": "7.21.8",
-    "@babel/preset-env": "7.21.5",
+    "@babel/preset-env": "7.22.2",
     "@babel/preset-flow": "7.21.4",
     "@babel/register": "7.21.0",
     "@commitlint/cli": "17.6.3",
