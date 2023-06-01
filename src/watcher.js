@@ -1,4 +1,3 @@
-/* @flow */
 import { fs } from 'mz';
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
@@ -10,22 +9,6 @@ const log = createLogger(import.meta.url);
 
 // onSourceChange types and implementation
 
-export type ShouldWatchFn = (filePath: string) => boolean;
-
-export type OnChangeFn = () => any;
-
-export type OnSourceChangeParams = {|
-  sourceDir: string,
-  watchFile?: Array<string>,
-  watchIgnored?: Array<string>,
-  artifactsDir: string,
-  onChange: OnChangeFn,
-  shouldWatchFile: ShouldWatchFn,
-  debounceTime?: number,
-|};
-
-export type OnSourceChangeFn = (params: OnSourceChangeParams) => Watchpack;
-
 export default function onSourceChange({
   sourceDir,
   watchFile,
@@ -34,7 +17,7 @@ export default function onSourceChange({
   onChange,
   shouldWatchFile,
   debounceTime = 500,
-}: OnSourceChangeParams): Watchpack {
+}) {
   // When running on Windows, transform the ignored paths and globs
   // as Watchpack does translate the changed files path internally
   // (See https://github.com/webpack/watchpack/blob/v2.1.1/lib/DirectoryWatcher.js#L99-L103).
@@ -90,19 +73,12 @@ export default function onSourceChange({
 
 // proxyFileChanges types and implementation.
 
-export type ProxyFileChangesParams = {|
-  artifactsDir: string,
-  onChange: OnChangeFn,
-  filePath: string,
-  shouldWatchFile: ShouldWatchFn,
-|};
-
 export function proxyFileChanges({
   artifactsDir,
   onChange,
   filePath,
   shouldWatchFile,
-}: ProxyFileChangesParams): void {
+}) {
   if (filePath.indexOf(artifactsDir) === 0 || !shouldWatchFile(filePath)) {
     log.debug(`Ignoring change to: ${filePath}`);
   } else {

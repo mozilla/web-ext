@@ -1,4 +1,3 @@
-/* @flow */
 import { promisify } from 'util';
 
 import { describe, it } from 'mocha';

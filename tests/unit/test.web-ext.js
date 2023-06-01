@@ -1,4 +1,3 @@
-/* @flow */
 import { afterEach, describe, it } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -13,14 +12,13 @@ describe('webExt', () => {
   });
 
   describe('exposes commands', () => {
-    let stub: any;
+    let stub;
     afterEach(() => {
       resetMockModules();
       stub = undefined;
     });
     for (const cmd of ['run', 'lint', 'build', 'sign', 'docs']) {
       it(`lazily loads cmd/${cmd}`, async () => {
-        // $FlowIgnore: non string literal imports are not supported by flow.
         const cmdModule = await import(`../../src/cmd/${cmd}.js`);
         stub = sinon.stub({ default: cmdModule.default }, 'default');
 
@@ -37,7 +35,7 @@ describe('webExt', () => {
         stub?.returns(expectedResult);
 
         const { default: webExtModule } = await import('../../src/main.js');
-        const runCommand: Function = webExtModule.cmd[cmd];
+        const runCommand = webExtModule.cmd[cmd];
         const result = await runCommand(params, options);
 
         // Check whether parameters and return values are forwarded as-is.

@@ -20,21 +20,14 @@
   },
   "plugins": [
     "async-await",
-    "ft-flow",
     "import"
   ],
-  "settings": {
-    "ft-flow": {
-      "onlyFilesWithFlowAnnotation": true
-    }
-  },
   "env": {
     "node": true,
     "es6": true
   },
   "extends": [
     "eslint:recommended",
-    "plugin:ft-flow/recommended"
   ],
   "globals": {
     "exports": false,
@@ -112,10 +105,6 @@
 
     "async-await/space-after-async": 2,
     "async-await/space-after-await": 2,
-
-    "ft-flow/define-flow-type": 1,
-    "ft-flow/use-flow-type": 1,
-    "ft-flow/space-after-type-colon": [1, "always"],
 
     // This makes sure imported modules exist.
     "import/no-unresolved": 2,

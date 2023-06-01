@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 import { promisify } from 'util';
 
@@ -18,8 +17,6 @@ import completeSignCommand, {
   getIdFromFile,
 } from '../../../src/cmd/sign.js';
 import { basicManifest, manifestWithoutApps, fixturePath } from '../helpers.js';
-// Import flow type
-import type { ExtensionManifestApplications } from '../../../src/util/manifest';
 
 describe('sign', () => {
   function getStubs() {
@@ -62,11 +59,7 @@ describe('sign', () => {
   /*
    * Run the sign command with stubs for all dependencies.
    */
-  function sign(
-    tmpDir: Object,
-    stubs: Object,
-    { extraArgs = {}, extraOptions = {} }: Object = {}
-  ): Promise<*> {
+  function sign(tmpDir, stubs, { extraArgs = {}, extraOptions = {} } = {}) {
     return completeSignCommand(
       {
         verbose: false,
@@ -408,8 +401,9 @@ describe('sign', () => {
       const stubs = getStubs();
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
       const apiProxy = 'http://yourproxy:6000';
-      const applications: ExtensionManifestApplications = stubs
-        .preValidatedManifest.applications || { gecko: {} };
+      const applications = stubs.preValidatedManifest.applications || {
+        gecko: {},
+      };
       const userAgentString = `web-ext/${stubs.signingConfig.webextVersion}`;
       const apiRequestConfig = { headers: { 'User-Agent': userAgentString } };
       return sign(tmpDir, stubs, {
@@ -435,8 +429,9 @@ describe('sign', () => {
     withTempDir((tmpDir) => {
       const stubs = getStubs();
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
-      const applications: ExtensionManifestApplications = stubs
-        .preValidatedManifest.applications || { gecko: {} };
+      const applications = stubs.preValidatedManifest.applications || {
+        gecko: {},
+      };
       const userAgentString = `web-ext/${stubs.signingConfig.webextVersion}`;
       const channel = 'unlisted';
       return sign(tmpDir, stubs, {

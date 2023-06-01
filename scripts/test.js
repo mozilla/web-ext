@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import eslint from './lib/eslint.js';
-import { flowCheck } from './lib/flow.js';
 import { mochaUnit } from './lib/mocha.js';
 import { isBuilt } from './lib/babel.js';
 
@@ -15,11 +14,6 @@ if (!isBuilt()) {
 
 console.log('Running eslint...');
 if (!eslint()) {
-  process.exit(1);
-}
-
-console.log('Running flow check...');
-if (!flowCheck()) {
   process.exit(1);
 }
 

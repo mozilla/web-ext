@@ -1,5 +1,3 @@
-/* @flow */
-
 import EventEmitter from 'events';
 
 import { assert } from 'chai';
@@ -9,7 +7,6 @@ import * as sinon from 'sinon';
 
 import { consoleStream } from '../../../src/util/logger.js';
 import { FirefoxAndroidExtensionRunner } from '../../../src/extension-runners/firefox-android.js';
-import type { FirefoxAndroidExtensionRunnerParams } from '../../../src/extension-runners/firefox-android';
 import { UsageError, WebExtError } from '../../../src/errors.js';
 import {
   basicManifest,
@@ -38,14 +35,6 @@ const fakeRDPUnixSocketFile =
 const fakeRDPUnixAbstractSocketFile =
   '@org.mozilla.firefox/firefox-debugger-socket';
 
-type PrepareParams = {
-  params?: Object,
-  debuggerPort?: number,
-  fakeFirefoxApp?: Object,
-  fakeRemoteFirefox?: Object,
-  fakeADBUtils?: Object,
-};
-
 // Reduce the waiting time during tests.
 FirefoxAndroidExtensionRunner.unixSocketDiscoveryRetryInterval = 0;
 
@@ -55,7 +44,7 @@ function prepareExtensionRunnerParams({
   fakeRemoteFirefox,
   fakeADBUtils,
   params,
-}: PrepareParams = {}) {
+} = {}) {
   const fakeRemoteFirefoxClient = new EventEmitter();
   const remoteFirefox = getFakeRemoteFirefox({
     installTemporaryAddon: sinon.spy(() => Promise.resolve(tempInstallResult)),
@@ -63,8 +52,7 @@ function prepareExtensionRunnerParams({
   });
   remoteFirefox.client = fakeRemoteFirefoxClient;
 
-  // $FlowIgnore: allow overriden params for testing purpose.
-  const runnerParams: FirefoxAndroidExtensionRunnerParams = {
+  const runnerParams = {
     extensions: [
       {
         sourceDir: '/fake/sourceDir',
@@ -89,7 +77,6 @@ function prepareExtensionRunnerParams({
       return Promise.resolve(remoteFirefox);
     }),
     desktopNotifications: sinon.spy(() => {}),
-    // $FlowIgnore: Allow to mock stdin with an EventEmitter for testing purpose.
     stdin: new EventEmitter(),
     ...(params || {}),
   };
@@ -595,7 +582,6 @@ describe('util/extension-runners/firefox-android', () => {
         port: runnerInstance.selectedTCPPort,
       });
 
-      // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
       const { installTemporaryAddon } = runnerInstance.remoteFirefox;
 
       sinon.assert.calledWithMatch(
@@ -640,7 +626,6 @@ describe('util/extension-runners/firefox-android', () => {
 
       await runnerInstance.reloadAllExtensions();
 
-      // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
       sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
     });
 
@@ -654,7 +639,6 @@ describe('util/extension-runners/firefox-android', () => {
         params.extensions[0].sourceDir
       );
 
-      // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
       sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
     });
 
@@ -676,7 +660,6 @@ describe('util/extension-runners/firefox-android', () => {
           '"/non-existent/source-dir"'
       );
 
-      // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
       sinon.assert.notCalled(runnerInstance.remoteFirefox.reloadAddon);
     });
 
@@ -703,7 +686,6 @@ describe('util/extension-runners/firefox-android', () => {
           )
       );
 
-      // $FlowIgnore: ignore method-unbinding, sinon does just check the spy properties.
       sinon.assert.called(runnerInstance.remoteFirefox.reloadAddon);
     });
 
@@ -855,7 +837,7 @@ describe('util/extension-runners/firefox-android', () => {
     });
 
     it('raises an error when unable to find an android version number', async () => {
-      async function expectInvalidVersionError(version: any) {
+      async function expectInvalidVersionError(version) {
         const { params, fakeADBUtils } = prepareSelectedDeviceAndAPKParams();
 
         fakeADBUtils.getAndroidVersionNumber = sinon.spy(() => {
@@ -975,7 +957,6 @@ describe('util/extension-runners/firefox-android', () => {
 
       for (const testCase of optionsWarningTestCases) {
         const runnerOptions = { ...params, ...testCase.params };
-        // $FlowIgnore: allow use of inexact object literal for testing purpose.
         new FirefoxAndroidExtensionRunner(runnerOptions); // eslint-disable-line no-new
 
         assert.match(

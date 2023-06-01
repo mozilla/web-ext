@@ -1,5 +1,3 @@
-/* @flow */
-
 import path from 'path';
 import EventEmitter from 'events';
 
@@ -16,7 +14,6 @@ import {
   ChromiumExtensionRunner,
   DEFAULT_CHROME_FLAGS,
 } from '../../../src/extension-runners/chromium.js';
-import type { ChromiumExtensionRunnerParams } from '../../../src/extension-runners/chromium';
 import {
   consoleStream, // instance is imported to inspect logged messages
 } from '../../../src/util/logger.js';
@@ -29,7 +26,7 @@ function prepareExtensionRunnerParams({ params } = {}) {
     process: new StubChildProcess(),
     kill: sinon.spy(async () => {}),
   };
-  const runnerParams: ChromiumExtensionRunnerParams = {
+  const runnerParams = {
     extensions: [
       {
         sourceDir: '/fake/sourceDir',
@@ -120,7 +117,6 @@ describe('util/extension-runners/chromium', async () => {
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
-    // $FlowIgnore: allow to call addess even wss property can be undefined.
     const wssInfo = runnerInstance.wss.address();
     const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
     const wsClient = new WebSocket(wsURL);
@@ -139,7 +135,6 @@ describe('util/extension-runners/chromium', async () => {
     const fakeSocket = new EventEmitter();
     sinon.spy(fakeSocket, 'on');
     runnerInstance.wss?.emit('connection', fakeSocket);
-    // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
     sinon.assert.calledOnce(fakeSocket.on);
 
     fakeSocket.emit('error', new Error('Fake wss socket ERROR'));
@@ -247,7 +242,6 @@ describe('util/extension-runners/chromium', async () => {
 
     await exitDone;
 
-    // $FlowIgnore: ignore method-unbinding, sinon just checks the spy properties.
     sinon.assert.calledOnce(runnerInstance.exit);
   });
 
@@ -622,8 +616,8 @@ describe('util/extension-runners/chromium', async () => {
   );
 
   describe('reloadAllExtensions', () => {
-    let runnerInstance: ChromiumExtensionRunner;
-    let wsClient: WebSocket;
+    let runnerInstance;
+    let wsClient;
 
     beforeEach(async () => {
       const { params } = prepareExtensionRunnerParams();
@@ -635,7 +629,6 @@ describe('util/extension-runners/chromium', async () => {
       if (!runnerInstance.wss) {
         throw new Error('WebSocker server is not running');
       }
-      // $FlowIgnore: if runnerInstance.wss would be unexpectedly undefined the test case will fail.
       const wssInfo = runnerInstance.wss.address();
       const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
       wsClient = new WebSocket(wsURL);
@@ -645,7 +638,6 @@ describe('util/extension-runners/chromium', async () => {
     afterEach(async () => {
       if (wsClient && wsClient.readyState === WebSocket.OPEN) {
         wsClient.close();
-        // $FlowIgnore: allow to nullify wsClient even if wsClient signature doesn't allow it.
         wsClient = null;
       }
       await runnerInstance.exit();
@@ -692,7 +684,6 @@ describe('util/extension-runners/chromium', async () => {
         });
         wsClient.close();
       });
-      // $FlowIgnore: allow to nullify wsClient even if wsClient signature doesn't allow it.
       wsClient = null;
     });
 

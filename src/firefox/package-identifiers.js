@@ -1,5 +1,3 @@
-/* @flow */
-
 // This list should have more specific identifiers listed first because of the
 // logic in `src/util/adb.js`, e.g. `some.id.debug` is more specific than `some.id`.
 export default [

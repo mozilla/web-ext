@@ -1,12 +1,9 @@
-/* @flow */
-
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import deepcopy from 'deepcopy';
 import * as sinon from 'sinon';
 
 import { FirefoxDesktopExtensionRunner } from '../../../src/extension-runners/firefox-desktop.js';
-import type { FirefoxDesktopExtensionRunnerParams } from '../../../src/extension-runners/firefox-desktop';
 import {
   basicManifest,
   getFakeFirefox,
@@ -29,28 +26,19 @@ const tempInstallResultMissingAddonId = {
   addon: { id: null },
 };
 
-type PrepareParams = {
-  params?: Object,
-  deps?: Object,
-  fakeFirefoxApp?: Object,
-  fakeRemoteFirefox?: Object,
-  debuggerPort?: number,
-};
-
 function prepareExtensionRunnerParams({
   params,
   fakeFirefoxApp,
   fakeRemoteFirefox,
   debuggerPort,
-}: PrepareParams = {}) {
+} = {}) {
   const remoteFirefox = getFakeRemoteFirefox({
     installTemporaryAddon: sinon.spy(() => Promise.resolve(tempInstallResult)),
     ...fakeRemoteFirefox,
   });
   const firefoxProcess = new StubChildProcess();
 
-  // $FlowIgnore: allow overriden params for testing purpose.
-  const runnerParams: FirefoxDesktopExtensionRunnerParams = {
+  const runnerParams = {
     extensions: [
       {
         sourceDir: '/fake/sourceDir',
@@ -290,7 +278,6 @@ describe('util/extension-runners/firefox-desktop', () => {
         extensionPath: sourceDir,
       })
     );
-    // $FlowIgnore: ignored 'property not found' on sinon spy.
     const install = params.firefoxApp.installExtension.firstCall.args[0];
 
     assert.equal(install.asProxy, true);

@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { fs } from 'mz';
@@ -13,27 +12,7 @@ const log = createLogger(import.meta.url);
 
 // getValidatedManifest helper types and implementation
 
-export type ExtensionManifestApplications = {|
-  gecko?: {|
-    id?: string,
-    strict_min_version?: string,
-    strict_max_version?: string,
-    update_url?: string,
-  |},
-|};
-
-export type ExtensionManifest = {|
-  name: string,
-  version: string,
-  default_locale?: string,
-  applications?: ExtensionManifestApplications,
-  browser_specific_settings?: ExtensionManifestApplications,
-  permissions?: Array<string>,
-|};
-
-export default async function getValidatedManifest(
-  sourceDir: string
-): Promise<ExtensionManifest> {
+export default async function getValidatedManifest(sourceDir) {
   const manifestFile = path.join(sourceDir, 'manifest.json');
   log.debug(`Validating manifest at ${manifestFile}`);
 
@@ -86,7 +65,7 @@ export default async function getValidatedManifest(
   return manifestData;
 }
 
-export function getManifestId(manifestData: ExtensionManifest): string | void {
+export function getManifestId(manifestData) {
   const manifestApps = [
     manifestData.browser_specific_settings,
     manifestData.applications,

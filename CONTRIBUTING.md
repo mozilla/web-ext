@@ -18,10 +18,6 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
     - [Debug a test](#debug-a-test)
   - [Build web-ext](#build-web-ext)
   - [Check for lint](#check-for-lint)
-  - [Check for Flow errors](#check-for-flow-errors)
-    - [Missing annotation](#missing-annotation)
-    - [How to read Flow errors related to type inconsistencies](#how-to-read-flow-errors-related-to-type-inconsistencies)
-    - [Flow type conventions](#flow-type-conventions)
   - [Code Coverage](#code-coverage)
   - [Working on the CLI](#working-on-the-cli)
     - [Adding a command option](#adding-a-command-option)
@@ -51,7 +47,7 @@ To get started on a patch, first install `web-ext` from [source](README.md#insta
 ## Develop all the things
 
 Your one stop command to continuously build, run tests, check for
-JavaScript syntax problems, and check for [Flow] errors is this:
+JavaScript syntax problems is:
 
     npm start
 
@@ -110,99 +106,6 @@ by setting `$SKIP_LINT` in the environment. Here is an example of running
 the test suite without lint checks:
 
     SKIP_LINT=1 npm test
-
-## Check for Flow errors
-
-This project relies on [Flow] to ensure functions and
-classes are used correctly. Run all Flow checks with `npm run flow-check`.
-
-The first steps to learn how to fix flow errors are:
-
-- learn how to read the flow annotations
-- learn how to write new type definitions or change the existing definitions
-- learn to read the flow errors and know some of the more common errors
-
-To learn more about the syntax used to add the flow annotations and how to
-write/change the type definitions, you should take a look at the official
-[Flow docs](https://flowtype.org/docs/getting-started.html)
-
-The following sections contain additional information related to common
-flow errors and how to read and fix them.
-
-### Missing annotation
-
-This is a pretty common flow error and it is usually the simplest to fix.
-
-It means that the new code added in the sources doesn't define the types
-of the functions and methods parameters, e.g. on the following snippet:
-
-```js
-export default async function getValidatedManifest(sourceDir) {
-  ...
-}
-```
-
-flow is going to raise the error:
-
-```
-src/util/manifest.js:32
- 32:   sourceDir
-       ^^^^^^^^^ parameter `sourceDir`. Missing annotation
-```
-
-which is fixed by annotating the function correctly, e.g.:
-
-```js
-export default async function getValidatedManifest(
-  sourceDir: string
-): Promise<ExtensionManifest> {
-  ...
-}
-```
-
-### How to read Flow errors related to type inconsistencies
-
-Some of the flow errors are going to contain references to the two sides
-of the flowtype errors:
-
-```
-tests/unit/test-cmd/test.build.js:193
-193:         manifestData: basicManifest,
-                           ^^^^^^^^^^^^^ property `applications`. Property not found in
- 24: export type ExtensionManifest = {|
-                                     ^ object type. See: src/util/manifest.js:24
-
-```
-
-- The first part points to the offending code (where the type violation has been found)
-- The second part points to the violated type annotation (where the type has been defined)
-
-When flow raises this kind of error (e.g. it is pretty common during a refactoring),
-we have to evaluate which one of the two sides is wrong.
-
-As an example, by reading the above error it is not immediately clear which part should be fixed.
-
-To be sure about which is the proper fix, we have to look at the code near to both the lines
-and evaluate the actual reason, e.g.:
-
-- it is possible that we wrote some of the property names wrong (in the code or in the type definitions)
-- or the defined type is supposed to contain a new property and it is not yet in the related type definitions
-
-### Flow type conventions
-
-In the `web-ext` sources we are currently using the following conventions (and they should be preserved
-when we change or add flow type definitions):
-
-- the type names should be CamelCased (e.g. `ExtensionManifest`)
-- the types used to annotate functions or methods defined in a module should be exported only when
-  they are supposed to be used by other modules (`export type ExtensionManifest = ...`)
-- any type imported from the other modules should be in the module preamble (near to the regular ES6 imports)
-- object types should be exact object types (e.g. `{| ... |}`), because flow will be able to raise
-  errors when we try to set or get a property not explicitly defined in the flow type (which is
-  particularly helpful during refactorings)
-- all the flow type definitions should be as close as possible to the function they annotate
-- we prefer not to use external files (e.g. `.flow.js` files or declaration files configured in the
-  `.flowconfig` file) for the `web-ext` flow types.
 
 ## Code Coverage
 
@@ -408,5 +311,3 @@ The schedule is flexible, if a release is due to happen close to a Firefox relea
 If the issue you're working on involves changing any of the headings in this document [CONTRIBUTING.md](https://github.com/mozilla/web-ext/blob/master/CONTRIBUTING.md),
 before making a commit and submitting a pull request, please remember to update the table of contents.
 To update the TOC, run the command `npm run gen-contributing-toc` from your root directory and you will auto generate a new TOC.
-
-[flow]: http://flowtype.org/

@@ -1,11 +1,6 @@
-/* @flow */
 import { fs } from 'mz';
 
 import { isErrorWithCode } from '../errors.js';
-
-type FileExistsOptions = {
-  fileIsReadable: (filePath: string) => Promise<boolean>,
-};
 
 /*
  * Resolves true if the path is a readable file.
@@ -19,11 +14,9 @@ type FileExistsOptions = {
  *
  * */
 export default async function fileExists(
-  path: string,
-  {
-    fileIsReadable = (f) => fs.access(f, fs.constants.R_OK),
-  }: FileExistsOptions = {}
-): Promise<boolean> {
+  path,
+  { fileIsReadable = (f) => fs.access(f, fs.constants.R_OK) } = {}
+) {
   try {
     await fileIsReadable(path);
     const stat = await fs.stat(path);

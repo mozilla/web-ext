@@ -1,4 +1,3 @@
-/* @flow */
 import net from 'net';
 
 import { describe, it, beforeEach, afterEach } from 'mocha';
@@ -13,7 +12,7 @@ import FirefoxRDPClient, {
 function createFakeRDPServer() {
   let lastSocket;
 
-  function sendRDPMessage(msg: Object) {
+  function sendRDPMessage(msg) {
     let data = Buffer.from(JSON.stringify(msg));
     data = Buffer.concat([Buffer.from(`${data.length}:`), data]);
     lastSocket.write(data);
@@ -104,7 +103,7 @@ describe('rdp-client', () => {
 
   describe('FirefoxRDPClient', () => {
     let fakeRDPServer;
-    let client: FirefoxRDPClient;
+    let client;
 
     beforeEach(() => {
       fakeRDPServer = createFakeRDPServer();
@@ -190,7 +189,6 @@ describe('rdp-client', () => {
       it('rejects on RDP request without a target actor', async () => {
         await getConnectedRDPClient();
         await assert.isRejected(
-          // $FlowIgnore: ignore flowtype error for testing purpose.
           client.request({ type: 'getRoot' }),
           /Unexpected RDP request without target actor/
         );
@@ -313,15 +311,10 @@ describe('rdp-client', () => {
         // Create an object with a circular dependency to trigger a stringify.
         // exception.
         const req = { to: 'root' };
-        // $FlowIgnore: ignore flowtype error for testing purpose.
         req.circular = req;
 
         await getConnectedRDPClient();
-        await assert.isRejected(
-          // $FlowIgnore: ignore flowtype error for testing purpose.
-          client.request(req),
-          Error
-        );
+        await assert.isRejected(client.request(req), Error);
         assertClientHasNoRequests();
       });
 
@@ -352,15 +345,10 @@ describe('rdp-client', () => {
         off: sinon.spy(),
       };
 
-      // $FlowIgnore: allow overwrite property for testing purpose.
       c._rdpConnection = fakeConn;
-      // $FlowIgnore
       c._onData = function fakeOnData() {};
-      // $FlowIgnore
       c._onError = function fakeOnError() {};
-      // $FlowIgnore
       c._onEnd = function fakeOnEnd() {};
-      // $FlowIgnore
       c._onTimeout = function fakeOnTimeout() {};
 
       c.disconnect();

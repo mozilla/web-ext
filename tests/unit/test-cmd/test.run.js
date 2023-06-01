@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { fs } from 'mz';
@@ -57,15 +56,14 @@ async function prepareRun(fakeInstallResult) {
     options,
     errors,
     run: (customArgv = {}, customOpt = {}) =>
-      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       cmdRun.default({ ...argv, ...customArgv }, { ...options, ...customOpt }),
   };
 }
 
 describe('run', () => {
-  let androidRunnerStub: any;
-  let desktopRunnerStub: any;
-  let chromiumRunnerStub: any;
+  let androidRunnerStub;
+  let desktopRunnerStub;
+  let chromiumRunnerStub;
 
   beforeEach(async () => {
     const firefoxAndroidModule = {
@@ -154,9 +152,7 @@ describe('run', () => {
       firefoxBinary: runOptions.firefox,
       customPrefs: runOptions.pref,
     };
-    // $FlowIgnore: Allow deleting properties for testing purpose.
     delete expectedRunnerParams.firefox;
-    // $FlowIgnore: Allow deleting properties for testing purpose.
     delete expectedRunnerParams.pref;
 
     assert.deepEqual(

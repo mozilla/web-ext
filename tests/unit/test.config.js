@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import { assert } from 'chai';
@@ -15,15 +14,6 @@ import {
 import { withTempDir } from '../../src/util/temp-dir.js';
 import { UsageError, WebExtError } from '../../src/errors.js';
 
-type MakeArgvParams = {|
-  userCmd?: Array<string>,
-  command?: string,
-  commandDesc?: string,
-  commandExecutor?: Function,
-  commandOpt?: Object,
-  globalOpt?: Object,
-|};
-
 function makeArgv({
   userCmd = ['fakecommand'],
   command = 'fakecommand',
@@ -31,7 +21,7 @@ function makeArgv({
   commandExecutor = sinon.stub(),
   commandOpt,
   globalOpt,
-}: MakeArgvParams) {
+}) {
   const program = new Program(userCmd);
 
   if (globalOpt) {
@@ -996,7 +986,6 @@ describe('config', () => {
 
   describe('discoverConfigFiles', () => {
     function _discoverConfigFiles(params = {}) {
-      // $FlowIgnore: allow use of inexact object literal for testing purpose.
       return discoverConfigFiles({
         // By default, do not look in the real home directory.
         getHomeDir: () => '/not-a-directory',

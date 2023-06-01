@@ -4,8 +4,7 @@
  *
  *     npx mocha -n "loader=./tests/babel-loader.js" -r tests/setup.js tests/unit/test.config.js
  *
- * It is responsible for the transpiling on the fly of the imported tests modules using babel (otherwise the flowtype
- * syntaxes will trigger syntax errors while loaded by node plain ESM module loader).
+ * It is responsible for the transpiling on the fly of the imported tests modules using babel.
  *
  * The simplified transformSource function that follows has been derived from the existing node ESM loader:
  *

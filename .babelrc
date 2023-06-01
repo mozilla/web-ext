@@ -6,8 +6,7 @@
         // Leave import/export statements unchanged in the babel transpiling output.
         "modules": false
       }
-    ],
-    "@babel/flow"
+    ]
   ],
   "plugins": [
     ["transform-inline-environment-variables", {

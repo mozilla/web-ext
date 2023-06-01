@@ -1,5 +1,3 @@
-/* @flow */
-
 /**
  * This module provide an ExtensionRunner subclass that manage an extension executed
  * in a Firefox for Android instance.
@@ -10,26 +8,14 @@ import readline from 'readline';
 
 import { withTempDir } from '../util/temp-dir.js';
 import DefaultADBUtils from '../util/adb.js';
-import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
 import {
   MultiExtensionsReloadError,
   UsageError,
   WebExtError,
 } from '../errors.js';
-import * as defaultFirefoxApp from '../firefox/index.js';
-import {
-  connectWithMaxRetries as defaultFirefoxConnector,
-  findFreeTcpPort,
-} from '../firefox/remote.js';
+import { findFreeTcpPort } from '../firefox/remote.js';
 import { createLogger } from '../util/logger.js';
 import { isTTY, setRawMode } from '../util/stdin.js';
-import type {
-  ExtensionRunnerParams,
-  ExtensionRunnerReloadResult,
-} from './base';
-import type { FirefoxPreferences } from '../firefox/preferences';
-import type { FirefoxRDPResponseAddon, RemoteFirefox } from '../firefox/remote';
-import type { ExtensionBuildResult } from '../cmd/build';
 
 const log = createLogger(import.meta.url);
 
@@ -52,58 +38,29 @@ const getIgnoredParamsWarningsMessage = (optionName) => {
   return `The Firefox for Android target does not support ${optionName}`;
 };
 
-export type FirefoxAndroidExtensionRunnerParams = {|
-  ...ExtensionRunnerParams,
-
-  // Firefox specific.
-  customPrefs?: FirefoxPreferences,
-
-  // Not supported (currently ignored with logged warning).
-  preInstall?: boolean,
-  browserConsole?: boolean,
-
-  // Firefox android injected dependencies.
-  adbBin?: string,
-  adbHost?: string,
-  adbPort?: string,
-  adbDevice?: string,
-  adbDiscoveryTimeout?: number,
-  adbRemoveOldArtifacts?: boolean,
-  firefoxApk?: string,
-  firefoxApkComponent?: string,
-
-  // Injected Dependencies.
-  firefoxApp: typeof defaultFirefoxApp,
-  firefoxClient: typeof defaultFirefoxConnector,
-  ADBUtils?: typeof DefaultADBUtils,
-  buildSourceDir: (string, string) => Promise<ExtensionBuildResult>,
-  desktopNotifications: typeof defaultDesktopNotifications,
-  stdin?: stream$Readable,
-|};
-
 /**
  * Implements an IExtensionRunner which manages a Firefox for Android instance.
  */
 export class FirefoxAndroidExtensionRunner {
   // Wait 3s before the next unix socket discovery loop.
-  static unixSocketDiscoveryRetryInterval: number = 3 * 1000;
+  static unixSocketDiscoveryRetryInterval = 3 * 1000;
   // Wait for at most 3 minutes before giving up.
-  static unixSocketDiscoveryMaxTime: number = 3 * 60 * 1000;
+  static unixSocketDiscoveryMaxTime = 3 * 60 * 1000;
 
-  params: FirefoxAndroidExtensionRunnerParams;
-  adbUtils: DefaultADBUtils;
-  exiting: boolean;
-  selectedAdbDevice: string;
-  selectedFirefoxApk: string;
-  selectedArtifactsDir: string;
-  selectedRDPSocketFile: string;
-  selectedTCPPort: number;
-  cleanupCallbacks: Set<Function>;
-  adbExtensionsPathBySourceDir: Map<string, string>;
-  reloadableExtensions: Map<string, string>;
-  remoteFirefox: RemoteFirefox;
+  params;
+  adbUtils;
+  exiting;
+  selectedAdbDevice;
+  selectedFirefoxApk;
+  selectedArtifactsDir;
+  selectedRDPSocketFile;
+  selectedTCPPort;
+  cleanupCallbacks;
+  adbExtensionsPathBySourceDir;
+  reloadableExtensions;
+  remoteFirefox;
 
-  constructor(params: FirefoxAndroidExtensionRunnerParams) {
+  constructor(params) {
     this.params = params;
     this.cleanupCallbacks = new Set();
     this.adbExtensionsPathBySourceDir = new Map();
@@ -114,7 +71,7 @@ export class FirefoxAndroidExtensionRunner {
     this.printIgnoredParamsWarnings();
   }
 
-  async run(): Promise<void> {
+  async run() {
     const {
       adbBin,
       adbHost = DEFAULT_ADB_HOST,
@@ -167,7 +124,7 @@ export class FirefoxAndroidExtensionRunner {
   /**
    * Returns the runner name.
    */
-  getName(): string {
+  getName() {
     return 'Firefox Android';
   }
 
@@ -175,7 +132,7 @@ export class FirefoxAndroidExtensionRunner {
    * Reloads all the extensions, collect any reload error and resolves to
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
-  async reloadAllExtensions(): Promise<Array<ExtensionRunnerReloadResult>> {
+  async reloadAllExtensions() {
     const runnerName = this.getName();
     const reloadErrors = new Map();
 
@@ -202,9 +159,7 @@ export class FirefoxAndroidExtensionRunner {
    * Reloads a single extension, collect any reload error and resolves to
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
-  async reloadExtensionBySourceDir(
-    extensionSourceDir: string
-  ): Promise<Array<ExtensionRunnerReloadResult>> {
+  async reloadExtensionBySourceDir(extensionSourceDir) {
     const runnerName = this.getName();
     const addonId = this.reloadableExtensions.get(extensionSourceDir);
 
@@ -242,14 +197,14 @@ export class FirefoxAndroidExtensionRunner {
    * (e.g. the Firefox instance exits or the user has requested web-ext
    * to exit).
    */
-  registerCleanup(fn: Function): void {
+  registerCleanup(fn) {
     this.cleanupCallbacks.add(fn);
   }
 
   /**
    * Exits the runner, by closing the managed Firefox instance.
    */
-  async exit(): Promise<void> {
+  async exit() {
     const { adbUtils, selectedAdbDevice, selectedArtifactsDir } = this;
 
     this.exiting = true;
@@ -275,7 +230,7 @@ export class FirefoxAndroidExtensionRunner {
 
   // Private helper methods.
 
-  getDeviceProfileDir(): string {
+  getDeviceProfileDir() {
     return `${this.selectedArtifactsDir}/profile`;
   }
 
@@ -496,7 +451,7 @@ export class FirefoxAndroidExtensionRunner {
     );
   }
 
-  async buildAndPushExtension(sourceDir: string) {
+  async buildAndPushExtension(sourceDir) {
     const {
       adbUtils,
       selectedAdbDevice,
@@ -637,7 +592,7 @@ export class FirefoxAndroidExtensionRunner {
 
       const addonId = await remoteFirefox
         .installTemporaryAddon(adbExtensionPath)
-        .then((installResult: FirefoxRDPResponseAddon) => {
+        .then((installResult) => {
           return installResult.addon.id;
         });
 

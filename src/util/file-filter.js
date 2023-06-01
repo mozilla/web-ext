@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import multimatch from 'multimatch';
@@ -8,7 +7,7 @@ import { createLogger } from './logger.js';
 const log = createLogger(import.meta.url);
 
 // check if target is a sub directory of src
-export const isSubPath = (src: string, target: string): boolean => {
+export const isSubPath = (src, target) => {
   const relate = path.relative(src, target);
   // same dir
   if (!relate) {
@@ -22,19 +21,12 @@ export const isSubPath = (src: string, target: string): boolean => {
 
 // FileFilter types and implementation.
 
-export type FileFilterOptions = {
-  baseIgnoredPatterns?: Array<string>,
-  ignoreFiles?: Array<string>,
-  sourceDir: string,
-  artifactsDir?: string,
-};
-
 /*
  * Allows or ignores files.
  */
 export class FileFilter {
-  filesToIgnore: Array<string>;
-  sourceDir: string;
+  filesToIgnore;
+  sourceDir;
 
   constructor({
     baseIgnoredPatterns = [
@@ -48,7 +40,7 @@ export class FileFilter {
     ignoreFiles = [],
     sourceDir,
     artifactsDir,
-  }: FileFilterOptions = {}) {
+  } = {}) {
     sourceDir = path.resolve(sourceDir);
 
     this.filesToIgnore = [];
@@ -71,7 +63,7 @@ export class FileFilter {
   /**
    *  Resolve relative path to absolute path with sourceDir.
    */
-  resolveWithSourceDir(file: string): string {
+  resolveWithSourceDir(file) {
     const resolvedPath = path.resolve(this.sourceDir, file);
     log.debug(
       `Resolved path ${file} with sourceDir ${this.sourceDir} ` +
@@ -83,7 +75,7 @@ export class FileFilter {
   /**
    *  Insert more files into filesToIgnore array.
    */
-  addToIgnoreList(files: Array<string>) {
+  addToIgnoreList(files) {
     for (const file of files) {
       if (file.charAt(0) === '!') {
         const resolvedFile = this.resolveWithSourceDir(file.substr(1));
@@ -104,7 +96,7 @@ export class FileFilter {
    * Example: this is called by zipdir as wantFile(filePath) for each
    * file in the folder that is being archived.
    */
-  wantFile(filePath: string): boolean {
+  wantFile(filePath) {
     const resolvedPath = this.resolveWithSourceDir(filePath);
     const matches = multimatch(resolvedPath, this.filesToIgnore);
     if (matches.length > 0) {
@@ -117,7 +109,4 @@ export class FileFilter {
 
 // a helper function to make mocking easier
 
-export const createFileFilter = (params: FileFilterOptions): FileFilter =>
-  new FileFilter(params);
-
-export type FileFilterCreatorFn = typeof createFileFilter;
+export const createFileFilter = (params) => new FileFilter(params);
