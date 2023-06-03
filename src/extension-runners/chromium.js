@@ -129,17 +129,18 @@ export class ChromiumExtensionRunner {
 
     const chromeFlags = [...DEFAULT_CHROME_FLAGS];
     let startingUrl;
-    var specialStartingUrls = [];
+    let specialStartingUrls = [];
     if (this.params.startUrl) {
+      const specialUrlFormats = ['chrome://', 'chrome-extension://'];
       const startingUrls = Array.isArray(this.params.startUrl) ?
         this.params.startUrl : [this.params.startUrl];
 
       // Extract URLs starting with chrome:// from startingUrls and let bg.js open them instead
       specialStartingUrls = startingUrls.filter(
-        (item) => (item.toLowerCase().startsWith('chrome://')));
+        (item) => (specialUrlFormats.some((format) => item.toLowerCase().startsWith(format))));
 
       const strippedStartingUrls = startingUrls.filter(
-        (item) => !(item.toLowerCase().startsWith('chrome://')));
+        (item) => !(specialUrlFormats.some((format) => item.toLowerCase().startsWith(format))));
 
       startingUrl = strippedStartingUrls.shift();
       chromeFlags.push(...strippedStartingUrls);
@@ -269,8 +270,7 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  async createReloadManagerExtension(
-    specialStartingUrls: Array<string>): Promise<string> {
+  async createReloadManagerExtension(specialStartingUrls) {
     const tmpDir = new TempDir();
     await tmpDir.create();
     this.registerCleanup(() => tmpDir.remove());
