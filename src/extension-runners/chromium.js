@@ -132,23 +132,32 @@ export class ChromiumExtensionRunner {
     let specialStartingUrls = [];
     if (this.params.startUrl) {
       const specialUrlFormats = ['chrome://', 'chrome-extension://'];
-      const startingUrls = Array.isArray(this.params.startUrl) ?
-        this.params.startUrl : [this.params.startUrl];
+      const startingUrls = Array.isArray(this.params.startUrl)
+        ? this.params.startUrl
+        : [this.params.startUrl];
 
       // Extract URLs starting with chrome:// from startingUrls and let bg.js open them instead
-      specialStartingUrls = startingUrls.filter(
-        (item) => (specialUrlFormats.some((format) => item.toLowerCase().startsWith(format))));
+      specialStartingUrls = startingUrls.filter((item) =>
+        specialUrlFormats.some((format) =>
+          item.toLowerCase().startsWith(format)
+        )
+      );
 
       const strippedStartingUrls = startingUrls.filter(
-        (item) => !(specialUrlFormats.some((format) => item.toLowerCase().startsWith(format))));
+        (item) =>
+          !specialUrlFormats.some((format) =>
+            item.toLowerCase().startsWith(format)
+          )
+      );
 
       startingUrl = strippedStartingUrls.shift();
       chromeFlags.push(...strippedStartingUrls);
     }
 
     // Create the extension that will manage the addon reloads
-    this.reloadManagerExtension =
-      await this.createReloadManagerExtension(specialStartingUrls);
+    this.reloadManagerExtension = await this.createReloadManagerExtension(
+      specialStartingUrls
+    );
 
     // Start chrome pointing it to a given profile dir
     const extensions = [this.reloadManagerExtension]
