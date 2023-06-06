@@ -92,11 +92,13 @@ describe('util.submit-addon', () => {
       const clientSpy = sinon.spy(Client);
       const apiAuthSpy = sinon.spy(JwtApiAuth);
       const userAgentString = 'web-ext/666.a.b';
+      const apiProxy = 'https://proxy.url';
 
       await signAddon({
         ...signAddonDefaults,
         apiKey,
         apiSecret,
+        apiProxy,
         amoBaseUrl,
         downloadDir,
         userAgentString,
@@ -112,6 +114,7 @@ describe('util.submit-addon', () => {
       sinon.assert.calledOnce(clientSpy);
       assert.deepEqual(clientSpy.firstCall.args[0], {
         apiAuth: {},
+        apiProxy,
         baseUrl,
         validationCheckTimeout: signAddonDefaults.timeout,
         approvalCheckTimeout: signAddonDefaults.timeout,
@@ -1014,6 +1017,21 @@ describe('util.submit-addon', () => {
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['User-Agent'],
           client.userAgentString
+        );
+        sinon.assert.calledOnce(nodeFetchStub);
+      });
+
+      it('uses a specified proxy', async () => {
+        nodeFetchStub.resolves(new JSONResponse({}, 200));
+        const apiProxyHost = 'proxy.url';
+        const apiProxy = `https://${apiProxyHost}`;
+        client.apiProxy = apiProxy;
+
+        await client.fetch(baseUrl, 'POST');
+
+        assert.equal(
+          nodeFetchStub.firstCall.args[1].agent.proxy.host,
+          apiProxyHost
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });

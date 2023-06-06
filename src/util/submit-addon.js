@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import fetch, { FormData, fileFromSync } from 'node-fetch';
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
+import HttpsProxyAgent from 'https-proxy-agent';
 
 import { isErrorWithCode } from '../errors.js';
 import { createLogger } from './../util/logger.js';
@@ -51,7 +52,8 @@ export class JwtApiAuth {
 
 export default class Client {
   apiAuth;
-  apiUrl;
+  apiProxy;
+  apiUr;
   validationCheckInterval;
   validationCheckTimeout;
   approvalCheckInterval;
@@ -61,6 +63,7 @@ export default class Client {
 
   constructor({
     apiAuth,
+    apiProxy,
     baseUrl,
     validationCheckInterval = 1000,
     validationCheckTimeout = 300000, // 5 minutes.
@@ -70,6 +73,9 @@ export default class Client {
     userAgentString,
   }) {
     this.apiAuth = apiAuth;
+    if (apiProxy) {
+      this.apiProxy = apiProxy;
+    }
     if (!baseUrl.pathname.endsWith('/')) {
       baseUrl = new URL(baseUrl.href);
       baseUrl.pathname += '/';
@@ -87,8 +93,8 @@ export default class Client {
     return fileFromSync(path);
   }
 
-  nodeFetch(url, { method, headers, body }) {
-    return fetch(url, { method, headers, body });
+  nodeFetch(url, { method, headers, body, agent }) {
+    return fetch(url, { method, headers, body, agent });
   }
 
   async doUploadSubmit(xpiPath, channel) {
@@ -229,7 +235,11 @@ export default class Client {
         'Content-Type': 'application/json',
       };
     }
-    return this.nodeFetch(url, { method, body, headers });
+    let agent;
+    if (this.apiProxy) {
+      agent = new HttpsProxyAgent(this.apiProxy);
+    }
+    return this.nodeFetch(url, { method, body, headers, agent });
   }
 
   async downloadSignedFile(fileUrl, addonId) {
@@ -353,6 +363,7 @@ export default class Client {
 export async function signAddon({
   apiKey,
   apiSecret,
+  apiProxy,
   amoBaseUrl,
   timeout,
   id,
@@ -385,6 +396,7 @@ export async function signAddon({
 
   const client = new SubmitClient({
     apiAuth: new ApiAuthClass({ apiKey, apiSecret }),
+    apiProxy,
     baseUrl,
     validationCheckTimeout: timeout,
     approvalCheckTimeout: timeout,

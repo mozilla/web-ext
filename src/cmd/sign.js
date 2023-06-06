@@ -116,14 +116,6 @@ export default function sign(
       );
     }
 
-    if (useSubmissionApi && apiProxy) {
-      // https://github.com/mozilla/web-ext/issues/2472
-      throw new UsageError(
-        "apiProxy isn't yet supported for the addon submission API. " +
-          'See https://github.com/mozilla/web-ext/issues/2472'
-      );
-    }
-
     let metaDataJson;
     if (amoMetadata) {
       const metadataFileBuffer = await asyncFsReadFile(amoMetadata);
@@ -138,6 +130,7 @@ export default function sign(
     const signSubmitArgs = {
       apiKey,
       apiSecret,
+      apiProxy,
       timeout,
       id,
       xpiPath: buildResult.extensionPath,
@@ -165,7 +158,6 @@ export default function sign(
         } = await signAddon({
           ...signSubmitArgs,
           apiUrlPrefix,
-          apiProxy,
           disableProgressBar,
           verbose,
           version: manifestData.version,
