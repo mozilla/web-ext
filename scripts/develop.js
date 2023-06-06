@@ -7,17 +7,11 @@ import notifier from 'node-notifier';
 
 import config from './lib/config.js';
 import eslint from './lib/eslint.js';
-import { flowStatus } from './lib/flow.js';
 import { mochaUnit, mochaFunctional } from './lib/mocha.js';
 import babel from './lib/babel.js';
 
 const COVERAGE =
   process.argv.includes('--coverage') || process.env.COVERAGE === 'y';
-
-console.log('Starting flow server...');
-if (!flowStatus()) {
-  process.exit(1);
-}
 
 const wp = new Watchpack();
 wp.watch(config.watch.files, config.watch.dirs);
@@ -34,12 +28,6 @@ async function runTasks(changes) {
     .join(' ')}...`;
   console.log(changesDetected);
   notify(changesDetected);
-
-  console.log('\nRunning flow checks');
-  if (!flowStatus()) {
-    notify('flow check errors');
-    return;
-  }
 
   console.log('\nRunning eslint checks');
   if (!eslint()) {

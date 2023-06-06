@@ -1,4 +1,3 @@
-/* @flow */
 import path from 'path';
 
 import deepcopy from 'deepcopy';
@@ -53,10 +52,7 @@ function createFakeProfileFinder(profilesDirPath) {
   return FakeProfileFinder;
 }
 
-async function createFakeProfilesIni(
-  dirPath: string,
-  profilesDefs: Array<Object>
-): Promise<void> {
+async function createFakeProfilesIni(dirPath, profilesDefs) {
   let content = '';
 
   for (const [idx, profile] of profilesDefs.entries()) {
@@ -97,16 +93,7 @@ describe('firefox', () => {
 
     // TODO: This object should accept dynamic properties since those are passed to firefox.run()
 
-    type RunFirefoxOptions = {
-      profile?: typeof FirefoxProfile,
-    };
-
-    function runFirefox({
-      // $FlowIgnore: for the purpose of this test, fakeProfile includes only a subset of the expected properties.
-      profile = fakeProfile,
-      ...args
-    }: RunFirefoxOptions = {}) {
-      // $FlowIgnore: allow use of inexact object literal for testing purpose.
+    function runFirefox({ profile = fakeProfile, ...args } = {}) {
       return firefox.run(profile, {
         fxRunner: createFakeFxRunner(),
         findRemotePort: () => Promise.resolve(6000),
@@ -117,7 +104,6 @@ describe('firefox', () => {
     it('executes the Firefox runner with a given profile', () => {
       const runner = createFakeFxRunner();
       const profile = fakeProfile;
-      // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
       return runFirefox({ fxRunner: runner, profile }).then(() => {
         sinon.assert.called(runner);
         assert.equal(runner.firstCall.args[0].profile, profile.path());
@@ -217,7 +203,6 @@ describe('firefox', () => {
       const extensions = [{ sourceDir: '/path/to/extension' }];
 
       return runFirefox({
-        // $FlowIgnore: allow use of fakeProfile as a fake FirefoxProfile instance.
         profile,
         fxRunner: runner,
         firefoxBinary,
@@ -655,11 +640,6 @@ describe('firefox', () => {
 
   describe('defaultCreateProfileFinder', () => {
     // Define the params type for the prepareProfileFinderTest helper.
-    type PrepareProfileFinderTestParams = {
-      readProfiles?: Function,
-      getPath?: Function,
-      profiles?: Array<{ Name: string }>,
-    };
 
     const defaultFakeProfiles = [{ Name: 'someName' }];
 
@@ -675,7 +655,7 @@ describe('firefox', () => {
       readProfiles = defaultReadProfilesMock,
       getPath = defaultGetPathMock,
       profiles = defaultFakeProfiles,
-    }: PrepareProfileFinderTestParams = {}) {
+    } = {}) {
       const fakeReadProfiles = sinon.spy(readProfiles);
       const fakeGetPath = sinon.spy(getPath);
       const fakeProfiles = profiles;
@@ -702,7 +682,6 @@ describe('firefox', () => {
     it('creates a finder', () => {
       const { FxProfile } = prepareProfileFinderTest();
       FxProfile.Finder = sinon.spy(FxProfile.Finder);
-      // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
       firefox.defaultCreateProfileFinder({ FxProfile });
       sinon.assert.calledWith(FxProfile.Finder, sinon.match(undefined));
     });
@@ -712,7 +691,6 @@ describe('firefox', () => {
       FxProfile.Finder = sinon.spy(FxProfile.Finder);
 
       const userDirectoryPath = '/non/existent/path';
-      // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
       firefox.defaultCreateProfileFinder({ userDirectoryPath, FxProfile });
 
       sinon.assert.called(FxProfile.Finder);
@@ -730,7 +708,6 @@ describe('firefox', () => {
 
       const profileFinder = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
-        // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
         FxProfile,
       });
 
@@ -755,7 +732,6 @@ describe('firefox', () => {
 
       const getter = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
-        // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
         FxProfile,
       });
 
@@ -781,7 +757,6 @@ describe('firefox', () => {
 
       const getter = firefox.defaultCreateProfileFinder({
         userDirectoryPath,
-        // $FlowIgnore: allow use of FxProfile as a fake FirefoxProfile class.
         FxProfile,
       });
 
@@ -882,7 +857,7 @@ describe('firefox', () => {
   });
 
   describe('installExtension', () => {
-    function setUp(testPromise: Function) {
+    function setUp(testPromise) {
       return withTempDir((tmpDir) => {
         const data = {
           extensionPath: fixturePath('minimal_extension-1.0.zip'),

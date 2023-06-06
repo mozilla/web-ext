@@ -1,11 +1,10 @@
-/* @flow */
 import ExtendableError from 'es6-error';
 
 /*
  * Base error for all custom web-ext errors.
  */
 export class WebExtError extends ExtendableError {
-  constructor(message: string) {
+  constructor(message) {
     super(message);
   }
 }
@@ -14,7 +13,7 @@ export class WebExtError extends ExtendableError {
  * The class for errors that can be fixed by the developer.
  */
 export class UsageError extends WebExtError {
-  constructor(message: string) {
+  constructor(message) {
     super(message);
   }
 }
@@ -23,7 +22,7 @@ export class UsageError extends WebExtError {
  * The manifest for the extension is invalid (or missing).
  */
 export class InvalidManifest extends UsageError {
-  constructor(message: string) {
+  constructor(message) {
     super(message);
   }
 }
@@ -32,7 +31,7 @@ export class InvalidManifest extends UsageError {
  * The remote Firefox does not support temporary add-on installation.
  */
 export class RemoteTempInstallNotSupported extends WebExtError {
-  constructor(message: string) {
+  constructor(message) {
     super(message);
   }
 }
@@ -42,7 +41,7 @@ export class RemoteTempInstallNotSupported extends WebExtError {
  * (initialized from a map of errors by extensionSourceDir string).
  */
 export class MultiExtensionsReloadError extends WebExtError {
-  constructor(errorsMap: Map<string, Error>) {
+  constructor(errorsMap) {
     let errors = '';
     for (const [sourceDir, error] of errorsMap) {
       const msg = String(error);
@@ -68,10 +67,7 @@ export class MultiExtensionsReloadError extends WebExtError {
  * All other errors will be re-thrown.
  *
  */
-export function onlyInstancesOf(
-  predicate: Function,
-  errorHandler: Function
-): Function {
+export function onlyInstancesOf(predicate, errorHandler) {
   return (error) => {
     if (error instanceof predicate) {
       return errorHandler(error);
@@ -101,10 +97,7 @@ export function onlyInstancesOf(
  * All other errors will be re-thrown.
  *
  */
-export function onlyErrorsWithCode(
-  codeWanted: (string | number) | Array<string | number>,
-  errorHandler: Function
-): Function {
+export function onlyErrorsWithCode(codeWanted, errorHandler) {
   return (error) => {
     let throwError = true;
 
@@ -127,10 +120,7 @@ export function onlyErrorsWithCode(
   };
 }
 
-export function isErrorWithCode(
-  codeWanted: string | Array<string>,
-  error: Object
-): boolean {
+export function isErrorWithCode(codeWanted, error) {
   if (Array.isArray(codeWanted) && codeWanted.indexOf(error.code) !== -1) {
     return true;
   } else if (error.code === codeWanted) {

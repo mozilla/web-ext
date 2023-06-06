@@ -1,29 +1,6 @@
-/* @flow */
 import net from 'net';
 import EventEmitter from 'events';
 import domain from 'domain';
-
-export type RDPRequest = {
-  to: string,
-  type: string,
-};
-
-export type RDPResult = {
-  from: string,
-  type: string,
-};
-
-export type Deferred = {|
-  resolve: Function,
-  reject: Function,
-|};
-
-type ParseResult = {|
-  data: Buffer,
-  rdpMessage?: Object,
-  error?: Error,
-  fatal?: boolean,
-|};
 
 export const DEFAULT_PORT = 6000;
 export const DEFAULT_HOST = '127.0.0.1';
@@ -41,7 +18,7 @@ const UNSOLICITED_EVENTS = new Set([
 ]);
 
 // Parse RDP packets: BYTE_LENGTH + ':' + DATA.
-export function parseRDPMessage(data: Buffer): ParseResult {
+export function parseRDPMessage(data) {
   const str = data.toString();
   const sepIdx = str.indexOf(':');
   if (sepIdx < 1) {
@@ -70,20 +47,20 @@ export function parseRDPMessage(data: Buffer): ParseResult {
   }
 }
 
-export function connectToFirefox(port: number): Promise<FirefoxRDPClient> {
+export function connectToFirefox(port) {
   const client = new FirefoxRDPClient();
   return client.connect(port).then(() => client);
 }
 
 export default class FirefoxRDPClient extends EventEmitter {
-  _incoming: Buffer;
-  _pending: Array<{| request: RDPRequest, deferred: Deferred |}>;
-  _active: Map<string, Deferred>;
-  _rdpConnection: net.Socket;
-  _onData: Function;
-  _onError: Function;
-  _onEnd: Function;
-  _onTimeout: Function;
+  _incoming;
+  _pending;
+  _active;
+  _rdpConnection;
+  _onData;
+  _onError;
+  _onEnd;
+  _onTimeout;
 
   constructor() {
     super();
@@ -97,7 +74,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     this._onTimeout = (...args) => this.onTimeout(...args);
   }
 
-  connect(port: number): Promise<void> {
+  connect(port) {
     return new Promise((resolve, reject) => {
       // Create a domain to wrap the errors that may be triggered
       // by creating the client connection (e.g. ECONNREFUSED)
@@ -124,7 +101,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     });
   }
 
-  disconnect(): void {
+  disconnect() {
     if (!this._rdpConnection) {
       return;
     }
@@ -139,7 +116,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     this._rejectAllRequests(new Error('RDP connection closed'));
   }
 
-  _rejectAllRequests(error: Error) {
+  _rejectAllRequests(error) {
     for (const activeDeferred of this._active.values()) {
       activeDeferred.reject(error);
     }
@@ -151,8 +128,8 @@ export default class FirefoxRDPClient extends EventEmitter {
     this._pending = [];
   }
 
-  async request(requestProps: string | RDPRequest): Promise<RDPResult> {
-    let request: RDPRequest;
+  async request(requestProps) {
+    let request;
 
     if (typeof requestProps === 'string') {
       request = { to: 'root', type: requestProps };
@@ -173,7 +150,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     });
   }
 
-  _flushPendingRequests(): void {
+  _flushPendingRequests() {
     this._pending = this._pending.filter(({ request, deferred }) => {
       if (this._active.has(request.to)) {
         // Keep in the pending requests until there are no requests
@@ -200,7 +177,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     });
   }
 
-  _expectReply(targetActor: string, deferred: Deferred): void {
+  _expectReply(targetActor, deferred) {
     if (this._active.has(targetActor)) {
       throw new Error(`${targetActor} does already have an active request`);
     }
@@ -208,7 +185,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     this._active.set(targetActor, deferred);
   }
 
-  _handleMessage(rdpData: Object): void {
+  _handleMessage(rdpData) {
     if (rdpData.from == null) {
       if (rdpData.error) {
         this.emit('rdp-error', rdpData);
@@ -249,7 +226,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     );
   }
 
-  _readMessage(): boolean {
+  _readMessage() {
     const { data, rdpMessage, error, fatal } = parseRDPMessage(this._incoming);
 
     this._incoming = data;
@@ -279,7 +256,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     return true;
   }
 
-  onData(data: Buffer) {
+  onData(data) {
     this._incoming = Buffer.concat([this._incoming, data]);
     while (this._readMessage()) {
       // Keep parsing and handling messages until readMessage
@@ -287,7 +264,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     }
   }
 
-  onError(error: Error) {
+  onError(error) {
     this.emit('error', error);
   }
 

@@ -1,4 +1,3 @@
-/* @flow */
 import { createHash } from 'crypto';
 import { promises as fsPromises, readFileSync } from 'fs';
 import path from 'path';
@@ -28,15 +27,7 @@ class JSONResponse extends Response {
   }
 }
 
-const mockNodeFetch = (
-  nodeFetchStub: any,
-  url: URL | string,
-  method: string,
-  responses: Array<{
-    body: any,
-    status: number,
-  }>
-): void => {
+const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
   const stubMatcher = nodeFetchStub.withArgs(
     url instanceof URL ? url : new URL(url),
     sinon.match.has('method', method)

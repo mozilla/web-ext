@@ -8,7 +8,6 @@ LICENSE
 # exclude these directories
 /artifacts/
 /coverage/
-/flow-typed/
 /lib/
 /node_modules/
 /tests/fixtures/

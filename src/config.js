@@ -1,4 +1,3 @@
-/* @flow */
 import os from 'os';
 import path from 'path';
 
@@ -12,24 +11,13 @@ import { UsageError, WebExtError } from './errors.js';
 
 const log = createLogger(import.meta.url);
 
-type ApplyConfigToArgvParams = {|
-  // This is the argv object which will get updated by each
-  // config applied.
-  argv: Object,
-  // This is the argv that only has CLI values applied to it.
-  argvFromCLI: Object,
-  configObject: Object,
-  options: Object,
-  configFileName: string,
-|};
-
 export function applyConfigToArgv({
   argv,
   argvFromCLI,
   configObject,
   options,
   configFileName,
-}: ApplyConfigToArgvParams): Object {
+}) {
   let newArgv = { ...argv };
 
   for (const option of Object.keys(configObject)) {
@@ -127,7 +115,7 @@ export function applyConfigToArgv({
   return newArgv;
 }
 
-export function loadJSConfigFile(filePath: string): Object {
+export function loadJSConfigFile(filePath) {
   const resolvedFilePath = path.resolve(filePath);
   log.debug(
     `Loading JS config file: "${filePath}" ` +
@@ -156,13 +144,7 @@ export function loadJSConfigFile(filePath: string): Object {
   return configObject;
 }
 
-type DiscoverConfigFilesParams = {
-  getHomeDir: () => string,
-};
-
-export async function discoverConfigFiles({
-  getHomeDir = os.homedir,
-}: DiscoverConfigFilesParams = {}): Promise<Array<string>> {
+export async function discoverConfigFiles({ getHomeDir = os.homedir } = {}) {
   const magicConfigName = 'web-ext-config.js';
 
   // Config files will be loaded in this order.

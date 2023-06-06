@@ -1,4 +1,3 @@
-/* @flow */
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
 
@@ -32,7 +31,6 @@ describe('firefox/preferences', () => {
 
     it('throws an error for unsupported apps', () => {
       assert.throws(
-        // $FlowIgnore: ignore type errors on testing nonexistent 'thunderbird' prefs
         () => getPrefs('thunderbird'),
         WebExtError,
         /Unsupported application: thunderbird/
