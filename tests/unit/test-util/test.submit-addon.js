@@ -74,7 +74,8 @@ describe('util.submit-addon', () => {
       apiKey: 'some-key',
       apiSecret: 'ffff',
       amoBaseUrl: AMO_BASE_URL,
-      timeout: 1,
+      validationCheckTimeout: 2,
+      approvalCheckoutTimeout: 1,
       downloadDir: '/some-dir/',
       xpiPath: '/some.xpi',
       channel: 'some-channel',
@@ -116,8 +117,8 @@ describe('util.submit-addon', () => {
         apiAuth: {},
         apiProxy,
         baseUrl,
-        validationCheckTimeout: signAddonDefaults.timeout,
-        approvalCheckTimeout: signAddonDefaults.timeout,
+        validationCheckTimeout: signAddonDefaults.validationCheckTimeout,
+        approvalCheckTimeout: signAddonDefaults.approvalCheckTimeout,
         downloadDir,
         userAgentString,
       });
@@ -916,6 +917,34 @@ describe('util.submit-addon', () => {
 
         addApprovalMocks(versionId);
         await client.putVersion(uploadUuid, `${addonId}`, {});
+      });
+
+      describe('doAfterSubmit', () => {
+        const downloadUrl = 'https://a.download/url';
+        let approvalStub;
+        let downloadStub;
+        const newVersionId = sampleVersionDetail.id;
+
+        before(() => {
+          approvalStub = sinon
+            .stub(client, 'waitForApproval')
+            .resolves(downloadUrl);
+          downloadStub = sinon.stub(client, 'downloadSignedFile').resolves();
+        });
+
+        it('skips download if approval timeout is 0', async () => {
+          client.approvalCheckTimeout = 0;
+          await client.doAfterSubmit(addonId, newVersionId);
+          sinon.assert.notCalled(approvalStub);
+          sinon.assert.notCalled(downloadStub);
+        });
+
+        it('downloads the signed xpi if approval timeout > 0', async () => {
+          client.approvalCheckTimeout = 1;
+          await client.doAfterSubmit(addonId, newVersionId);
+          sinon.assert.calledWith(approvalStub, addonId, newVersionId);
+          sinon.assert.calledWith(downloadStub, new URL(downloadUrl), addonId);
+        });
       });
     });
 

@@ -186,6 +186,17 @@ export default class Client {
     return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
   }
 
+  async doAfterSubmit(addonId, newVersionId) {
+    if (this.approvalCheckTimeout > 0) {
+      const fileUrl = new URL(
+        await this.waitForApproval(addonId, newVersionId)
+      );
+      return this.downloadSignedFile(fileUrl, addonId);
+    } else {
+      return this.returnResult(addonId);
+    }
+  }
+
   waitForApproval(addonId, versionId) {
     log.info('Waiting for Approval...');
     return this.waitRetry(
@@ -242,6 +253,13 @@ export default class Client {
     return this.nodeFetch(url, { method, body, headers, agent });
   }
 
+  returnResult(addonId, downloadedFiles) {
+    return {
+      id: addonId,
+      downloadedFiles,
+    };
+  }
+
   async downloadSignedFile(fileUrl, addonId) {
     const filename = fileUrl.pathname.split('/').pop(); // get the name from fileUrl
     const dest = `${this.downloadDir}/${filename}`;
@@ -255,10 +273,7 @@ export default class Client {
       log.info(`Download of signed xpi failed: ${error}.`);
       throw new Error(`Downloading ${filename} failed`);
     }
-    return {
-      id: addonId,
-      downloadedFiles: [filename],
-    };
+    return this.returnResult(addonId, [filename]);
   }
 
   async saveToFile(contents, destPath) {
@@ -344,9 +359,7 @@ export default class Client {
     log.info('You must add the following to your manifest:');
     log.info(`"browser_specific_settings": {"gecko": {"id": "${addonId}"}}`);
 
-    const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
-
-    return this.downloadSignedFile(fileUrl, addonId);
+    return this.doAfterSubmit(addonId, newVersionId);
   }
 
   async putVersion(uploadUuid, addonId, metaDataJson) {
@@ -354,9 +367,7 @@ export default class Client {
       version: { id: newVersionId },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
-    const fileUrl = new URL(await this.waitForApproval(addonId, newVersionId));
-
-    return this.downloadSignedFile(fileUrl, addonId);
+    return this.doAfterSubmit(addonId, newVersionId);
   }
 }
 
@@ -365,7 +376,8 @@ export async function signAddon({
   apiSecret,
   apiProxy,
   amoBaseUrl,
-  timeout,
+  validationCheckTimeout,
+  approvalCheckTimeout,
   id,
   xpiPath,
   downloadDir,
@@ -398,8 +410,8 @@ export async function signAddon({
     apiAuth: new ApiAuthClass({ apiKey, apiSecret }),
     apiProxy,
     baseUrl,
-    validationCheckTimeout: timeout,
-    approvalCheckTimeout: timeout,
+    validationCheckTimeout,
+    approvalCheckTimeout,
     downloadDir,
     userAgentString,
   });
