@@ -1,7 +1,6 @@
 import { createHash } from 'crypto';
 import { createWriteStream, promises as fsPromises } from 'fs';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
+import { promises as streamPromises } from 'stream';
 
 // eslint-disable-next-line no-shadow
 import fetch, { FormData, fileFromSync } from 'node-fetch';
@@ -262,7 +261,7 @@ export default class Client {
   }
 
   async saveToFile(contents, destPath) {
-    return promisify(pipeline)(contents, createWriteStream(destPath));
+    return streamPromises.pipeline(contents, createWriteStream(destPath));
   }
 
   /*
