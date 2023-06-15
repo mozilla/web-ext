@@ -7,7 +7,7 @@ import { promisify } from 'util';
 import fetch, { FormData, fileFromSync } from 'node-fetch';
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
-import HttpsProxyAgent from 'https-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 import { isErrorWithCode } from '../errors.js';
 import { createLogger } from './../util/logger.js';
