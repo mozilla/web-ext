@@ -219,6 +219,7 @@ describe('util.submit-addon', () => {
       // Note: most of the fields are omitted here, these are just the essentials.
       id: 456,
       channel: 'a-channel',
+      edit_url: 'http://amo/devhub-url',
       file: {
         id: 789,
         hash: 'abcd',
@@ -924,6 +925,7 @@ describe('util.submit-addon', () => {
         let approvalStub;
         let downloadStub;
         const newVersionId = sampleVersionDetail.id;
+        const editUrl = sampleVersionDetail.editUrl;
 
         before(() => {
           approvalStub = sinon
@@ -934,14 +936,14 @@ describe('util.submit-addon', () => {
 
         it('skips download if approval timeout is 0', async () => {
           client.approvalCheckTimeout = 0;
-          await client.doAfterSubmit(addonId, newVersionId);
+          await client.doAfterSubmit(addonId, newVersionId, editUrl);
           sinon.assert.notCalled(approvalStub);
           sinon.assert.notCalled(downloadStub);
         });
 
         it('downloads the signed xpi if approval timeout > 0', async () => {
           client.approvalCheckTimeout = 1;
-          await client.doAfterSubmit(addonId, newVersionId);
+          await client.doAfterSubmit(addonId, newVersionId, editUrl);
           sinon.assert.calledWith(approvalStub, addonId, newVersionId);
           sinon.assert.calledWith(downloadStub, new URL(downloadUrl), addonId);
         });

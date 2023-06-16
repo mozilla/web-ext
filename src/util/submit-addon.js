@@ -186,13 +186,17 @@ export default class Client {
     return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
   }
 
-  async doAfterSubmit(addonId, newVersionId) {
+  async doAfterSubmit(addonId, newVersionId, editUrl) {
     if (this.approvalCheckTimeout > 0) {
       const fileUrl = new URL(
         await this.waitForApproval(addonId, newVersionId)
       );
       return this.downloadSignedFile(fileUrl, addonId);
     } else {
+      log.info('Waiting for approval and download of signed xpi skipped.');
+      log.info(
+        `When approved the signed xpi can be downloaded from ${editUrl}.`
+      );
       return this.returnResult(addonId);
     }
   }
@@ -351,7 +355,7 @@ export default class Client {
   ) {
     const {
       guid: addonId,
-      version: { id: newVersionId },
+      version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
 
     await saveIdToFileFunc(savedIdPath, addonId);
@@ -359,15 +363,15 @@ export default class Client {
     log.info('You must add the following to your manifest:');
     log.info(`"browser_specific_settings": {"gecko": {"id": "${addonId}"}}`);
 
-    return this.doAfterSubmit(addonId, newVersionId);
+    return this.doAfterSubmit(addonId, newVersionId, editUrl);
   }
 
   async putVersion(uploadUuid, addonId, metaDataJson) {
     const {
-      version: { id: newVersionId },
+      version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
-    return this.doAfterSubmit(addonId, newVersionId);
+    return this.doAfterSubmit(addonId, newVersionId, editUrl);
   }
 }
 
