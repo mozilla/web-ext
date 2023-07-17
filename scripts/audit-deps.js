@@ -83,10 +83,30 @@ if (auditReport) {
       // packages in the audit json report. We need to normalize the data so
       // that we always deal with a list of objects.
       item.via = item.via.reduce((acc, via) => {
-        if (typeof via === 'object') {
-          acc.push(via);
+        const addAdvisoryDetails = (entries, newEntry) => {
+          if (entries.some((entry) => entry.url === newEntry.url)) {
+            // The advisory url is already listed, no need to add a new entry.
+            return;
+          }
+          entries.push(newEntry);
+        };
+
+        if (typeof via === 'string') {
+          // Resolve the actual security advisory details recursively.
+          const recursivelyResolveVia = (currVia) => {
+            const resolvedVia = auditReport.vulnerabilities[currVia].via;
+            for (const viaEntry of resolvedVia) {
+              if (typeof viaEntry === 'string') {
+                recursivelyResolveVia(viaEntry);
+              } else {
+                addAdvisoryDetails(acc, viaEntry);
+              }
+            }
+          };
+
+          recursivelyResolveVia(via);
         } else {
-          acc.push(...auditReport.vulnerabilities[via].via);
+          addAdvisoryDetails(acc, via);
         }
 
         return acc;
