@@ -22,10 +22,10 @@ describe('web-ext run', () => {
       withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir) => {
         const watchedFile = path.join(srcDir, 'watchedFile.txt');
         const watchedFilesArr = ['watchedFile1', 'watchedFile2'].map((file) =>
-          path.join(srcDir, file)
+          path.join(srcDir, file),
         );
         const watchIgnoredArr = ['ignoredFile1.txt', 'ignoredFile2.txt'].map(
-          (file) => path.join(srcDir, file)
+          (file) => path.join(srcDir, file),
         );
         const watchIgnoredFile = path.join(srcDir, 'ignoredFile3.txt');
 
@@ -77,7 +77,7 @@ describe('web-ext run', () => {
                 stdout,
                 stderr,
               },
-              'The fake Firefox binary has not been executed'
+              'The fake Firefox binary has not been executed',
             );
           } else if (exitCode !== 0) {
             reportCommandErrors({
@@ -88,7 +88,7 @@ describe('web-ext run', () => {
             });
           }
         });
-      })
+      }),
   );
 
   it('should not accept: --watch-file <directory>', () =>

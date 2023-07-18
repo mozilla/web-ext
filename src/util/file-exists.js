@@ -15,7 +15,7 @@ import { isErrorWithCode } from '../errors.js';
  * */
 export default async function fileExists(
   path,
-  { fileIsReadable = (f) => fs.access(f, fs.constants.R_OK) } = {}
+  { fileIsReadable = (f) => fs.access(f, fs.constants.R_OK) } = {},
 ) {
   try {
     await fileIsReadable(path);

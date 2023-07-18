@@ -37,7 +37,7 @@ export async function run(
     binaryArgs,
     extensions,
     devtools,
-  } = {}
+  } = {},
 ) {
   log.debug(`Running Firefox with profile at ${profile.path()}`);
 
@@ -133,7 +133,7 @@ const DEFAULT_PROFILES_NAMES = ['default', 'dev-edition-default'];
 export async function isDefaultProfile(
   profilePathOrName,
   ProfileFinder = FirefoxProfile.Finder,
-  fsStat = fs.stat
+  fsStat = fs.stat,
 ) {
   if (DEFAULT_PROFILES_NAMES.includes(profilePathOrName)) {
     return true;
@@ -163,7 +163,7 @@ export async function isDefaultProfile(
   await readProfiles();
 
   const normalizedProfileDirPath = path.normalize(
-    path.join(path.resolve(profilePathOrName), path.sep)
+    path.join(path.resolve(profilePathOrName), path.sep),
   );
 
   for (const profile of finder.profiles) {
@@ -207,7 +207,7 @@ export async function isDefaultProfile(
  */
 export function configureProfile(
   profile,
-  { app = 'firefox', getPrefs = defaultPrefGetter, customPrefs = {} } = {}
+  { app = 'firefox', getPrefs = defaultPrefGetter, customPrefs = {} } = {},
 ) {
   // Set default preferences. Some of these are required for the add-on to
   // operate, such as disabling signatures.
@@ -263,7 +263,7 @@ export async function useProfile(
     isFirefoxDefaultProfile = isDefaultProfile,
     customPrefs = {},
     createProfileFinder = defaultCreateProfileFinder,
-  } = {}
+  } = {},
 ) {
   const isForbiddenProfile = await isFirefoxDefaultProfile(profilePath);
   if (isForbiddenProfile) {
@@ -271,7 +271,7 @@ export async function useProfile(
       'Cannot use --keep-profile-changes on a default profile' +
         ` ("${profilePath}")` +
         ' because web-ext will make it insecure and unsuitable for daily use.' +
-        '\nSee https://github.com/mozilla/web-ext/issues/1005'
+        '\nSee https://github.com/mozilla/web-ext/issues/1005',
     );
   }
 
@@ -288,7 +288,7 @@ export async function useProfile(
     if (!destinationDirectory) {
       throw new UsageError(
         `The request "${profilePath}" profile name ` +
-          'cannot be resolved to a profile path'
+          'cannot be resolved to a profile path',
       );
     }
   }
@@ -334,7 +334,7 @@ export async function copyProfile(
     configureThisProfile = configureProfile,
     copyFromUserProfile = defaultUserProfileCopier,
     customPrefs = {},
-  } = {}
+  } = {},
 ) {
   const copy = promisify(FirefoxProfile.copy);
   const copyByName = promisify(copyFromUserProfile);
@@ -355,7 +355,7 @@ export async function copyProfile(
     return configureThisProfile(profile, { app, customPrefs });
   } catch (error) {
     throw new WebExtError(
-      `Could not copy Firefox profile from ${profileDirectory}: ${error}`
+      `Could not copy Firefox profile from ${profileDirectory}: ${error}`,
     );
   }
 }
@@ -404,7 +404,7 @@ export async function installExtension({
   if (!id) {
     throw new UsageError(
       'An explicit extension ID is required when installing to ' +
-        'a profile (applications.gecko.id not found in manifest.json)'
+        'a profile (applications.gecko.id not found in manifest.json)',
     );
   }
 
@@ -415,7 +415,7 @@ export async function installExtension({
     if (!isDir) {
       throw new WebExtError(
         'proxy install: extensionPath must be the extension source ' +
-          `directory; got: ${extensionPath}`
+          `directory; got: ${extensionPath}`,
       );
     }
 

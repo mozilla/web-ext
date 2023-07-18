@@ -90,7 +90,7 @@ export class Program {
             0,
             0,
             undefined,
-            'This command does not take any arguments'
+            'This command does not take any arguments',
           )
           .strict()
           .exitProcess(this.shouldExitProgram)
@@ -283,7 +283,7 @@ export class Program {
 
       if (argv.configDiscovery) {
         log.debug(
-          'Discovering config files. ' + 'Set --no-config-discovery to disable'
+          'Discovering config files. ' + 'Set --no-config-discovery to disable',
         );
         const discoveredConfigs = await discoverConfigFiles();
         configFiles.push(...discoveredConfigs);
@@ -303,7 +303,7 @@ export class Program {
         log.info(
           'Applying config file' +
             `${configFiles.length !== 1 ? 's' : ''}: ` +
-            `${niceFileList}`
+            `${niceFileList}`,
         );
       }
 
@@ -351,12 +351,12 @@ export class Program {
 
 export async function defaultVersionGetter(
   absolutePackageDir,
-  { globalEnv = defaultGlobalEnv } = {}
+  { globalEnv = defaultGlobalEnv } = {},
 ) {
   if (globalEnv === 'production') {
     log.debug('Getting the version from package.json');
     const packageData = readFileSync(
-      path.join(absolutePackageDir, 'package.json')
+      path.join(absolutePackageDir, 'package.json'),
     );
     return JSON.parse(packageData).version;
   } else {
@@ -386,7 +386,7 @@ export async function main(
     commands = defaultCommands,
     argv,
     runOptions = {},
-  } = {}
+  } = {},
 ) {
   const program = new Program(argv, { absolutePackageDir });
   const version = await getVersion(absolutePackageDir);
@@ -413,7 +413,7 @@ with $${envPrefix}_. For example: $${envPrefix}_SOURCE_DIR=/path is the same as
 
 To view specific help for any given command, add the command name.
 Example: $0 --help run.
-`
+`,
     )
     .help('help')
     .alias('h', 'help')
@@ -511,7 +511,7 @@ Example: $0 --help run.
             arg == null
               ? undefined
               : throwUsageErrorIfArray(
-                  'Multiple --filename/-n option are not allowed'
+                  'Multiple --filename/-n option are not allowed',
                 )(arg),
         },
         'overwrite-dest': {
@@ -519,7 +519,7 @@ Example: $0 --help run.
           describe: 'Overwrite destination package if it exists.',
           type: 'boolean',
         },
-      }
+      },
     )
     .command(
       'sign',
@@ -592,7 +592,7 @@ Example: $0 --help run.
             'Only used with `use-submission-api`',
           type: 'string',
         },
-      }
+      },
     )
     .command('run', 'Run the extension', commands.run, {
       target: {
@@ -826,7 +826,7 @@ Example: $0 --help run.
       'docs',
       'Open the web-ext documentation in a browser',
       commands.docs,
-      {}
+      {},
     );
 
   return program.execute({ getVersion, ...runOptions });

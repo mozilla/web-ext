@@ -29,7 +29,7 @@ describe('util.withTempDir', () => {
         tmpPathExisted = Boolean(await fs.stat(tmpPath));
         throw new Error('simulated error');
       }),
-      'simulated error'
+      'simulated error',
     );
 
     assert.equal(tmpPathExisted, true);

@@ -38,7 +38,7 @@ export default function onSourceChange({
   });
 
   log.debug(
-    `Watching ${watchFile ? watchFile.join(',') : sourceDir} for changes`
+    `Watching ${watchFile ? watchFile.join(',') : sourceDir} for changes`,
   );
 
   const watchedDirs = [];
@@ -48,7 +48,7 @@ export default function onSourceChange({
     for (const filePath of watchFile) {
       if (fs.existsSync(filePath) && !fs.lstatSync(filePath).isFile()) {
         throw new UsageError(
-          'Invalid --watch-file value: ' + `"${filePath}" is not a file.`
+          'Invalid --watch-file value: ' + `"${filePath}" is not a file.`,
         );
       }
 

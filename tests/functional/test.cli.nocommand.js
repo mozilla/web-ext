@@ -28,12 +28,12 @@ describe('web-ext', () => {
       assert.equal(
         stdout.includes('--input'),
         false,
-        'help does not include --input'
+        'help does not include --input',
       );
       assert.equal(
         stdout.includes('--no-input'),
         true,
-        'help does include --no-input'
+        'help does include --no-input',
       );
     }));
 });

@@ -20,6 +20,6 @@ export default function isDirectory(path) {
     .catch(
       onlyErrorsWithCode(['ENOENT', 'ENOTDIR'], () => {
         return false;
-      })
+      }),
     );
 }

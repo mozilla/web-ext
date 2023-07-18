@@ -140,7 +140,7 @@ program.command(
       describe: 'Watch for file changes and re-build as needed',
       type: 'boolean',
     },
-  }
+  },
 );
 ```
 

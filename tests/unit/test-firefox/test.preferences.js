@@ -33,7 +33,7 @@ describe('firefox/preferences', () => {
       assert.throws(
         () => getPrefs('thunderbird'),
         WebExtError,
-        /Unsupported application: thunderbird/
+        /Unsupported application: thunderbird/,
       );
     });
   });
@@ -92,13 +92,13 @@ describe('firefox/preferences', () => {
         () => coerceCLICustomPreference(['test.invalid.prop']),
         UsageError,
         'Incomplete custom preference: "test.invalid.prop". ' +
-          'Syntax expected: "prefname=prefvalue".'
+          'Syntax expected: "prefname=prefvalue".',
       );
 
       assert.throws(
         () => coerceCLICustomPreference(['*&%£=true']),
         UsageError,
-        'Invalid custom preference name: *&%£'
+        'Invalid custom preference name: *&%£',
       );
     });
   });
