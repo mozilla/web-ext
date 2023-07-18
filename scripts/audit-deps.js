@@ -12,7 +12,7 @@ import stripJsonComments from 'strip-json-comments';
 
 const npmVersion = parseInt(
   shell.exec('npm --version', { silent: true }).stdout.split('.')[0],
-  10
+  10,
 );
 const npmCmd = npmVersion >= 6 ? 'npm' : 'npx npm@latest';
 
@@ -53,7 +53,7 @@ if (auditReport) {
     if (auditReport.error.code === 'ENETUNREACH') {
       console.log(
         'npm was not able to reach the api endpoint:',
-        auditReport.error.summary
+        auditReport.error.summary,
       );
       console.log('Retrying...');
       auditReport = getNpmAuditJSON();
@@ -73,7 +73,7 @@ if (auditReport) {
     console.error(
       'ERROR: npm audit JSON is using a new format not yet supported.',
       '\nPlease file a bug in the github repository and attach the following JSON data sample to it:',
-      `\n\n${JSON.stringify(auditReport, null, 2)}`
+      `\n\n${JSON.stringify(auditReport, null, 2)}`,
     );
   } else if (auditReport.auditReportVersion === 2) {
     // New npm audit json format introduced in npm v8.
@@ -166,7 +166,7 @@ function formatAdvisory(adv) {
 
 if (ignoredIssues.length > 0) {
   console.log(
-    '\n== audit-deps: ignored security issues (based on .nsprc exceptions)\n'
+    '\n== audit-deps: ignored security issues (based on .nsprc exceptions)\n',
   );
 
   for (const adv of ignoredIssues) {

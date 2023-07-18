@@ -24,7 +24,7 @@ export function applyConfigToArgv({
     if (camelCase(option) !== option) {
       throw new UsageError(
         `The config option "${option}" must be ` +
-          `specified in camel case: "${camelCase(option)}"`
+          `specified in camel case: "${camelCase(option)}"`,
       );
     }
 
@@ -51,7 +51,7 @@ export function applyConfigToArgv({
     if (typeof options[decamelizedOptName] !== 'object') {
       throw new UsageError(
         `The config file at ${configFileName} specified ` +
-          `an unknown option: "${option}"`
+          `an unknown option: "${option}"`,
       );
     }
     if (options[decamelizedOptName].type === undefined) {
@@ -72,7 +72,7 @@ export function applyConfigToArgv({
       throw new UsageError(
         `The config file at ${configFileName} specified ` +
           `the type of "${option}" incorrectly as "${optionType}"` +
-          ` (expected type "${expectedType}")`
+          ` (expected type "${expectedType}")`,
       );
     }
 
@@ -96,7 +96,7 @@ export function applyConfigToArgv({
     if (wasValueSetOnCLI) {
       log.debug(
         `Favoring CLI: ${option}=${argvFromCLI[option]} over ` +
-          `configuration: ${option}=${configObject[option]}`
+          `configuration: ${option}=${configObject[option]}`,
       );
       newArgv[option] = argvFromCLI[option];
       continue;
@@ -119,7 +119,7 @@ export function loadJSConfigFile(filePath) {
   const resolvedFilePath = path.resolve(filePath);
   log.debug(
     `Loading JS config file: "${filePath}" ` +
-      `(resolved to "${resolvedFilePath}")`
+      `(resolved to "${resolvedFilePath}")`,
   );
   let configObject;
   try {
@@ -128,7 +128,7 @@ export function loadJSConfigFile(filePath) {
     log.debug('Handling error:', error);
     throw new UsageError(
       `Cannot read config file: ${resolvedFilePath}\n` +
-        `Error: ${error.message}`
+        `Error: ${error.message}`,
     );
   }
   if (filePath.endsWith('package.json')) {
@@ -138,7 +138,7 @@ export function loadJSConfigFile(filePath) {
   if (Object.keys(configObject).length === 0) {
     log.debug(
       `Config file ${resolvedFilePath} did not define any options. ` +
-        'Did you set module.exports = {...}?'
+        'Did you set module.exports = {...}?',
     );
   }
   return configObject;
@@ -165,11 +165,11 @@ export async function discoverConfigFiles({ getHomeDir = os.homedir } = {}) {
       } else {
         log.debug(
           `Discovered config "${resolvedFileName}" does not ` +
-            'exist or is not readable'
+            'exist or is not readable',
         );
         return undefined;
       }
-    })
+    }),
   );
 
   const existingConfigs = [];

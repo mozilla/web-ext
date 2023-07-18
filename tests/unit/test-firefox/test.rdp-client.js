@@ -143,13 +143,13 @@ describe('rdp-client', () => {
       };
       for (const name of forwardedEvents) {
         const promiseEvent = new Promise((resolve) =>
-          client.once(name, (evt) => resolve(evt))
+          client.once(name, (evt) => resolve(evt)),
         );
         client._rdpConnection.emit(name, expectedData[name]);
         assert.equal(
           await promiseEvent,
           expectedData[name],
-          `${name} event got forwarded as expected`
+          `${name} event got forwarded as expected`,
         );
       }
     });
@@ -190,7 +190,7 @@ describe('rdp-client', () => {
         await getConnectedRDPClient();
         await assert.isRejected(
           client.request({ type: 'getRoot' }),
-          /Unexpected RDP request without target actor/
+          /Unexpected RDP request without target actor/,
         );
       });
 
@@ -258,13 +258,13 @@ describe('rdp-client', () => {
       it('emits an error event on messages with no source actor', () =>
         testHandleMessageError(
           { message: 'fake-msg' },
-          /Received an RDP message without a sender actor/
+          /Received an RDP message without a sender actor/,
         ));
 
       it('emits error event on unexpected source actor', () =>
         testHandleMessageError(
           { message: 'fake-msg', from: 'unexpected-actor' },
-          /Unexpected RDP message received/
+          /Unexpected RDP message received/,
         ));
     });
 
@@ -328,7 +328,7 @@ describe('rdp-client', () => {
           const fakeDeferred = { resolve: () => {}, reject: () => {} };
           assert.throws(
             () => client._expectReply('root', fakeDeferred),
-            /root does already have an active request/
+            /root does already have an active request/,
           );
 
           assert.strictEqual(client._active.get('root'), expectedActive);

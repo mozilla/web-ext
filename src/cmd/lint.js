@@ -26,7 +26,7 @@ export default function lint(
     createLinter = defaultLinterCreator,
     createFileFilter = defaultFileFilterCreator,
     shouldExitProgram = true,
-  } = {}
+  } = {},
 ) {
   const fileFilter = createFileFilter({ sourceDir, ignoreFiles, artifactsDir });
 
@@ -54,7 +54,7 @@ export default function lint(
         'Manifest Version 3 is now officially supported and',
         '"--firefox-preview=mv3" is no longer needed.',
         'In addition, the "mv3" value will be removed in the future.',
-      ].join(' ')
+      ].join(' '),
     );
   }
 

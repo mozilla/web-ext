@@ -22,7 +22,7 @@ export default async function getValidatedManifest(sourceDir) {
     manifestContents = await fs.readFile(manifestFile, { encoding: 'utf-8' });
   } catch (error) {
     throw new InvalidManifest(
-      `Could not read manifest.json file at ${manifestFile}: ${error}`
+      `Could not read manifest.json file at ${manifestFile}: ${error}`,
     );
   }
 
@@ -34,7 +34,7 @@ export default async function getValidatedManifest(sourceDir) {
     manifestData = parseJSON(stripJsonComments(manifestContents));
   } catch (error) {
     throw new InvalidManifest(
-      `Error parsing manifest.json file at ${manifestFile}: ${error}`
+      `Error parsing manifest.json file at ${manifestFile}: ${error}`,
     );
   }
 
@@ -58,7 +58,7 @@ export default async function getValidatedManifest(sourceDir) {
 
   if (errors.length) {
     throw new InvalidManifest(
-      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`
+      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`,
     );
   }
 

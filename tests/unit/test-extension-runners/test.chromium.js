@@ -105,7 +105,7 @@ describe('util/extension-runners/chromium', async () => {
 
     assert.equal(await fs.exists(reloadManagerExtension), true);
     const managerExtManifest = await getValidatedManifest(
-      reloadManagerExtension
+      reloadManagerExtension,
     );
     assert.deepEqual(managerExtManifest.permissions, ['management', 'tabs']);
 
@@ -146,8 +146,8 @@ describe('util/extension-runners/chromium', async () => {
     assert.ok(
       capturedMessages.some(
         (message) =>
-          message.match('[debug]') && message.match('Fake wss socket ERROR')
-      )
+          message.match('[debug]') && message.match('Fake wss socket ERROR'),
+      ),
     );
 
     const reload = (client, resolve, data) => {
@@ -156,7 +156,7 @@ describe('util/extension-runners/chromium', async () => {
     };
 
     const waitForReloadAll = new Promise((resolve) =>
-      wsClient.on('message', (data) => reload(wsClient, resolve, data))
+      wsClient.on('message', (data) => reload(wsClient, resolve, data)),
     );
     await runnerInstance.reloadAllExtensions();
     assert.deepEqual(JSON.parse(await waitForReloadAll), {
@@ -166,7 +166,7 @@ describe('util/extension-runners/chromium', async () => {
     // TODO(rpl): change this once we improve the manager extension to be able
     // to reload a single extension.
     const waitForReloadOne = new Promise((resolve) =>
-      wsClient.on('message', (data) => reload(wsClient, resolve, data))
+      wsClient.on('message', (data) => reload(wsClient, resolve, data)),
     );
     await runnerInstance.reloadExtensionBySourceDir('/fake/sourceDir');
     assert.deepEqual(JSON.parse(await waitForReloadOne), {
@@ -180,7 +180,7 @@ describe('util/extension-runners/chromium', async () => {
     wsClient.close();
 
     const waitForReloadClient2 = new Promise((resolve) =>
-      wsClient2.on('message', (data) => reload(wsClient2, resolve, data))
+      wsClient2.on('message', (data) => reload(wsClient2, resolve, data)),
     );
 
     await runnerInstance.reloadAllExtensions();
@@ -189,7 +189,7 @@ describe('util/extension-runners/chromium', async () => {
     });
 
     const waitForReloadAllAgain = new Promise((resolve) =>
-      wsClient2.on('message', (data) => reload(wsClient2, resolve, data))
+      wsClient2.on('message', (data) => reload(wsClient2, resolve, data)),
     );
     await runnerInstance.reloadAllExtensions();
     assert.deepEqual(JSON.parse(await waitForReloadAllAgain), {
@@ -205,7 +205,7 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.run();
 
     const onceExiting = new Promise((resolve) =>
-      runnerInstance.registerCleanup(resolve)
+      runnerInstance.registerCleanup(resolve),
     );
 
     fakeChromeInstance.process.emit('close');
@@ -223,7 +223,7 @@ describe('util/extension-runners/chromium', async () => {
     });
 
     const onceExiting = new Promise((resolve) =>
-      runnerInstance.registerCleanup(resolve)
+      runnerInstance.registerCleanup(resolve),
     );
 
     await runnerInstance.exit();
@@ -278,8 +278,8 @@ describe('util/extension-runners/chromium', async () => {
         (message) =>
           message.match('[debug]') &&
           message.match('ignored setup error on chromium runner shutdown') &&
-          message.match('Fake chromiumLaunch ERROR')
-      )
+          message.match('Fake chromiumLaunch ERROR'),
+      ),
     );
   });
 
@@ -433,7 +433,7 @@ describe('util/extension-runners/chromium', async () => {
         await fs.mkdirs(path.join(tmpPath, 'userDataDir/profile'));
         await fs.outputFile(
           path.join(tmpPath, 'userDataDir/profile/Secure Preferences'),
-          ''
+          '',
         );
 
         const { params } = prepareExtensionRunnerParams({
@@ -463,7 +463,7 @@ describe('util/extension-runners/chromium', async () => {
         });
 
         await runnerInstance.exit();
-      })
+      }),
   );
 
   it('does support some special chars in profile-directory flag', async () =>
@@ -477,7 +477,7 @@ describe('util/extension-runners/chromium', async () => {
       await fs.mkdirs(path.join(tmpPath, 'userDataDir', profileDirName));
       await fs.outputFile(
         path.join(tmpPath, 'userDataDir', profileDirName, 'Secure Preferences'),
-        ''
+        '',
       );
 
       const { params } = prepareExtensionRunnerParams({
@@ -545,7 +545,7 @@ describe('util/extension-runners/chromium', async () => {
       // the userDataDir is missing a file Local State to be validated as such
       await fs.outputFile(
         path.join(tmpPath, 'userDataDir/profile/Secure Preferences'),
-        ''
+        '',
       );
 
       const { params } = prepareExtensionRunnerParams({
@@ -571,7 +571,7 @@ describe('util/extension-runners/chromium', async () => {
         await fs.mkdirs(path.join(tmpPath, 'userDataDir/profile'));
         await fs.outputFile(
           path.join(tmpPath, 'userDataDir/profile/Secure Preferences'),
-          ''
+          '',
         );
 
         const { params } = prepareExtensionRunnerParams({
@@ -606,13 +606,13 @@ describe('util/extension-runners/chromium', async () => {
         assert.isTrue(await isDirectory(path.join(usedTempPath, 'profile')));
         assert.isTrue(
           await fileExists(
-            path.join(usedTempPath, 'profile/Secure Preferences')
-          )
+            path.join(usedTempPath, 'profile/Secure Preferences'),
+          ),
         );
 
         await runnerInstance.exit();
         spy.restore();
-      })
+      }),
   );
 
   describe('reloadAllExtensions', () => {

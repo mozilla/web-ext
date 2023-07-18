@@ -57,9 +57,9 @@ describe('logger', () => {
             name: 'foo',
             msg: 'some message',
             level: bunyan.DEBUG,
-          })
+          }),
         ),
-        '[foo][debug] some message\n'
+        '[foo][debug] some message\n',
       );
     });
 
@@ -67,7 +67,7 @@ describe('logger', () => {
       const log = new ConsoleStream({ verbose: false });
       assert.equal(
         log.format(packet({ name: 'foo', msg: 'some message' })),
-        'some message\n'
+        'some message\n',
       );
     });
 

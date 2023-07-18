@@ -59,13 +59,13 @@ export default async function run(
     reloadStrategy = defaultReloadStrategy,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
-  } = {}
+  } = {},
 ) {
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
     log.info(
       "Disabled auto-reloading because it's not possible with " +
-        '--pre-install'
+        '--pre-install',
     );
     noReload = true;
   }
@@ -94,7 +94,7 @@ export default async function run(
     if (!profileDir) {
       throw new UsageError(
         '--profile-create-if-missing requires ' +
-          '--firefox-profile or --chromium-profile'
+          '--firefox-profile or --chromium-profile',
       );
     }
     const isDir = fs.existsSync(profileDir);
@@ -176,7 +176,7 @@ export default async function run(
           {
             // Suppress the message usually logged by web-ext build.
             showReadyMessage: false,
-          }
+          },
         );
       },
     };

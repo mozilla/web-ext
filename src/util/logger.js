@@ -60,7 +60,7 @@ export const consoleStream = new ConsoleStream();
 
 export function createLogger(
   moduleURL,
-  { createBunyanLog = defaultLogCreator } = {}
+  { createBunyanLog = defaultLogCreator } = {},
 ) {
   return createBunyanLog({
     // Strip the leading src/ from file names (which is in all file names) to

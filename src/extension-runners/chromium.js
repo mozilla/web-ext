@@ -23,7 +23,7 @@ const log = createLogger(import.meta.url);
 const EXCLUDED_CHROME_FLAGS = ['--disable-extensions', '--mute-audio'];
 
 export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
-  (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag)
+  (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag),
 );
 
 /**
@@ -115,7 +115,7 @@ export class ChromiumExtensionRunner {
         { port: 0, host: '127.0.0.1', clientTracking: true },
         // Wait the server to be listening (so that the extension
         // runner can successfully retrieve server address and port).
-        () => resolve(server)
+        () => resolve(server),
       );
     });
 
@@ -154,7 +154,7 @@ export class ChromiumExtensionRunner {
     // eslint-disable-next-line prefer-const
     let { userDataDir, profileDirName } =
       await ChromiumExtensionRunner.getProfilePaths(
-        this.params.chromiumProfile
+        this.params.chromiumProfile,
       );
 
     if (userDataDir && this.params.keepProfileChanges) {
@@ -166,7 +166,7 @@ export class ChromiumExtensionRunner {
           'The profile you provided is not in a ' +
             'user-data-dir. The changes cannot be kept. Please either ' +
             'remove --keep-profile-changes or use a profile in a ' +
-            'user-data-dir directory'
+            'user-data-dir directory',
         );
       }
     } else if (!this.params.keepProfileChanges) {
@@ -181,7 +181,7 @@ export class ChromiumExtensionRunner {
         // copy profile dir to this temp user data dir.
         await fs.copy(
           path.join(userDataDir, profileDirName),
-          path.join(tmpDirPath, profileDirName)
+          path.join(tmpDirPath, profileDirName),
         );
       } else if (userDataDir) {
         await fs.copy(userDataDir, tmpDirPath);
@@ -268,7 +268,7 @@ export class ChromiumExtensionRunner {
 
     const extPath = path.join(
       tmpDir.path(),
-      `reload-manager-extension-${Date.now()}`
+      `reload-manager-extension-${Date.now()}`,
     );
 
     log.debug(`Creating reload-manager-extension in ${extPath}`);
@@ -285,7 +285,7 @@ export class ChromiumExtensionRunner {
         background: {
           scripts: ['bg.js'],
         },
-      })
+      }),
     );
 
     const wssInfo = this.wss.address();
@@ -341,7 +341,7 @@ export class ChromiumExtensionRunner {
     });
 
     process.stdout.write(
-      `\rLast extension reload: ${new Date().toTimeString()}`
+      `\rLast extension reload: ${new Date().toTimeString()}`,
     );
     log.debug('\n');
 
@@ -353,7 +353,7 @@ export class ChromiumExtensionRunner {
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
   async reloadExtensionBySourceDir(
-    extensionSourceDir // eslint-disable-line no-unused-vars
+    extensionSourceDir, // eslint-disable-line no-unused-vars
   ) {
     // TODO(rpl): detect the extension ids assigned to the
     // target extensions and map it to the extensions source dir
@@ -400,7 +400,7 @@ export class ChromiumExtensionRunner {
         }
       }
       await new Promise((resolve) =>
-        this.wss ? this.wss.close(resolve) : resolve()
+        this.wss ? this.wss.close(resolve) : resolve(),
       );
       this.wss = null;
     }

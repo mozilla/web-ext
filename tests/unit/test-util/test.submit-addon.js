@@ -30,7 +30,7 @@ class JSONResponse extends Response {
 const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
   const stubMatcher = nodeFetchStub.withArgs(
     url instanceof URL ? url : new URL(url),
-    sinon.match.has('method', method)
+    sinon.match.has('method', method),
   );
   for (let i = 0; i < responses.length; i++) {
     const { body, status } = responses[i];
@@ -159,7 +159,7 @@ describe('util.submit-addon', () => {
       await assert.isRejected(
         signAddonPromise,
         `error with ${signAddonDefaults.xpiPath}: ` +
-          'Error: ENOENT: no such file or directory'
+          'Error: ENOENT: no such file or directory',
       );
     });
 
@@ -168,7 +168,7 @@ describe('util.submit-addon', () => {
       const signAddonPromise = signAddon({ ...signAddonDefaults, amoBaseUrl });
       await assert.isRejected(
         signAddonPromise,
-        `Invalid AMO API base URL: ${amoBaseUrl}`
+        `Invalid AMO API base URL: ${amoBaseUrl}`,
       );
     });
 
@@ -183,7 +183,7 @@ describe('util.submit-addon', () => {
         postNewAddonStub,
         uploadUuid,
         signAddonDefaults.savedIdPath,
-        metaDataJson
+        metaDataJson,
       );
     });
   });
@@ -247,7 +247,7 @@ describe('util.submit-addon', () => {
       const client = new Client({ ...clientDefaults, baseUrl: noSlashBaseUrl });
       assert.equal(
         client.apiUrl.href,
-        new URL(`${noSlashBaseUrl.href}/addons/`).href
+        new URL(`${noSlashBaseUrl.href}/addons/`).href,
       );
     });
 
@@ -282,7 +282,7 @@ describe('util.submit-addon', () => {
           channel,
           uuidFilePath,
           saveUploadUuidStub,
-          getUploadUuidStub
+          getUploadUuidStub,
         );
 
         assert.equal(returnedUuid, newUuid);
@@ -314,7 +314,7 @@ describe('util.submit-addon', () => {
           channel,
           uuidFilePath,
           saveUploadUuidStub,
-          getUploadUuidStub
+          getUploadUuidStub,
         );
 
         assert.equal(returnedUuid, uploadUuid);
@@ -346,7 +346,7 @@ describe('util.submit-addon', () => {
           newChannel,
           uuidFilePath,
           saveUploadUuidStub,
-          getUploadUuidStub
+          getUploadUuidStub,
         );
 
         assert.equal(returnedUuid, newUuid);
@@ -368,7 +368,7 @@ describe('util.submit-addon', () => {
         });
         await fsPromises.writeFile(
           zipFilePath,
-          await zip.generateAsync({ type: 'nodebuffer' })
+          await zip.generateAsync({ type: 'nodebuffer' }),
         );
         return zip;
       };
@@ -399,12 +399,12 @@ describe('util.submit-addon', () => {
                 path: manifestFileName,
                 crc32: CRC32.str(manifestContents),
               },
-            ])
+            ]),
           );
 
           assert.equal(
             await client.hashXpiCrcs(zipFilePath),
-            originalHash.digest('hex')
+            originalHash.digest('hex'),
           );
         });
       });
@@ -421,7 +421,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             ...files,
@@ -430,7 +430,7 @@ describe('util.submit-addon', () => {
 
           assert.notEqual(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -448,7 +448,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             ...files,
@@ -457,7 +457,7 @@ describe('util.submit-addon', () => {
 
           assert.notEqual(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -476,7 +476,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             [manifestFileName, manifestContents],
@@ -485,7 +485,7 @@ describe('util.submit-addon', () => {
 
           assert.notEqual(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -505,7 +505,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             [jsFileName, jsFileContents],
@@ -514,7 +514,7 @@ describe('util.submit-addon', () => {
 
           assert.equal(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -535,7 +535,7 @@ describe('util.submit-addon', () => {
               body: sampleUploadDetail,
               status: 200,
             },
-          ]
+          ],
         );
 
         const xpiPath = '/some/path.xpi';
@@ -559,7 +559,7 @@ describe('util.submit-addon', () => {
             headers: {
               Authorization: authHeaderValue,
             },
-          })
+          }),
         );
       });
     });
@@ -582,7 +582,7 @@ describe('util.submit-addon', () => {
               body: {},
               status: 200,
             },
-          ]
+          ],
         );
 
         const clientPromise = client.waitForValidation(uploadUuid);
@@ -607,7 +607,7 @@ describe('util.submit-addon', () => {
               body: { processed: true, valid: true, uuid: uploadUuid },
               status: 200,
             },
-          ]
+          ],
         );
 
         const returnUuid = await client.waitForValidation(uploadUuid);
@@ -633,7 +633,7 @@ describe('util.submit-addon', () => {
               body: { processed: true, valid: false, url: validationUrl },
               status: 200,
             },
-          ]
+          ],
         );
 
         const clientPromise = client.waitForValidation(uploadUuid);
@@ -648,7 +648,7 @@ describe('util.submit-addon', () => {
           sinon.stub(client, 'nodeFetch'),
           new URL('addons/addon/', baseUrl),
           'POST',
-          [{ body: sampleAddonDetail, status: 202 }]
+          [{ body: sampleAddonDetail, status: 202 }],
         );
         const uploadUuid = 'some-uuid';
         const returnData = await client.doNewAddonSubmit(uploadUuid, {});
@@ -678,7 +678,7 @@ describe('util.submit-addon', () => {
         sinon.assert.calledWith(
           nodeFetchStub,
           sinon.match.instanceOf(URL),
-          sinon.match({ method: 'POST', body })
+          sinon.match({ method: 'POST', body }),
         );
       });
     });
@@ -692,7 +692,7 @@ describe('util.submit-addon', () => {
           nodeFetchStub,
           new URL(`addons/addon/${guid}/`, baseUrl),
           'PUT',
-          [{ body: sampleAddonDetail, status: 202 }]
+          [{ body: sampleAddonDetail, status: 202 }],
         );
         const uploadUuid = 'some-other-uuid';
 
@@ -703,7 +703,7 @@ describe('util.submit-addon', () => {
           sinon.match({
             method: 'PUT',
             body: JSON.stringify({ version: { upload: uploadUuid } }),
-          })
+          }),
         );
       });
 
@@ -731,7 +731,7 @@ describe('util.submit-addon', () => {
         sinon.assert.calledWith(
           nodeFetchStub,
           sinon.match.instanceOf(URL),
-          sinon.match({ method: 'PUT', body })
+          sinon.match({ method: 'PUT', body }),
         );
       });
     });
@@ -748,7 +748,7 @@ describe('util.submit-addon', () => {
         const versionId = 0;
         const detailUrl = new URL(
           `addons/addon/${addonId}/versions/${versionId}/`,
-          baseUrl
+          baseUrl,
         );
         mockNodeFetch(sinon.stub(client, 'nodeFetch'), detailUrl, 'GET', [
           { body: {}, status: 200 },
@@ -767,7 +767,7 @@ describe('util.submit-addon', () => {
         const versionId = 0;
         const detailUrl = new URL(
           `addons/addon/${addonId}/versions/${versionId}/`,
-          baseUrl
+          baseUrl,
         );
         const url = new URL('file/download/url', baseUrl);
         mockNodeFetch(sinon.stub(client, 'nodeFetch'), detailUrl, 'GET', [
@@ -819,7 +819,7 @@ describe('util.submit-addon', () => {
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
         await assert.isRejected(
           clientPromise,
-          `Downloading ${filename} failed`
+          `Downloading ${filename} failed`,
         );
       });
 
@@ -830,7 +830,7 @@ describe('util.submit-addon', () => {
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
         await assert.isRejected(
           clientPromise,
-          `Downloading ${filename} failed`
+          `Downloading ${filename} failed`,
         );
       });
 
@@ -846,7 +846,7 @@ describe('util.submit-addon', () => {
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
         await assert.isRejected(
           clientPromise,
-          `Downloading ${filename} failed`
+          `Downloading ${filename} failed`,
         );
       });
     });
@@ -881,7 +881,7 @@ describe('util.submit-addon', () => {
               body: { file: { status: 'public', url } },
               status: 200,
             },
-          ]
+          ],
         );
         mockNodeFetch(nodeFetchStub, url, 'GET', [
           { body: `${versionId}`, status: 200 },
@@ -897,7 +897,7 @@ describe('util.submit-addon', () => {
           nodeFetchStub,
           new URL('addons/addon/', baseUrl),
           'POST',
-          [{ body: sampleAddonDetail, status: 200 }]
+          [{ body: sampleAddonDetail, status: 200 }],
         );
         addApprovalMocks(versionId);
         await client.postNewAddon(uploadUuid, idFile, {}, saveIdStub);
@@ -911,7 +911,7 @@ describe('util.submit-addon', () => {
           nodeFetchStub,
           new URL(`addons/addon/${addonId}/`, baseUrl),
           'PUT',
-          [{ body: sampleAddonDetail, status: 200 }]
+          [{ body: sampleAddonDetail, status: 200 }],
         );
 
         addApprovalMocks(versionId);
@@ -980,7 +980,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
-          'application/json'
+          'application/json',
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -992,7 +992,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
-          undefined
+          undefined,
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -1004,7 +1004,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
-          undefined
+          undefined,
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -1016,7 +1016,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['User-Agent'],
-          client.userAgentString
+          client.userAgentString,
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -1031,7 +1031,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].agent.proxy.host,
-          apiProxyHost
+          apiProxyHost,
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -1124,7 +1124,7 @@ describe('util.submit-addon', () => {
             uploadUuid: '',
             channel: '',
             xpiCrcHash: '',
-          })
+          }),
       );
     });
 

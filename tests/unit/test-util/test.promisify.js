@@ -35,14 +35,14 @@ describe('nodejs util.promisify', () => {
     // Test successfull promised function call.
     await assert.becomes(
       promisedFnSuccess(expectedParam1, expectedParam2),
-      expectedResult
+      expectedResult,
     );
     sinon.assert.calledOnce(fnCallSuccess);
     sinon.assert.calledWith(
       fnCallSuccess,
       expectedParam1,
       expectedParam2,
-      sinon.match.func
+      sinon.match.func,
     );
 
     // Test failed promised function call.

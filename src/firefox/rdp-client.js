@@ -139,7 +139,7 @@ export default class FirefoxRDPClient extends EventEmitter {
 
     if (request.to == null) {
       throw new Error(
-        `Unexpected RDP request without target actor: ${request.type}`
+        `Unexpected RDP request without target actor: ${request.type}`,
       );
     }
 
@@ -196,9 +196,9 @@ export default class FirefoxRDPClient extends EventEmitter {
         'error',
         new Error(
           `Received an RDP message without a sender actor: ${JSON.stringify(
-            rdpData
-          )}`
-        )
+            rdpData,
+          )}`,
+        ),
       );
       return;
     }
@@ -222,7 +222,7 @@ export default class FirefoxRDPClient extends EventEmitter {
 
     this.emit(
       'error',
-      new Error(`Unexpected RDP message received: ${JSON.stringify(rdpData)}`)
+      new Error(`Unexpected RDP message received: ${JSON.stringify(rdpData)}`),
     );
   }
 
@@ -234,7 +234,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     if (error) {
       this.emit(
         'error',
-        new Error(`Error parsing RDP packet: ${String(error)}`)
+        new Error(`Error parsing RDP packet: ${String(error)}`),
       );
       // Disconnect automatically on a fatal error.
       if (fatal) {

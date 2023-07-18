@@ -17,7 +17,7 @@ describe('docs', () => {
     });
     await assert.isRejected(
       defaultDocsCommand({}, { openUrl }),
-      /error from open()/
+      /error from open()/,
     );
   });
 });

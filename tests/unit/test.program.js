@@ -35,7 +35,7 @@ describe('program.Program', () => {
     const absolutePackageDir = path.join(
       moduleURLToDirname(import.meta.url),
       '..',
-      '..'
+      '..',
     );
     if (program.absolutePackageDir == null) {
       program.absolutePackageDir = absolutePackageDir;
@@ -55,7 +55,7 @@ describe('program.Program', () => {
       'thing',
       'does a thing',
       thing,
-      null
+      null,
     );
     return execProgram(program).then(() => {
       sinon.assert.called(thing);
@@ -69,7 +69,7 @@ describe('program.Program', () => {
       .catch(
         onlyInstancesOf(UsageError, (error) => {
           assert.match(error.message, /Unknown argument: thing/);
-        })
+        }),
       );
   });
 
@@ -80,7 +80,7 @@ describe('program.Program', () => {
       .catch(
         onlyInstancesOf(UsageError, (error) => {
           assert.match(error.message, /No sub-command was specified/);
-        })
+        }),
       );
   });
 
@@ -102,7 +102,7 @@ describe('program.Program', () => {
     const program = new Program(['thing', 'nope']).command(
       'thing',
       '',
-      () => {}
+      () => {},
     );
     return execProgram(program)
       .then(makeSureItFails())
@@ -136,7 +136,7 @@ describe('program.Program', () => {
           type: 'string',
           default: 'default value',
         },
-      }
+      },
     );
     return execProgram(program).then(() => {
       // This ensures that the default configuration for the option has
@@ -185,7 +185,7 @@ describe('program.Program', () => {
           type: 'string',
           describe: 'example option',
         },
-      }
+      },
     );
     return execProgram(program, { shouldExitProgram: true }).then(() => {
       assert.equal(valueReceived, 'value');
@@ -224,7 +224,7 @@ describe('program.Program', () => {
     return execProgram(program, { getVersion: version }).then(() => {
       sinon.assert.calledWith(
         version,
-        path.join(moduleURLToDirname(import.meta.url), '..', '..')
+        path.join(moduleURLToDirname(import.meta.url), '..', '..'),
       );
     });
   });
@@ -267,9 +267,9 @@ describe('program.Program', () => {
           consoleStream.stopCapturing();
           assert.match(error.message, /some error/);
           assert.ok(
-            capturedMessages.some((message) => message.match(/some error/))
+            capturedMessages.some((message) => message.match(/some error/)),
           );
-        })
+        }),
       );
   });
 
@@ -295,7 +295,7 @@ describe('program.Program', () => {
     const program = new Program(['thing', '--nope']).command(
       'thing',
       '',
-      () => {}
+      () => {},
     );
     return execProgram(program)
       .then(makeSureItFails())
@@ -314,7 +314,7 @@ describe('program.Program', () => {
       ({ webextVersion }) => {
         valueReceived = webextVersion;
       },
-      {}
+      {},
     );
 
     return execProgram(program, { shouldExitProgram: true }).then(() => {
@@ -330,7 +330,7 @@ describe('program.Program', () => {
     const program = new Program(['run']).command(
       'run',
       'some command',
-      handler
+      handler,
     );
     return execProgram(program, {
       checkForUpdates,
@@ -350,7 +350,7 @@ describe('program.Program', () => {
     const program = new Program(['run']).command(
       'run',
       'some command',
-      handler
+      handler,
     );
     return execProgram(program, {
       checkForUpdates,
@@ -417,7 +417,7 @@ describe('program.Program', () => {
 describe('program.main', () => {
   function execProgram(
     argv,
-    { projectRoot = '', runOptions, ...mainOptions } = {}
+    { projectRoot = '', runOptions, ...mainOptions } = {},
   ) {
     return main(projectRoot, {
       argv,
@@ -501,7 +501,7 @@ describe('program.main', () => {
     return execProgram(
       // Add a double slash to the path, which will be fixed by normalization.
       ['build', '--artifacts-dir', process.cwd() + path.sep + path.sep],
-      { commands: fakeCommands }
+      { commands: fakeCommands },
     ).then(() => {
       sinon.assert.calledWithMatch(fakeCommands.build, {
         artifactsDir: process.cwd() + path.sep,
@@ -536,7 +536,7 @@ describe('program.main', () => {
     // Repeat test with multiple urls.
     await execProgram(
       ['run', '--start-url', 'www.example.com', 'www.example2.com'],
-      opts
+      opts,
     );
     sinon.assert.calledWithMatch(fakeCommands.run, {
       startUrl: ['www.example.com', 'www.example2.com'],
@@ -544,7 +544,7 @@ describe('program.main', () => {
 
     await assert.isRejected(
       execProgram(['run', '--start-url'], opts),
-      /Not enough arguments following: start-url/
+      /Not enough arguments following: start-url/,
     );
   });
 
@@ -566,7 +566,7 @@ describe('program.main', () => {
     return execProgram(['run', '--devtools'], { commands: fakeCommands }).then(
       () => {
         sinon.assert.calledWithMatch(fakeCommands.run, { devtools: true });
-      }
+      },
     );
   });
 
@@ -618,7 +618,7 @@ describe('program.main', () => {
     });
     return execProgram(
       ['run', '--pref', 'prop=true', '--pref', 'prop2=value2'],
-      { commands: fakeCommands }
+      { commands: fakeCommands },
     ).then(() => {
       const { pref } = fakeCommands.run.firstCall.args[0];
       assert.isObject(pref);
@@ -834,7 +834,7 @@ describe('program.main', () => {
       .catch((error) => {
         assert.match(
           error.message,
-          /Not enough arguments following: ignore-files/
+          /Not enough arguments following: ignore-files/,
         );
       });
   });
@@ -845,7 +845,7 @@ describe('program.main', () => {
     });
     return execProgram(
       ['build', '--ignore-files', 'f1', 'f2', '-a', 'xxx', '-i', 'f4', 'f3'],
-      { commands: fakeCommands }
+      { commands: fakeCommands },
     ).then(() => {
       const options = fakeCommands.build.firstCall.args[0];
       assert.deepEqual(options.ignoreFiles, ['f1', 'f2', 'f4', 'f3']);
@@ -859,7 +859,7 @@ describe('program.main', () => {
     });
     await execProgram(
       ['run', '--firefox-apk-component', 'CustomView', '-t', 'firefox-android'],
-      { commands: fakeCommands }
+      { commands: fakeCommands },
     );
     const options = fakeCommands.run.firstCall.args[0];
     assert.equal(options.firefoxApkComponent, 'CustomView');
@@ -882,7 +882,7 @@ describe('program.main', () => {
 
     for (const [cliArg, expected] of testCases) {
       it(`does parse "${cliArg}" cli argument as ${JSON.stringify(
-        expected
+        expected,
       )}`, async () => {
         await execProgram(['run', cliArg], { commands: fakeCommands });
         sinon.assert.calledWithMatch(fakeCommands.run, expected);
@@ -918,7 +918,7 @@ describe('program.defaultVersionGetter', () => {
   const projectRoot = path.join(
     moduleURLToDirname(import.meta.url),
     '..',
-    '..'
+    '..',
   );
 
   it('returns the package version in production', () => {
@@ -927,7 +927,7 @@ describe('program.defaultVersionGetter', () => {
       const testBuildEnv = { globalEnv: 'production' };
       assert.equal(
         await defaultVersionGetter(projectRoot, testBuildEnv),
-        JSON.parse(pkgData).version
+        JSON.parse(pkgData).version,
       );
     });
   });
@@ -941,7 +941,7 @@ describe('program.defaultVersionGetter', () => {
       const testBuildEnv = { globalEnv: 'development' };
       assert.equal(
         await defaultVersionGetter(projectRoot, testBuildEnv),
-        commit
+        commit,
       );
     });
   });
