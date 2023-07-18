@@ -113,7 +113,7 @@
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-import": "2.27.5",
     "git-rev-sync": "3.0.2",
-    "html-entities": "2.3.6",
+    "html-entities": "2.4.0",
     "mocha": "10.2.0",
     "nyc": "15.1.0",
     "prettier": "2.8.8",
