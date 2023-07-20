@@ -121,7 +121,7 @@
     "prettyjson": "1.2.5",
     "shelljs": "0.8.5",
     "sinon": "15.2.0",
-    "testdouble": "3.16.8",
+    "testdouble": "3.18.0",
     "yauzl": "2.10.0"
   },
   "author": "Kumar McMillan",
