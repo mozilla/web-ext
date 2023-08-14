@@ -145,12 +145,12 @@ export function loadJSConfigFile(filePath) {
 }
 
 export async function discoverConfigFiles({ getHomeDir = os.homedir } = {}) {
-  const magicConfigName = 'web-ext-config.js';
+  const magicConfigName = '.web-ext-config.js';
 
   // Config files will be loaded in this order.
   const possibleConfigs = [
     // Look for a magic hidden config (preceded by dot) in home dir.
-    path.join(getHomeDir(), `.${magicConfigName}`),
+    path.join(getHomeDir(), magicConfigName),
     // Look for webExt key inside package.json file
     path.join(process.cwd(), 'package.json'),
     // Look for a magic config in the current working directory.

@@ -1018,7 +1018,7 @@ describe('config', () => {
         process.chdir(tmpDir.path());
         try {
           const expectedConfig = path.resolve(
-            path.join(process.cwd(), 'web-ext-config.js'),
+            path.join(process.cwd(), '.web-ext-config.js'),
           );
           await fs.writeFile(expectedConfig, 'module.exports = {}');
 
@@ -1054,7 +1054,7 @@ describe('config', () => {
           );
 
           const projectConfig = path.resolve(
-            path.join(process.cwd(), 'web-ext-config.js'),
+            path.join(process.cwd(), '.web-ext-config.js'),
           );
           await fs.writeFile(projectConfig, 'module.exports = {}');
 
