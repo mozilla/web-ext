@@ -341,9 +341,8 @@ export class FirefoxAndroidExtensionRunner {
 
     log.debug(`Discovering Android version for ${selectedAdbDevice}...`);
 
-    const androidVersion = await adbUtils.getAndroidVersionNumber(
-      selectedAdbDevice,
-    );
+    const androidVersion =
+      await adbUtils.getAndroidVersionNumber(selectedAdbDevice);
 
     if (typeof androidVersion !== 'number' || Number.isNaN(androidVersion)) {
       throw new WebExtError(`Invalid Android version: ${androidVersion}`);
@@ -409,9 +408,8 @@ export class FirefoxAndroidExtensionRunner {
 
     // Choose a artifacts dir name for the assets pushed to the
     // Android device.
-    this.selectedArtifactsDir = await adbUtils.getOrCreateArtifactsDir(
-      selectedAdbDevice,
-    );
+    this.selectedArtifactsDir =
+      await adbUtils.getOrCreateArtifactsDir(selectedAdbDevice);
 
     const deviceProfileDir = this.getDeviceProfileDir();
 
