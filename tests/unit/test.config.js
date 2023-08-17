@@ -1029,6 +1029,23 @@ describe('config', () => {
       });
     });
 
+    it('finds a config without dot in your working directory', () => {
+      return withTempDir(async (tmpDir) => {
+        const lastDir = process.cwd();
+        process.chdir(tmpDir.path());
+        try {
+          const undotedConfig = path.resolve(
+            path.join(process.cwd(), 'web-ext-config.js'),
+          );
+          await fs.writeFile(undotedConfig, 'module.exports = {}');
+
+          assert.deepEqual(await _discoverConfigFiles(), [undotedConfig]);
+        } finally {
+          process.chdir(lastDir);
+        }
+      });
+    });
+
     it('discovers all config files', () => {
       return withTempDir(async (tmpDir) => {
         const lastDir = process.cwd();
@@ -1058,11 +1075,21 @@ describe('config', () => {
           );
           await fs.writeFile(projectConfig, 'module.exports = {}');
 
+          const projectConfigUndoted = path.resolve(
+            path.join(process.cwd(), 'web-ext-config.js'),
+          );
+          await fs.writeFile(projectConfigUndoted, 'module.exports = {}');
+
           assert.deepEqual(
             await _discoverConfigFiles({
               getHomeDir: () => fakeHomeDir,
             }),
-            [globalConfig, packageJSONConfig, projectConfig],
+            [
+              globalConfig,
+              packageJSONConfig,
+              projectConfigUndoted,
+              projectConfig,
+            ],
           );
         } finally {
           process.chdir(lastDir);
