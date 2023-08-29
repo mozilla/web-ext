@@ -39,7 +39,7 @@ async function prepareRun(fakeInstallResult) {
         getFakeRemoteFirefox({
           installTemporaryAddon: () =>
             Promise.resolve(fakeInstallResult || tempInstallResult),
-        })
+        }),
       );
     }),
     reloadStrategy: sinon.spy(() => {
@@ -78,11 +78,11 @@ describe('run', () => {
 
     androidRunnerStub = sinon.stub(
       firefoxAndroidModule,
-      'FirefoxAndroidExtensionRunner'
+      'FirefoxAndroidExtensionRunner',
     );
     desktopRunnerStub = sinon.stub(
       firefoxDesktopModule,
-      'FirefoxDesktopExtensionRunner'
+      'FirefoxDesktopExtensionRunner',
     );
     chromiumRunnerStub = sinon.stub(chromiumModule, 'ChromiumExtensionRunner');
 
@@ -165,7 +165,7 @@ describe('run', () => {
         firefoxProfile: runnerParams.profilePath,
         args: runnerParams.args,
       },
-      expectedRunnerParams
+      expectedRunnerParams,
     );
     assert.equal(runnerParams.extensions.length, 1);
     assert.equal(runnerParams.extensions[0].sourceDir, cmd.argv.sourceDir);
@@ -183,7 +183,7 @@ describe('run', () => {
         firefoxApp: runnerParams.firefoxApp,
         firefoxClient: runnerParams.firefoxClient,
       },
-      { firefoxApp, firefoxClient }
+      { firefoxApp, firefoxClient },
     );
   });
 
@@ -191,7 +191,7 @@ describe('run', () => {
     const cmd = await prepareRun();
     await assert.isRejected(
       cmd.run({ noReload: false, watchFile: 'invalid-value.txt' }),
-      /Unexpected watchFile type/
+      /Unexpected watchFile type/,
     );
   });
 
@@ -301,7 +301,7 @@ describe('run', () => {
     assert.equal(
       chromiumBinary,
       fakeChromiumBinary,
-      'Got the expected chromiumBinary option'
+      'Got the expected chromiumBinary option',
     );
   });
 
@@ -321,7 +321,7 @@ describe('run', () => {
     assert.equal(
       chromiumProfile,
       fakeChromiumProfile,
-      'Got the expected chromiumProfile option'
+      'Got the expected chromiumProfile option',
     );
   });
 
@@ -382,7 +382,7 @@ describe('run', () => {
         assert.equal(
           chromiumProfile,
           fakeProfile,
-          'Got the expected chromiumProfile option'
+          'Got the expected chromiumProfile option',
         );
       } else {
         sinon.assert.calledOnce(desktopRunnerStub);
@@ -390,7 +390,7 @@ describe('run', () => {
         assert.equal(
           firefoxProfile,
           fakeProfile,
-          'Got the expected firefoxProfile option'
+          'Got the expected firefoxProfile option',
         );
       }
     }
@@ -428,7 +428,7 @@ describe('run', () => {
       await assert.isRejected(promise, cmd.errors.UsageError);
       await assert.isRejected(
         promise,
-        /requires --firefox-profile or --chromium-profile/
+        /requires --firefox-profile or --chromium-profile/,
       );
     });
   });

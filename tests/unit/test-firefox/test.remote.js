@@ -126,7 +126,7 @@ describe('firefox.remote', () => {
           .catch(
             onlyInstancesOf(WebExtError, (error) => {
               assert.match(error.message, /unknownError: some actor failure/);
-            })
+            }),
           );
       });
     });
@@ -160,9 +160,9 @@ describe('firefox.remote', () => {
             onlyInstancesOf(WebExtError, (error) => {
               assert.match(
                 error.message,
-                /does not have your extension installed/
+                /does not have your extension installed/,
               );
-            })
+            }),
           );
       });
 
@@ -177,9 +177,9 @@ describe('firefox.remote', () => {
             onlyInstancesOf(WebExtError, (error) => {
               assert.equal(
                 error.message,
-                'Remote Firefox: listAddons() error: Error: some internal error'
+                'Remote Firefox: listAddons() error: Error: some internal error',
               );
-            })
+            }),
           );
       });
     });
@@ -216,7 +216,7 @@ describe('firefox.remote', () => {
           .catch(
             onlyInstancesOf(UsageError, (error) => {
               assert.match(error.message, /does not support add-on reloading/);
-            })
+            }),
           );
       });
 
@@ -241,7 +241,7 @@ describe('firefox.remote', () => {
         const client = fakeFirefoxClient();
         client.request = sinon.stub().rejects(
           // listTabs and getRoot response:
-          new Error('some listTabs error')
+          new Error('some listTabs error'),
         );
         const conn = makeInstance(client);
         await conn
@@ -250,7 +250,7 @@ describe('firefox.remote', () => {
           .catch(
             onlyInstancesOf(WebExtError, (error) => {
               assert.match(error.message, /some listTabs error/);
-            })
+            }),
           );
 
         // When getRoot fails, a fallback to listTabs is expected.
@@ -271,9 +271,9 @@ describe('firefox.remote', () => {
             onlyInstancesOf(RemoteTempInstallNotSupported, (error) => {
               assert.match(
                 error.message,
-                /This version of Firefox does not provide an add-ons actor/
+                /This version of Firefox does not provide an add-ons actor/,
               );
-            })
+            }),
           );
         sinon.assert.calledOnce(client.request);
         sinon.assert.calledWith(client.request, 'getRoot');
@@ -313,7 +313,7 @@ describe('firefox.remote', () => {
               type: 'installTemporaryAddon',
               to: addonsActor,
               addonPath,
-            })
+            }),
           )
           .resolves({
             addon: { id: 'abc123@temporary-addon' },
@@ -353,9 +353,9 @@ describe('firefox.remote', () => {
             onlyInstancesOf(RemoteTempInstallNotSupported, (error) => {
               assert.match(
                 error.message,
-                /does not provide an add-ons actor.*Try Firefox 49/
+                /does not provide an add-ons actor.*Try Firefox 49/,
               );
-            })
+            }),
           );
 
         sinon.assert.calledTwice(client.request);
@@ -385,7 +385,7 @@ describe('firefox.remote', () => {
           .catch(
             onlyInstancesOf(WebExtError, (error) => {
               assert.match(error.message, /install error: error message/);
-            })
+            }),
           );
       });
     });
@@ -419,7 +419,7 @@ describe('firefox.remote', () => {
 
         const getInstalledAddon = () => Promise.resolve(addon);
         const checkForAddonReloading = sinon.spy((addonToCheck) =>
-          Promise.resolve(addonToCheck)
+          Promise.resolve(addonToCheck),
         );
 
         conn.getInstalledAddon = getInstalledAddon;
@@ -442,7 +442,7 @@ describe('firefox.remote', () => {
           port: 6005,
           ...opt,
         },
-        deps
+        deps,
       );
     }
 
@@ -459,7 +459,7 @@ describe('firefox.remote', () => {
               // The second connection succeeds.
               resolve(client);
             }
-          })
+          }),
       );
 
       await firefoxClient({ maxRetries: 3 }, { connectToFirefox });
@@ -468,7 +468,7 @@ describe('firefox.remote', () => {
 
     it('only retries connection errors', async () => {
       const connectToFirefox = sinon.spy(() =>
-        Promise.reject(new Error('not a connection error'))
+        Promise.reject(new Error('not a connection error')),
       );
 
       await firefoxClient({ maxRetries: 2 }, { connectToFirefox })
@@ -481,7 +481,7 @@ describe('firefox.remote', () => {
 
     it('gives up connecting after too many retries', async () => {
       const connectToFirefox = sinon.spy(() =>
-        Promise.reject(new TCPConnectError('failure'))
+        Promise.reject(new TCPConnectError('failure')),
       );
 
       await firefoxClient({ maxRetries: 2 }, { connectToFirefox })

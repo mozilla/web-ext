@@ -44,7 +44,7 @@ function exitKeypressLoop(stdin) {
     console.error(
       'ERROR in exitKeypressLoop test helper - ' +
         'Unexpected exception while exiting the keypress loop',
-      error
+      error,
     );
   }
 }
@@ -110,11 +110,11 @@ describe('util/extension-runners', () => {
 
       sinon.assert.calledWith(
         spyReloadExtension,
-        sinon.match('/fake/source/dir')
+        sinon.match('/fake/source/dir'),
       );
       sinon.assert.calledWith(
         spyAnotherReloadExtension,
-        sinon.match('/fake/source/dir')
+        sinon.match('/fake/source/dir'),
       );
     });
 
@@ -166,7 +166,7 @@ describe('util/extension-runners', () => {
         sinon.match({
           title: sinon.match(/web-ext run: extension reload error/),
           message: sinon.match(/on "fakeExtensionRunner" - reload error 1/),
-        })
+        }),
       );
     });
 
@@ -199,7 +199,7 @@ describe('util/extension-runners', () => {
 
       sinon.assert.calledOnce(fakeExtensionRunner.reloadExtensionBySourceDir);
       sinon.assert.calledOnce(
-        anotherFakeExtensionRunner.reloadExtensionBySourceDir
+        anotherFakeExtensionRunner.reloadExtensionBySourceDir,
       );
       sinon.assert.calledOnce(params.desktopNotifications);
 
@@ -208,9 +208,9 @@ describe('util/extension-runners', () => {
         sinon.match({
           title: sinon.match(/web-ext run: extension reload error/),
           message: sinon.match(
-            /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/
+            /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/,
           ),
-        })
+        }),
       );
     });
 
@@ -246,7 +246,7 @@ describe('util/extension-runners', () => {
 
         assert.equal(
           checkIncompleteCleanup,
-          'waitRegisterCleanup should not be resolved yet'
+          'waitRegisterCleanup should not be resolved yet',
         );
 
         // Call the cleanup callback on the second and last runner.
@@ -288,7 +288,7 @@ describe('util/extension-runners', () => {
           watchIgnored: config.watchIgnored,
           artifactsDir: config.artifactsDir,
           onChange: sinon.match.typeOf('function'),
-        })
+        }),
       );
     });
 
@@ -304,7 +304,7 @@ describe('util/extension-runners', () => {
           sourceDir: config.sourceDir,
           artifactsDir: config.artifactsDir,
           ignoreFiles: config.ignoreFiles,
-        })
+        }),
       );
       const { shouldWatchFile } = config.onSourceChange.firstCall.args[0];
       shouldWatchFile('path/to/file');
@@ -328,7 +328,7 @@ describe('util/extension-runners', () => {
         config.onSourceChange,
         sinon.match({
           onChange: sinon.match.typeOf('function'),
-        })
+        }),
       );
 
       const { onChange } = config.onSourceChange.firstCall.args[0];
@@ -337,7 +337,7 @@ describe('util/extension-runners', () => {
       sinon.assert.called(config.reloadExtension);
       sinon.assert.calledWith(
         config.reloadExtension,
-        sinon.match(config.sourceDir)
+        sinon.match(config.sourceDir),
       );
     });
   });
@@ -388,7 +388,7 @@ describe('util/extension-runners', () => {
           watchIgnored: sentArgs.watchIgnored,
           artifactsDir: sentArgs.artifactsDir,
           ignoreFiles: sentArgs.ignoreFiles,
-        })
+        }),
       );
     });
 
@@ -406,7 +406,7 @@ describe('util/extension-runners', () => {
         createWatcher,
         sinon.match({
           reloadExtension: sinon.match.typeOf('function'),
-        })
+        }),
       );
 
       const sourceDir = '/fake/sourceDir';
@@ -418,7 +418,7 @@ describe('util/extension-runners', () => {
       sinon.assert.calledOnce(reloadExtensionBySourceDir);
       sinon.assert.calledWith(
         reloadExtensionBySourceDir,
-        sinon.match(sourceDir)
+        sinon.match(sourceDir),
       );
     });
 
@@ -492,7 +492,7 @@ describe('util/extension-runners', () => {
       const { extensionRunner, reloadStrategy } = prepare({
         stubExtensionRunner: {
           reloadAllExtensions: sinon.spy(() =>
-            Promise.reject(new Error('fake reload error'))
+            Promise.reject(new Error('fake reload error')),
           ),
         },
       });
@@ -590,7 +590,7 @@ describe('util/extension-runners', () => {
         sinon.assert.calledWith(
           fakeKill,
           sinon.match(process.pid),
-          sinon.match('SIGTSTP')
+          sinon.match('SIGTSTP'),
         );
         sinon.assert.callOrder(setRawMode, setRawMode, fakeKill, setRawMode);
         sinon.assert.calledThrice(setRawMode);

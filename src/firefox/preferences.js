@@ -125,7 +125,7 @@ export function coerceCLICustomPreference(cliPrefs) {
     if (prefsAry.length < 2) {
       throw new UsageError(
         `Incomplete custom preference: "${pref}". ` +
-          'Syntax expected: "prefname=prefvalue".'
+          'Syntax expected: "prefname=prefvalue".',
       );
     }
 

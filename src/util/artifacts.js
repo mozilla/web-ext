@@ -13,13 +13,13 @@ export async function prepareArtifactsDir(
   {
     asyncMkdirp = defaultAsyncMkdirp,
     asyncFsAccess = defaultAsyncFsAccess,
-  } = {}
+  } = {},
 ) {
   try {
     const stats = await fs.stat(artifactsDir);
     if (!stats.isDirectory()) {
       throw new UsageError(
-        `--artifacts-dir="${artifactsDir}" exists but it is not a directory.`
+        `--artifacts-dir="${artifactsDir}" exists but it is not a directory.`,
       );
     }
     // If the artifactsDir already exists, check that we have the write permissions on it.
@@ -29,7 +29,7 @@ export async function prepareArtifactsDir(
       if (isErrorWithCode('EACCES', accessErr)) {
         throw new UsageError(
           `--artifacts-dir="${artifactsDir}" exists but the user lacks ` +
-            'permissions on it.'
+            'permissions on it.',
         );
       } else {
         throw accessErr;
@@ -40,7 +40,7 @@ export async function prepareArtifactsDir(
       // Handle errors when the artifactsDir cannot be accessed.
       throw new UsageError(
         `Cannot access --artifacts-dir="${artifactsDir}" because the user ` +
-          `lacks permissions: ${error}`
+          `lacks permissions: ${error}`,
       );
     } else if (isErrorWithCode('ENOENT', error)) {
       // Create the artifact dir if it doesn't exist yet.
@@ -52,7 +52,7 @@ export async function prepareArtifactsDir(
           // Handle errors when the artifactsDir cannot be created for lack of permissions.
           throw new UsageError(
             `Cannot create --artifacts-dir="${artifactsDir}" because the ` +
-              `user lacks permissions: ${mkdirErr}`
+              `user lacks permissions: ${mkdirErr}`,
           );
         } else {
           throw mkdirErr;

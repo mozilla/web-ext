@@ -85,7 +85,7 @@ describe('web-ext sign', () => {
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
       fs.writeFileSync(
         path.join(tmpDir, 'web-ext-config.js'),
-        GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS
+        GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS,
       );
 
       fs.writeFileSync(
@@ -97,7 +97,7 @@ describe('web-ext sign', () => {
             },
             sourceDir: srcDir,
           },
-        })
+        }),
       );
 
       const argv = ['sign', '--verbose'];
@@ -132,7 +132,7 @@ describe('web-ext sign', () => {
         assert.notEqual(exitCode, 0);
         assert.match(
           stdout,
-          /web-ext-config.js specified an unknown option: "apiKey"/
+          /web-ext-config.js specified an unknown option: "apiKey"/,
         );
       });
     }));

@@ -95,7 +95,7 @@ export class FirefoxDesktopExtensionRunner {
           sourceDir: extensionSourceDir,
           reloadError: new WebExtError(
             'Extension not reloadable: ' +
-              `no addonId has been mapped to "${extensionSourceDir}"`
+              `no addonId has been mapped to "${extensionSourceDir}"`,
           ),
           runnerName,
         },
@@ -241,7 +241,7 @@ export class FirefoxDesktopExtensionRunner {
 
           if (!addonId) {
             throw new WebExtError(
-              'Unexpected missing addonId in the installAsTemporaryAddon result'
+              'Unexpected missing addonId in the installAsTemporaryAddon result',
             );
           }
 
@@ -252,7 +252,7 @@ export class FirefoxDesktopExtensionRunner {
             throw new WebExtError(
               'Temporary add-on installation is not supported in this version' +
                 ' of Firefox (you need Firefox 49 or higher). For older Firefox' +
-                ' versions, use --pre-install'
+                ' versions, use --pre-install',
             );
           } else {
             throw error;

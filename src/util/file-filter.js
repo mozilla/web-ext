@@ -54,7 +54,7 @@ export class FileFilter {
       artifactsDir = path.resolve(artifactsDir);
       log.debug(
         `Ignoring artifacts directory "${artifactsDir}" ` +
-          'and all its subdirectories'
+          'and all its subdirectories',
       );
       this.addToIgnoreList([artifactsDir, path.join(artifactsDir, '**', '*')]);
     }
@@ -67,7 +67,7 @@ export class FileFilter {
     const resolvedPath = path.resolve(this.sourceDir, file);
     log.debug(
       `Resolved path ${file} with sourceDir ${this.sourceDir} ` +
-        `to ${resolvedPath}`
+        `to ${resolvedPath}`,
     );
     return resolvedPath;
   }

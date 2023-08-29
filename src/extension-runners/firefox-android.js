@@ -169,7 +169,7 @@ export class FirefoxAndroidExtensionRunner {
           sourceDir: extensionSourceDir,
           reloadError: new WebExtError(
             'Extension not reloadable: ' +
-              `no addonId has been mapped to "${extensionSourceDir}"`
+              `no addonId has been mapped to "${extensionSourceDir}"`,
           ),
           runnerName,
         },
@@ -253,7 +253,7 @@ export class FirefoxAndroidExtensionRunner {
     if (devices.length === 0) {
       throw new UsageError(
         'No Android device found through ADB. ' +
-          'Make sure the device is connected and USB debugging is enabled.'
+          'Make sure the device is connected and USB debugging is enabled.',
       );
     }
 
@@ -261,7 +261,7 @@ export class FirefoxAndroidExtensionRunner {
       const devicesMsg = devices.map((dev) => ` - ${dev}`).join('\n');
       log.info(`\nAndroid devices found:\n${devicesMsg}`);
       throw new UsageError(
-        'Select an android device using --android-device=<name>'
+        'Select an android device using --android-device=<name>',
       );
     }
 
@@ -272,7 +272,7 @@ export class FirefoxAndroidExtensionRunner {
     if (foundDevices.length === 0) {
       const devicesMsg = JSON.stringify(devices);
       throw new UsageError(
-        `Android device ${adbDevice} was not found in list: ${devicesMsg}`
+        `Android device ${adbDevice} was not found in list: ${devicesMsg}`,
       );
     }
 
@@ -289,12 +289,12 @@ export class FirefoxAndroidExtensionRunner {
     // Discovery and select a Firefox for Android version.
     const packages = await adbUtils.discoverInstalledFirefoxAPKs(
       selectedAdbDevice,
-      firefoxApk
+      firefoxApk,
     );
 
     if (packages.length === 0) {
       throw new UsageError(
-        'No Firefox packages were found on the selected Android device'
+        'No Firefox packages were found on the selected Android device',
       );
     }
 
@@ -321,7 +321,7 @@ export class FirefoxAndroidExtensionRunner {
     if (filteredPackages.length === 0) {
       const pkgsList = pkgsListMsg(filteredPackages);
       throw new UsageError(
-        `Package ${firefoxApk} was not found in list: ${pkgsList}`
+        `Package ${firefoxApk} was not found in list: ${pkgsList}`,
       );
     }
 
@@ -341,9 +341,8 @@ export class FirefoxAndroidExtensionRunner {
 
     log.debug(`Discovering Android version for ${selectedAdbDevice}...`);
 
-    const androidVersion = await adbUtils.getAndroidVersionNumber(
-      selectedAdbDevice
-    );
+    const androidVersion =
+      await adbUtils.getAndroidVersionNumber(selectedAdbDevice);
 
     if (typeof androidVersion !== 'number' || Number.isNaN(androidVersion)) {
       throw new WebExtError(`Invalid Android version: ${androidVersion}`);
@@ -357,7 +356,7 @@ export class FirefoxAndroidExtensionRunner {
 
     log.debug(
       'Checking read/write permissions needed for web-ext' +
-        `on ${selectedFirefoxApk}...`
+        `on ${selectedFirefoxApk}...`,
     );
 
     // Runtime permissions needed to Firefox to be able to access the
@@ -367,7 +366,7 @@ export class FirefoxAndroidExtensionRunner {
     await adbUtils.ensureRequiredAPKRuntimePermissions(
       selectedAdbDevice,
       selectedFirefoxApk,
-      requiredPermissions
+      requiredPermissions,
     );
   }
 
@@ -390,28 +389,27 @@ export class FirefoxAndroidExtensionRunner {
     // automatically remove them if adbRemoteOldArtifacts is true.
     const foundOldArtifacts = await adbUtils.detectOrRemoveOldArtifacts(
       selectedAdbDevice,
-      adbRemoveOldArtifacts
+      adbRemoveOldArtifacts,
     );
 
     if (foundOldArtifacts) {
       if (adbRemoveOldArtifacts) {
         log.info(
           'Old web-ext artifacts have been found and removed ' +
-            `from ${selectedAdbDevice} device`
+            `from ${selectedAdbDevice} device`,
         );
       } else {
         log.warn(
           `Old artifacts directories have been found on ${selectedAdbDevice} ` +
-            'device. Use --adb-remove-old-artifacts to remove them automatically.'
+            'device. Use --adb-remove-old-artifacts to remove them automatically.',
         );
       }
     }
 
     // Choose a artifacts dir name for the assets pushed to the
     // Android device.
-    this.selectedArtifactsDir = await adbUtils.getOrCreateArtifactsDir(
-      selectedAdbDevice
-    );
+    this.selectedArtifactsDir =
+      await adbUtils.getOrCreateArtifactsDir(selectedAdbDevice);
 
     const deviceProfileDir = this.getDeviceProfileDir();
 
@@ -423,7 +421,7 @@ export class FirefoxAndroidExtensionRunner {
     await adbUtils.pushFile(
       selectedAdbDevice,
       path.join(profile.profileDir, 'user.js'),
-      `${deviceProfileDir}/user.js`
+      `${deviceProfileDir}/user.js`,
     );
 
     log.debug(`Created temporary profile at ${deviceProfileDir}.`);
@@ -447,7 +445,7 @@ export class FirefoxAndroidExtensionRunner {
       selectedAdbDevice,
       selectedFirefoxApk,
       firefoxApkComponent,
-      deviceProfileDir
+      deviceProfileDir,
     );
   }
 
@@ -475,7 +473,7 @@ export class FirefoxAndroidExtensionRunner {
       await adbUtils.pushFile(
         selectedAdbDevice,
         extensionPath,
-        adbExtensionPath
+        adbExtensionPath,
       );
 
       log.debug(`Upload completed: ${adbExtensionPath}`);
@@ -531,7 +529,7 @@ export class FirefoxAndroidExtensionRunner {
         {
           maxDiscoveryTime: unixSocketDiscoveryMaxTime,
           retryInterval: unixSocketDiscoveryRetryInterval,
-        }
+        },
       );
     } finally {
       if (isTTY(stdin)) {
@@ -554,7 +552,7 @@ export class FirefoxAndroidExtensionRunner {
     await adbUtils.setupForward(
       selectedAdbDevice,
       forwardSocketSpec,
-      `tcp:${tcpPort}`
+      `tcp:${tcpPort}`,
     );
 
     this.selectedTCPPort = tcpPort;
@@ -586,7 +584,7 @@ export class FirefoxAndroidExtensionRunner {
 
       if (!adbExtensionPath) {
         throw new WebExtError(
-          `ADB extension path for "${sourceDir}" was unexpectedly empty`
+          `ADB extension path for "${sourceDir}" was unexpectedly empty`,
         );
       }
 
@@ -599,7 +597,7 @@ export class FirefoxAndroidExtensionRunner {
       if (!addonId) {
         throw new WebExtError(
           'Received an empty addonId from ' +
-            `remoteFirefox.installTemporaryAddon("${adbExtensionPath}")`
+            `remoteFirefox.installTemporaryAddon("${adbExtensionPath}")`,
         );
       }
 

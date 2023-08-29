@@ -404,7 +404,7 @@ describe('config', () => {
         },
         UsageError,
         'The config option "source-dir" must be ' +
-          'specified in camel case: "sourceDir"'
+          'specified in camel case: "sourceDir"',
       );
     });
 
@@ -426,7 +426,7 @@ describe('config', () => {
         },
         UsageError,
         'The config file ' +
-          'at some/path/to/config.js specified an unknown option: "randomDir"'
+          'at some/path/to/config.js specified an unknown option: "randomDir"',
       );
     });
 
@@ -446,7 +446,7 @@ describe('config', () => {
         () => applyConf({ ...params, configObject }),
         UsageError,
         'The config file at some/path/to/config.js specified the ' +
-          'type of "retries" incorrectly as "string" (expected type "number")'
+          'type of "retries" incorrectly as "string" (expected type "number")',
       );
     });
 
@@ -468,7 +468,7 @@ describe('config', () => {
         },
         UsageError,
         'The config file at some/path/to/config.js ' +
-          'specified the type of "sourceDir" incorrectly'
+          'specified the type of "sourceDir" incorrectly',
       );
     });
 
@@ -703,7 +703,7 @@ describe('config', () => {
         () => applyConf({ ...params, configObject }),
         UsageError,
         'The config file at some/path/to/config.js ' +
-          'specified the type of "apiUrl" incorrectly'
+          'specified the type of "apiUrl" incorrectly',
       );
     });
 
@@ -731,7 +731,7 @@ describe('config', () => {
         },
         UsageError,
         'The config option "api-url"' +
-          ' must be specified in camel case: "apiUrl"'
+          ' must be specified in camel case: "apiUrl"',
       );
     });
 
@@ -759,7 +759,7 @@ describe('config', () => {
         },
         UsageError,
         'The config file at ' +
-          'some/path/to/config.js specified an unknown option: "randomOption"'
+          'some/path/to/config.js specified an unknown option: "randomOption"',
       );
     });
 
@@ -787,7 +787,7 @@ describe('config', () => {
         },
         UsageError,
         'The config file at some/path/to/config.js ' +
-          'specified the type of "apiUrl" incorrectly'
+          'specified the type of "apiUrl" incorrectly',
       );
     });
 
@@ -824,9 +824,9 @@ describe('config', () => {
           },
           UsageError,
           'The config file at some/path/to/config.js ' +
-            'specified the type of "apiUrl" incorrectly'
+            'specified the type of "apiUrl" incorrectly',
         );
-      }
+      },
     );
 
     it('throws an error when the type of option is missing', () => {
@@ -852,7 +852,7 @@ describe('config', () => {
           applyConf({ ...params, configObject });
         },
         WebExtError,
-        'Option: apiUrl was defined without a type.'
+        'Option: apiUrl was defined without a type.',
       );
     });
 
@@ -892,7 +892,7 @@ describe('config', () => {
         UsageError,
         'The config file at some/path/to/config.js ' +
           'specified the type of "apiUrl" incorrectly as "number"' +
-          ' (expected type "string")'
+          ' (expected type "string")',
       );
     });
   });
@@ -903,11 +903,11 @@ describe('config', () => {
         assert.throws(
           () => {
             loadJSConfigFile(
-              path.join(tmpDir.path(), 'non-existant-config.js')
+              path.join(tmpDir.path(), 'non-existant-config.js'),
             );
           },
           UsageError,
-          /Cannot read config file/
+          /Cannot read config file/,
         );
       });
     });
@@ -920,7 +920,7 @@ describe('config', () => {
           // missing = in two places
           `module.exports {
                 sourceDir 'path/to/fake/source/dir',
-              };`
+              };`,
         );
         assert.throws(() => {
           loadJSConfigFile(configFilePath);
@@ -935,7 +935,7 @@ describe('config', () => {
           configFilePath,
           `module.exports = {
               sourceDir: 'path/to/fake/source/dir',
-            };`
+            };`,
         );
         const configObj = loadJSConfigFile(configFilePath);
         assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
@@ -953,7 +953,7 @@ describe('config', () => {
                 "webExt": {
                   "sourceDir": "path/to/fake/source/dir"
                 }
-            }`
+            }`,
         );
         const configObj = loadJSConfigFile(configFilePath);
         assert.equal(configObj.sourceDir, 'path/to/fake/source/dir');
@@ -976,7 +976,7 @@ describe('config', () => {
           `{
               "name": "dummy-package-json",
               "version": "1.0.0"
-            }`
+            }`,
         );
         const configObj = loadJSConfigFile(configFilePath);
         assert.deepEqual(configObj, {});
@@ -1007,7 +1007,7 @@ describe('config', () => {
           await _discoverConfigFiles({
             getHomeDir: () => tmpDir.path(),
           }),
-          [path.resolve(homeDirConfig), packageJSON]
+          [path.resolve(homeDirConfig), packageJSON],
         );
       });
     });
@@ -1018,7 +1018,7 @@ describe('config', () => {
         process.chdir(tmpDir.path());
         try {
           const expectedConfig = path.resolve(
-            path.join(process.cwd(), 'web-ext-config.js')
+            path.join(process.cwd(), 'web-ext-config.js'),
           );
           await fs.writeFile(expectedConfig, 'module.exports = {}');
 
@@ -1037,12 +1037,12 @@ describe('config', () => {
           const fakeHomeDir = path.join(tmpDir.path(), 'home-dir');
           await fs.mkdir(fakeHomeDir);
           const globalConfig = path.resolve(
-            path.join(fakeHomeDir, '.web-ext-config.js')
+            path.join(fakeHomeDir, '.web-ext-config.js'),
           );
           await fs.writeFile(globalConfig, 'module.exports = {}');
 
           const packageJSONConfig = path.resolve(
-            path.join(process.cwd(), 'package.json')
+            path.join(process.cwd(), 'package.json'),
           );
           await fs.writeFile(
             packageJSONConfig,
@@ -1050,11 +1050,11 @@ describe('config', () => {
                 "name": "dummy-package-json",
                 "version": "1.0.0",
                 "webExt": {}
-              }`
+              }`,
           );
 
           const projectConfig = path.resolve(
-            path.join(process.cwd(), 'web-ext-config.js')
+            path.join(process.cwd(), 'web-ext-config.js'),
           );
           await fs.writeFile(projectConfig, 'module.exports = {}');
 
@@ -1062,7 +1062,7 @@ describe('config', () => {
             await _discoverConfigFiles({
               getHomeDir: () => fakeHomeDir,
             }),
-            [globalConfig, packageJSONConfig, projectConfig]
+            [globalConfig, packageJSONConfig, projectConfig],
           );
         } finally {
           process.chdir(lastDir);

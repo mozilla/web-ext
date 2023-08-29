@@ -89,7 +89,7 @@ function getPullRequestTitle() {
 
     if (!/^\d+$/.test(pullRequestNumber)) {
       reject(
-        new Error(`Unable to parse pull request number from ${pullRequestURL}`)
+        new Error(`Unable to parse pull request number from ${pullRequestURL}`),
       );
       return;
     }
@@ -107,8 +107,8 @@ function getPullRequestTitle() {
         if (response.statusCode < 200 || response.statusCode > 299) {
           reject(
             new Error(
-              `getPullRequestTitle got an unexpected statusCode: ${response.statusCode}`
-            )
+              `getPullRequestTitle got an unexpected statusCode: ${response.statusCode}`,
+            ),
           );
           return;
         }
@@ -166,7 +166,7 @@ function getPullRequestTitle() {
           console.error('Failed during pull request title download: ', err);
           reject(err);
         });
-      }
+      },
     );
   }).then((message) => {
     return decode(message, { level: 'all' });
@@ -207,13 +207,13 @@ async function runChangelogLinting() {
     if (commits.length === 1 && !TEST_FORCE_PR_LINT) {
       console.log(
         'There is only one commit in this pull request,',
-        'we are going to check the single commit message...'
+        'we are going to check the single commit message...',
       );
       message = getGitCommitMessage(commits[0]);
     } else {
       console.log(
         'There is more than one commit in this pull request,',
-        'we are going to check the pull request title...'
+        'we are going to check the pull request title...',
       );
 
       message = await getPullRequestTitle();
@@ -223,7 +223,7 @@ async function runChangelogLinting() {
   } catch (err) {
     var errMessage = `${err.stack || err}`.trim();
     console.error(
-      `Failures during changelog linting the pull request:\n\n${errMessage}`
+      `Failures during changelog linting the pull request:\n\n${errMessage}`,
     );
     console.log(DONT_PANIC_MESSAGE);
     process.exit(1);
@@ -236,6 +236,6 @@ if (CIRCLE_PULL_REQUEST) {
   runChangelogLinting();
 } else {
   console.log(
-    'This isn\'t a "GitHub Pull Request" CI job. Nothing to do here.'
+    'This isn\'t a "GitHub Pull Request" CI job. Nothing to do here.',
   );
 }

@@ -11,7 +11,7 @@ import * as tmpDirUtils from '../../src/util/temp-dir.js';
 export const withTempDir = tmpDirUtils.withTempDir;
 
 export const functionalTestsDir = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url || ''))
+  path.dirname(fileURLToPath(import.meta.url || '')),
 );
 export const projectDir = path.join(functionalTestsDir, '..', '..');
 export const webExt = process.env.TEST_WEB_EXT_BIN
@@ -24,11 +24,11 @@ export const fakeFirefoxPath = path.join(
   functionalTestsDir,
   process.platform === 'win32'
     ? 'fake-firefox-binary.bat'
-    : 'fake-firefox-binary.js'
+    : 'fake-firefox-binary.js',
 );
 export const fakeServerPath = path.join(
   functionalTestsDir,
-  'fake-amo-server.js'
+  'fake-amo-server.js',
 );
 
 // withTempAddonDir helper
@@ -84,7 +84,7 @@ export function execWebExt(argv, spawnOptions) {
   const spawnedProcess = spawn(
     process.execPath,
     [webExt, ...argv],
-    spawnOptions
+    spawnOptions,
   );
 
   const waitForExit = new Promise((resolve) => {

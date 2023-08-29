@@ -49,7 +49,7 @@ net
         process.exit(0);
       } else {
         process.stderr.write(
-          `Fake Firefox received an unexpected message: ${String(data)}\n`
+          `Fake Firefox received an unexpected message: ${String(data)}\n`,
         );
         process.exit(1);
       }

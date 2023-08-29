@@ -28,7 +28,7 @@ import * as td from 'testdouble';
 const MODULE_TYPES = ['module', 'commonjs'];
 const TESTS_BASE_URL = path.dirname(import.meta.url);
 const SRC_BASE_URL = pathToFileURL(
-  path.resolve(path.join(fileURLToPath(TESTS_BASE_URL), '..', 'src'))
+  path.resolve(path.join(fileURLToPath(TESTS_BASE_URL), '..', 'src')),
 ).href;
 
 global.__webextMocks = new Set();
@@ -102,7 +102,7 @@ export async function transformSource(source, context, defaultTransformSource) {
 
   if (!sourceCode) {
     throw new Error(
-      `tests/babel-loader.js: undefined babel transform result for ${url}`
+      `tests/babel-loader.js: undefined babel transform result for ${url}`,
     );
   }
 

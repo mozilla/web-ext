@@ -1,7 +1,6 @@
 import { createHash } from 'crypto';
 import { createWriteStream, promises as fsPromises } from 'fs';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
+import { promises as streamPromises } from 'stream';
 
 // eslint-disable-next-line no-shadow
 import fetch, { FormData, fileFromSync } from 'node-fetch';
@@ -121,7 +120,7 @@ export default class Client {
             checkUrl,
             'GET',
             undefined,
-            'Getting details failed.'
+            'Getting details failed.',
           );
 
           const success = successFunc(responseData);
@@ -158,13 +157,13 @@ export default class Client {
         log.info('Validation failed.');
         throw new Error(
           'Validation failed, open the following URL for more information: ' +
-            `${detailResponseData.url}`
+            `${detailResponseData.url}`,
         );
       },
       new URL(`upload/${uuid}/`, this.apiUrl),
       this.validationCheckInterval,
       this.validationCheckTimeout,
-      'Validation'
+      'Validation',
     );
   }
 
@@ -215,7 +214,7 @@ export default class Client {
       new URL(`addon/${addonId}/versions/${versionId}/`, this.apiUrl),
       this.approvalCheckInterval,
       this.approvalCheckTimeout,
-      'Approval'
+      'Approval',
     );
   }
 
@@ -223,7 +222,7 @@ export default class Client {
     const response = await this.fetch(url, method, body);
     if (response.status < 200 || response.status >= 500) {
       throw new Error(
-        `${errorMsg}: ${response.statusText || response.status}.`
+        `${errorMsg}: ${response.statusText || response.status}.`,
       );
     }
     const data = await response.json();
@@ -231,7 +230,7 @@ export default class Client {
     if (!response.ok) {
       log.info('Server Response:', data);
       throw new Error(
-        `${errorMsg}: ${response.statusText || response.status}.`
+        `${errorMsg}: ${response.statusText || response.status}.`,
       );
     }
     return data;
@@ -281,7 +280,7 @@ export default class Client {
   }
 
   async saveToFile(contents, destPath) {
-    return promisify(pipeline)(contents, createWriteStream(destPath));
+    return streamPromises.pipeline(contents, createWriteStream(destPath));
   }
 
   /*
@@ -297,7 +296,7 @@ export default class Client {
   */
   async hashXpiCrcs(filePath, asyncFsReadFile = defaultAsyncFsReadFile) {
     const zip = await JSZip.loadAsync(
-      asyncFsReadFile(filePath, { createFolders: true })
+      asyncFsReadFile(filePath, { createFolders: true }),
     );
     const hash = createHash('sha256');
     const entries = [];
@@ -319,7 +318,7 @@ export default class Client {
     channel,
     savedUploadUuidPath,
     saveUploadUuidToFileFunc = saveUploadUuidToFile,
-    getUploadUuidFromFileFunc = getUploadUuidFromFile
+    getUploadUuidFromFileFunc = getUploadUuidFromFile,
   ) {
     const [
       {
@@ -351,7 +350,7 @@ export default class Client {
     uploadUuid,
     savedIdPath,
     metaDataJson,
-    saveIdToFileFunc = saveIdToFile
+    saveIdToFileFunc = saveIdToFile,
   ) {
     const {
       guid: addonId,
@@ -422,7 +421,7 @@ export async function signAddon({
   const uploadUuid = await client.getPreviousUuidOrUploadXpi(
     xpiPath,
     channel,
-    savedUploadUuidPath
+    savedUploadUuidPath,
   );
 
   // We specifically need to know if `id` has not been passed as a parameter because
@@ -441,7 +440,7 @@ export async function saveIdToFile(filePath, id) {
       '# This file was created by https://github.com/mozilla/web-ext',
       '# Your auto-generated extension ID for addons.mozilla.org is:',
       id.toString(),
-    ].join('\n')
+    ].join('\n'),
   );
 
   log.debug(`Saved auto-generated ID ${id} to ${filePath}`);
@@ -449,26 +448,26 @@ export async function saveIdToFile(filePath, id) {
 
 export async function saveUploadUuidToFile(
   filePath,
-  { uploadUuid, channel, xpiCrcHash }
+  { uploadUuid, channel, xpiCrcHash },
 ) {
   await fsPromises.writeFile(
     filePath,
-    JSON.stringify({ uploadUuid, channel, xpiCrcHash })
+    JSON.stringify({ uploadUuid, channel, xpiCrcHash }),
   );
   log.debug(
-    `Saved upload UUID ${uploadUuid}, xpi crc hash ${xpiCrcHash}, and channel ${channel} to ${filePath}`
+    `Saved upload UUID ${uploadUuid}, xpi crc hash ${xpiCrcHash}, and channel ${channel} to ${filePath}`,
   );
 }
 
 export async function getUploadUuidFromFile(
   filePath,
-  asyncFsReadFile = defaultAsyncFsReadFile
+  asyncFsReadFile = defaultAsyncFsReadFile,
 ) {
   try {
     const content = await asyncFsReadFile(filePath, 'utf-8');
     const { uploadUuid, channel, xpiCrcHash } = JSON.parse(content);
     log.debug(
-      `Found upload uuid:${uploadUuid}, channel:${channel}, hash:${xpiCrcHash} in ${filePath}`
+      `Found upload uuid:${uploadUuid}, channel:${channel}, hash:${xpiCrcHash} in ${filePath}`,
     );
     return { uploadUuid, channel, xpiCrcHash };
   } catch (error) {

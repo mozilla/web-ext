@@ -53,7 +53,7 @@ describe('util/file-filter', () => {
     it('ignores module content within node_modules by default', () => {
       assert.equal(
         defaultFilter.wantFile('node_modules/something/file.js'),
-        false
+        false,
       );
     });
   });
@@ -149,15 +149,15 @@ describe('util/file-filter', () => {
     it('includes paths captured by negation', () => {
       assert.equal(
         filter.wantFile('/src/node_modules/libdweb/src/lib.js'),
-        true
+        true,
       );
       assert.equal(
         filter.wantFile('/src/node_modules/libdweb/src/sub/lib.js'),
-        true
+        true,
       );
       assert.equal(
         filter.wantFile('/src/node_modules/libdweb/src/node_modules/lib.js'),
-        true
+        true,
       );
     });
   });

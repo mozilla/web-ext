@@ -48,7 +48,7 @@ export default function sign(
     signAddon = defaultAddonSigner,
     submitAddon = defaultSubmitAddonSigner,
     asyncFsReadFile = defaultAsyncFsReadFile,
-  } = {}
+  } = {},
 ) {
   return withTempDir(async function (tmpDir) {
     await prepareArtifactsDir(artifactsDir);
@@ -66,7 +66,7 @@ export default function sign(
     const [buildResult, idFromSourceDir] = await Promise.all([
       build(
         { sourceDir, ignoreFiles, artifactsDir: tmpDir.path() },
-        { manifestData, showReadyMessage: false }
+        { manifestData, showReadyMessage: false },
       ),
       getIdFromFile(savedIdPath),
     ]);
@@ -76,20 +76,20 @@ export default function sign(
     if (useSubmissionApi && id && !manifestId) {
       throw new UsageError(
         `Cannot set custom ID ${id} - addon submission API requires a ` +
-          'custom ID be specified in the manifest'
+          'custom ID be specified in the manifest',
       );
     }
     if (useSubmissionApi && idFromSourceDir && !manifestId) {
       throw new UsageError(
         'Cannot use previously auto-generated extension ID ' +
           `${idFromSourceDir} - addon submission API ` +
-          'requires a custom ID be specified in the manifest'
+          'requires a custom ID be specified in the manifest',
       );
     }
     if (id && manifestId) {
       throw new UsageError(
         `Cannot set custom ID ${id} because manifest.json ` +
-          `declares ID ${manifestId}`
+          `declares ID ${manifestId}`,
       );
     }
     if (id) {
@@ -102,7 +102,7 @@ export default function sign(
 
     if (!id && idFromSourceDir) {
       log.info(
-        `Using previously auto-generated extension ID: ${idFromSourceDir}`
+        `Using previously auto-generated extension ID: ${idFromSourceDir}`,
       );
       id = idFromSourceDir;
     }
@@ -113,7 +113,7 @@ export default function sign(
 
     if (useSubmissionApi && !channel) {
       throw new UsageError(
-        'channel is a required parameter for the addon submission API'
+        'channel is a required parameter for the addon submission API',
       );
     }
 
@@ -188,7 +188,7 @@ export default function sign(
 
 export async function getIdFromFile(
   filePath,
-  asyncFsReadFile = defaultAsyncFsReadFile
+  asyncFsReadFile = defaultAsyncFsReadFile,
 ) {
   let content;
 

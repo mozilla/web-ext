@@ -73,7 +73,7 @@ describe('sign', () => {
       {
         ...stubs.signingOptions,
         ...extraOptions,
-      }
+      },
     );
   }
 
@@ -108,7 +108,7 @@ describe('sign', () => {
               'minimal_extension-1.0.zip'
             );
           });
-      }
+      },
     ));
 
   it('builds and signs an extension with submission api', () =>
@@ -144,14 +144,14 @@ describe('sign', () => {
               stubs.signingOptions.submitAddon.firstCall.args[0];
             assert.include(
               submitAddonCall.xpiPath,
-              'minimal_extension-1.0.zip'
+              'minimal_extension-1.0.zip',
             );
             assert.include(
               submitAddonCall.amoBaseUrl,
-              stubs.signingConfig.amoBaseUrl
+              stubs.signingConfig.amoBaseUrl,
             );
           });
-      }
+      },
     ));
 
   it('allows an empty application ID when signing', () =>
@@ -204,11 +204,11 @@ describe('sign', () => {
       await assert.isRejected(promiseSigned, UsageError);
       await assert.isRejected(
         promiseSigned,
-        /Cannot set custom ID some-custom-id/
+        /Cannot set custom ID some-custom-id/,
       );
       await assert.isRejected(
         promiseSigned,
-        /requires a custom ID be specified in the manifest/
+        /requires a custom ID be specified in the manifest/,
       );
     }));
 
@@ -234,12 +234,12 @@ describe('sign', () => {
       await assert.isRejected(promiseSigned, UsageError);
       await assert.isRejected(
         promiseSigned,
-        /Cannot use previously auto-generated extension ID/
+        /Cannot use previously auto-generated extension ID/,
       );
       await assert.isRejected(promiseSigned, /some-other-id - /);
       await assert.isRejected(
         promiseSigned,
-        /requires a custom ID be specified in the manifest/
+        /requires a custom ID be specified in the manifest/,
       );
     }));
 
@@ -264,7 +264,7 @@ describe('sign', () => {
               extraOptions: {
                 preValidatedManifest: manifestWithoutApps,
               },
-            })
+            }),
           )
           .then(() => {
             sinon.assert.called(stubs.signingOptions.signAddon);
@@ -291,11 +291,11 @@ describe('sign', () => {
       await assert.isRejected(signPromise, UsageError);
       await assert.isRejected(
         signPromise,
-        /Cannot set custom ID some-custom-id/
+        /Cannot set custom ID some-custom-id/,
       );
       await assert.isRejected(
         signPromise,
-        /manifest\.json declares ID basic-manifest@web-ext-test-suite/
+        /manifest\.json declares ID basic-manifest@web-ext-test-suite/,
       );
     }));
 
@@ -306,7 +306,7 @@ describe('sign', () => {
           Promise.resolve({
             ...stubs.signAddonResult,
             id: 'auto-generated-id',
-          })
+          }),
         );
 
         return sign(tmpDir, stubs, {
@@ -354,7 +354,7 @@ describe('sign', () => {
       await assert.isRejected(signPromise, UsageError);
       await assert.isRejected(
         signPromise,
-        /channel is a required parameter for the addon submission API/
+        /channel is a required parameter for the addon submission API/,
       );
     }));
 
@@ -511,7 +511,7 @@ describe('sign', () => {
           sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
             channel: 'unlisted',
           });
-        }
+        },
       );
     }));
 
@@ -579,7 +579,7 @@ describe('sign', () => {
       const metaDataJson = { version: { license: 'MPL2.0' } };
       const amoMetadata = 'path/to/metadata.json';
       const asyncFsReadFileStub = sinon.spy(() =>
-        Promise.resolve(new Buffer(JSON.stringify(metaDataJson)))
+        Promise.resolve(new Buffer(JSON.stringify(metaDataJson))),
       );
 
       return sign(tmpDir, stubs, {
@@ -605,7 +605,7 @@ describe('sign', () => {
       const stubs = getStubs();
       const amoMetadata = 'path/to/metadata.json';
       const asyncFsReadFileStub = sinon.spy(() =>
-        Promise.resolve(new Buffer('{"broken":"json"'))
+        Promise.resolve(new Buffer('{"broken":"json"')),
       );
 
       const signPromise = sign(tmpDir, stubs, {
@@ -638,7 +638,7 @@ describe('sign', () => {
         await assert.isRejected(getIdPromise, UsageError);
         await assert.isRejected(
           getIdPromise,
-          /No ID found in extension ID file/
+          /No ID found in extension ID file/,
         );
       }));
 
@@ -656,7 +656,7 @@ describe('sign', () => {
       });
       await assert.isRejected(
         getIdFromFile('fakeIdFile', fakeAsyncFsReadFile),
-        /Unexpected fs.readFile error/
+        /Unexpected fs.readFile error/,
       );
 
       sinon.assert.calledOnce(fakeAsyncFsReadFile);
