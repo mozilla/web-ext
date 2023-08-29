@@ -188,13 +188,13 @@ export default class Client {
   async doAfterSubmit(addonId, newVersionId, editUrl) {
     if (this.approvalCheckTimeout > 0) {
       const fileUrl = new URL(
-        await this.waitForApproval(addonId, newVersionId)
+        await this.waitForApproval(addonId, newVersionId),
       );
       return this.downloadSignedFile(fileUrl, addonId);
     } else {
       log.info('Waiting for approval and download of signed xpi skipped.');
       log.info(
-        `When approved the signed xpi can be downloaded from ${editUrl}.`
+        `When approved the signed xpi can be downloaded from ${editUrl}.`,
       );
       return this.returnResult(addonId);
     }

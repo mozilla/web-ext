@@ -96,8 +96,8 @@ describe('sign', () => {
               },
               {
                 signAddon: stubs.signingOptions.signAddon,
-              }
-            )
+              },
+            ),
           )
           .then((result) => {
             assert.equal(result.id, stubs.signingResult.id);
@@ -105,7 +105,7 @@ describe('sign', () => {
             // signer.
             assert.include(
               stubs.signingOptions.signAddon.firstCall.args[0].xpiPath,
-              'minimal_extension-1.0.zip'
+              'minimal_extension-1.0.zip',
             );
           });
       },
@@ -133,8 +133,8 @@ describe('sign', () => {
               },
               {
                 submitAddon: stubs.signingOptions.submitAddon,
-              }
-            )
+              },
+            ),
           )
           .then((result) => {
             assert.equal(result.id, stubs.signingResult.id);
