@@ -35,6 +35,7 @@ export default function sign(
     ignoreFiles = [],
     sourceDir,
     timeout,
+    approvalTimeout,
     disableProgressBar = !isTTY(process.stdin),
     verbose,
     channel,
@@ -131,7 +132,6 @@ export default function sign(
       apiKey,
       apiSecret,
       apiProxy,
-      timeout,
       id,
       xpiPath: buildResult.extensionPath,
       downloadDir: artifactsDir,
@@ -149,6 +149,9 @@ export default function sign(
           savedUploadUuidPath,
           metaDataJson,
           userAgentString,
+          validationCheckTimeout: timeout,
+          approvalCheckTimeout:
+            approvalTimeout !== undefined ? approvalTimeout : timeout,
         });
       } else {
         const {
@@ -157,6 +160,7 @@ export default function sign(
           downloadedFiles,
         } = await signAddon({
           ...signSubmitArgs,
+          timeout,
           apiUrlPrefix,
           disableProgressBar,
           verbose,
