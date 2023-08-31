@@ -601,6 +601,11 @@ Example: $0 --help run.
             'Only used with `use-submission-api`',
           type: 'string',
         },
+        'version-source': {
+          describe:
+            'Path to a zip file containing human readable source code for a version. ' +
+            'Only used with `use-submission-api`',
+        },
       },
     )
     .command('run', 'Run the extension', commands.run, {

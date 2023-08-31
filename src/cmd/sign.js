@@ -40,6 +40,7 @@ export default function sign(
     verbose,
     channel,
     amoMetadata,
+    versionSource,
     webextVersion,
   },
   {
@@ -152,6 +153,7 @@ export default function sign(
           validationCheckTimeout: timeout,
           approvalCheckTimeout:
             approvalTimeout !== undefined ? approvalTimeout : timeout,
+          versionSource,
         });
       } else {
         const {

@@ -50,7 +50,9 @@ describe('util.submit-addon', () => {
     let getPreviousUuidOrUploadXpiStub;
     let postNewAddonStub;
     let putVersionStub;
+    let fileFromSyncStub;
     const uploadUuid = '{some-upload-uuid}';
+    const fakeFileFromSync = new File([], 'foo.xpi');
 
     beforeEach(() => {
       statStub = sinon
@@ -61,6 +63,9 @@ describe('util.submit-addon', () => {
         .resolves(uploadUuid);
       postNewAddonStub = sinon.stub(Client.prototype, 'postNewAddon');
       putVersionStub = sinon.stub(Client.prototype, 'putVersion');
+      fileFromSyncStub = sinon
+        .stub(Client.prototype, 'fileFromSync')
+        .returns(fakeFileFromSync);
     });
 
     afterEach(() => {
@@ -68,6 +73,7 @@ describe('util.submit-addon', () => {
       getPreviousUuidOrUploadXpiStub.restore();
       postNewAddonStub.restore();
       putVersionStub.restore();
+      fileFromSyncStub.restore();
     });
 
     const signAddonDefaults = {
@@ -122,6 +128,7 @@ describe('util.submit-addon', () => {
         downloadDir,
         userAgentString,
       });
+      sinon.assert.notCalled(fileFromSyncStub);
     });
 
     it('calls postNewAddon if `id` is undefined', async () => {
@@ -185,6 +192,42 @@ describe('util.submit-addon', () => {
         uploadUuid,
         signAddonDefaults.savedIdPath,
         metaDataJson,
+      );
+    });
+
+    it('includes source data to be patched if versionSource defined for new addon', async () => {
+      const versionSource = 'path/to/source/zip';
+      await signAddon({
+        ...signAddonDefaults,
+        versionSource,
+      });
+
+      sinon.assert.calledWith(fileFromSyncStub, versionSource);
+      sinon.assert.calledWith(
+        postNewAddonStub,
+        uploadUuid,
+        signAddonDefaults.savedIdPath,
+        {},
+        { source: fakeFileFromSync },
+      );
+    });
+
+    it('includes source data to be patched if versionSource defined for new version', async () => {
+      const versionSource = 'path/to/source/zip';
+      const id = '@thisID';
+      await signAddon({
+        ...signAddonDefaults,
+        versionSource,
+        id,
+      });
+
+      sinon.assert.calledWith(fileFromSyncStub, versionSource);
+      sinon.assert.calledWith(
+        putVersionStub,
+        uploadUuid,
+        id,
+        {},
+        { source: fakeFileFromSync },
       );
     });
   });
@@ -738,6 +781,42 @@ describe('util.submit-addon', () => {
       });
     });
 
+    describe('doFormDataPatch', () => {
+      const addonId = 'some-addon-id';
+      const versionId = 123456;
+      const dataField1 = 'someField';
+      const dataField2 = 'otherField';
+      const data = { dataField1: 'value', dataField2: 0 };
+      const formData = new FormData();
+      formData.append(dataField1, data[dataField1]);
+      formData.append(dataField2, data[dataField2]);
+
+      it('creates the url from addon and version', async () => {
+        const client = new Client(clientDefaults);
+        const fetchStub = sinon
+          .stub(client, 'fetch')
+          .resolves(new Response('', { ok: true, status: 200 }));
+        await client.doFormDataPatch(data, addonId, versionId);
+        const patchUrl = new URL(
+          `addon/${addonId}/versions/${versionId}/`,
+          client.apiUrl,
+        );
+
+        sinon.assert.calledWith(fetchStub, patchUrl, 'PATCH', formData);
+      });
+
+      it('catches and throws for non ok responses', async () => {
+        const client = new Client(clientDefaults);
+        sinon.stub(client, 'fetch').resolves();
+        const response = client.doFormDataPatch(data, addonId, versionId);
+
+        assert.isRejected(
+          response,
+          `Uploading ${dataField1}${dataField2} failed`,
+        );
+      });
+    });
+
     describe('waitForApproval', () => {
       it('aborts approval wait after timeout', async () => {
         const client = new Client({
@@ -902,7 +981,13 @@ describe('util.submit-addon', () => {
           [{ body: sampleAddonDetail, status: 200 }],
         );
         addApprovalMocks(versionId);
-        await client.postNewAddon(uploadUuid, idFile, {}, saveIdStub);
+        await client.postNewAddon(
+          uploadUuid,
+          idFile,
+          {},
+          undefined,
+          saveIdStub,
+        );
         sinon.assert.calledWith(saveIdStub, idFile, sampleAddonDetail.guid);
       });
 
@@ -918,6 +1003,92 @@ describe('util.submit-addon', () => {
 
         addApprovalMocks(versionId);
         await client.putVersion(uploadUuid, `${addonId}`, {});
+      });
+
+      describe('doFormDataPatch called correctly', () => {
+        const versionPatchData = { source: 'somesource' };
+        const metaDataJson = { some: 'metadata' };
+        const newVersionId = 123456;
+        const editUrl = 'http://some/url';
+        const stubbedClient = new Client(clientDefaults);
+
+        const submitResponse = {
+          guid: addonId,
+          version: { id: newVersionId, edit_url: editUrl },
+        };
+        sinon
+          .stub(stubbedClient, 'doNewAddonOrVersionSubmit')
+          .resolves(submitResponse);
+        sinon.stub(stubbedClient, 'doNewAddonSubmit').resolves(submitResponse);
+        sinon.stub(stubbedClient, 'doAfterSubmit').resolves();
+
+        let doFormDataPatchStub;
+
+        before(() => {
+          doFormDataPatchStub = sinon
+            .stub(stubbedClient, 'doFormDataPatch')
+            .resolves();
+        });
+
+        afterEach(() => {
+          doFormDataPatchStub.reset();
+        });
+
+        it('calls doFormDataPatch if versionPatchData is defined for postNewAddon', async () => {
+          const saveIdToFileStub = sinon.stub().resolves();
+          const savedIdPath = 'some/saved/id/path';
+          await stubbedClient.postNewAddon(
+            uploadUuid,
+            savedIdPath,
+            metaDataJson,
+            versionPatchData,
+            saveIdToFileStub,
+          );
+
+          sinon.assert.calledWith(
+            doFormDataPatchStub,
+            versionPatchData,
+            addonId,
+            newVersionId,
+          );
+        });
+
+        it('calls doFormDataPatch if versionPatchData is defined for putVersion', async () => {
+          await stubbedClient.putVersion(
+            uploadUuid,
+            addonId,
+            metaDataJson,
+            versionPatchData,
+          );
+
+          sinon.assert.called(doFormDataPatchStub);
+          sinon.assert.calledWith(
+            doFormDataPatchStub,
+            versionPatchData,
+            addonId,
+            newVersionId,
+          );
+        });
+
+        it('does not call doFormDataPatch is versionPatchData is undefined for postNewAddon', async () => {
+          const saveIdToFileStub = sinon.stub().resolves();
+          const savedIdPath = 'some/saved/id/path';
+          await stubbedClient.postNewAddon(
+            uploadUuid,
+            savedIdPath,
+            metaDataJson,
+            undefined,
+            saveIdToFileStub,
+          );
+
+          sinon.assert.notCalled(doFormDataPatchStub);
+        });
+
+        it('does not call doFormDataPatch is versionPatchData is undefined for putVersion', async () => {
+          await stubbedClient.putVersion(uploadUuid, addonId, metaDataJson);
+
+          sinon.assert.notCalled(doFormDataPatchStub);
+        });
       });
 
       describe('doAfterSubmit', () => {

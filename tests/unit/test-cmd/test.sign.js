@@ -384,6 +384,23 @@ describe('sign', () => {
       });
     }));
 
+  it('passes the versionSource parameter to submissionAPI signer', () =>
+    withTempDir((tmpDir) => {
+      const stubs = getStubs();
+      const versionSource = 'path/to/source.zip';
+      return sign(tmpDir, stubs, {
+        extraArgs: {
+          versionSource,
+          useSubmissionApi: true,
+          channel: 'unlisted',
+        },
+      }).then(() => {
+        sinon.assert.called(stubs.signingOptions.submitAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
+          versionSource,
+        });
+      });
+    }));
   it('returns a signing result', () =>
     withTempDir((tmpDir) => {
       const stubs = getStubs();

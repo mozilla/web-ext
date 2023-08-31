@@ -185,6 +185,27 @@ export default class Client {
     return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
   }
 
+  async doFormDataPatch(data, addonId, versionId) {
+    const patchUrl = new URL(
+      `addon/${addonId}/versions/${versionId}/`,
+      this.apiUrl,
+    );
+    try {
+      const formData = new FormData();
+      for (const field in data) {
+        formData.set(field, data[field]);
+      }
+
+      const response = await this.fetch(patchUrl, 'PATCH', formData);
+      if (!response.ok) {
+        throw new Error(`response status was ${response.status}`);
+      }
+    } catch (error) {
+      log.info(`Upload of ${Object.keys(data)} failed: ${error}.`);
+      throw new Error(`Uploading ${Object.keys(data)} failed`);
+    }
+  }
+
   async doAfterSubmit(addonId, newVersionId, editUrl) {
     if (this.approvalCheckTimeout > 0) {
       const fileUrl = new URL(
@@ -237,7 +258,7 @@ export default class Client {
   }
 
   async fetch(url, method = 'GET', body) {
-    log.info(`Fetching URL: ${url.href}`);
+    log.info(`${method}ing URL: ${url.href}`);
     let headers = {
       Authorization: await this.apiAuth.getAuthHeader(),
       Accept: 'application/json',
@@ -350,12 +371,18 @@ export default class Client {
     uploadUuid,
     savedIdPath,
     metaDataJson,
+    versionPatchData,
     saveIdToFileFunc = saveIdToFile,
   ) {
     const {
       guid: addonId,
       version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
+
+    if (versionPatchData) {
+      log.info('Submitting source zip');
+      await this.doFormDataPatch(versionPatchData, addonId, newVersionId);
+    }
 
     await saveIdToFileFunc(savedIdPath, addonId);
     log.info(`Generated extension ID: ${addonId}.`);
@@ -365,11 +392,15 @@ export default class Client {
     return this.doAfterSubmit(addonId, newVersionId, editUrl);
   }
 
-  async putVersion(uploadUuid, addonId, metaDataJson) {
+  async putVersion(uploadUuid, addonId, metaDataJson, versionPatchData) {
     const {
       version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
+    if (versionPatchData) {
+      log.info('Submitting source zip');
+      await this.doFormDataPatch(versionPatchData, addonId, newVersionId);
+    }
     return this.doAfterSubmit(addonId, newVersionId, editUrl);
   }
 }
@@ -388,6 +419,7 @@ export async function signAddon({
   savedIdPath,
   savedUploadUuidPath,
   metaDataJson = {},
+  versionSource,
   userAgentString,
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
@@ -423,14 +455,23 @@ export async function signAddon({
     channel,
     savedUploadUuidPath,
   );
+  // if we have a source file we need to upload we patch after the create
+  const versionPatchData = versionSource
+    ? { source: client.fileFromSync(versionSource) }
+    : undefined;
 
   // We specifically need to know if `id` has not been passed as a parameter because
   // it's the indication that a new add-on should be created, rather than a new version.
   if (id === undefined) {
-    return client.postNewAddon(uploadUuid, savedIdPath, metaDataJson);
+    return client.postNewAddon(
+      uploadUuid,
+      savedIdPath,
+      metaDataJson,
+      versionPatchData,
+    );
   }
 
-  return client.putVersion(uploadUuid, id, metaDataJson);
+  return client.putVersion(uploadUuid, id, metaDataJson, versionPatchData);
 }
 
 export async function saveIdToFile(filePath, id) {
