@@ -41,6 +41,7 @@ export default function sign(
     channel,
     amoMetadata,
     uploadSourceCode,
+    amoIcon,
     webextVersion,
   },
   {
@@ -154,6 +155,7 @@ export default function sign(
           approvalCheckTimeout:
             approvalTimeout !== undefined ? approvalTimeout : timeout,
           submissionSource: uploadSourceCode,
+          amoIcon,
         });
       } else {
         const {

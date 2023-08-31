@@ -609,6 +609,13 @@ Example: $0 --help run.
             'details. Only used with `use-submission-api`',
           type: 'string',
         },
+        'amo-icon': {
+          describe:
+            'Path to an image that should be displayed as the addon icon on ' +
+            'addons.mozilla.org. Must be square; 128px x 128px is recommended. ' +
+            'Only used with `use-submission-api`',
+          type: 'string',
+        },
       },
     )
     .command('run', 'Run the extension', commands.run, {

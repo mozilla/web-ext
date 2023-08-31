@@ -186,10 +186,11 @@ export default class Client {
   }
 
   async doFormDataPatch(data, addonId, versionId) {
-    const patchUrl = new URL(
-      `addon/${addonId}/versions/${versionId}/`,
-      this.apiUrl,
-    );
+    let patchUrl = new URL(`addon/${addonId}/`, this.apiUrl);
+    if (versionId) {
+      patchUrl = new URL(`versions/${versionId}/`, patchUrl);
+    }
+
     try {
       const formData = new FormData();
       for (const field in data) {
@@ -207,10 +208,19 @@ export default class Client {
   }
 
   async doAfterSubmit(addonId, newVersionId, editUrl, patchData) {
+    const promises = [];
     if (patchData && patchData.version) {
       log.info(`Submitting ${Object.keys(patchData.version)} to version`);
-      await this.doFormDataPatch(patchData.version, addonId, newVersionId);
+      promises.push(
+        this.doFormDataPatch(patchData.version, addonId, newVersionId),
+      );
     }
+    if (patchData && patchData.addon) {
+      log.info(`Submitting ${Object.keys(patchData.addon)} to addon`);
+      promises.push(this.doFormDataPatch(patchData.addon, addonId));
+    }
+    await Promise.all(promises);
+
     if (this.approvalCheckTimeout > 0) {
       const fileUrl = new URL(
         await this.waitForApproval(addonId, newVersionId),
@@ -415,19 +425,16 @@ export async function signAddon({
   savedUploadUuidPath,
   metaDataJson = {},
   submissionSource,
+  amoIcon,
   userAgentString,
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
 }) {
-  try {
-    const stats = await fsPromises.stat(xpiPath);
-
-    if (!stats.isFile()) {
-      throw new Error('not a file');
-    }
-  } catch (statError) {
-    throw new Error(`error with ${xpiPath}: ${statError}`);
-  }
+  await Promise.all([
+    checkPathIsFile(xpiPath),
+    submissionSource ? checkPathIsFile(submissionSource) : Promise.resolve(),
+    amoIcon ? checkPathIsFile(amoIcon) : Promise.resolve(),
+  ]);
 
   let baseUrl;
   try {
@@ -451,18 +458,12 @@ export async function signAddon({
     savedUploadUuidPath,
   );
   const patchData = {};
-  // if we have a source file we need to upload we patch after the create
+  // if we have a source or icon file we need to upload we patch after the create
   if (submissionSource) {
-    try {
-      const stats2 = await fsPromises.stat(submissionSource);
-
-      if (!stats2.isFile()) {
-        throw new Error('not a file');
-      }
-    } catch (statError) {
-      throw new Error(`error with ${submissionSource}: ${statError}`);
-    }
     patchData.version = { source: client.fileFromSync(submissionSource) };
+  }
+  if (amoIcon) {
+    patchData.addon = { icon: client.fileFromSync(amoIcon) };
   }
 
   // We specifically need to know if `id` has not been passed as a parameter because
@@ -525,4 +526,16 @@ export async function getUploadUuidFromFile(
   }
 
   return { uploadUuid: '', channel: '', xpiCrcHash: '' };
+}
+
+async function checkPathIsFile(filePath) {
+  try {
+    const stats2 = await fsPromises.stat(filePath);
+
+    if (!stats2.isFile()) {
+      throw new Error('not a file');
+    }
+  } catch (statError) {
+    throw new Error(`error with ${filePath}: ${statError}`);
+  }
 }
