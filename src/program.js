@@ -601,10 +601,13 @@ Example: $0 --help run.
             'Only used with `use-submission-api`',
           type: 'string',
         },
-        'version-source': {
+        'upload-source-code': {
           describe:
-            'Path to a zip file containing human readable source code for a version. ' +
-            'Only used with `use-submission-api`',
+            'Path to an archive file containing human readable source code of this submission, ' +
+            'if the code in --source-dir has been processed to make it unreadable. ' +
+            'See https://extensionworkshop.com/documentation/publish/source-code-submission/ for ' +
+            'details. Only used with `use-submission-api`',
+          type: 'string',
         },
       },
     )

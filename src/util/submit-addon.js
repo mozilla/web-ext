@@ -371,7 +371,7 @@ export default class Client {
     uploadUuid,
     savedIdPath,
     metaDataJson,
-    versionPatchData,
+    patchData,
     saveIdToFileFunc = saveIdToFile,
   ) {
     const {
@@ -379,9 +379,9 @@ export default class Client {
       version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
 
-    if (versionPatchData) {
+    if (patchData && patchData.version) {
       log.info('Submitting source zip');
-      await this.doFormDataPatch(versionPatchData, addonId, newVersionId);
+      await this.doFormDataPatch(patchData.version, addonId, newVersionId);
     }
 
     await saveIdToFileFunc(savedIdPath, addonId);
@@ -392,14 +392,14 @@ export default class Client {
     return this.doAfterSubmit(addonId, newVersionId, editUrl);
   }
 
-  async putVersion(uploadUuid, addonId, metaDataJson, versionPatchData) {
+  async putVersion(uploadUuid, addonId, metaDataJson, patchData) {
     const {
       version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
-    if (versionPatchData) {
+    if (patchData && patchData.version) {
       log.info('Submitting source zip');
-      await this.doFormDataPatch(versionPatchData, addonId, newVersionId);
+      await this.doFormDataPatch(patchData.version, addonId, newVersionId);
     }
     return this.doAfterSubmit(addonId, newVersionId, editUrl);
   }
@@ -419,7 +419,7 @@ export async function signAddon({
   savedIdPath,
   savedUploadUuidPath,
   metaDataJson = {},
-  versionSource,
+  submissionSource,
   userAgentString,
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
@@ -456,9 +456,11 @@ export async function signAddon({
     savedUploadUuidPath,
   );
   // if we have a source file we need to upload we patch after the create
-  const versionPatchData = versionSource
-    ? { source: client.fileFromSync(versionSource) }
-    : undefined;
+  const patchData = {
+    version: submissionSource
+      ? { source: client.fileFromSync(submissionSource) }
+      : undefined,
+  };
 
   // We specifically need to know if `id` has not been passed as a parameter because
   // it's the indication that a new add-on should be created, rather than a new version.
@@ -467,11 +469,11 @@ export async function signAddon({
       uploadUuid,
       savedIdPath,
       metaDataJson,
-      versionPatchData,
+      patchData,
     );
   }
 
-  return client.putVersion(uploadUuid, id, metaDataJson, versionPatchData);
+  return client.putVersion(uploadUuid, id, metaDataJson, patchData);
 }
 
 export async function saveIdToFile(filePath, id) {

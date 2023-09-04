@@ -195,39 +195,39 @@ describe('util.submit-addon', () => {
       );
     });
 
-    it('includes source data to be patched if versionSource defined for new addon', async () => {
-      const versionSource = 'path/to/source/zip';
+    it('includes source data to be patched if submissionSource defined for new addon', async () => {
+      const submissionSource = 'path/to/source/zip';
       await signAddon({
         ...signAddonDefaults,
-        versionSource,
+        submissionSource,
       });
 
-      sinon.assert.calledWith(fileFromSyncStub, versionSource);
+      sinon.assert.calledWith(fileFromSyncStub, submissionSource);
       sinon.assert.calledWith(
         postNewAddonStub,
         uploadUuid,
         signAddonDefaults.savedIdPath,
         {},
-        { source: fakeFileFromSync },
+        { version: { source: fakeFileFromSync } },
       );
     });
 
-    it('includes source data to be patched if versionSource defined for new version', async () => {
-      const versionSource = 'path/to/source/zip';
+    it('includes source data to be patched if submissionSource defined for new version', async () => {
+      const submissionSource = 'path/to/source/zip';
       const id = '@thisID';
       await signAddon({
         ...signAddonDefaults,
-        versionSource,
+        submissionSource,
         id,
       });
 
-      sinon.assert.calledWith(fileFromSyncStub, versionSource);
+      sinon.assert.calledWith(fileFromSyncStub, submissionSource);
       sinon.assert.calledWith(
         putVersionStub,
         uploadUuid,
         id,
         {},
-        { source: fakeFileFromSync },
+        { version: { source: fakeFileFromSync } },
       );
     });
   });
@@ -1006,7 +1006,7 @@ describe('util.submit-addon', () => {
       });
 
       describe('doFormDataPatch called correctly', () => {
-        const versionPatchData = { source: 'somesource' };
+        const patchData = { version: { source: 'somesource' } };
         const metaDataJson = { some: 'metadata' };
         const newVersionId = 123456;
         const editUrl = 'http://some/url';
@@ -1034,57 +1034,57 @@ describe('util.submit-addon', () => {
           doFormDataPatchStub.reset();
         });
 
-        it('calls doFormDataPatch if versionPatchData is defined for postNewAddon', async () => {
+        it('calls doFormDataPatch if patchData.version is defined for postNewAddon', async () => {
           const saveIdToFileStub = sinon.stub().resolves();
           const savedIdPath = 'some/saved/id/path';
           await stubbedClient.postNewAddon(
             uploadUuid,
             savedIdPath,
             metaDataJson,
-            versionPatchData,
+            patchData,
             saveIdToFileStub,
           );
 
           sinon.assert.calledWith(
             doFormDataPatchStub,
-            versionPatchData,
+            patchData.version,
             addonId,
             newVersionId,
           );
         });
 
-        it('calls doFormDataPatch if versionPatchData is defined for putVersion', async () => {
+        it('calls doFormDataPatch if patchData.version is defined for putVersion', async () => {
           await stubbedClient.putVersion(
             uploadUuid,
             addonId,
             metaDataJson,
-            versionPatchData,
+            patchData,
           );
 
           sinon.assert.called(doFormDataPatchStub);
           sinon.assert.calledWith(
             doFormDataPatchStub,
-            versionPatchData,
+            patchData.version,
             addonId,
             newVersionId,
           );
         });
 
-        it('does not call doFormDataPatch is versionPatchData is undefined for postNewAddon', async () => {
+        it('does not call doFormDataPatch is patchData.version is undefined for postNewAddon', async () => {
           const saveIdToFileStub = sinon.stub().resolves();
           const savedIdPath = 'some/saved/id/path';
           await stubbedClient.postNewAddon(
             uploadUuid,
             savedIdPath,
             metaDataJson,
-            undefined,
+            {},
             saveIdToFileStub,
           );
 
           sinon.assert.notCalled(doFormDataPatchStub);
         });
 
-        it('does not call doFormDataPatch is versionPatchData is undefined for putVersion', async () => {
+        it('does not call doFormDataPatch is patchData.version is undefined for putVersion', async () => {
           await stubbedClient.putVersion(uploadUuid, addonId, metaDataJson);
 
           sinon.assert.notCalled(doFormDataPatchStub);

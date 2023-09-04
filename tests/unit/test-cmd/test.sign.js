@@ -384,20 +384,20 @@ describe('sign', () => {
       });
     }));
 
-  it('passes the versionSource parameter to submissionAPI signer', () =>
+  it('passes the uploadSourceCode parameter to submissionAPI signer as submissionSource', () =>
     withTempDir((tmpDir) => {
       const stubs = getStubs();
-      const versionSource = 'path/to/source.zip';
+      const uploadSourceCode = 'path/to/source.zip';
       return sign(tmpDir, stubs, {
         extraArgs: {
-          versionSource,
+          uploadSourceCode,
           useSubmissionApi: true,
           channel: 'unlisted',
         },
       }).then(() => {
         sinon.assert.called(stubs.signingOptions.submitAddon);
         sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
-          versionSource,
+          submissionSource: uploadSourceCode,
         });
       });
     }));
