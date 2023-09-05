@@ -206,7 +206,11 @@ export default class Client {
     }
   }
 
-  async doAfterSubmit(addonId, newVersionId, editUrl) {
+  async doAfterSubmit(addonId, newVersionId, editUrl, patchData) {
+    if (patchData && patchData.version) {
+      log.info(`Submitting ${Object.keys(patchData.version)} to version`);
+      await this.doFormDataPatch(patchData.version, addonId, newVersionId);
+    }
     if (this.approvalCheckTimeout > 0) {
       const fileUrl = new URL(
         await this.waitForApproval(addonId, newVersionId),
@@ -379,17 +383,12 @@ export default class Client {
       version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonSubmit(uploadUuid, metaDataJson);
 
-    if (patchData && patchData.version) {
-      log.info('Submitting source zip');
-      await this.doFormDataPatch(patchData.version, addonId, newVersionId);
-    }
-
     await saveIdToFileFunc(savedIdPath, addonId);
     log.info(`Generated extension ID: ${addonId}.`);
     log.info('You must add the following to your manifest:');
     log.info(`"browser_specific_settings": {"gecko": {"id": "${addonId}"}}`);
 
-    return this.doAfterSubmit(addonId, newVersionId, editUrl);
+    return this.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
   }
 
   async putVersion(uploadUuid, addonId, metaDataJson, patchData) {
@@ -397,11 +396,7 @@ export default class Client {
       version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
-    if (patchData && patchData.version) {
-      log.info('Submitting source zip');
-      await this.doFormDataPatch(patchData.version, addonId, newVersionId);
-    }
-    return this.doAfterSubmit(addonId, newVersionId, editUrl);
+    return this.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
   }
 }
 
