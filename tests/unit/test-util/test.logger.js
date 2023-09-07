@@ -1,5 +1,5 @@
 /* @flow */
-import { Writable as WritableStream } from 'stream';
+import { Writable } from 'stream';
 import { pathToFileURL } from 'url';
 
 import bunyan from 'bunyan';
@@ -34,7 +34,7 @@ describe('logger', () => {
 
     // NOTE: create a fake process that makes flow happy.
     function fakeProcess() {
-      class FakeWritableStream extends WritableStream {
+      class FakeWritableStream extends Writable {
         write = () => true;
       }
       const fakeWritableStream = new FakeWritableStream();
