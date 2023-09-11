@@ -109,7 +109,7 @@
     "crc-32": "1.2.2",
     "cross-env": "7.0.3",
     "deepcopy": "2.1.0",
-    "eslint": "8.48.0",
+    "eslint": "8.49.0",
     "eslint-plugin-async-await": "0.0.0",
     "eslint-plugin-import": "2.28.1",
     "git-rev-sync": "3.0.2",
