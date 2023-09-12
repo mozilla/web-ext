@@ -82,7 +82,7 @@
     "open": "9.1.0",
     "parse-json": "7.1.0",
     "promise-toolbox": "0.21.0",
-    "sign-addon": "6.1.0",
+    "sign-addon": "6.2.0",
     "source-map-support": "0.5.21",
     "strip-bom": "5.0.0",
     "strip-json-comments": "5.0.1",
