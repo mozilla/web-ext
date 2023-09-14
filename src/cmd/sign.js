@@ -84,6 +84,12 @@ export default function sign(
     asyncFsReadFile = defaultAsyncFsReadFile,
   }: SignOptions = {}
 ): Promise<SignResult> {
+  if (!useSubmissionApi) {
+    log.warn(
+      'IMPORTANT: web-ext v8 will introduce a new AMO submission API for signing and you might need to take actions when upgrading from v7 to v8. You can test this upcoming change now by specifying `--use-submission-api` to the `sign` command. If you want to keep using the API you are using now (via "sign-addon"), you must stay on v7.'
+    );
+  }
+
   return withTempDir(async function (tmpDir) {
     await prepareArtifactsDir(artifactsDir);
 
