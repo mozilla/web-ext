@@ -1,7 +1,5 @@
 import path from 'path';
 
-import { signAddon as defaultAddonSigner } from 'sign-addon';
-
 import defaultBuilder from './build.js';
 import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
 import { prepareArtifactsDir } from '../util/artifacts.js';
@@ -10,10 +8,8 @@ import getValidatedManifest, { getManifestId } from '../util/manifest.js';
 import {
   defaultAsyncFsReadFile,
   signAddon as defaultSubmitAddonSigner,
-  saveIdToFile,
 } from '../util/submit-addon.js';
 import { withTempDir } from '../util/temp-dir.js';
-import { isTTY } from '../util/stdin.js';
 
 const log = createLogger(import.meta.url);
 
@@ -28,16 +24,12 @@ export default function sign(
     apiKey,
     apiProxy,
     apiSecret,
-    apiUrlPrefix,
-    useSubmissionApi = false,
     artifactsDir,
     id,
     ignoreFiles = [],
     sourceDir,
     timeout,
     approvalTimeout,
-    disableProgressBar = !isTTY(process.stdin),
-    verbose,
     channel,
     amoMetadata,
     uploadSourceCode,
@@ -46,7 +38,6 @@ export default function sign(
   {
     build = defaultBuilder,
     preValidatedManifest,
-    signAddon = defaultAddonSigner,
     submitAddon = defaultSubmitAddonSigner,
     asyncFsReadFile = defaultAsyncFsReadFile,
   } = {},
@@ -74,13 +65,13 @@ export default function sign(
 
     const manifestId = getManifestId(manifestData);
 
-    if (useSubmissionApi && id && !manifestId) {
+    if (id && !manifestId) {
       throw new UsageError(
         `Cannot set custom ID ${id} - addon submission API requires a ` +
           'custom ID be specified in the manifest',
       );
     }
-    if (useSubmissionApi && idFromSourceDir && !manifestId) {
+    if (idFromSourceDir && !manifestId) {
       throw new UsageError(
         'Cannot use previously auto-generated extension ID ' +
           `${idFromSourceDir} - addon submission API ` +
@@ -112,7 +103,7 @@ export default function sign(
       log.warn('No extension ID specified (it will be auto-generated)');
     }
 
-    if (useSubmissionApi && !channel) {
+    if (!channel) {
       throw new UsageError(
         'channel is a required parameter for the addon submission API',
       );
@@ -139,52 +130,26 @@ export default function sign(
       channel,
     };
 
-    let result;
     try {
-      if (useSubmissionApi) {
-        result = await submitAddon({
-          ...signSubmitArgs,
-          amoBaseUrl,
-          channel,
-          savedIdPath,
-          savedUploadUuidPath,
-          metaDataJson,
-          userAgentString,
-          validationCheckTimeout: timeout,
-          approvalCheckTimeout:
-            approvalTimeout !== undefined ? approvalTimeout : timeout,
-          submissionSource: uploadSourceCode,
-        });
-      } else {
-        const {
-          success,
-          id: newId,
-          downloadedFiles,
-        } = await signAddon({
-          ...signSubmitArgs,
-          timeout,
-          apiUrlPrefix,
-          disableProgressBar,
-          verbose,
-          version: manifestData.version,
-          apiRequestConfig: { headers: { 'User-Agent': userAgentString } },
-        });
-        if (!success) {
-          throw new Error('The extension could not be signed');
-        }
-        result = { id: newId, downloadedFiles };
-        // All information about the downloaded files would have already been
-        // logged by signAddon(). submitAddon() calls saveIdToFile itself.
-        await saveIdToFile(savedIdPath, newId);
-        log.info(`Extension ID: ${newId}`);
-        log.info('SUCCESS');
-      }
+      const result = await submitAddon({
+        ...signSubmitArgs,
+        amoBaseUrl,
+        channel,
+        savedIdPath,
+        savedUploadUuidPath,
+        metaDataJson,
+        userAgentString,
+        validationCheckTimeout: timeout,
+        approvalCheckTimeout:
+          approvalTimeout !== undefined ? approvalTimeout : timeout,
+        submissionSource: uploadSourceCode,
+      });
+
+      return result;
     } catch (clientError) {
       log.info('FAIL');
       throw new WebExtError(clientError.message);
     }
-
-    return result;
   });
 }
 

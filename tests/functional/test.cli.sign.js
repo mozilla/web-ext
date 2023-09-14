@@ -53,13 +53,13 @@ describe('web-ext sign', () => {
     }
   });
 
-  it('should accept: --source-dir SRCDIR --api-url-prefix URL', () =>
+  it('should accept: --source-dir SRCDIR --amo-base-url URL', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
       const argv = [
         'sign',
         '--verbose',
-        '--api-url-prefix',
-        'http://localhost:8989/fake/api/v4',
+        '--amo-base-url',
+        'http://localhost:8989/fake/api/v5',
         '--api-key',
         'FAKEAPIKEY',
         '--api-secret',
