@@ -58,7 +58,7 @@
     "opera"
   ],
   "dependencies": {
-    "@babel/runtime": "7.22.15",
+    "@babel/runtime": "7.23.1",
     "@devicefarmer/adbkit": "3.2.5",
     "addons-linter": "6.14.0",
     "bunyan": "1.8.15",
