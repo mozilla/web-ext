@@ -57,7 +57,9 @@ describe('util.submit-addon', () => {
     beforeEach(() => {
       statStub = sinon
         .stub(fsPromises, 'stat')
+        .onFirstCall()
         .resolves({ isFile: () => true });
+      statStub.callThrough();
       getPreviousUuidOrUploadXpiStub = sinon
         .stub(Client.prototype, 'getPreviousUuidOrUploadXpi')
         .resolves(uploadUuid);
@@ -197,6 +199,7 @@ describe('util.submit-addon', () => {
 
     it('includes source data to be patched if submissionSource defined for new addon', async () => {
       const submissionSource = 'path/to/source/zip';
+      statStub.onSecondCall().resolves({ isFile: () => true });
       await signAddon({
         ...signAddonDefaults,
         submissionSource,
@@ -214,6 +217,7 @@ describe('util.submit-addon', () => {
 
     it('includes source data to be patched if submissionSource defined for new version', async () => {
       const submissionSource = 'path/to/source/zip';
+      statStub.onSecondCall().resolves({ isFile: () => true });
       const id = '@thisID';
       await signAddon({
         ...signAddonDefaults,
@@ -229,6 +233,34 @@ describe('util.submit-addon', () => {
         {},
         { version: { source: fakeFileFromSync } },
       );
+    });
+
+    it('throws error if submissionSource is not found', async () => {
+      const submissionSource = 'path/to/source/zip';
+      const signAddonPromise = signAddon({
+        ...signAddonDefaults,
+        submissionSource,
+      });
+      await assert.isRejected(
+        signAddonPromise,
+        `error with ${submissionSource}: ` +
+          'Error: ENOENT: no such file or directory',
+      );
+    });
+
+    it('throws error if submissionSource is a directory', async () => {
+      await withTempDir(async (tmpDir) => {
+        const submissionSource = path.join(tmpDir.path(), 'someDirectory');
+        await fsPromises.mkdir(submissionSource);
+        const signAddonPromise = signAddon({
+          ...signAddonDefaults,
+          submissionSource,
+        });
+        await assert.isRejected(
+          signAddonPromise,
+          `error with ${submissionSource}: ` + 'Error: not a file',
+        );
+      });
     });
   });
 

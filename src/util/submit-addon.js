@@ -423,7 +423,7 @@ export async function signAddon({
     const stats = await fsPromises.stat(xpiPath);
 
     if (!stats.isFile()) {
-      throw new Error(`not a file: ${xpiPath}`);
+      throw new Error('not a file');
     }
   } catch (statError) {
     throw new Error(`error with ${xpiPath}: ${statError}`);
@@ -450,12 +450,20 @@ export async function signAddon({
     channel,
     savedUploadUuidPath,
   );
+  const patchData = {};
   // if we have a source file we need to upload we patch after the create
-  const patchData = {
-    version: submissionSource
-      ? { source: client.fileFromSync(submissionSource) }
-      : undefined,
-  };
+  if (submissionSource) {
+    try {
+      const stats2 = await fsPromises.stat(submissionSource);
+
+      if (!stats2.isFile()) {
+        throw new Error('not a file');
+      }
+    } catch (statError) {
+      throw new Error(`error with ${submissionSource}: ${statError}`);
+    }
+    patchData.version = { source: client.fileFromSync(submissionSource) };
+  }
 
   // We specifically need to know if `id` has not been passed as a parameter because
   // it's the indication that a new add-on should be created, rather than a new version.
