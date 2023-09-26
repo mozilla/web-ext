@@ -185,7 +185,32 @@ export default class Client {
     return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
   }
 
-  async doAfterSubmit(addonId, newVersionId, editUrl) {
+  async doFormDataPatch(data, addonId, versionId) {
+    const patchUrl = new URL(
+      `addon/${addonId}/versions/${versionId}/`,
+      this.apiUrl,
+    );
+    try {
+      const formData = new FormData();
+      for (const field in data) {
+        formData.set(field, data[field]);
+      }
+
+      const response = await this.fetch(patchUrl, 'PATCH', formData);
+      if (!response.ok) {
+        throw new Error(`response status was ${response.status}`);
+      }
+    } catch (error) {
+      log.info(`Upload of ${Object.keys(data)} failed: ${error}.`);
+      throw new Error(`Uploading ${Object.keys(data)} failed`);
+    }
+  }
+
+  async doAfterSubmit(addonId, newVersionId, editUrl, patchData) {
+    if (patchData && patchData.version) {
+      log.info(`Submitting ${Object.keys(patchData.version)} to version`);
+      await this.doFormDataPatch(patchData.version, addonId, newVersionId);
+    }
     if (this.approvalCheckTimeout > 0) {
       const fileUrl = new URL(
         await this.waitForApproval(addonId, newVersionId),
@@ -237,7 +262,7 @@ export default class Client {
   }
 
   async fetch(url, method = 'GET', body) {
-    log.info(`Fetching URL: ${url.href}`);
+    log.info(`${method}ing URL: ${url.href}`);
     let headers = {
       Authorization: await this.apiAuth.getAuthHeader(),
       Accept: 'application/json',
@@ -350,6 +375,7 @@ export default class Client {
     uploadUuid,
     savedIdPath,
     metaDataJson,
+    patchData,
     saveIdToFileFunc = saveIdToFile,
   ) {
     const {
@@ -362,15 +388,15 @@ export default class Client {
     log.info('You must add the following to your manifest:');
     log.info(`"browser_specific_settings": {"gecko": {"id": "${addonId}"}}`);
 
-    return this.doAfterSubmit(addonId, newVersionId, editUrl);
+    return this.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
   }
 
-  async putVersion(uploadUuid, addonId, metaDataJson) {
+  async putVersion(uploadUuid, addonId, metaDataJson, patchData) {
     const {
       version: { id: newVersionId, edit_url: editUrl },
     } = await this.doNewAddonOrVersionSubmit(addonId, uploadUuid, metaDataJson);
 
-    return this.doAfterSubmit(addonId, newVersionId, editUrl);
+    return this.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
   }
 }
 
@@ -388,6 +414,7 @@ export async function signAddon({
   savedIdPath,
   savedUploadUuidPath,
   metaDataJson = {},
+  submissionSource,
   userAgentString,
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
@@ -396,7 +423,7 @@ export async function signAddon({
     const stats = await fsPromises.stat(xpiPath);
 
     if (!stats.isFile()) {
-      throw new Error(`not a file: ${xpiPath}`);
+      throw new Error('not a file');
     }
   } catch (statError) {
     throw new Error(`error with ${xpiPath}: ${statError}`);
@@ -423,14 +450,33 @@ export async function signAddon({
     channel,
     savedUploadUuidPath,
   );
+  const patchData = {};
+  // if we have a source file we need to upload we patch after the create
+  if (submissionSource) {
+    try {
+      const stats2 = await fsPromises.stat(submissionSource);
+
+      if (!stats2.isFile()) {
+        throw new Error('not a file');
+      }
+    } catch (statError) {
+      throw new Error(`error with ${submissionSource}: ${statError}`);
+    }
+    patchData.version = { source: client.fileFromSync(submissionSource) };
+  }
 
   // We specifically need to know if `id` has not been passed as a parameter because
   // it's the indication that a new add-on should be created, rather than a new version.
   if (id === undefined) {
-    return client.postNewAddon(uploadUuid, savedIdPath, metaDataJson);
+    return client.postNewAddon(
+      uploadUuid,
+      savedIdPath,
+      metaDataJson,
+      patchData,
+    );
   }
 
-  return client.putVersion(uploadUuid, id, metaDataJson);
+  return client.putVersion(uploadUuid, id, metaDataJson, patchData);
 }
 
 export async function saveIdToFile(filePath, id) {

@@ -601,6 +601,14 @@ Example: $0 --help run.
             'Only used with `use-submission-api`',
           type: 'string',
         },
+        'upload-source-code': {
+          describe:
+            'Path to an archive file containing human readable source code of this submission, ' +
+            'if the code in --source-dir has been processed to make it unreadable. ' +
+            'See https://extensionworkshop.com/documentation/publish/source-code-submission/ for ' +
+            'details. Only used with `use-submission-api`',
+          type: 'string',
+        },
       },
     )
     .command('run', 'Run the extension', commands.run, {
