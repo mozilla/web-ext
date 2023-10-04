@@ -228,6 +228,7 @@ describe('utils/adb', () => {
         'pm',
         'list',
         'packages',
+        '--user 0',
       ]);
     });
 
