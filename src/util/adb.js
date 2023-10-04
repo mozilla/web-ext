@@ -93,6 +93,7 @@ export default class ADBUtils {
       'pm',
       'list',
       'packages',
+      '--user 0',
     ]);
 
     return pmList
