@@ -1034,12 +1034,12 @@ describe('config', () => {
         const lastDir = process.cwd();
         process.chdir(tmpDir.path());
         try {
-          const undotedConfig = path.resolve(
+          const undottedConfig = path.resolve(
             path.join(process.cwd(), 'web-ext-config.js'),
           );
-          await fs.writeFile(undotedConfig, 'module.exports = {}');
+          await fs.writeFile(undottedConfig, 'module.exports = {}');
 
-          assert.deepEqual(await _discoverConfigFiles(), [undotedConfig]);
+          assert.deepEqual(await _discoverConfigFiles(), [undottedConfig]);
         } finally {
           process.chdir(lastDir);
         }
