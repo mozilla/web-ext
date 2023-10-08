@@ -528,7 +528,7 @@ Example: $0 --help run.
       {
         'amo-base-url': {
           describe:
-            'Signing API URL prefix - only used with `use-submission-api`',
+            'Submission API URL prefix - only used with `use-submission-api`',
           default: AMO_BASE_URL,
           demandOption: true,
           type: 'string',
@@ -544,7 +544,8 @@ Example: $0 --help run.
           type: 'string',
         },
         'api-url-prefix': {
-          describe: 'Signing API URL prefix',
+          describe:
+            'Signing API URL prefix - not used with `use-submission-api`',
           default: 'https://addons.mozilla.org/api/v4',
           demandOption: true,
           type: 'string',
@@ -572,15 +573,23 @@ Example: $0 --help run.
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },
+        'approval-timeout': {
+          describe:
+            'Number of milliseconds to wait for approval before giving up. ' +
+            'Set to 0 to disable waiting for approval. Fallback to `timeout` if not set. ' +
+            'Only used with `use-submission-api`',
+          type: 'number',
+        },
         'disable-progress-bar': {
-          describe: 'Disable the progress bar in sign-addon',
+          describe:
+            'Disable the progress bar - not used with `use-submission-api`',
           demandOption: false,
           type: 'boolean',
         },
         channel: {
           describe:
             'The channel for which to sign the addon. Either ' +
-            "'listed' or 'unlisted'",
+            "'listed' or 'unlisted'. Required with `use-submission-api`",
           type: 'string',
         },
         'amo-metadata': {
@@ -590,6 +599,14 @@ Example: $0 --help run.
             'See https://addons-server.readthedocs.io' +
             '/en/latest/topics/api/addons.html for details. ' +
             'Only used with `use-submission-api`',
+          type: 'string',
+        },
+        'upload-source-code': {
+          describe:
+            'Path to an archive file containing human readable source code of this submission, ' +
+            'if the code in --source-dir has been processed to make it unreadable. ' +
+            'See https://extensionworkshop.com/documentation/publish/source-code-submission/ for ' +
+            'details. Only used with `use-submission-api`',
           type: 'string',
         },
       },

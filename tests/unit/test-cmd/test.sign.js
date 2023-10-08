@@ -45,14 +45,16 @@ describe('sign', () => {
 
     return {
       signingConfig,
-      build,
+      signingOptions: {
+        build,
+        preValidatedManifest: basicManifest,
+        signAddon,
+        submitAddon,
+      },
       buildResult,
-      signAddon,
-      submitAddon,
       signAddonResult,
       submitAddonResult,
       signingResult,
-      preValidatedManifest: basicManifest,
     };
   }
 
@@ -69,7 +71,7 @@ describe('sign', () => {
         ...extraArgs,
       },
       {
-        ...stubs,
+        ...stubs.signingOptions,
         ...extraOptions,
       },
     );
@@ -93,7 +95,7 @@ describe('sign', () => {
                 ...stubs.signingConfig,
               },
               {
-                signAddon: stubs.signAddon,
+                signAddon: stubs.signingOptions.signAddon,
               },
             ),
           )
@@ -102,7 +104,7 @@ describe('sign', () => {
             // Do a sanity check that a built extension was passed to the
             // signer.
             assert.include(
-              stubs.signAddon.firstCall.args[0].xpiPath,
+              stubs.signingOptions.signAddon.firstCall.args[0].xpiPath,
               'minimal_extension-1.0.zip',
             );
           });
@@ -130,7 +132,7 @@ describe('sign', () => {
                 apiProxy,
               },
               {
-                submitAddon: stubs.submitAddon,
+                submitAddon: stubs.signingOptions.submitAddon,
               },
             ),
           )
@@ -138,7 +140,8 @@ describe('sign', () => {
             assert.equal(result.id, stubs.signingResult.id);
             // Do a sanity check that a built extension was passed to the
             // signer.
-            const submitAddonCall = stubs.submitAddon.firstCall.args[0];
+            const submitAddonCall =
+              stubs.signingOptions.submitAddon.firstCall.args[0];
             assert.include(
               submitAddonCall.xpiPath,
               'minimal_extension-1.0.zip',
@@ -159,8 +162,8 @@ describe('sign', () => {
           preValidatedManifest: manifestWithoutApps,
         },
       }).then(() => {
-        sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.signAddon, {
+        sinon.assert.called(stubs.signingOptions.signAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
           id: getManifestId(manifestWithoutApps),
         });
       });
@@ -178,8 +181,10 @@ describe('sign', () => {
           preValidatedManifest: manifestWithoutApps,
         },
       }).then(() => {
-        sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.signAddon, { id: customId });
+        sinon.assert.called(stubs.signingOptions.signAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
+          id: customId,
+        });
       });
     }));
 
@@ -262,8 +267,10 @@ describe('sign', () => {
             }),
           )
           .then(() => {
-            sinon.assert.called(stubs.signAddon);
-            sinon.assert.calledWithMatch(stubs.signAddon, { id: customId });
+            sinon.assert.called(stubs.signingOptions.signAddon);
+            sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
+              id: customId,
+            });
           })
       );
     }));
@@ -302,18 +309,12 @@ describe('sign', () => {
           }),
         );
 
-        return sign(
-          tmpDir,
-          {
-            ...stubs,
+        return sign(tmpDir, stubs, {
+          extraOptions: {
+            preValidatedManifest: manifestWithoutApps,
             signAddon,
           },
-          {
-            extraOptions: {
-              preValidatedManifest: manifestWithoutApps,
-            },
-          },
-        ).then((signingResult) => {
+        }).then((signingResult) => {
           return { signingResult, signAddon };
         });
       }
@@ -362,8 +363,10 @@ describe('sign', () => {
       const stubs = getStubs();
       const apiProxy = 'https://proxy.url';
       return sign(tmpDir, stubs, { extraArgs: { apiProxy } }).then(() => {
-        sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.signAddon, { apiProxy });
+        sinon.assert.called(stubs.signingOptions.signAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
+          apiProxy,
+        });
       });
     }));
 
@@ -374,11 +377,30 @@ describe('sign', () => {
       return sign(tmpDir, stubs, {
         extraArgs: { apiProxy, useSubmissionApi: true, channel: 'unlisted' },
       }).then(() => {
-        sinon.assert.called(stubs.submitAddon);
-        sinon.assert.calledWithMatch(stubs.submitAddon, { apiProxy });
+        sinon.assert.called(stubs.signingOptions.submitAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
+          apiProxy,
+        });
       });
     }));
 
+  it('passes the uploadSourceCode parameter to submissionAPI signer as submissionSource', () =>
+    withTempDir((tmpDir) => {
+      const stubs = getStubs();
+      const uploadSourceCode = 'path/to/source.zip';
+      return sign(tmpDir, stubs, {
+        extraArgs: {
+          uploadSourceCode,
+          useSubmissionApi: true,
+          channel: 'unlisted',
+        },
+      }).then(() => {
+        sinon.assert.called(stubs.signingOptions.submitAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
+          submissionSource: uploadSourceCode,
+        });
+      });
+    }));
   it('returns a signing result', () =>
     withTempDir((tmpDir) => {
       const stubs = getStubs();
@@ -389,12 +411,13 @@ describe('sign', () => {
 
   it('might fail', () =>
     withTempDir(async (tmpDir) => {
-      const signPromise = sign(tmpDir, {
-        ...getStubs(),
-        signAddon: () =>
-          Promise.resolve({
-            success: false,
-          }),
+      const signPromise = sign(tmpDir, getStubs(), {
+        extraOptions: {
+          signAddon: () =>
+            Promise.resolve({
+              success: false,
+            }),
+        },
       });
       await assert.isRejected(signPromise, WebExtError);
       await assert.isRejected(signPromise, /The extension could not be signed/);
@@ -405,7 +428,8 @@ describe('sign', () => {
       const stubs = getStubs();
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
       const apiProxy = 'http://yourproxy:6000';
-      const applications = stubs.preValidatedManifest.applications || {
+      const applications = stubs.signingOptions.preValidatedManifest
+        .applications || {
         gecko: {},
       };
       const userAgentString = `web-ext/${stubs.signingConfig.webextVersion}`;
@@ -413,8 +437,8 @@ describe('sign', () => {
       return sign(tmpDir, stubs, {
         extraArgs: { artifactsDir, apiProxy },
       }).then(() => {
-        sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.signAddon, {
+        sinon.assert.called(stubs.signingOptions.signAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
           apiKey: stubs.signingConfig.apiKey,
           apiProxy,
           apiSecret: stubs.signingConfig.apiSecret,
@@ -422,7 +446,7 @@ describe('sign', () => {
           downloadDir: artifactsDir,
           id: applications.gecko?.id,
           timeout: stubs.signingConfig.timeout,
-          version: stubs.preValidatedManifest.version,
+          version: stubs.signingOptions.preValidatedManifest.version,
           xpiPath: stubs.buildResult.extensionPath,
           apiRequestConfig,
         });
@@ -433,7 +457,8 @@ describe('sign', () => {
     withTempDir((tmpDir) => {
       const stubs = getStubs();
       const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
-      const applications = stubs.preValidatedManifest.applications || {
+      const applications = stubs.signingOptions.preValidatedManifest
+        .applications || {
         gecko: {},
       };
       const userAgentString = `web-ext/${stubs.signingConfig.webextVersion}`;
@@ -441,14 +466,52 @@ describe('sign', () => {
       return sign(tmpDir, stubs, {
         extraArgs: { artifactsDir, useSubmissionApi: true, channel },
       }).then(() => {
-        sinon.assert.called(stubs.submitAddon);
-        sinon.assert.calledWithMatch(stubs.submitAddon, {
+        sinon.assert.called(stubs.signingOptions.submitAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
           apiKey: stubs.signingConfig.apiKey,
           apiSecret: stubs.signingConfig.apiSecret,
           amoBaseUrl: stubs.signingConfig.amoBaseUrl,
           downloadDir: artifactsDir,
           id: applications.gecko?.id,
-          timeout: stubs.signingConfig.timeout,
+          validationCheckTimeout: stubs.signingConfig.timeout,
+          approvalCheckTimeout: stubs.signingConfig.timeout,
+          xpiPath: stubs.buildResult.extensionPath,
+          channel,
+          userAgentString,
+        });
+      });
+    }));
+
+  it('calls the add-on submission api signer with approval timeout', () =>
+    withTempDir((tmpDir) => {
+      const stubs = getStubs();
+      const artifactsDir = path.join(tmpDir.path(), 'some-artifacts-dir');
+      const applications = stubs.signingOptions.preValidatedManifest
+        .applications || {
+        gecko: {},
+      };
+      const userAgentString = `web-ext/${stubs.signingConfig.webextVersion}`;
+      const channel = 'unlisted';
+      const approvalCheckTimeout = 0;
+      const validationCheckTimeout = 123;
+      return sign(tmpDir, stubs, {
+        extraArgs: {
+          artifactsDir,
+          useSubmissionApi: true,
+          channel,
+          approvalTimeout: approvalCheckTimeout,
+          timeout: validationCheckTimeout,
+        },
+      }).then(() => {
+        sinon.assert.called(stubs.signingOptions.submitAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
+          apiKey: stubs.signingConfig.apiKey,
+          apiSecret: stubs.signingConfig.apiSecret,
+          amoBaseUrl: stubs.signingConfig.amoBaseUrl,
+          downloadDir: artifactsDir,
+          id: applications.gecko?.id,
+          validationCheckTimeout,
+          approvalCheckTimeout,
           xpiPath: stubs.buildResult.extensionPath,
           channel,
           userAgentString,
@@ -461,8 +524,8 @@ describe('sign', () => {
       const stubs = getStubs();
       return sign(tmpDir, stubs, { extraArgs: { channel: 'unlisted' } }).then(
         () => {
-          sinon.assert.called(stubs.signAddon);
-          sinon.assert.calledWithMatch(stubs.signAddon, {
+          sinon.assert.called(stubs.signingOptions.signAddon);
+          sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
             channel: 'unlisted',
           });
         },
@@ -473,8 +536,10 @@ describe('sign', () => {
     withTempDir((tmpDir) => {
       const stubs = getStubs();
       return sign(tmpDir, stubs, { extraArgs: { verbose: true } }).then(() => {
-        sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.signAddon, { verbose: true });
+        sinon.assert.called(stubs.signingOptions.signAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
+          verbose: true,
+        });
       });
     }));
 
@@ -484,8 +549,8 @@ describe('sign', () => {
       return sign(tmpDir, stubs, {
         extraArgs: { disableProgressBar: true },
       }).then(() => {
-        sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.signAddon, {
+        sinon.assert.called(stubs.signingOptions.signAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.signAddon, {
           disableProgressBar: true,
         });
       });
@@ -496,15 +561,18 @@ describe('sign', () => {
       const stubs = getStubs();
       const ignoreFiles = ['*'];
       return sign(tmpDir, stubs, { extraArgs: { ignoreFiles } }).then(() => {
-        sinon.assert.called(stubs.signAddon);
-        sinon.assert.calledWithMatch(stubs.build, { ignoreFiles });
+        sinon.assert.called(stubs.signingOptions.signAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.build, {
+          ignoreFiles,
+        });
       });
     }));
 
   it('passes through a signing exception', () =>
     withTempDir(async (tmpDir) => {
       const stubs = getStubs();
-      stubs.signAddon = () => Promise.reject(new Error('some signing error'));
+      stubs.signingOptions.signAddon = () =>
+        Promise.reject(new Error('some signing error'));
 
       const signPromise = sign(tmpDir, stubs);
       await assert.isRejected(signPromise, /signing error/);
@@ -513,7 +581,8 @@ describe('sign', () => {
   it('passes through a signing exception from submitAddon', () =>
     withTempDir(async (tmpDir) => {
       const stubs = getStubs();
-      stubs.submitAddon = () => Promise.reject(new Error('some signing error'));
+      stubs.signingOptions.submitAddon = () =>
+        Promise.reject(new Error('some signing error'));
 
       const signPromise = sign(tmpDir, stubs, {
         extraArgs: { useSubmissionApi: true, channel: 'listed' },
@@ -540,8 +609,10 @@ describe('sign', () => {
           asyncFsReadFile: asyncFsReadFileStub,
         },
       }).then(() => {
-        sinon.assert.called(stubs.submitAddon);
-        sinon.assert.calledWithMatch(stubs.submitAddon, { metaDataJson });
+        sinon.assert.called(stubs.signingOptions.submitAddon);
+        sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
+          metaDataJson,
+        });
         sinon.assert.calledWith(asyncFsReadFileStub, amoMetadata);
       });
     }));
