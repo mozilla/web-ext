@@ -1029,23 +1029,6 @@ describe('config', () => {
       });
     });
 
-    it('finds a config without dot in your working directory', () => {
-      return withTempDir(async (tmpDir) => {
-        const lastDir = process.cwd();
-        process.chdir(tmpDir.path());
-        try {
-          const undottedConfig = path.resolve(
-            path.join(process.cwd(), 'web-ext-config.js'),
-          );
-          await fs.writeFile(undottedConfig, 'module.exports = {}');
-
-          assert.deepEqual(await _discoverConfigFiles(), [undottedConfig]);
-        } finally {
-          process.chdir(lastDir);
-        }
-      });
-    });
-
     it('discovers all config files', () => {
       return withTempDir(async (tmpDir) => {
         const lastDir = process.cwd();

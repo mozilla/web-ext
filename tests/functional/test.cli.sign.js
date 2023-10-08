@@ -13,7 +13,7 @@ import {
   reportCommandErrors,
 } from './common.js';
 
-// Put this as ".web-ext-config.js" in the current directory, and replace
+// Put this as "web-ext-config.js" in the current directory, and replace
 // "FAKEAPIKEY" and "FAKEAPISECRET" with the actual values to enable
 // "web-ext sign" without passing those values via the CLI parameters.
 const GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS = `
@@ -84,7 +84,7 @@ describe('web-ext sign', () => {
   it('should use config file if required parameters are not in the arguments', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
       fs.writeFileSync(
-        path.join(tmpDir, '.web-ext-config.js'),
+        path.join(tmpDir, 'web-ext-config.js'),
         GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS,
       );
 
@@ -117,7 +117,7 @@ describe('web-ext sign', () => {
 
   it('should show an error message if the api-key is not set in the config', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
-      const configFilePath = path.join(tmpDir, '.web-ext-config.js');
+      const configFilePath = path.join(tmpDir, 'web-ext-config.js');
       fs.writeFileSync(configFilePath, BAD_EXAMPLE_OF_WEB_EXT_CONFIG_JS);
       const argv = [
         'sign',
@@ -132,7 +132,7 @@ describe('web-ext sign', () => {
         assert.notEqual(exitCode, 0);
         assert.match(
           stdout,
-          /.web-ext-config.js specified an unknown option: "apiKey"/,
+          /web-ext-config.js specified an unknown option: "apiKey"/,
         );
       });
     }));
