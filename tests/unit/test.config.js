@@ -1058,10 +1058,10 @@ describe('config', () => {
           );
           await fs.writeFile(projectConfig, 'module.exports = {}');
 
-          const projectConfigUndoted = path.resolve(
+          const projectConfigUndotted = path.resolve(
             path.join(process.cwd(), 'web-ext-config.js'),
           );
-          await fs.writeFile(projectConfigUndoted, 'module.exports = {}');
+          await fs.writeFile(projectConfigUndotted, 'module.exports = {}');
 
           assert.deepEqual(
             await _discoverConfigFiles({
@@ -1070,7 +1070,7 @@ describe('config', () => {
             [
               globalConfig,
               packageJSONConfig,
-              projectConfigUndoted,
+              projectConfigUndotted,
               projectConfig,
             ],
           );
