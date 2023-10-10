@@ -155,6 +155,8 @@ export async function discoverConfigFiles({ getHomeDir = os.homedir } = {}) {
     path.join(process.cwd(), 'package.json'),
     // Look for a magic config in the current working directory.
     path.join(process.cwd(), magicConfigName),
+    // Look for a magic hidden config (preceded by dot) the current working directory.
+    path.join(process.cwd(), `.${magicConfigName}`),
   ];
 
   const configs = await Promise.all(
