@@ -618,6 +618,56 @@ describe('util/extension-runners/chromium', async () => {
       }),
   );
 
+  it('does pass default prefs to chrome', async () => {
+    const { params } = prepareExtensionRunnerParams();
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    sinon.assert.calledOnce(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      prefs: {
+        extensions: {
+          ui: {
+            developer_mode: true,
+          },
+        },
+      },
+    });
+
+    await runnerInstance.exit();
+  });
+
+  it('does pass custom prefs to chrome', async () => {
+    const { params } = prepareExtensionRunnerParams({
+      params: {
+        customPrefs: {
+          'download.default_directory': '/some/directory',
+          'extensions.ui.developer_mode': false,
+        },
+      },
+    });
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    sinon.assert.calledOnce(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      prefs: {
+        download: {
+          default_directory: '/some/directory',
+        },
+        extensions: {
+          ui: {
+            developer_mode: false,
+          },
+        },
+      },
+    });
+
+    await runnerInstance.exit();
+  });
+
   describe('reloadAllExtensions', () => {
     let runnerInstance;
     let wsClient;
