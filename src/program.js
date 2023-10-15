@@ -630,6 +630,18 @@ Example: $0 --help run.
         demandOption: false,
         type: 'string',
       },
+      'chromium-pref': {
+        describe:
+          'Launch chromium with a custom preference ' +
+          '(example: --chromium-pref=browser.theme.follows_system_colors=false). ' +
+          'You can repeat this option to set more than one ' +
+          'preference.',
+        demandOption: false,
+        requiresArg: true,
+        type: 'array',
+        coerce: (arg) =>
+          arg != null ? coerceCLICustomPreference(arg) : undefined,
+      },
       'chromium-profile': {
         describe: 'Path to a custom Chromium profile',
         demandOption: false,
