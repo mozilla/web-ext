@@ -49,7 +49,7 @@ describe('util/extension-runners/chromium', async () => {
   it('uses the expected chrome flags', () => {
     // Flags from chrome-launcher v0.14.0
     const expectedFlags = [
-      '--disable-features=Translate',
+      '--disable-features=Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,CalculateNativeWinOcclusion,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,AutofillServerCommunication',
       '--disable-component-extensions-with-background-pages',
       '--disable-background-networking',
       '--disable-component-update',
@@ -66,6 +66,9 @@ describe('util/extension-runners/chromium', async () => {
       '--password-store=basic',
       '--use-mock-keychain',
       '--force-fieldtrials=*BackgroundTracing/default/',
+      '--disable-hang-monitor',
+      '--disable-prompt-on-repost',
+      '--disable-domain-reliability',
     ];
 
     assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
