@@ -632,7 +632,13 @@ describe('program.main', () => {
       run: () => Promise.resolve(),
     });
     return execProgram(
-      ['run', '--chromium-pref', 'prop=true', '--chromium-pref', 'prop2=value2'],
+      [
+        'run',
+        '--chromium-pref',
+        'prop=true',
+        '--chromium-pref',
+        'prop2=value2',
+      ],
       { commands: fakeCommands },
     ).then(() => {
       const { chromiumPref } = fakeCommands.run.firstCall.args[0];
