@@ -428,7 +428,7 @@ export class ChromiumExtensionRunner {
   getPrefs() {
     return Object.entries({
       ...DEFAULT_PREFS,
-      ...(this.params.customPrefs || {}),
+      ...(this.params.customChromiumPrefs || {}),
     }).reduce((prefs, [key, value]) => {
       set(prefs, key, value);
       return prefs;

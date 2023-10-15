@@ -641,7 +641,7 @@ describe('util/extension-runners/chromium', async () => {
   it('does pass custom prefs to chrome', async () => {
     const { params } = prepareExtensionRunnerParams({
       params: {
-        customPrefs: {
+        customChromiumPrefs: {
           'download.default_directory': '/some/directory',
           'extensions.ui.developer_mode': false,
         },
