@@ -100,7 +100,7 @@
     "@babel/preset-env": "7.23.2",
     "@babel/register": "7.22.15",
     "@commitlint/cli": "17.8.0",
-    "@commitlint/config-conventional": "17.8.0",
+    "@commitlint/config-conventional": "18.1.0",
     "babel-plugin-istanbul": "6.1.1",
     "babel-plugin-transform-inline-environment-variables": "0.4.4",
     "chai": "4.3.10",
