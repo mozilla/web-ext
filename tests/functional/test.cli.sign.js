@@ -58,6 +58,8 @@ describe('web-ext sign', () => {
       const argv = [
         'sign',
         '--verbose',
+        '--channel',
+        'listed',
         '--amo-base-url',
         'http://localhost:8989/fake/api/v5',
         '--api-key',
@@ -93,7 +95,8 @@ describe('web-ext sign', () => {
         JSON.stringify({
           webExt: {
             sign: {
-              apiUrlPrefix: 'http://localhost:8989/fake/api/v4',
+              amoBaseUrl: 'http://localhost:8989/fake/api/v5',
+              channel: 'listed',
             },
             sourceDir: srcDir,
           },
