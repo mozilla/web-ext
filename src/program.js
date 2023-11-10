@@ -527,8 +527,7 @@ Example: $0 --help run.
       commands.sign,
       {
         'amo-base-url': {
-          describe:
-            'Submission API URL prefix - only used with `use-submission-api`',
+          describe: 'Submission API URL prefix',
           default: AMO_BASE_URL,
           demandOption: true,
           type: 'string',
@@ -543,24 +542,12 @@ Example: $0 --help run.
           demandOption: true,
           type: 'string',
         },
-        'api-url-prefix': {
-          describe:
-            'Signing API URL prefix - not used with `use-submission-api`',
-          default: 'https://addons.mozilla.org/api/v4',
-          demandOption: true,
-          type: 'string',
-        },
         'api-proxy': {
           describe:
             'Use a proxy to access the signing API. ' +
             'Example: https://yourproxy:6000 ',
           demandOption: false,
           type: 'string',
-        },
-        'use-submission-api': {
-          describe: 'Sign using the addon submission API',
-          demandOption: false,
-          type: 'boolean',
         },
         id: {
           describe:
@@ -576,29 +563,19 @@ Example: $0 --help run.
         'approval-timeout': {
           describe:
             'Number of milliseconds to wait for approval before giving up. ' +
-            'Set to 0 to disable waiting for approval. Fallback to `timeout` if not set. ' +
-            'Only used with `use-submission-api`',
+            'Set to 0 to disable waiting for approval. Fallback to `timeout` if not set.',
           type: 'number',
-        },
-        'disable-progress-bar': {
-          describe:
-            'Disable the progress bar - not used with `use-submission-api`',
-          demandOption: false,
-          type: 'boolean',
         },
         channel: {
           describe:
-            'The channel for which to sign the addon. Either ' +
-            "'listed' or 'unlisted'. Required with `use-submission-api`",
+            "The channel for which to sign the addon. Either 'listed' or 'unlisted'.",
+          demandOption: true,
           type: 'string',
         },
         'amo-metadata': {
           describe:
-            'Path to a JSON file containing an object with metadata ' +
-            'to be passed to the API. ' +
-            'See https://addons-server.readthedocs.io' +
-            '/en/latest/topics/api/addons.html for details. ' +
-            'Only used with `use-submission-api`',
+            'Path to a JSON file containing an object with metadata to be passed to the API. ' +
+            'See https://addons-server.readthedocs.io/en/latest/topics/api/addons.html for details.',
           type: 'string',
         },
         'upload-source-code': {
