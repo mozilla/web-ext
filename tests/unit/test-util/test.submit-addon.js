@@ -235,6 +235,44 @@ describe('util.submit-addon', () => {
       );
     });
 
+    it('includes icon data to be patched if amoIcon defined for new addon', async () => {
+      const amoIcon = 'path/to/icon/image';
+      statStub.onSecondCall().resolves({ isFile: () => true });
+      await signAddon({
+        ...signAddonDefaults,
+        amoIcon,
+      });
+
+      sinon.assert.calledWith(fileFromSyncStub, amoIcon);
+      sinon.assert.calledWith(
+        postNewAddonStub,
+        uploadUuid,
+        signAddonDefaults.savedIdPath,
+        {},
+        { addon: { icon: fakeFileFromSync } },
+      );
+    });
+
+    it('includes icon data to be patched if amoIcon defined for new version', async () => {
+      const amoIcon = 'path/to/icon/image';
+      statStub.onSecondCall().resolves({ isFile: () => true });
+      const id = '@thisID';
+      await signAddon({
+        ...signAddonDefaults,
+        amoIcon,
+        id,
+      });
+
+      sinon.assert.calledWith(fileFromSyncStub, amoIcon);
+      sinon.assert.calledWith(
+        putVersionStub,
+        uploadUuid,
+        id,
+        {},
+        { addon: { icon: fakeFileFromSync } },
+      );
+    });
+
     it('throws error if submissionSource is not found', async () => {
       const submissionSource = 'path/to/source/zip';
       const signAddonPromise = signAddon({
@@ -1041,7 +1079,6 @@ describe('util.submit-addon', () => {
         const downloadUrl = 'https://a.download/url';
         const newVersionId = sampleVersionDetail.id;
         const editUrl = sampleVersionDetail.editUrl;
-        const patchData = { version: { source: 'somesource' } };
 
         let approvalStub;
         let downloadStub;
@@ -1079,8 +1116,45 @@ describe('util.submit-addon', () => {
 
         it('calls doFormDataPatch if patchData.version is defined', async () => {
           client.approvalCheckTimeout = 0;
+          const patchData = { version: { source: 'somesource' } };
           await client.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
 
+          sinon.assert.calledOnce(doFormDataPatchStub);
+          sinon.assert.calledWith(
+            doFormDataPatchStub,
+            patchData.version,
+            addonId,
+            newVersionId,
+          );
+        });
+
+        it('calls doFormDataPatch if patchData.addon is defined', async () => {
+          client.approvalCheckTimeout = 0;
+          const patchData = { addon: { icon: 'someimage' } };
+          await client.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
+
+          sinon.assert.calledOnce(doFormDataPatchStub);
+          sinon.assert.calledWith(
+            doFormDataPatchStub,
+            patchData.addon,
+            addonId,
+          );
+        });
+
+        it('calls doFormDataPatch twice if patchData.addon and patchData.version is defined', async () => {
+          client.approvalCheckTimeout = 0;
+          const patchData = {
+            version: { source: 'somesource' },
+            addon: { icon: 'someimage' },
+          };
+          await client.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
+
+          sinon.assert.callCount(doFormDataPatchStub, 2);
+          sinon.assert.calledWith(
+            doFormDataPatchStub,
+            patchData.addon,
+            addonId,
+          );
           sinon.assert.calledWith(
             doFormDataPatchStub,
             patchData.version,
