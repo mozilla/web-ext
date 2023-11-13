@@ -27,8 +27,8 @@ references:
   nodejs_versions:
     # nvm-windows wants a full Node version, not just `<major>.<minor>`.
     - &nodejs_current "16.14.2"
-    - &nodejs_next "18.15"
-    - &nodejs_experimental "19.3"
+    - &nodejs_next "20.9"
+    - &nodejs_experimental "21.1"
 
   nodejs_enum: &nodejs_enum
     type: enum
