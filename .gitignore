@@ -5,6 +5,10 @@
 .grunt
 .cache
 
+# web-ext config files
+.web-ext-config.js
+web-ext-config.js
+
 # Build artifacts.
 .nyc_output
 npm-debug.log
