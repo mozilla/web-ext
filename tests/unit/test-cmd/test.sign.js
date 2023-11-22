@@ -134,7 +134,7 @@ describe('sign', () => {
       );
       await assert.isRejected(
         promiseSigned,
-        /requires a custom ID be specified in the manifest/,
+        /The add-on ID must be specified in the manifest.json file/,
       );
     }));
 
@@ -163,7 +163,7 @@ describe('sign', () => {
       await assert.isRejected(promiseSigned, /some-other-id - /);
       await assert.isRejected(
         promiseSigned,
-        /requires a custom ID be specified in the manifest/,
+        /This add-on ID must be specified in the manifest.json file/,
       );
     }));
 
@@ -187,7 +187,7 @@ describe('sign', () => {
       );
       await assert.isRejected(
         signPromise,
-        /manifest\.json declares ID basic-manifest@web-ext-test-suite/,
+        /manifest\.json already defines ID basic-manifest@web-ext-test-suite/,
       );
     }));
 
@@ -203,10 +203,7 @@ describe('sign', () => {
         },
       });
       await assert.isRejected(signPromise, UsageError);
-      await assert.isRejected(
-        signPromise,
-        /channel is a required parameter for the addon submission API/,
-      );
+      await assert.isRejected(signPromise, /You must specify a channel/);
     }));
 
   it('passes the apiProxy parameter to submissionAPI signer', () =>

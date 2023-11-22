@@ -67,25 +67,23 @@ export default function sign(
 
     if (id && !manifestId) {
       throw new UsageError(
-        `Cannot set custom ID ${id} - addon submission API requires a ` +
-          'custom ID be specified in the manifest',
+        `Cannot set custom ID ${id} - The add-on ID must be specified in the manifest.json file.`,
       );
     }
     if (idFromSourceDir && !manifestId) {
       throw new UsageError(
         'Cannot use previously auto-generated extension ID ' +
-          `${idFromSourceDir} - addon submission API ` +
-          'requires a custom ID be specified in the manifest',
+          `${idFromSourceDir} - This add-on ID must be specified in the manifest.json file.`,
       );
     }
     if (id && manifestId) {
       throw new UsageError(
         `Cannot set custom ID ${id} because manifest.json ` +
-          `declares ID ${manifestId}`,
+          `already defines ID ${manifestId}`,
       );
     }
     if (id) {
-      log.debug(`Using custom ID declared as --id=${id}`);
+      log.info(`Using custom ID declared as --id=${id}`);
     }
 
     if (manifestId) {
@@ -104,9 +102,7 @@ export default function sign(
     }
 
     if (!channel) {
-      throw new UsageError(
-        'channel is a required parameter for the addon submission API',
-      );
+      throw new UsageError('You must specify a channel');
     }
 
     let metaDataJson;
@@ -147,7 +143,6 @@ export default function sign(
 
       return result;
     } catch (clientError) {
-      log.info('FAIL');
       throw new WebExtError(clientError.message);
     }
   });

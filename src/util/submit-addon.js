@@ -101,7 +101,12 @@ export default class Client {
     const formData = new FormData();
     formData.set('channel', channel);
     formData.set('upload', this.fileFromSync(xpiPath));
-    const { uuid } = await this.fetchJson(url, 'POST', formData);
+    const { uuid } = await this.fetchJson(
+      url,
+      'POST',
+      formData,
+      'Upload failed',
+    );
     return this.waitForValidation(uuid);
   }
 
@@ -120,7 +125,7 @@ export default class Client {
             checkUrl,
             'GET',
             undefined,
-            'Getting details failed.',
+            'Getting details failed',
           );
 
           const success = successFunc(responseData);
@@ -142,22 +147,23 @@ export default class Client {
   }
 
   waitForValidation(uuid) {
-    log.info('Waiting for Validation...');
+    log.info('Waiting for validation...');
     return this.waitRetry(
       (detailResponseData) => {
         if (!detailResponseData.processed) {
           return null;
         }
 
-        log.info('Validation results:', detailResponseData.validation);
+        log.debug('Validation results:', detailResponseData.validation);
         if (detailResponseData.valid) {
           return detailResponseData.uuid;
         }
 
-        log.info('Validation failed.');
         throw new Error(
-          'Validation failed, open the following URL for more information: ' +
-            `${detailResponseData.url}`,
+          [
+            'Validation failed:\n',
+            JSON.stringify(detailResponseData.validation, null, 2),
+          ].join(''),
         );
       },
       new URL(`upload/${uuid}/`, this.apiUrl),
@@ -173,7 +179,12 @@ export default class Client {
       ...metaDataJson,
       version: { upload: uuid, ...metaDataJson.version },
     };
-    return this.fetchJson(url, 'POST', JSON.stringify(jsonData));
+    return this.fetchJson(
+      url,
+      'POST',
+      JSON.stringify(jsonData),
+      'Submission failed (1)',
+    );
   }
 
   doNewAddonOrVersionSubmit(addonId, uuid, metaDataJson) {
@@ -182,7 +193,12 @@ export default class Client {
       ...metaDataJson,
       version: { upload: uuid, ...metaDataJson.version },
     };
-    return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
+    return this.fetchJson(
+      url,
+      'PUT',
+      JSON.stringify(jsonData),
+      'Submission failed (2)',
+    );
   }
 
   async doFormDataPatch(data, addonId, versionId) {
@@ -201,7 +217,7 @@ export default class Client {
         throw new Error(`response status was ${response.status}`);
       }
     } catch (error) {
-      log.info(`Upload of ${Object.keys(data)} failed: ${error}.`);
+      log.warn(`Upload of ${Object.keys(data)} failed: ${error}.`);
       throw new Error(`Uploading ${Object.keys(data)} failed`);
     }
   }
@@ -226,7 +242,7 @@ export default class Client {
   }
 
   waitForApproval(addonId, versionId) {
-    log.info('Waiting for Approval...');
+    log.info('Waiting for approval...');
     return this.waitRetry(
       (detailResponseData) => {
         const { file } = detailResponseData;
@@ -253,16 +269,18 @@ export default class Client {
     const data = await response.json();
 
     if (!response.ok) {
-      log.info('Server Response:', data);
       throw new Error(
-        `${errorMsg}: ${response.statusText || response.status}.`,
+        [
+          `${errorMsg}: ${response.statusText || response.status}`,
+          JSON.stringify(data, null, 2),
+        ].join('\n'),
       );
     }
     return data;
   }
 
   async fetch(url, method = 'GET', body) {
-    log.info(`${method}ing URL: ${url.href}`);
+    log.debug(`${method}ing URL: ${url.href}`);
     let headers = {
       Authorization: await this.apiAuth.getAuthHeader(),
       Accept: 'application/json',
@@ -301,6 +319,7 @@ export default class Client {
       log.info(`Download of signed xpi failed: ${error}.`);
       throw new Error(`Downloading ${filename} failed`);
     }
+    log.info(`Signed xpi downloaded: ${dest}`);
     return this.returnResult(addonId, [filename]);
   }
 
