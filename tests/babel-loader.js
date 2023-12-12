@@ -90,8 +90,8 @@ export async function transformSource(source, context, defaultTransformSource) {
     typeof source === 'string'
       ? source
       : Buffer.isBuffer(source)
-      ? source.toString('utf-8')
-      : Buffer.from(source).toString('utf-8');
+        ? source.toString('utf-8')
+        : Buffer.from(source).toString('utf-8');
 
   let sourceCode = await babel.transformAsync(stringSource, {
     sourceType: 'module',
