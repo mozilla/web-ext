@@ -31,7 +31,15 @@ Here are the commands you can run. Click on each one for detailed documentation 
 - [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-docs)
   - Open the `web-ext` documentation in a browser
 
-## Installation from npm
+## Installation
+
+### Using Homebrew
+
+```sh
+brew install web-ext
+```
+
+### Using npm
 
 First, make sure you are running the current
 [LTS](https://github.com/nodejs/LTS)
