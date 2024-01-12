@@ -34,8 +34,8 @@ const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
   // https://github.com/mozilla/web-ext/issues/2917#issuecomment-1766000545
   const urlMatch = url instanceof URL ? url.href : url;
   const stubMatcher = nodeFetchStub.withArgs(
-    sinon.match((urlArg) =>
-      urlMatch === (urlArg instanceof URL ? urlArg.href : urlArg)
+    sinon.match(
+      (urlArg) => urlMatch === (urlArg instanceof URL ? urlArg.href : urlArg),
     ),
     sinon.match.has('method', method),
   );
