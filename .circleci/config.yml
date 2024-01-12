@@ -40,7 +40,8 @@ references:
     enum:
       - *nodejs_current
       - *nodejs_next
-      - *nodejs_experimental
+      # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
+      # - *nodejs_experimental
   repo_path: &repo_path ~/web-ext
   defaults: &defaults
     working_directory: *repo_path
@@ -268,12 +269,13 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - build:
-          name: build-nodejs-experimental
-          nodejs: *nodejs_experimental
-          filters:
-            tags:
-              only: /.*/
+      # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
+      # - build:
+      #     name: build-nodejs-experimental
+      #     nodejs: *nodejs_experimental
+      #     filters:
+      #       tags:
+      #         only: /.*/
       - test-windows:
           filters:
             tags:
@@ -283,8 +285,9 @@ workflows:
           requires:
             - build-nodejs-current
             - build-nodejs-next
-            - build-nodejs-experimental
             - test-windows
+            # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
+            #- build-nodejs-experimental
           filters:
             tags:
               only: /.*/
