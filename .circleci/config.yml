@@ -30,7 +30,9 @@ references:
     # nvm-windows wants a full Node version, not just `<major>.<minor>`.
     - &nodejs_current "18.19.0"
     - &nodejs_next "20.11.0"
-    - &nodejs_experimental "21.5"
+    # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
+    # by a testdouble dependency update.
+    # - &nodejs_experimental "21.5"
 
   nodejs_enum: &nodejs_enum
     type: enum
