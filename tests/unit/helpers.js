@@ -331,10 +331,8 @@ export function mockModule({
   ).href;
 
   td.replaceEsm(fullModuleURL, namedExports, defaultExport);
-  global.__webextMocks?.add(fullModuleURL);
 }
 
 export function resetMockModules() {
   td.reset();
-  global.__webextMocks?.clear();
 }
