@@ -30,9 +30,7 @@ references:
     # nvm-windows wants a full Node version, not just `<major>.<minor>`.
     - &nodejs_current "18.19.0"
     - &nodejs_next "20.11.0"
-    # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
-    # by a testdouble dependency update.
-    # - &nodejs_experimental "21.5"
+    - &nodejs_experimental "21.5"
 
   nodejs_enum: &nodejs_enum
     type: enum
@@ -40,8 +38,7 @@ references:
     enum:
       - *nodejs_current
       - *nodejs_next
-      # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
-      # - *nodejs_experimental
+      - *nodejs_experimental
   repo_path: &repo_path ~/web-ext
   defaults: &defaults
     working_directory: *repo_path
@@ -178,13 +175,24 @@ jobs:
           node_env: test
       ## Skip code coverage and the additional legacy bundling tests on jobs
       ## running on the next nodejs versions.
-      - unless:
+      - when:
           condition:
-            equal: [*nodejs_current, << parameters.nodejs >>]
+            equal: [*nodejs_next, << parameters.nodejs >>]
           steps:
             - run:
-                name: run linting checks and unit tests
-                command: npm run test
+                  name: run linting checks and unit tests
+                  command: npm run test
+            - run_functional_tests
+      ## Allow npm run test to fail when running on nodejs experimental.
+      # TODO(https://github.com/mozilla/web-ext/issues/3015): change this to do not
+      # allow failures on nodejs 21 once fixed by a testdouble dependency update.
+      - when:
+          condition:
+            equal: [*nodejs_experimental, << parameters.nodejs >>]
+          steps:
+            - run:
+                  name: run linting checks and unit tests (but allow failure)
+                  command: npm run test || echo "NOTE - Unit tests failed, but allowed to fail on nodejs experimental"
             - run_functional_tests
       ## Steps only executed in jobs running on the current nodejs version.
       - when:
@@ -269,13 +277,12 @@ workflows:
           filters:
             tags:
               only: /.*/
-      # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
-      # - build:
-      #     name: build-nodejs-experimental
-      #     nodejs: *nodejs_experimental
-      #     filters:
-      #       tags:
-      #         only: /.*/
+      - build:
+          name: build-nodejs-experimental
+          nodejs: *nodejs_experimental
+          filters:
+            tags:
+              only: /.*/
       - test-windows:
           filters:
             tags:
@@ -285,9 +292,8 @@ workflows:
           requires:
             - build-nodejs-current
             - build-nodejs-next
+            - build-nodejs-experimental
             - test-windows
-            # TODO(https://github.com/mozilla/web-ext/issues/3015): re-enable this once fixed
-            #- build-nodejs-experimental
           filters:
             tags:
               only: /.*/
