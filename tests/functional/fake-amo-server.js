@@ -4,7 +4,6 @@
 // -  http://addons-server.readthedocs.io/en/latest/topics/api/signing.html
 
 import http from 'http';
-import os from 'os';
 
 const FAKE_REPLIES = [
   // Upload responses, see https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#upload-detail-object
@@ -90,7 +89,7 @@ http
       process.exit(1);
     }
   })
-  .listen(8989, os.platform() === 'win32' ? '::1' : '127.0.0.1', () => {
+  .listen(8989, 'localhost', () => {
     process.stdout.write('listening');
     process.stdout.uncork();
   });
