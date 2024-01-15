@@ -76,7 +76,7 @@ version on the command line with this:
 
 You'll need:
 
-- [Node.js](https://nodejs.org/en/), 16.0.0 or higher
+- [Node.js](https://nodejs.org/en/) (current [LTS](https://github.com/nodejs/LTS))
 - [npm](https://www.npmjs.com/), 8.0.0 or higher is recommended
 
 Optionally, you may like:

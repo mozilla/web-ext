@@ -14,7 +14,7 @@
     "lib/**"
   ],
   "engines": {
-    "node": ">=16.0.0",
+    "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "engine-strict": true,
@@ -120,7 +120,7 @@
     "prettyjson": "1.2.5",
     "shelljs": "0.8.5",
     "sinon": "17.0.1",
-    "testdouble": "3.16.8",
+    "testdouble": "3.20.1",
     "yauzl": "2.10.0"
   },
   "author": "Kumar McMillan",

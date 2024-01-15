@@ -28,8 +28,15 @@ class JSONResponse extends Response {
 }
 
 const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
+  // Trust us... You don't want to know why... but if you really do like nightmares
+  // take a look to the details and links kindly provided in this comment
+  // that helped investigating this:
+  // https://github.com/mozilla/web-ext/issues/2917#issuecomment-1766000545
+  const urlMatch = url instanceof URL ? url.href : url;
   const stubMatcher = nodeFetchStub.withArgs(
-    url instanceof URL ? url : new URL(url),
+    sinon.match(
+      (urlArg) => urlMatch === (urlArg instanceof URL ? urlArg.href : urlArg),
+    ),
     sinon.match.has('method', method),
   );
   for (let i = 0; i < responses.length; i++) {
