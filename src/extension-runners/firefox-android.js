@@ -87,7 +87,6 @@ export class FirefoxAndroidExtensionRunner {
 
     await this.adbDevicesDiscoveryAndSelect();
     await this.apkPackagesDiscoveryAndSelect();
-    await this.adbCheckRuntimePermissions();
     await this.adbForceStopSelectedPackage();
 
     // Create profile prefs (with enabled remote RDP server), prepare the
@@ -334,40 +333,6 @@ export class FirefoxAndroidExtensionRunner {
 
     log.info(`Stopping existing instances of ${selectedFirefoxApk}...`);
     await adbUtils.amForceStopAPK(selectedAdbDevice, selectedFirefoxApk);
-  }
-
-  async adbCheckRuntimePermissions() {
-    const { adbUtils, selectedAdbDevice, selectedFirefoxApk } = this;
-
-    log.debug(`Discovering Android version for ${selectedAdbDevice}...`);
-
-    const androidVersion =
-      await adbUtils.getAndroidVersionNumber(selectedAdbDevice);
-
-    if (typeof androidVersion !== 'number' || Number.isNaN(androidVersion)) {
-      throw new WebExtError(`Invalid Android version: ${androidVersion}`);
-    }
-
-    log.debug(`Detected Android version ${androidVersion}`);
-
-    if (androidVersion < 23) {
-      return;
-    }
-
-    log.debug(
-      'Checking read/write permissions needed for web-ext' +
-        `on ${selectedFirefoxApk}...`,
-    );
-
-    // Runtime permissions needed to Firefox to be able to access the
-    // xpi file uploaded to the android device or emulator.
-    const requiredPermissions = ['android.permission.READ_EXTERNAL_STORAGE'];
-
-    await adbUtils.ensureRequiredAPKRuntimePermissions(
-      selectedAdbDevice,
-      selectedFirefoxApk,
-      requiredPermissions,
-    );
   }
 
   async adbPrepareProfileDir() {
