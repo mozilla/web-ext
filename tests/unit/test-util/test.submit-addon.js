@@ -1120,7 +1120,7 @@ describe('util.submit-addon', () => {
           { body: {}, status: 400 },
         ]);
         const clientPromise = client.fetchJson(baseUrl);
-        await assert.isRejected(clientPromise, 'Bad Request: 400.');
+        await assert.isRejected(clientPromise, 'Bad Request: 400\n{}');
       });
 
       it('rejects with a promise on < 100 responses', async () => {
