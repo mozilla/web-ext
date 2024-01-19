@@ -104,7 +104,6 @@ function prepareSelectedDeviceAndAPKParams(
         'org.mozilla.reference.browser',
       ]),
     ),
-    getAndroidVersionNumber: sinon.spy(() => Promise.resolve(20)),
     amForceStopAPK: sinon.spy(() => Promise.resolve()),
     discoverRDPUnixSocket: sinon.spy(() =>
       Promise.resolve(fakeRDPUnixSocketFile),
@@ -119,7 +118,6 @@ function prepareSelectedDeviceAndAPKParams(
     clearArtifactsDir: sinon.spy(() => Promise.resolve()),
     detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(true)),
     setUserAbortDiscovery: sinon.spy(() => {}),
-    ensureRequiredAPKRuntimePermissions: sinon.spy(() => Promise.resolve()),
     ...adbOverrides,
   };
 
@@ -834,92 +832,6 @@ describe('util/extension-runners/firefox-android', () => {
 
       sinon.assert.calledOnce(cleanupCallback);
       sinon.assert.calledOnce(anotherCallback);
-    });
-
-    it('raises an error when unable to find an android version number', async () => {
-      async function expectInvalidVersionError(version) {
-        const { params, fakeADBUtils } = prepareSelectedDeviceAndAPKParams();
-
-        fakeADBUtils.getAndroidVersionNumber = sinon.spy(() => {
-          return version;
-        });
-
-        const runnerInstance = new FirefoxAndroidExtensionRunner(params);
-        const promise = runnerInstance.run();
-
-        const expectedMsg = `Invalid Android version: ${version}`;
-        await assert.isRejected(promise, WebExtError);
-        await assert.isRejected(promise, expectedMsg);
-      }
-
-      await expectInvalidVersionError(undefined);
-      await expectInvalidVersionError(NaN);
-    });
-
-    it('does not check granted android permissions on Android <= 21', async () => {
-      async function expectNoGrantedPermissionDiscovery(version) {
-        const { params, fakeADBUtils } = prepareSelectedDeviceAndAPKParams();
-
-        fakeADBUtils.getAndroidVersionNumber = sinon.spy(() => {
-          return Promise.resolve(version);
-        });
-
-        const runnerInstance = new FirefoxAndroidExtensionRunner(params);
-
-        await runnerInstance.run();
-
-        sinon.assert.calledWithMatch(
-          fakeADBUtils.getAndroidVersionNumber,
-          'emulator-1',
-        );
-
-        sinon.assert.notCalled(
-          fakeADBUtils.ensureRequiredAPKRuntimePermissions,
-        );
-      }
-
-      // KitKat (Android 4.4).
-      await expectNoGrantedPermissionDiscovery(19);
-      await expectNoGrantedPermissionDiscovery(21);
-      // Lollipop versions (Android 5.0 and 5.1).
-      await expectNoGrantedPermissionDiscovery(22);
-    });
-
-    it('checks the granted android permissions on Android >= 23', async () => {
-      async function testGrantedPermissionDiscovery(version) {
-        const { params, fakeADBUtils } = prepareSelectedDeviceAndAPKParams();
-
-        fakeADBUtils.getAndroidVersionNumber = sinon.spy(() => {
-          return Promise.resolve(version);
-        });
-
-        const runnerInstance = new FirefoxAndroidExtensionRunner(params);
-
-        await runnerInstance.run();
-
-        sinon.assert.calledWithMatch(
-          fakeADBUtils.getAndroidVersionNumber,
-          'emulator-1',
-        );
-
-        sinon.assert.calledWithMatch(
-          fakeADBUtils.ensureRequiredAPKRuntimePermissions,
-          'emulator-1',
-          'org.mozilla.firefox',
-          ['android.permission.READ_EXTERNAL_STORAGE'],
-        );
-
-        sinon.assert.callOrder(
-          fakeADBUtils.getAndroidVersionNumber,
-          fakeADBUtils.ensureRequiredAPKRuntimePermissions,
-        );
-      }
-
-      // Marshmallow (Android 6.0)
-      await testGrantedPermissionDiscovery(23);
-      // Nougat versions (Android 7.0 and 7.1.1)
-      await testGrantedPermissionDiscovery(24);
-      await testGrantedPermissionDiscovery(25);
     });
 
     it('logs warnings on the unsupported CLI options', async () => {
