@@ -135,66 +135,6 @@ export default class ADBUtils {
       });
   }
 
-  async getAndroidVersionNumber(deviceId: string): Promise<number> {
-    const androidVersion = (
-      await this.runShellCommand(deviceId, ['getprop', 'ro.build.version.sdk'])
-    ).trim();
-
-    const androidVersionNumber = parseInt(androidVersion);
-
-    // No need to check the granted runtime permissions on Android versions < Lollypop.
-    if (isNaN(androidVersionNumber)) {
-      throw new WebExtError(
-        'Unable to discovery android version on ' +
-          `${deviceId}: ${androidVersion}`
-      );
-    }
-
-    return androidVersionNumber;
-  }
-
-  // Raise an UsageError when the given APK does not have the required runtime permissions.
-  async ensureRequiredAPKRuntimePermissions(
-    deviceId: string,
-    apk: string,
-    permissions: Array<string>
-  ): Promise<void> {
-    const permissionsMap = {};
-
-    // Initialize every permission to false in the permissions map.
-    for (const perm of permissions) {
-      permissionsMap[perm] = false;
-    }
-
-    // Retrieve the permissions information for the given apk.
-    const pmDumpLogs = (
-      await this.runShellCommand(deviceId, ['pm', 'dump', apk])
-    ).split('\n');
-
-    // Set to true the required permissions that have been granted.
-    for (const line of pmDumpLogs) {
-      for (const perm of permissions) {
-        if (
-          line.includes(`${perm}: granted=true`) ||
-          line.includes(`${perm}, granted=true`)
-        ) {
-          permissionsMap[perm] = true;
-        }
-      }
-    }
-
-    for (const perm of permissions) {
-      if (!permissionsMap[perm]) {
-        throw new UsageError(
-          `Required ${perm} has not be granted for ${apk}. ` +
-            'Please grant them using the Android Settings ' +
-            'or using the following adb command:\n' +
-            `\t adb shell pm grant ${apk} ${perm}\n`
-        );
-      }
-    }
-  }
-
   async amForceStopAPK(deviceId: string, apk: string): Promise<void> {
     await this.runShellCommand(deviceId, ['am', 'force-stop', apk]);
   }
