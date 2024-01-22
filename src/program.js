@@ -522,6 +522,12 @@ Example: $0 --help run.
       },
     )
     .command(
+      'config',
+      'Run config discovery and dump the resulting config data',
+      commands.config,
+      {},
+    )
+    .command(
       'sign',
       'Sign the extension so it can be installed in Firefox',
       commands.sign,
