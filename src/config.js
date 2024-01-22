@@ -140,7 +140,7 @@ export async function loadJSConfigFile(filePath) {
     if (resolvedFilePath.endsWith('.mjs')) {
       const nonce = `${Date.now()}-${Math.random()}`;
       const { default: configDefault, ...esmConfigMod } = await import(
-        `${resolvedFilePath}?nonce=${nonce}`
+        `file://${resolvedFilePath}?nonce=${nonce}`
       );
       // ESM modules may expose both a default and named exports and so
       // we merge the named exports of top of what may have been set in
