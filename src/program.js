@@ -307,8 +307,8 @@ export class Program {
         );
       }
 
-      configFiles.forEach((configFileName) => {
-        const configObject = loadJSConfigFile(configFileName);
+      for (const configFileName of configFiles) {
+        const configObject = await loadJSConfigFile(configFileName);
         adjustedArgv = applyConfigToArgv({
           argv: adjustedArgv,
           argvFromCLI: argv,
@@ -316,7 +316,7 @@ export class Program {
           configObject,
           options: this.options,
         });
-      });
+      }
 
       if (adjustedArgv.verbose) {
         // Ensure that the verbose is enabled when specified in a config file.

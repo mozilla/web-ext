@@ -11,6 +11,20 @@ import { UsageError, WebExtError } from './errors.js';
 
 const log = createLogger(import.meta.url);
 
+export const HELP_ERR_REQUIRE_ESM = [
+  'This config file belongs to a package.json file with "type" set to "module".',
+  'Rename the config file to end in .cjs or rewrite it to an ES module.',
+].join(' ');
+
+export const HELP_ERR_IMPORTEXPORT_CJS = [
+  'This config file is defined as an ESM module, but it belongs to either a project dir',
+  'with a package.json file with "type" set to "commonjs" or one without any package.json file.',
+  'Rename the config file to end in ".mjs" to fix the config loading error.',
+].join(' ');
+
+const ERR_IMPORT_FROM_CJS = 'Cannot use import statement outside a module';
+const ERR_EXPORT_FROM_CJS = "Unexpected token 'export'";
+
 export function applyConfigToArgv({
   argv,
   argvFromCLI,
@@ -115,7 +129,7 @@ export function applyConfigToArgv({
   return newArgv;
 }
 
-export function loadJSConfigFile(filePath) {
+export async function loadJSConfigFile(filePath) {
   const resolvedFilePath = path.resolve(filePath);
   log.debug(
     `Loading JS config file: "${filePath}" ` +
@@ -123,12 +137,31 @@ export function loadJSConfigFile(filePath) {
   );
   let configObject;
   try {
-    configObject = importFresh(resolvedFilePath);
+    if (resolvedFilePath.endsWith('.mjs')) {
+      const nonce = `${Date.now()}-${Math.random()}`;
+      const { default: configDefault, ...esmConfigMod } = await import(
+        `${resolvedFilePath}?nonce=${nonce}`
+      );
+      // ESM modules may expose both a default and named exports and so
+      // we merge the named exports of top of what may have been set in
+      // the default export.
+      configObject = { ...configDefault, ...esmConfigMod };
+    } else {
+      configObject = importFresh(resolvedFilePath);
+    }
   } catch (error) {
     log.debug('Handling error:', error);
+    let errorMessage = error.message;
+    if (error.code === 'ERR_REQUIRE_ESM') {
+      errorMessage = HELP_ERR_REQUIRE_ESM;
+    } else if (
+      [ERR_IMPORT_FROM_CJS, ERR_EXPORT_FROM_CJS].includes(error.message)
+    ) {
+      errorMessage = HELP_ERR_IMPORTEXPORT_CJS;
+    }
     throw new UsageError(
       `Cannot read config file: ${resolvedFilePath}\n` +
-        `Error: ${error.message}`,
+        `Error: ${errorMessage}`,
     );
   }
   if (filePath.endsWith('package.json')) {
@@ -145,18 +178,24 @@ export function loadJSConfigFile(filePath) {
 }
 
 export async function discoverConfigFiles({ getHomeDir = os.homedir } = {}) {
-  const magicConfigName = 'web-ext-config.js';
+  const magicConfigName = 'web-ext-config';
 
   // Config files will be loaded in this order.
   const possibleConfigs = [
     // Look for a magic hidden config (preceded by dot) in home dir.
-    path.join(getHomeDir(), `.${magicConfigName}`),
+    path.join(getHomeDir(), `.${magicConfigName}.mjs`),
+    path.join(getHomeDir(), `.${magicConfigName}.cjs`),
+    path.join(getHomeDir(), `.${magicConfigName}.js`),
     // Look for webExt key inside package.json file
     path.join(process.cwd(), 'package.json'),
     // Look for a magic config in the current working directory.
-    path.join(process.cwd(), magicConfigName),
+    path.join(process.cwd(), `${magicConfigName}.mjs`),
+    path.join(process.cwd(), `${magicConfigName}.cjs`),
+    path.join(process.cwd(), `${magicConfigName}.js`),
     // Look for a magic hidden config (preceded by dot) the current working directory.
-    path.join(process.cwd(), `.${magicConfigName}`),
+    path.join(process.cwd(), `.${magicConfigName}.mjs`),
+    path.join(process.cwd(), `.${magicConfigName}.cjs`),
+    path.join(process.cwd(), `.${magicConfigName}.js`),
   ];
 
   const configs = await Promise.all(
