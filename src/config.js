@@ -12,21 +12,23 @@ import { UsageError, WebExtError } from './errors.js';
 
 const log = createLogger(import.meta.url);
 
+// NOTE: this error message is used in an interpolated string (while the other two help
+// messages are being logged as is).
 export const WARN_LEGACY_JS_EXT = [
-  'should be renamed to .cjs or .mjs to ensure its format is not ambiguous.',
-  'Config files with .js extensions are deprecated and will not be loaded anymore',
-  'in the next web-ext major version.',
+  'should be renamed to ".cjs" or ".mjs" file extension to ensure its format is not ambiguous.',
+  'Config files with the ".js" file extension are deprecated and will not be loaded anymore',
+  'in a future web-ext major version.',
 ].join(' ');
 
 export const HELP_ERR_MODULE_FROM_ESM = [
   'This config file belongs to a package.json file with "type" set to "module".',
-  'Rename the config file to end in .cjs or rename it to .mjs and rewrite it to an ES module.',
+  'Change the file extension to ".cjs" or rewrite it as an ES module and use the ".mjs" file extension.',
 ].join(' ');
 
 export const HELP_ERR_IMPORTEXPORT_CJS = [
-  'This config file is defined as an ESM module, but it belongs to either a project dir',
+  'This config file is defined as an ES module, but it belongs to either a project directory',
   'with a package.json file with "type" set to "commonjs" or one without any package.json file.',
-  'Rename the config file to end in ".mjs" to fix the config loading error.',
+  'Change the file extension to ".mjs" to fix the config loading error.',
 ].join(' ');
 
 const ERR_IMPORT_FROM_CJS = 'Cannot use import statement outside a module';
@@ -160,8 +162,8 @@ export async function loadJSConfigFile(filePath) {
 
     if (configModule.default) {
       const { default: configDefault, ...esmConfigMod } = configModule;
-      // ESM modules may expose both a default and named exports and so
-      // we merge the named exports of top of what may have been set in
+      // ES modules may expose both a default and named exports and so
+      // we merge the named exports on top of what may have been set in
       // the default export.
       configObject = { ...configDefault, ...esmConfigMod };
     } else {

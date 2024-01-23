@@ -523,7 +523,7 @@ Example: $0 --help run.
     )
     .command(
       'dump-config',
-      'Run config discovery and dump the resulting config data',
+      'Run config discovery and dump the resulting config data as JSON',
       commands.dumpConfig,
       {},
     )
