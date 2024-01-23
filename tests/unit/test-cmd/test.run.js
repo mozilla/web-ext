@@ -128,6 +128,21 @@ describe('run', () => {
     });
   });
 
+  it('turns sourceDir into an absolute path', async () => {
+    const getFakeManifest = sinon.spy();
+    const cmd = await prepareRun();
+
+    await cmd.run(
+      { sourceDir: '.' },
+      { getValidatedManifest: getFakeManifest },
+    );
+
+    sinon.assert.calledOnce(desktopRunnerStub);
+    const runnerParams = desktopRunnerStub.firstCall.args[0];
+    const [{ sourceDir: expectedSourceDir }] = runnerParams.extensions;
+    assert.equal(expectedSourceDir, process.cwd());
+  });
+
   it('passes the expected parameters to the extension runner', async () => {
     const cmd = await prepareRun();
     const runOptions = {
