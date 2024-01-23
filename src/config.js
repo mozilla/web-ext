@@ -143,6 +143,9 @@ export async function loadJSConfigFile(filePath) {
     `Loading JS config file: "${filePath}" ` +
       `(resolved to "${resolvedFilePath}")`,
   );
+  if (filePath.endsWith('.js')) {
+    log.warn(`WARNING: config file ${filePath} ${WARN_LEGACY_JS_EXT}`);
+  }
   let configObject;
   try {
     const nonce = `${Date.now()}-${Math.random()}`;

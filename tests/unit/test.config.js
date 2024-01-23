@@ -12,9 +12,13 @@ import {
   loadJSConfigFile,
   HELP_ERR_IMPORTEXPORT_CJS,
   HELP_ERR_MODULE_FROM_ESM,
+  WARN_LEGACY_JS_EXT,
 } from '../../src/config.js';
 import { withTempDir } from '../../src/util/temp-dir.js';
 import { UsageError, WebExtError } from '../../src/errors.js';
+import {
+  consoleStream, // instance is imported to inspect logged messages
+} from '../../src/util/logger.js';
 
 function makeArgv({
   userCmd = ['fakecommand'],
@@ -990,8 +994,19 @@ describe('config', () => {
               sourceDir: 'fake/dir',
             };`,
         );
+        consoleStream.flushCapturedLogs();
+        consoleStream.startCapturing();
+
         const promise = loadJSConfigFile(configFilePath);
+
+        const { capturedMessages } = consoleStream;
+        consoleStream.stopCapturing();
+
         await assert.becomes(promise, { sourceDir: 'fake/dir' });
+        assert.include(
+          capturedMessages.join('\n'),
+          `WARNING: config file ${configFilePath} ${WARN_LEGACY_JS_EXT}`,
+        );
       });
     });
 
