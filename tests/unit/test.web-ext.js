@@ -17,7 +17,7 @@ describe('webExt', () => {
       resetMockModules();
       stub = undefined;
     });
-    for (const cmd of ['run', 'lint', 'build', 'sign', 'docs']) {
+    for (const cmd of ['run', 'lint', 'build', 'sign', 'docs', 'dump-config']) {
       it(`lazily loads cmd/${cmd}`, async () => {
         const cmdModule = await import(`../../src/cmd/${cmd}.js`);
         stub = sinon.stub({ default: cmdModule.default }, 'default');
@@ -35,7 +35,8 @@ describe('webExt', () => {
         stub?.returns(expectedResult);
 
         const { default: webExtModule } = await import('../../src/main.js');
-        const runCommand = webExtModule.cmd[cmd];
+        const runCommand =
+          webExtModule.cmd[cmd === 'dump-config' ? 'dumpConfig' : cmd];
         const result = await runCommand(params, options);
 
         // Check whether parameters and return values are forwarded as-is.

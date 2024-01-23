@@ -300,7 +300,7 @@ export class Program {
           .map((f) => f.replace(process.cwd(), '.'))
           .map((f) => f.replace(os.homedir(), '~'))
           .join(', ');
-        log.info(
+        log.debug(
           'Applying config file' +
             `${configFiles.length !== 1 ? 's' : ''}: ` +
             `${niceFileList}`,
@@ -522,9 +522,9 @@ Example: $0 --help run.
       },
     )
     .command(
-      'config',
+      'dump-config',
       'Run config discovery and dump the resulting config data',
-      commands.config,
+      commands.dumpConfig,
       {},
     )
     .command(
