@@ -131,10 +131,10 @@ describe('web-ext sign', () => {
       ];
       const cmd = execWebExt(argv, { cwd: tmpDir });
 
-      return cmd.waitForExit.then(({ exitCode, stdout }) => {
+      return cmd.waitForExit.then(({ exitCode, stderr }) => {
         assert.notEqual(exitCode, 0);
         assert.match(
-          stdout,
+          stderr,
           /web-ext-config.js specified an unknown option: "apiKey"/,
         );
       });
