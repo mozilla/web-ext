@@ -1,9 +1,10 @@
 import os from 'os';
 import path from 'path';
 
-import importFresh from 'import-fresh';
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
+import { fs } from 'mz';
+import parseJSON from 'parse-json';
 
 import fileExists from './util/file-exists.js';
 import { createLogger } from './util/logger.js';
@@ -11,9 +12,15 @@ import { UsageError, WebExtError } from './errors.js';
 
 const log = createLogger(import.meta.url);
 
-export const HELP_ERR_REQUIRE_ESM = [
+export const WARN_LEGACY_JS_EXT = [
+  'should be renamed to .cjs or .mjs to ensure its format is not ambiguous.',
+  'Config files with .js extensions are deprecated and will not be loaded anymore',
+  'in the next web-ext major version.',
+].join(' ');
+
+export const HELP_ERR_MODULE_FROM_ESM = [
   'This config file belongs to a package.json file with "type" set to "module".',
-  'Rename the config file to end in .cjs or rewrite it to an ES module.',
+  'Rename the config file to end in .cjs or rename it to .mjs and rewrite it to an ES module.',
 ].join(' ');
 
 export const HELP_ERR_IMPORTEXPORT_CJS = [
@@ -24,6 +31,7 @@ export const HELP_ERR_IMPORTEXPORT_CJS = [
 
 const ERR_IMPORT_FROM_CJS = 'Cannot use import statement outside a module';
 const ERR_EXPORT_FROM_CJS = "Unexpected token 'export'";
+const ERR_MODULE_FROM_ESM = 'module is not defined in ES module scope';
 
 export function applyConfigToArgv({
   argv,
@@ -137,23 +145,30 @@ export async function loadJSConfigFile(filePath) {
   );
   let configObject;
   try {
-    if (resolvedFilePath.endsWith('.mjs')) {
-      const nonce = `${Date.now()}-${Math.random()}`;
-      const { default: configDefault, ...esmConfigMod } = await import(
-        `file://${resolvedFilePath}?nonce=${nonce}`
+    const nonce = `${Date.now()}-${Math.random()}`;
+    let configModule;
+    if (resolvedFilePath.endsWith('package.json')) {
+      configModule = parseJSON(
+        await fs.readFile(resolvedFilePath, { encoding: 'utf-8' }),
       );
+    } else {
+      configModule = await import(`file://${resolvedFilePath}?nonce=${nonce}`);
+    }
+
+    if (configModule.default) {
+      const { default: configDefault, ...esmConfigMod } = configModule;
       // ESM modules may expose both a default and named exports and so
       // we merge the named exports of top of what may have been set in
       // the default export.
       configObject = { ...configDefault, ...esmConfigMod };
     } else {
-      configObject = importFresh(resolvedFilePath);
+      configObject = { ...configModule };
     }
   } catch (error) {
     log.debug('Handling error:', error);
     let errorMessage = error.message;
-    if (error.code === 'ERR_REQUIRE_ESM') {
-      errorMessage = HELP_ERR_REQUIRE_ESM;
+    if (error.message.startsWith(ERR_MODULE_FROM_ESM)) {
+      errorMessage = HELP_ERR_MODULE_FROM_ESM;
     } else if (
       [ERR_IMPORT_FROM_CJS, ERR_EXPORT_FROM_CJS].includes(error.message)
     ) {

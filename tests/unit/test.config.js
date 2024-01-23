@@ -10,8 +10,8 @@ import {
   applyConfigToArgv,
   discoverConfigFiles,
   loadJSConfigFile,
-  HELP_ERR_REQUIRE_ESM,
   HELP_ERR_IMPORTEXPORT_CJS,
+  HELP_ERR_MODULE_FROM_ESM,
 } from '../../src/config.js';
 import { withTempDir } from '../../src/util/temp-dir.js';
 import { UsageError, WebExtError } from '../../src/errors.js';
@@ -945,7 +945,7 @@ describe('config', () => {
         fs.writeFileSync(pkgFilePath, JSON.stringify({ type: 'module' }));
         const promise = loadJSConfigFile(cfgFilePath);
         await assert.isRejected(promise, UsageError);
-        await assert.isRejected(promise, new RegExp(HELP_ERR_REQUIRE_ESM));
+        await assert.isRejected(promise, new RegExp(HELP_ERR_MODULE_FROM_ESM));
       }));
 
     it('provides help message on load failure due to .js ESM config file and type commonjs package', () =>
