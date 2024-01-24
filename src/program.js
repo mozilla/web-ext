@@ -300,15 +300,15 @@ export class Program {
           .map((f) => f.replace(process.cwd(), '.'))
           .map((f) => f.replace(os.homedir(), '~'))
           .join(', ');
-        log.info(
+        log.debug(
           'Applying config file' +
             `${configFiles.length !== 1 ? 's' : ''}: ` +
             `${niceFileList}`,
         );
       }
 
-      configFiles.forEach((configFileName) => {
-        const configObject = loadJSConfigFile(configFileName);
+      for (const configFileName of configFiles) {
+        const configObject = await loadJSConfigFile(configFileName);
         adjustedArgv = applyConfigToArgv({
           argv: adjustedArgv,
           argvFromCLI: argv,
@@ -316,7 +316,7 @@ export class Program {
           configObject,
           options: this.options,
         });
-      });
+      }
 
       if (adjustedArgv.verbose) {
         // Ensure that the verbose is enabled when specified in a config file.
@@ -520,6 +520,12 @@ Example: $0 --help run.
           type: 'boolean',
         },
       },
+    )
+    .command(
+      'dump-config',
+      'Run config discovery and dump the resulting config data as JSON',
+      commands.dumpConfig,
+      {},
     )
     .command(
       'sign',
