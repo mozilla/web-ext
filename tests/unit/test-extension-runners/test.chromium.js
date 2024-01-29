@@ -47,7 +47,7 @@ function prepareExtensionRunnerParams({ params } = {}) {
 
 describe('util/extension-runners/chromium', async () => {
   it('uses the expected chrome flags', () => {
-    // Flags from chrome-launcher v0.14.0
+    // Flags from chrome-launcher v1.1.0
     const expectedFlags = [
       '--disable-features=Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,CalculateNativeWinOcclusion,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,AutofillServerCommunication',
       '--disable-component-extensions-with-background-pages',
