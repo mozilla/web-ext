@@ -670,7 +670,7 @@ describe('util.submit-addon', () => {
         );
 
         const clientPromise = client.waitForValidation(uploadUuid);
-        await assert.isRejected(clientPromise, 'Validation: timeout.');
+        await assert.isRejected(clientPromise, 'Validation: timeout exceeded.');
       });
 
       it('waits for validation that passes', async () => {
@@ -873,8 +873,16 @@ describe('util.submit-addon', () => {
         mockNodeFetch(sinon.stub(client, 'nodeFetch'), detailUrl, 'GET', [
           { body: {}, status: 200 },
         ]);
-        const clientPromise = client.waitForApproval(addonId, versionId);
-        await assert.isRejected(clientPromise, 'Approval: timeout.');
+        const editUrl = 'some-edit-url';
+        const clientPromise = client.waitForApproval(
+          addonId,
+          versionId,
+          editUrl,
+        );
+        await assert.isRejected(
+          clientPromise,
+          `Approval: timeout exceeded. When approved the signed XPI file can be downloaded from ${editUrl}`,
+        );
       });
 
       it('waits for approval', async () => {

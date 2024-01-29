@@ -110,13 +110,26 @@ export default class Client {
     return this.waitForValidation(uuid);
   }
 
-  waitRetry(successFunc, checkUrl, checkInterval, abortInterval, context) {
+  waitRetry(
+    successFunc,
+    checkUrl,
+    checkInterval,
+    abortInterval,
+    context,
+    editUrl = null,
+  ) {
     let checkTimeout;
 
     return new Promise((resolve, reject) => {
       const abortTimeout = setTimeout(() => {
         clearTimeout(checkTimeout);
-        reject(new Error(`${context}: timeout.`));
+
+        let errorMessage = `${context}: timeout exceeded.`;
+        if (editUrl) {
+          errorMessage += ` When approved the signed XPI file can be downloaded from ${editUrl}`;
+        }
+
+        reject(new Error(errorMessage));
       }, abortInterval);
 
       const pollStatus = async () => {
@@ -227,21 +240,24 @@ export default class Client {
       log.info(`Submitting ${Object.keys(patchData.version)} to version`);
       await this.doFormDataPatch(patchData.version, addonId, newVersionId);
     }
-    if (this.approvalCheckTimeout > 0) {
-      const fileUrl = new URL(
-        await this.waitForApproval(addonId, newVersionId),
-      );
-      return this.downloadSignedFile(fileUrl, addonId);
-    } else {
-      log.info('Waiting for approval and download of signed xpi skipped.');
+
+    if (this.approvalCheckTimeout === 0) {
       log.info(
-        `When approved the signed xpi can be downloaded from ${editUrl}.`,
+        [
+          'Waiting for approval and download of signed XPI skipped.',
+          `When approved the signed XPI file can be downloaded from ${editUrl}`,
+        ].join(' '),
       );
       return this.returnResult(addonId);
     }
+
+    const fileUrl = new URL(
+      await this.waitForApproval(addonId, newVersionId, editUrl),
+    );
+    return this.downloadSignedFile(fileUrl, addonId);
   }
 
-  waitForApproval(addonId, versionId) {
+  waitForApproval(addonId, versionId, editUrl) {
     log.info('Waiting for approval...');
     return this.waitRetry(
       (detailResponseData) => {
@@ -256,6 +272,7 @@ export default class Client {
       this.approvalCheckInterval,
       this.approvalCheckTimeout,
       'Approval',
+      editUrl,
     );
   }
 
