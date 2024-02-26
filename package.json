@@ -120,7 +120,7 @@
     "shelljs": "0.8.5",
     "sinon": "17.0.1",
     "testdouble": "3.20.1",
-    "yauzl": "2.10.0"
+    "yauzl": "3.1.0"
   },
   "author": "Kumar McMillan",
   "license": "MPL-2.0",
