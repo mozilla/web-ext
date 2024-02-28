@@ -98,7 +98,7 @@
     "@babel/preset-env": "7.23.9",
     "@babel/register": "7.23.7",
     "@commitlint/cli": "18.6.1",
-    "@commitlint/config-conventional": "18.6.2",
+    "@commitlint/config-conventional": "19.0.0",
     "babel-plugin-istanbul": "6.1.1",
     "babel-plugin-transform-inline-environment-variables": "0.4.4",
     "chai": "4.3.10",
