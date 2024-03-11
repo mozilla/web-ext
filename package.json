@@ -71,7 +71,7 @@
     "fs-extra": "11.2.0",
     "fx-runner": "1.4.0",
     "https-proxy-agent": "^7.0.0",
-    "jose": "4.15.4",
+    "jose": "4.15.5",
     "jszip": "3.10.1",
     "mkdirp": "1.0.4",
     "multimatch": "6.0.0",
