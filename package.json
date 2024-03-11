@@ -78,7 +78,7 @@
     "mz": "2.7.0",
     "node-fetch": "3.3.2",
     "node-notifier": "10.0.1",
-    "open": "9.1.0",
+    "open": "10.1.0",
     "parse-json": "7.1.1",
     "promise-toolbox": "0.21.0",
     "source-map-support": "0.5.21",
