@@ -6,7 +6,7 @@
 import path from 'path';
 
 import fs from 'fs-extra';
-import asyncMkdirp from 'mkdirp';
+import { mkdirp as asyncMkdirp } from 'mkdirp';
 import {
   Launcher as ChromeLauncher,
   launch as defaultChromiumLaunch,
