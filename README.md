@@ -123,7 +123,7 @@ As of version `7.0.0`, the `web-ext` npm package exports NodeJS native ES module
 
 ### Examples
 
-You are able to execute command functions without any argument validation. If you want to execute `web-ext run` you would do so like this:
+You can execute command functions without any argument validation. If you want to execute `web-ext run` you would do so like this:
 
 ```js
 import webExt from 'web-ext';
