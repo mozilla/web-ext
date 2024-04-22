@@ -227,7 +227,6 @@ describe('sign', () => {
       return sign(tmpDir, stubs, {
         extraArgs: {
           uploadSourceCode,
-          useSubmissionApi: true,
           channel: 'unlisted',
         },
       }).then(() => {

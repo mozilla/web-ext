@@ -589,7 +589,7 @@ Example: $0 --help run.
             'Path to an archive file containing human readable source code of this submission, ' +
             'if the code in --source-dir has been processed to make it unreadable. ' +
             'See https://extensionworkshop.com/documentation/publish/source-code-submission/ for ' +
-            'details. Only used with `use-submission-api`',
+            'details.',
           type: 'string',
         },
       },
