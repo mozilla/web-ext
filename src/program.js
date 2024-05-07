@@ -542,13 +542,6 @@ Example: $0 --help run.
           demandOption: false,
           type: 'string',
         },
-        id: {
-          describe:
-            'A custom ID for the extension. This has no effect if the ' +
-            'extension already declares an explicit ID in its manifest.',
-          demandOption: false,
-          type: 'string',
-        },
         timeout: {
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',

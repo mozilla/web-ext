@@ -25,7 +25,6 @@ export default function sign(
     apiProxy,
     apiSecret,
     artifactsDir,
-    id,
     ignoreFiles = [],
     sourceDir,
     timeout,
@@ -63,42 +62,25 @@ export default function sign(
       getIdFromFile(savedIdPath),
     ]);
 
-    const manifestId = getManifestId(manifestData);
-
-    if (id && !manifestId) {
-      throw new UsageError(
-        `Cannot set custom ID ${id} - The add-on ID must be specified in the manifest.json file.`,
-      );
-    }
-    if (idFromSourceDir && !manifestId) {
+    const id = getManifestId(manifestData);
+    if (idFromSourceDir && !id) {
       throw new UsageError(
         'Cannot use previously auto-generated extension ID ' +
-          `${idFromSourceDir} - This add-on ID must be specified in the manifest.json file.`,
+          `${idFromSourceDir} - This extension ID must be specified in the manifest.json file.`,
       );
-    }
-    if (id && manifestId) {
-      throw new UsageError(
-        `Cannot set custom ID ${id} because manifest.json ` +
-          `already defines ID ${manifestId}`,
-      );
-    }
-    if (id) {
-      log.info(`Using custom ID declared as --id=${id}`);
-    }
-
-    if (manifestId) {
-      id = manifestId;
-    }
-
-    if (!id && idFromSourceDir) {
-      log.info(
-        `Using previously auto-generated extension ID: ${idFromSourceDir}`,
-      );
-      id = idFromSourceDir;
     }
 
     if (!id) {
-      log.warn('No extension ID specified (it will be auto-generated)');
+      // We only auto-generate add-on IDs for MV2 add-ons on AMO.
+      if (manifestData?.manifest_version !== 2) {
+        throw new UsageError(
+          'An extension ID must be specified in the manifest.json file.',
+        );
+      }
+
+      log.warn(
+        'No extension ID specified (it will be auto-generated the first time)',
+      );
     }
 
     if (!channel) {
