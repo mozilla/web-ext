@@ -198,10 +198,6 @@ export class Program {
       throw new UsageError('Not enough arguments following: start-url');
     }
 
-    if (Array.isArray(argv.firefoxPreview) && !argv.firefoxPreview.length) {
-      argv.firefoxPreview = ['mv3'];
-    }
-
     return argv;
   }
 
@@ -390,15 +386,6 @@ export async function main(
 ) {
   const program = new Program(argv, { absolutePackageDir });
   const version = await getVersion(absolutePackageDir);
-
-  // This is an option shared by some commands but not all of them, hence why
-  // it isn't a global option.
-  const firefoxPreviewOption = {
-    describe:
-      'Turn on developer preview features in Firefox' + ' (defaults to "mv3")',
-    demandOption: false,
-    type: 'array',
-  };
 
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
@@ -725,7 +712,6 @@ Example: $0 --help run.
         demandOption: false,
         type: 'array',
       },
-      'firefox-preview': firefoxPreviewOption,
       // Firefox for Android CLI options.
       'adb-bin': {
         describe: 'Specify a custom path to the adb binary',
@@ -820,7 +806,6 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
-      'firefox-preview': firefoxPreviewOption,
     })
     .command(
       'docs',
