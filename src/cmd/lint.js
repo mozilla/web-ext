@@ -11,7 +11,6 @@ export default function lint(
   {
     artifactsDir,
     boring,
-    firefoxPreview = [],
     ignoreFiles,
     metadata,
     output,
@@ -47,16 +46,6 @@ export default function lint(
     // the directory to the extension.
     _: [sourceDir],
   };
-
-  if (firefoxPreview.includes('mv3')) {
-    log.warn(
-      [
-        'Manifest Version 3 is now officially supported and',
-        '"--firefox-preview=mv3" is no longer needed.',
-        'In addition, the "mv3" value will be removed in the future.',
-      ].join(' '),
-    );
-  }
 
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({ config, runAsBinary: shouldExitProgram });
