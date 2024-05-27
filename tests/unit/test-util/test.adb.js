@@ -226,11 +226,53 @@ describe('utils/adb', () => {
       });
 
       sinon.assert.calledOnce(adb.fakeADBDevice.shell);
+    });
+
+    it('retrieves current user', async () => {
+      const deviceId = '123';
+      const adb = getFakeADBKit({
+        adbkitUtil: {
+          readAll: sinon.spy(() => {
+            return Promise.resolve(Buffer.from('123\n'));
+          }),
+        },
+      });
+
+      const adbUtils = new ADBUtils({ adb });
+      const promise = adbUtils.getCurrentUser(deviceId);
+
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
       sinon.assert.calledWith(adb.fakeADBDevice.shell, [
-        'pm',
-        'list',
-        'packages',
+        'am',
+        'get-current-user',
       ]);
+      const result = await assert.isFulfilled(promise);
+      assert.equal(result, 123);
+    });
+
+    it('rejects invalid get-current-user output', async () => {
+      const deviceId = '123';
+      const adb = getFakeADBKit({
+        adbkitUtil: {
+          readAll: sinon.spy(() => {
+            return Promise.resolve(Buffer.from('No user'));
+          }),
+        },
+      });
+
+      const adbUtils = new ADBUtils({ adb });
+      const promise = adbUtils.getCurrentUser(deviceId);
+
+      sinon.assert.calledOnce(adb.fakeADBDevice.shell);
+      sinon.assert.calledWith(adb.fakeADBDevice.shell, [
+        'am',
+        'get-current-user',
+      ]);
+      await assert.isRejected(
+        promise,
+        WebExtError,
+        /Unable to retrieve current user/
+      );
     });
 
     it('resolves the array of the installed firefox APKs', async () => {
@@ -244,11 +286,27 @@ describe('utils/adb', () => {
           }),
         },
       });
+
+      const stubGetCurrentUser = sinon.stub(
+        ADBUtils.prototype,
+        'getCurrentUser'
+      );
+      stubGetCurrentUser.resolves(0);
+
       const adbUtils = new ADBUtils({ adb });
 
       const promise = adbUtils.discoverInstalledFirefoxAPKs('device1');
       const packages = await assert.isFulfilled(promise);
+      sinon.assert.calledOnce(stubGetCurrentUser);
+      sinon.assert.calledWith(stubGetCurrentUser, 'device1');
       sinon.assert.calledOnce(adb.fakeADBDevice.shell);
+      sinon.assert.calledWith(adb.fakeADBDevice.shell, [
+        'pm',
+        'list',
+        'packages',
+        '--user',
+        '0',
+      ]);
       sinon.assert.calledOnce(adb.util.readAll);
       assert.deepEqual(packages, ['org.mozilla.fennec', 'org.mozilla.firefox']);
     });
