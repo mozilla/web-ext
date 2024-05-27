@@ -72,7 +72,7 @@ export default function sign(
 
     if (!id) {
       // We only auto-generate add-on IDs for MV2 add-ons on AMO.
-      if (manifestData?.manifest_version !== 2) {
+      if (manifestData.manifest_version !== 2) {
         throw new UsageError(
           'An extension ID must be specified in the manifest.json file.',
         );
