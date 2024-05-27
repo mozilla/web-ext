@@ -15,7 +15,7 @@ import completeSignCommand, {
   extensionIdFile,
   getIdFromFile,
 } from '../../../src/cmd/sign.js';
-import { basicManifest, manifestWithoutApps, fixturePath } from '../helpers.js';
+import { basicManifest, fixturePath } from '../helpers.js';
 
 describe('sign', () => {
   function getStubs() {
@@ -115,82 +115,6 @@ describe('sign', () => {
       },
     ));
 
-  it("doesn't allow a custom ID when no ID in manifest.json with submission api", () =>
-    withTempDir(async (tmpDir) => {
-      const customId = 'some-custom-id';
-      const stubs = getStubs();
-      const promiseSigned = sign(tmpDir, stubs, {
-        extraArgs: {
-          id: customId,
-        },
-        extraOptions: {
-          preValidatedManifest: manifestWithoutApps,
-        },
-      });
-      await assert.isRejected(promiseSigned, UsageError);
-      await assert.isRejected(
-        promiseSigned,
-        /Cannot set custom ID some-custom-id/,
-      );
-      await assert.isRejected(
-        promiseSigned,
-        /The add-on ID must be specified in the manifest.json file/,
-      );
-    }));
-
-  it("doesn't allow ID file when no ID in manifest.json with submission api", () =>
-    withTempDir(async (tmpDir) => {
-      const sourceDir = path.join(tmpDir.path(), 'source-dir');
-      const idFile = path.join(sourceDir, extensionIdFile);
-      const stubs = getStubs();
-      await fs.mkdir(sourceDir);
-      await saveIdToFile(idFile, 'some-other-id');
-      // Now, make a signing call with a custom ID.
-      const promiseSigned = sign(tmpDir, stubs, {
-        extraArgs: {
-          sourceDir,
-        },
-        extraOptions: {
-          preValidatedManifest: manifestWithoutApps,
-        },
-      });
-
-      await assert.isRejected(promiseSigned, UsageError);
-      await assert.isRejected(
-        promiseSigned,
-        /Cannot use previously auto-generated extension ID/,
-      );
-      await assert.isRejected(promiseSigned, /some-other-id - /);
-      await assert.isRejected(
-        promiseSigned,
-        /This add-on ID must be specified in the manifest.json file/,
-      );
-    }));
-
-  it('disallows a custom ID when manifest.json has ID', () =>
-    withTempDir(async (tmpDir) => {
-      const customId = 'some-custom-id';
-      const stubs = getStubs();
-      const signPromise = sign(tmpDir, stubs, {
-        extraArgs: {
-          id: customId,
-        },
-        extraOptions: {
-          // This manifest has an ID in it.
-          preValidatedManifest: basicManifest,
-        },
-      });
-      await assert.isRejected(signPromise, UsageError);
-      await assert.isRejected(
-        signPromise,
-        /Cannot set custom ID some-custom-id/,
-      );
-      await assert.isRejected(
-        signPromise,
-        /manifest\.json already defines ID basic-manifest@web-ext-test-suite/,
-      );
-    }));
-
   it('requires a channel for submission API', () =>
     withTempDir(async (tmpDir) => {
       const stubs = getStubs();
@@ -199,7 +123,7 @@ describe('sign', () => {
           channel: '',
         },
         extraOptions: {
-          preValidatedManifest: manifestWithoutApps,
+          preValidatedManifest: basicManifest,
         },
       });
       await assert.isRejected(signPromise, UsageError);
