@@ -5,8 +5,6 @@ This is a command line tool to help build, run, and test
 
 [![CircleCI](https://circleci.com/gh/mozilla/web-ext.svg?style=svg)](https://circleci.com/gh/mozilla/web-ext)
 [![codecov](https://codecov.io/gh/mozilla/web-ext/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/web-ext)
-[![Dependency Status](https://david-dm.org/mozilla/web-ext.svg)](https://david-dm.org/mozilla/web-ext)
-[![devDependency Status](https://david-dm.org/mozilla/web-ext/dev-status.svg)](https://david-dm.org/mozilla/web-ext#info=devDependencies)
 [![npm version](https://badge.fury.io/js/web-ext.svg)](https://badge.fury.io/js/web-ext)
 
 Ultimately, it aims to support browser extensions in a standard, portable,
