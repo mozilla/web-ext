@@ -5,8 +5,6 @@ This is a command line tool to help build, run, and test
 
 [![CircleCI](https://circleci.com/gh/mozilla/web-ext.svg?style=svg)](https://circleci.com/gh/mozilla/web-ext)
 [![codecov](https://codecov.io/gh/mozilla/web-ext/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/web-ext)
-[![Dependency Status](https://david-dm.org/mozilla/web-ext.svg)](https://david-dm.org/mozilla/web-ext)
-[![devDependency Status](https://david-dm.org/mozilla/web-ext/dev-status.svg)](https://david-dm.org/mozilla/web-ext#info=devDependencies)
 [![npm version](https://badge.fury.io/js/web-ext.svg)](https://badge.fury.io/js/web-ext)
 
 Ultimately, it aims to support browser extensions in a standard, portable,
@@ -16,7 +14,7 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 ## Documentation
 
 - [Getting started with web-ext][web-ext-user-docs]
-- [Command reference](https://extensionworkshop.com/documentation/develop/web-ext-command-reference)
+- [Command reference](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/)
 
 Here are the commands you can run. Click on each one for detailed documentation or use `--help` on the command line, such as `web-ext build --help`.
 
@@ -76,7 +74,7 @@ version on the command line with this:
 
 You'll need:
 
-- [Node.js](https://nodejs.org/en/), 16.0.0 or higher
+- [Node.js](https://nodejs.org/en/) (current [LTS](https://github.com/nodejs/LTS))
 - [npm](https://www.npmjs.com/), 8.0.0 or higher is recommended
 
 Optionally, you may like:

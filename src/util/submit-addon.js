@@ -101,17 +101,35 @@ export default class Client {
     const formData = new FormData();
     formData.set('channel', channel);
     formData.set('upload', this.fileFromSync(xpiPath));
-    const { uuid } = await this.fetchJson(url, 'POST', formData);
+    const { uuid } = await this.fetchJson(
+      url,
+      'POST',
+      formData,
+      'Upload failed',
+    );
     return this.waitForValidation(uuid);
   }
 
-  waitRetry(successFunc, checkUrl, checkInterval, abortInterval, context) {
+  waitRetry(
+    successFunc,
+    checkUrl,
+    checkInterval,
+    abortInterval,
+    context,
+    editUrl = null,
+  ) {
     let checkTimeout;
 
     return new Promise((resolve, reject) => {
       const abortTimeout = setTimeout(() => {
         clearTimeout(checkTimeout);
-        reject(new Error(`${context}: timeout.`));
+
+        let errorMessage = `${context}: timeout exceeded.`;
+        if (editUrl) {
+          errorMessage += ` When approved the signed XPI file can be downloaded from ${editUrl}`;
+        }
+
+        reject(new Error(errorMessage));
       }, abortInterval);
 
       const pollStatus = async () => {
@@ -120,7 +138,7 @@ export default class Client {
             checkUrl,
             'GET',
             undefined,
-            'Getting details failed.',
+            'Getting details failed',
           );
 
           const success = successFunc(responseData);
@@ -142,22 +160,23 @@ export default class Client {
   }
 
   waitForValidation(uuid) {
-    log.info('Waiting for Validation...');
+    log.info('Waiting for validation...');
     return this.waitRetry(
       (detailResponseData) => {
         if (!detailResponseData.processed) {
           return null;
         }
 
-        log.info('Validation results:', detailResponseData.validation);
+        log.debug('Validation results:', detailResponseData.validation);
         if (detailResponseData.valid) {
           return detailResponseData.uuid;
         }
 
-        log.info('Validation failed.');
         throw new Error(
-          'Validation failed, open the following URL for more information: ' +
-            `${detailResponseData.url}`,
+          [
+            'Validation failed:\n',
+            JSON.stringify(detailResponseData.validation, null, 2),
+          ].join(''),
         );
       },
       new URL(`upload/${uuid}/`, this.apiUrl),
@@ -173,7 +192,12 @@ export default class Client {
       ...metaDataJson,
       version: { upload: uuid, ...metaDataJson.version },
     };
-    return this.fetchJson(url, 'POST', JSON.stringify(jsonData));
+    return this.fetchJson(
+      url,
+      'POST',
+      JSON.stringify(jsonData),
+      'Submission failed (1)',
+    );
   }
 
   doNewAddonOrVersionSubmit(addonId, uuid, metaDataJson) {
@@ -182,7 +206,12 @@ export default class Client {
       ...metaDataJson,
       version: { upload: uuid, ...metaDataJson.version },
     };
-    return this.fetchJson(url, 'PUT', JSON.stringify(jsonData));
+    return this.fetchJson(
+      url,
+      'PUT',
+      JSON.stringify(jsonData),
+      'Submission failed (2)',
+    );
   }
 
   async doFormDataPatch(data, addonId, versionId) {
@@ -201,7 +230,7 @@ export default class Client {
         throw new Error(`response status was ${response.status}`);
       }
     } catch (error) {
-      log.info(`Upload of ${Object.keys(data)} failed: ${error}.`);
+      log.warn(`Upload of ${Object.keys(data)} failed: ${error}.`);
       throw new Error(`Uploading ${Object.keys(data)} failed`);
     }
   }
@@ -211,22 +240,25 @@ export default class Client {
       log.info(`Submitting ${Object.keys(patchData.version)} to version`);
       await this.doFormDataPatch(patchData.version, addonId, newVersionId);
     }
-    if (this.approvalCheckTimeout > 0) {
-      const fileUrl = new URL(
-        await this.waitForApproval(addonId, newVersionId),
-      );
-      return this.downloadSignedFile(fileUrl, addonId);
-    } else {
-      log.info('Waiting for approval and download of signed xpi skipped.');
+
+    if (this.approvalCheckTimeout === 0) {
       log.info(
-        `When approved the signed xpi can be downloaded from ${editUrl}.`,
+        [
+          'Waiting for approval and download of signed XPI skipped.',
+          `When approved the signed XPI file can be downloaded from ${editUrl}`,
+        ].join(' '),
       );
       return this.returnResult(addonId);
     }
+
+    const fileUrl = new URL(
+      await this.waitForApproval(addonId, newVersionId, editUrl),
+    );
+    return this.downloadSignedFile(fileUrl, addonId);
   }
 
-  waitForApproval(addonId, versionId) {
-    log.info('Waiting for Approval...');
+  waitForApproval(addonId, versionId, editUrl) {
+    log.info('Waiting for approval...');
     return this.waitRetry(
       (detailResponseData) => {
         const { file } = detailResponseData;
@@ -240,6 +272,7 @@ export default class Client {
       this.approvalCheckInterval,
       this.approvalCheckTimeout,
       'Approval',
+      editUrl,
     );
   }
 
@@ -253,16 +286,18 @@ export default class Client {
     const data = await response.json();
 
     if (!response.ok) {
-      log.info('Server Response:', data);
       throw new Error(
-        `${errorMsg}: ${response.statusText || response.status}.`,
+        [
+          `${errorMsg}: ${response.statusText || response.status}`,
+          JSON.stringify(data, null, 2),
+        ].join('\n'),
       );
     }
     return data;
   }
 
   async fetch(url, method = 'GET', body) {
-    log.info(`${method}ing URL: ${url.href}`);
+    log.debug(`${method}ing URL: ${url.href}`);
     let headers = {
       Authorization: await this.apiAuth.getAuthHeader(),
       Accept: 'application/json',
@@ -301,6 +336,7 @@ export default class Client {
       log.info(`Download of signed xpi failed: ${error}.`);
       throw new Error(`Downloading ${filename} failed`);
     }
+    log.info(`Signed xpi downloaded: ${dest}`);
     return this.returnResult(addonId, [filename]);
   }
 

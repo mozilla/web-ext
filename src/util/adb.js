@@ -86,13 +86,31 @@ export default class ADBUtils {
     return devices.map((dev) => dev.id);
   }
 
-  async discoverInstalledFirefoxAPKs(deviceId, firefoxApk) {
-    log.debug(`Listing installed Firefox APKs on ${deviceId}`);
+  async getCurrentUser(deviceId) {
+    log.debug(`Retrieving  current user on ${deviceId}`);
 
+    const currentUser = await this.runShellCommand(deviceId, [
+      'am',
+      'get-current-user',
+    ]);
+
+    const userId = parseInt(currentUser.trim());
+    if (isNaN(userId)) {
+      throw new WebExtError(`Unable to retrieve current user on ${deviceId}`);
+    }
+    return userId;
+  }
+
+  async discoverInstalledFirefoxAPKs(deviceId, firefoxApk) {
+    const userId = await this.getCurrentUser(deviceId);
+
+    log.debug(`Listing installed Firefox APKs on ${deviceId}`);
     const pmList = await this.runShellCommand(deviceId, [
       'pm',
       'list',
       'packages',
+      '--user',
+      `${userId}`,
     ]);
 
     return pmList
@@ -112,62 +130,6 @@ export default class ADBUtils {
 
         return false;
       });
-  }
-
-  async getAndroidVersionNumber(deviceId) {
-    const androidVersion = (
-      await this.runShellCommand(deviceId, ['getprop', 'ro.build.version.sdk'])
-    ).trim();
-
-    const androidVersionNumber = parseInt(androidVersion);
-
-    // No need to check the granted runtime permissions on Android versions < Lollypop.
-    if (isNaN(androidVersionNumber)) {
-      throw new WebExtError(
-        'Unable to discovery android version on ' +
-          `${deviceId}: ${androidVersion}`,
-      );
-    }
-
-    return androidVersionNumber;
-  }
-
-  // Raise an UsageError when the given APK does not have the required runtime permissions.
-  async ensureRequiredAPKRuntimePermissions(deviceId, apk, permissions) {
-    const permissionsMap = {};
-
-    // Initialize every permission to false in the permissions map.
-    for (const perm of permissions) {
-      permissionsMap[perm] = false;
-    }
-
-    // Retrieve the permissions information for the given apk.
-    const pmDumpLogs = (
-      await this.runShellCommand(deviceId, ['pm', 'dump', apk])
-    ).split('\n');
-
-    // Set to true the required permissions that have been granted.
-    for (const line of pmDumpLogs) {
-      for (const perm of permissions) {
-        if (
-          line.includes(`${perm}: granted=true`) ||
-          line.includes(`${perm}, granted=true`)
-        ) {
-          permissionsMap[perm] = true;
-        }
-      }
-    }
-
-    for (const perm of permissions) {
-      if (!permissionsMap[perm]) {
-        throw new UsageError(
-          `Required ${perm} has not be granted for ${apk}. ` +
-            'Please grant them using the Android Settings ' +
-            'or using the following adb command:\n' +
-            `\t adb shell pm grant ${apk} ${perm}\n`,
-        );
-      }
-    }
   }
 
   async amForceStopAPK(deviceId, apk) {

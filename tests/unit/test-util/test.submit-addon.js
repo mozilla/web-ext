@@ -28,8 +28,15 @@ class JSONResponse extends Response {
 }
 
 const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
+  // Trust us... You don't want to know why... but if you really do like nightmares
+  // take a look to the details and links kindly provided in this comment
+  // that helped investigating this:
+  // https://github.com/mozilla/web-ext/issues/2917#issuecomment-1766000545
+  const urlMatch = url instanceof URL ? url.href : url;
   const stubMatcher = nodeFetchStub.withArgs(
-    url instanceof URL ? url : new URL(url),
+    sinon.match(
+      (urlArg) => urlMatch === (urlArg instanceof URL ? urlArg.href : urlArg),
+    ),
     sinon.match.has('method', method),
   );
   for (let i = 0; i < responses.length; i++) {
@@ -663,7 +670,7 @@ describe('util.submit-addon', () => {
         );
 
         const clientPromise = client.waitForValidation(uploadUuid);
-        await assert.isRejected(clientPromise, 'Validation: timeout.');
+        await assert.isRejected(clientPromise, 'Validation: timeout exceeded.');
       });
 
       it('waits for validation that passes', async () => {
@@ -866,8 +873,16 @@ describe('util.submit-addon', () => {
         mockNodeFetch(sinon.stub(client, 'nodeFetch'), detailUrl, 'GET', [
           { body: {}, status: 200 },
         ]);
-        const clientPromise = client.waitForApproval(addonId, versionId);
-        await assert.isRejected(clientPromise, 'Approval: timeout.');
+        const editUrl = 'some-edit-url';
+        const clientPromise = client.waitForApproval(
+          addonId,
+          versionId,
+          editUrl,
+        );
+        await assert.isRejected(
+          clientPromise,
+          `Approval: timeout exceeded. When approved the signed XPI file can be downloaded from ${editUrl}`,
+        );
       });
 
       it('waits for approval', async () => {
@@ -1113,7 +1128,7 @@ describe('util.submit-addon', () => {
           { body: {}, status: 400 },
         ]);
         const clientPromise = client.fetchJson(baseUrl);
-        await assert.isRejected(clientPromise, 'Bad Request: 400.');
+        await assert.isRejected(clientPromise, 'Bad Request: 400\n{}');
       });
 
       it('rejects with a promise on < 100 responses', async () => {

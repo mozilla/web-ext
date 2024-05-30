@@ -25,7 +25,6 @@ export default function sign(
     apiProxy,
     apiSecret,
     artifactsDir,
-    id,
     ignoreFiles = [],
     sourceDir,
     timeout,
@@ -63,50 +62,29 @@ export default function sign(
       getIdFromFile(savedIdPath),
     ]);
 
-    const manifestId = getManifestId(manifestData);
-
-    if (id && !manifestId) {
-      throw new UsageError(
-        `Cannot set custom ID ${id} - addon submission API requires a ` +
-          'custom ID be specified in the manifest',
-      );
-    }
-    if (idFromSourceDir && !manifestId) {
+    const id = getManifestId(manifestData);
+    if (idFromSourceDir && !id) {
       throw new UsageError(
         'Cannot use previously auto-generated extension ID ' +
-          `${idFromSourceDir} - addon submission API ` +
-          'requires a custom ID be specified in the manifest',
+          `${idFromSourceDir} - This extension ID must be specified in the manifest.json file.`,
       );
-    }
-    if (id && manifestId) {
-      throw new UsageError(
-        `Cannot set custom ID ${id} because manifest.json ` +
-          `declares ID ${manifestId}`,
-      );
-    }
-    if (id) {
-      log.debug(`Using custom ID declared as --id=${id}`);
-    }
-
-    if (manifestId) {
-      id = manifestId;
-    }
-
-    if (!id && idFromSourceDir) {
-      log.info(
-        `Using previously auto-generated extension ID: ${idFromSourceDir}`,
-      );
-      id = idFromSourceDir;
     }
 
     if (!id) {
-      log.warn('No extension ID specified (it will be auto-generated)');
+      // We only auto-generate add-on IDs for MV2 add-ons on AMO.
+      if (manifestData.manifest_version !== 2) {
+        throw new UsageError(
+          'An extension ID must be specified in the manifest.json file.',
+        );
+      }
+
+      log.warn(
+        'No extension ID specified (it will be auto-generated the first time)',
+      );
     }
 
     if (!channel) {
-      throw new UsageError(
-        'channel is a required parameter for the addon submission API',
-      );
+      throw new UsageError('You must specify a channel');
     }
 
     let metaDataJson;
@@ -147,7 +125,6 @@ export default function sign(
 
       return result;
     } catch (clientError) {
-      log.info('FAIL');
       throw new WebExtError(clientError.message);
     }
   });

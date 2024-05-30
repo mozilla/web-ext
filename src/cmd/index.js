@@ -8,6 +8,16 @@ async function build(params, options) {
   return runCommand(params, options);
 }
 
+async function docs(params, options) {
+  const { default: runCommand } = await import('./docs.js');
+  return runCommand(params, options);
+}
+
+async function dumpConfig(params, options) {
+  const { default: runCommand } = await import('./dump-config.js');
+  return runCommand(params, options);
+}
+
 async function lint(params, options) {
   const { default: runCommand } = await import('./lint.js');
   return runCommand(params, options);
@@ -23,9 +33,4 @@ async function sign(params, options) {
   return runCommand(params, options);
 }
 
-async function docs(params, options) {
-  const { default: runCommand } = await import('./docs.js');
-  return runCommand(params, options);
-}
-
-export default { build, lint, run, sign, docs };
+export default { build, docs, dumpConfig, lint, run, sign };

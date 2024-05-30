@@ -37,7 +37,6 @@ export default async function run(
     startUrl,
     target,
     args,
-    firefoxPreview = [],
     // Android CLI options.
     adbBin,
     adbHost,

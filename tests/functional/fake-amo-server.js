@@ -89,7 +89,7 @@ http
       process.exit(1);
     }
   })
-  .listen(8989, '127.0.0.1', () => {
+  .listen(8989, 'localhost', () => {
     process.stdout.write('listening');
     process.stdout.uncork();
   });
