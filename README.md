@@ -33,14 +33,6 @@ Here are the commands you can run. Click on each one for detailed documentation 
 
 ## Installation
 
-### Using Homebrew (unofficial)
-
-The community maintains a `web-ext` formula.
-
-```sh
-brew install web-ext
-```
-
 ### Using npm
 
 First, make sure you are running the current
@@ -81,6 +73,14 @@ the `--` suffix. For example, the previous script could specify the Firefox
 version on the command line with this:
 
     npm run start:firefox -- --firefox=nightly
+
+### Using Homebrew (unofficial)
+
+The community maintains a `web-ext` formula.
+
+```sh
+brew install web-ext
+```
 
 ## Installation from source
 
