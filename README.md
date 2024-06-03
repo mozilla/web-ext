@@ -33,7 +33,9 @@ Here are the commands you can run. Click on each one for detailed documentation 
 
 ## Installation
 
-### Using Homebrew
+### Using Homebrew (unofficial)
+
+The community maintains a `web-ext` formula.
 
 ```sh
 brew install web-ext
