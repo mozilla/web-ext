@@ -29,7 +29,9 @@ Here are the commands you can run. Click on each one for detailed documentation 
 - [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-docs)
   - Open the `web-ext` documentation in a browser
 
-## Installation from npm
+## Installation
+
+### Using npm
 
 First, make sure you are running the current
 [LTS](https://github.com/nodejs/LTS)
@@ -69,6 +71,14 @@ the `--` suffix. For example, the previous script could specify the Firefox
 version on the command line with this:
 
     npm run start:firefox -- --firefox=nightly
+
+### Using Homebrew (unofficial)
+
+The community maintains a `web-ext` formula.
+
+```sh
+brew install web-ext
+```
 
 ## Installation from source
 
