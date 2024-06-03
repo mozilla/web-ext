@@ -38,13 +38,13 @@ First, make sure you are running the current
 (long term support) version of
 [NodeJS](https://nodejs.org/en/).
 
-### Global command
+#### Global command
 
 You can install this command onto your machine globally with:
 
     npm install --global web-ext
 
-### For your project
+#### For your project
 
 Alternatively, you can install this command as one of the
 [`devDependencies`](https://docs.npmjs.com/files/package.json#devdependencies)
