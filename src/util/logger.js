@@ -31,6 +31,8 @@ export class ConsoleStream {
       const msg = this.format(packet);
       if (this.isCapturing) {
         this.capturedMessages.push(msg);
+      } else if (packet.level > bunyan.INFO) {
+        localProcess.stderr.write(msg);
       } else {
         localProcess.stdout.write(msg);
       }

@@ -198,10 +198,6 @@ export class Program {
       throw new UsageError('Not enough arguments following: start-url');
     }
 
-    if (Array.isArray(argv.firefoxPreview) && !argv.firefoxPreview.length) {
-      argv.firefoxPreview = ['mv3'];
-    }
-
     return argv;
   }
 
@@ -300,15 +296,15 @@ export class Program {
           .map((f) => f.replace(process.cwd(), '.'))
           .map((f) => f.replace(os.homedir(), '~'))
           .join(', ');
-        log.info(
+        log.debug(
           'Applying config file' +
             `${configFiles.length !== 1 ? 's' : ''}: ` +
             `${niceFileList}`,
         );
       }
 
-      configFiles.forEach((configFileName) => {
-        const configObject = loadJSConfigFile(configFileName);
+      for (const configFileName of configFiles) {
+        const configObject = await loadJSConfigFile(configFileName);
         adjustedArgv = applyConfigToArgv({
           argv: adjustedArgv,
           argvFromCLI: argv,
@@ -316,7 +312,7 @@ export class Program {
           configObject,
           options: this.options,
         });
-      });
+      }
 
       if (adjustedArgv.verbose) {
         // Ensure that the verbose is enabled when specified in a config file.
@@ -390,15 +386,6 @@ export async function main(
 ) {
   const program = new Program(argv, { absolutePackageDir });
   const version = await getVersion(absolutePackageDir);
-
-  // This is an option shared by some commands but not all of them, hence why
-  // it isn't a global option.
-  const firefoxPreviewOption = {
-    describe:
-      'Turn on developer preview features in Firefox' + ' (defaults to "mv3")',
-    demandOption: false,
-    type: 'array',
-  };
 
   // yargs uses magic camel case expansion to expose options on the
   // final argv object. For example, the 'artifacts-dir' option is alternatively
@@ -522,13 +509,18 @@ Example: $0 --help run.
       },
     )
     .command(
+      'dump-config',
+      'Run config discovery and dump the resulting config data as JSON',
+      commands.dumpConfig,
+      {},
+    )
+    .command(
       'sign',
       'Sign the extension so it can be installed in Firefox',
       commands.sign,
       {
         'amo-base-url': {
-          describe:
-            'Signing API URL prefix - only used with `use-submission-api`',
+          describe: 'Submission API URL prefix',
           default: AMO_BASE_URL,
           demandOption: true,
           type: 'string',
@@ -543,12 +535,6 @@ Example: $0 --help run.
           demandOption: true,
           type: 'string',
         },
-        'api-url-prefix': {
-          describe: 'Signing API URL prefix',
-          default: 'https://addons.mozilla.org/api/v4',
-          demandOption: true,
-          type: 'string',
-        },
         'api-proxy': {
           describe:
             'Use a proxy to access the signing API. ' +
@@ -556,40 +542,34 @@ Example: $0 --help run.
           demandOption: false,
           type: 'string',
         },
-        'use-submission-api': {
-          describe: 'Sign using the addon submission API',
-          demandOption: false,
-          type: 'boolean',
-        },
-        id: {
-          describe:
-            'A custom ID for the extension. This has no effect if the ' +
-            'extension already declares an explicit ID in its manifest.',
-          demandOption: false,
-          type: 'string',
-        },
         timeout: {
           describe: 'Number of milliseconds to wait before giving up',
           type: 'number',
         },
-        'disable-progress-bar': {
-          describe: 'Disable the progress bar in sign-addon',
-          demandOption: false,
-          type: 'boolean',
+        'approval-timeout': {
+          describe:
+            'Number of milliseconds to wait for approval before giving up. ' +
+            'Set to 0 to disable waiting for approval. Fallback to `timeout` if not set.',
+          type: 'number',
         },
         channel: {
           describe:
-            'The channel for which to sign the addon. Either ' +
-            "'listed' or 'unlisted'",
+            "The channel for which to sign the addon. Either 'listed' or 'unlisted'.",
+          demandOption: true,
           type: 'string',
         },
         'amo-metadata': {
           describe:
-            'Path to a JSON file containing an object with metadata ' +
-            'to be passed to the API. ' +
-            'See https://addons-server.readthedocs.io' +
-            '/en/latest/topics/api/addons.html for details. ' +
-            'Only used with `use-submission-api`',
+            'Path to a JSON file containing an object with metadata to be passed to the API. ' +
+            'See https://addons-server.readthedocs.io/en/latest/topics/api/addons.html for details.',
+          type: 'string',
+        },
+        'upload-source-code': {
+          describe:
+            'Path to an archive file containing human readable source code of this submission, ' +
+            'if the code in --source-dir has been processed to make it unreadable. ' +
+            'See https://extensionworkshop.com/documentation/publish/source-code-submission/ for ' +
+            'details.',
           type: 'string',
         },
       },
@@ -725,7 +705,6 @@ Example: $0 --help run.
         demandOption: false,
         type: 'array',
       },
-      'firefox-preview': firefoxPreviewOption,
       // Firefox for Android CLI options.
       'adb-bin': {
         describe: 'Specify a custom path to the adb binary',
@@ -820,7 +799,6 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
-      'firefox-preview': firefoxPreviewOption,
     })
     .command(
       'docs',

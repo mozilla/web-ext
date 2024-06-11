@@ -110,8 +110,8 @@ describe('web-ext run', () => {
         },
       };
 
-      return execWebExt(argv, spawnOptions).waitForExit.then(({ stdout }) => {
-        assert.match(stdout, /Invalid --watch-file value: .+ is not a file./);
+      return execWebExt(argv, spawnOptions).waitForExit.then(({ stderr }) => {
+        assert.match(stderr, /Invalid --watch-file value: .+ is not a file./);
       });
     }));
 

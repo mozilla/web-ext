@@ -20,17 +20,16 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
     shell.echo(`\nSetting mocha timeout from env var: ${MOCHA_TIMEOUT}\n`);
   }
 
-  // Pass custom babel-loader node loader to transpile on the fly
-  // the tests modules.
-  binArgs.push('-n="loader=./tests/babel-loader.js"');
+  // Pass testdouble node loader to support ESM module mocking and
+  // transpiling on the fly the tests modules.
+  binArgs.push('-n="loader=testdouble"');
 
   const res = spawnSync(binPath, binArgs, {
     ...execMochaOptions,
     env: {
       ...process.env,
       // Make sure NODE_ENV is set to test (which also enable babel
-      // install plugin for all modules transpiled on the fly by the
-      // tests/babel-loader.js).
+      // install plugin for all modules transpiled on the fly).
       NODE_ENV: 'test',
     },
     stdio: 'inherit',
