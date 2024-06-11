@@ -73,7 +73,7 @@
     "https-proxy-agent": "^7.0.0",
     "jose": "5.4.0",
     "jszip": "3.10.1",
-    "mkdirp": "1.0.4",
+    "mkdirp": "3.0.1",
     "multimatch": "6.0.0",
     "mz": "2.7.0",
     "node-fetch": "3.3.2",

@@ -1,5 +1,5 @@
 import { fs } from 'mz';
-import defaultAsyncMkdirp from 'mkdirp';
+import { mkdirp as defaultAsyncMkdirp } from 'mkdirp';
 
 import { UsageError, isErrorWithCode } from '../errors.js';
 import { createLogger } from './logger.js';
