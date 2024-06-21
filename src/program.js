@@ -343,7 +343,7 @@ export class Program {
   }
 }
 
-//A defintion of type of argument for defaultVersionGetter
+//A definition of type of argument for defaultVersionGetter
 
 export async function defaultVersionGetter(
   absolutePackageDir,
