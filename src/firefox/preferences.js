@@ -42,7 +42,7 @@ const prefsCommon = {
   'extensions.enabledScopes': 5,
   // Disable metadata caching for installed add-ons by default.
   'extensions.getAddons.cache.enabled': false,
-  // Disable intalling any distribution add-ons.
+  // Disable installing any distribution add-ons.
   'extensions.installDistroAddons': false,
   // Allow installing extensions dropped into the profile folder.
   'extensions.autoDisableScopes': 10,
