@@ -48,6 +48,7 @@ export default async function run(
     firefoxApkComponent,
     // Chromium CLI options.
     chromiumBinary,
+    chromiumPref,
     chromiumProfile,
   },
   {
@@ -80,6 +81,15 @@ export default async function run(
   // Create an alias for --pref since it has been transformed into an
   // object containing one or more preferences.
   const customPrefs = { ...pref };
+  if (firefoxPreview.includes('mv3')) {
+    log.info('Configuring Firefox preferences for Manifest V3');
+    customPrefs['extensions.manifestV3.enabled'] = true;
+  }
+
+  // Create an alias for --chromium-pref since it has been transformed into an
+  // object containing one or more preferences.
+  const customChromiumPrefs = { ...chromiumPref };
+
   const manifestData = await getValidatedManifest(sourceDir);
 
   const profileDir = firefoxProfile || chromiumProfile;
@@ -187,6 +197,7 @@ export default async function run(
       ...commonRunnerParams,
       chromiumBinary,
       chromiumProfile,
+      customChromiumPrefs,
     };
 
     const chromiumRunner = await createExtensionRunner({
