@@ -417,7 +417,7 @@ Example: $0 --help run.
       default: process.cwd(),
       requiresArg: true,
       type: 'string',
-      coerce: (arg) => (arg != null ? path.resolve(arg) : undefined),
+      coerce: (arg) => arg ?? undefined,
     },
     'artifacts-dir': {
       alias: 'a',

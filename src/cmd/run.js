@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { fs } from 'mz';
 
 import defaultBuildExtension from './build.js';
@@ -60,6 +62,7 @@ export default async function run(
     getValidatedManifest = defaultGetValidatedManifest,
   } = {},
 ) {
+  sourceDir = path.resolve(sourceDir);
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
     log.info(
