@@ -203,7 +203,7 @@ export class ChromiumExtensionRunner {
     }
 
     let port;
-    if(this.params.chromiumPort && !isNaN(this.params.chromiumPort)) {
+    if (this.params.chromiumPort && !isNaN(this.params.chromiumPort)) {
       port = this.params.chromiumPort;
       log.debug(`(port: ${port})`);
     }
