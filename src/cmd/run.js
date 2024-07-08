@@ -48,6 +48,7 @@ export default async function run(
     firefoxApkComponent,
     // Chromium CLI options.
     chromiumBinary,
+    chromiumPort,
     chromiumProfile,
   },
   {
@@ -186,6 +187,7 @@ export default async function run(
     const chromiumRunnerParams = {
       ...commonRunnerParams,
       chromiumBinary,
+      chromiumPort,
       chromiumProfile,
     };
 

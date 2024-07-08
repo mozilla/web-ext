@@ -202,6 +202,12 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(...startingUrls);
     }
 
+    let port;
+    if(this.params.chromiumPort && !isNaN(this.params.chromiumPort)) {
+      port = this.params.chromiumPort;
+      log.debug(`(port: ${port})`);
+    }
+
     this.chromiumInstance = await this.chromiumLaunch({
       enableExtensions: true,
       chromePath: chromiumBinary,
@@ -210,6 +216,7 @@ export class ChromiumExtensionRunner {
       userDataDir,
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
+      port,
     });
 
     this.chromiumInstance.process.once('close', () => {
