@@ -618,13 +618,16 @@ describe('util/extension-runners/chromium', async () => {
   it('does pass port to chrome', async () => {
     const port = 9222;
     const { params } = prepareExtensionRunnerParams({
-      chromiumPort: port,
+      params: { chromiumPort: port },
     });
 
-    sinon.assert(calledOnce(params.chromiumLaunch));
-    sinon.assert(calledWithMatch(params.chromiumLaunch, {
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    sinon.assert.calledOnce(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
       port,
-    }));
+    });
 
     await runnerInstance.exit();
   });
