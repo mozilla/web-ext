@@ -17,6 +17,8 @@ import { createLogger } from '../util/logger.js';
 import { TempDir } from '../util/temp-dir.js';
 import isDirectory from '../util/is-directory.js';
 import fileExists from '../util/file-exists.js';
+import { validatePort } from '../util/verify-chromium-port.js';
+import { PortInUseError, PortVerificationFailedError } from '../errors.js';
 
 const log = createLogger(import.meta.url);
 
@@ -202,13 +204,25 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(...startingUrls);
     }
 
-    let port;
-    if (this.params.chromiumPort && !isNaN(this.params.chromiumPort)) {
-      port = this.params.chromiumPort;
-      log.debug(`(port: ${port})`);
+    const { chromiumPort } = this.params;
+    if (chromiumPort) {
+      log.debug('(port: %d)', chromiumPort);
+
+      const isPortUsable = await validatePort(
+        this.params.chromiumPort,
+        chromiumBinary,
+        chromeFlags,
+      ).catch((error) => {
+        log.error('Port verification failed: %s', error.message);
+        throw new PortVerificationFailedError();
+      });
+
+      if (!isPortUsable) {
+        throw new PortInUseError();
+      }
     }
 
-    this.chromiumInstance = await this.chromiumLaunch({
+    const chromiumConfig = {
       enableExtensions: true,
       chromePath: chromiumBinary,
       chromeFlags,
@@ -216,8 +230,11 @@ export class ChromiumExtensionRunner {
       userDataDir,
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
-      port,
-    });
+      port: chromiumPort,
+    };
+
+    log.debug('(config: %O)', chromiumConfig);
+    this.chromiumInstance = await this.chromiumLaunch(chromiumConfig);
 
     this.chromiumInstance.process.once('close', () => {
       this.chromiumInstance = null;
