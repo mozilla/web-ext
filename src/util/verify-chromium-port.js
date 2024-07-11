@@ -51,24 +51,15 @@ async function findProcess(chromeBinary) {
       throw new UsageError('Unsupported platform');
   }
 
-  // log.info('Searching for process %s', chromeBinary);
-  // log.debug('(cmd: %s)', cmd);
-
   const promise = new Promise((resolve, reject) => {
     exec(cmd, (error, stdout, stderr) => {
-      // log.debug('Output: %s', stdout);
       if (stderr) {
         log.debug('Error: %s', stderr);
       }
 
-      // const isMatch =
-      // stdout.toLowerCase().indexOf(chromeBinary.toLowerCase()) > -1;
-
       if (error) {
         reject(error);
       } else {
-        // log.debug('Found at least one instance of %s', chromeBinary);
-        // log.debug('(result: %o)', isMatch);
         resolve(stdout);
       }
     });
@@ -92,8 +83,6 @@ async function inspectProcessList(port, extension, output) {
   const lines = output.split('\n');
   let foundEligibleInstance = false;
 
-  // log.debug('Found %d browser instance(s).  Inspecting...', lines.length);
-
   lines.forEach((line) => {
     const extensionMatch = `--load-extension=${extension}`;
     const portMatch = `--remote-debugging-port=${port}`;
@@ -102,29 +91,16 @@ async function inspectProcessList(port, extension, output) {
     const isExtension = line.indexOf(extensionMatch) > -1;
 
     if (!isPortMatch) {
-      // log.debug('[%d/%d] Not using target port', i, lines.length, port);
       return;
     }
-
-    // log.debug('[%d/%d] Found chromium instance', i, lines.length);
 
     if (!isExtension) {
-      // throw new UnusablePortError(
-      //   'Port is in use by another browser instance that does not have this extension loaded',
-      // );
-      // log.debug('[%d/%d] Extension not loaded', i, lines.length);
       return;
     }
 
-    // log.debug(
-    //   '[%d/%d] Found extension loaded in this instance',
-    //   i,
-    //   lines.length,
-    // );
     foundEligibleInstance = true;
   });
 
-  // log.debug('Inspection complete.  Result: %o', foundEligibleInstance);
   return foundEligibleInstance;
 }
 
@@ -152,7 +128,7 @@ export async function portAvailable(port) {
  */
 export async function validatePort(port, chromeBinary, chromeFlags) {
   if (!port) {
-    return;
+    return false;
   }
   if (isNaN(port)) {
     throw new UnusablePortError(`Non-numeric port provided (${port})`);
@@ -162,7 +138,6 @@ export async function validatePort(port, chromeBinary, chromeFlags) {
   }
 
   const isAvailable = await portAvailable(port);
-  // const flags = new Map();
   const extensions = chromeFlags.find(
     (flag) => flag.toLowerCase().indexOf('--load-extension') > -1,
   );
@@ -181,30 +156,8 @@ export async function validatePort(port, chromeBinary, chromeFlags) {
       'Port is in use and verification of whether the extension is loaded failed',
     );
   }
-  // chromeFlags.forEach((flag) => {
-  //   const valueAt = flag.indexOf('=');
-  //   const [key, value] =
-  //     valueAt === -1
-  //       ? [flag, undefined]
-  //       : [flag.substring(0, valueAt), flag.substring(valueAt + 1)];
-
-  //   // let key;
-  //   // let value;
-  //   // if (valueAt === -1) {
-  //   //   key = flag;
-  //   //   log.debug('flag: [%s]', key);
-  //   // } else {
-  //   //   key = flag.substring(0, valueAt);
-  //   //   value = flag.substring(valueAt + 1);
-  //   //   log.debug('flag: [%s] => %s', key, value);
-  //   // }
-  //   flags.set(key, value);
-  // });
-
-  // const extension = flags.get('--load-extension');
 
   if (isAvailable) {
-    // log.debug('Using debugging port: %d', port);
     return true;
   }
 
