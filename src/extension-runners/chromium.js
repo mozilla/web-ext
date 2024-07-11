@@ -153,6 +153,24 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(...this.params.args);
     }
 
+    const { chromiumPort } = this.params;
+    if (chromiumPort) {
+      log.debug('(port: %d)', chromiumPort);
+      const isPortUsable = await validatePort(
+        chromiumPort,
+        chromiumBinary,
+        chromeFlags,
+      ).catch(async (error) => {
+        // Validation wasn't able to complete successfully
+        throw new PortVerificationFailedError(error.message);
+      });
+
+      if (!isPortUsable) {
+        // Validation completed, and the port definitely isn't usable
+        throw new PortInUseError();
+      }
+    }
+
     // eslint-disable-next-line prefer-const
     let { userDataDir, profileDirName } =
       await ChromiumExtensionRunner.getProfilePaths(
@@ -202,24 +220,6 @@ export class ChromiumExtensionRunner {
         : [this.params.startUrl];
       startingUrl = startingUrls.shift();
       chromeFlags.push(...startingUrls);
-    }
-
-    const { chromiumPort } = this.params;
-    if (chromiumPort) {
-      log.debug('(port: %d)', chromiumPort);
-
-      const isPortUsable = await validatePort(
-        this.params.chromiumPort,
-        chromiumBinary,
-        chromeFlags,
-      ).catch((error) => {
-        log.error('Port verification failed: %s', error.message);
-        throw new PortVerificationFailedError();
-      });
-
-      if (!isPortUsable) {
-        throw new PortInUseError();
-      }
     }
 
     const chromiumConfig = {
