@@ -235,7 +235,7 @@ export class ChromiumExtensionRunner {
 
     log.debug('(config: %O)', chromiumConfig);
     this.chromiumInstance = await this.chromiumLaunch(chromiumConfig);
-
+    log.debug('(process: %O)', this.chromiumInstance);
     this.chromiumInstance.process.once('close', () => {
       this.chromiumInstance = null;
 
