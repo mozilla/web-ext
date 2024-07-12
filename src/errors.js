@@ -64,7 +64,7 @@ export class PortInUseError extends UnusablePortError {
     super(message);
   }
 }
-export class PortVerificationFailedError extends UnusablePortError {
+export class PortInvalidError extends UnusablePortError {
   constructor(message = 'The requested port cannot be used.') {
     super(message);
   }
