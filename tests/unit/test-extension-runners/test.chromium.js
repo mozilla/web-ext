@@ -628,9 +628,19 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       port,
     });
-    assert.isDefined(runnerInstance.chromiumInstance, 'returned process instance');
-    assert.isDefined(runnerInstance.chromiumInstance.process.port, 'process instance has port value');
-    assert.equal(runnerInstance.chromiumInstance.process.port, port, 'process instance configured with correct port');
+    assert.isDefined(
+      runnerInstance.chromiumInstance,
+      'returned process instance',
+    );
+    assert.isDefined(
+      runnerInstance.chromiumInstance.process.port,
+      'process instance has port value',
+    );
+    assert.equal(
+      runnerInstance.chromiumInstance.process.port,
+      port,
+      'process instance configured with correct port',
+    );
 
     await runnerInstance.exit();
   });

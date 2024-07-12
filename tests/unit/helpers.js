@@ -198,7 +198,9 @@ export class StubChildProcess extends EventEmitter {
     super();
 
     // mimic chrome-launch and set a port property, defaulting to a random port
-    this.port = params.chromiumPort ? params.chromiumPort : getRandomInt(1024, 65536);
+    this.port = params.chromiumPort
+      ? params.chromiumPort
+      : getRandomInt(1024, 65536);
   }
 }
 
