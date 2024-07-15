@@ -114,7 +114,7 @@
     "html-entities": "2.5.2",
     "mocha": "10.6.0",
     "nyc": "17.0.0",
-    "prettier": "3.3.2",
+    "prettier": "3.3.3",
     "pretty-quick": "4.0.0",
     "prettyjson": "1.2.5",
     "shelljs": "0.8.5",
