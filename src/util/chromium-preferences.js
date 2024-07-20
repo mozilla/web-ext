@@ -16,7 +16,7 @@ export function coerceCLICustomChromiumPreference(cliPrefs) {
     const key = prefsAry[0];
     let value = prefsAry.slice(1).join('=');
 
-    if (/[^\w.]/.test(key)) {
+    if (/[^\w_.]/.test(key)) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
     }
 
