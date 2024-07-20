@@ -12,12 +12,12 @@ import {
   launch as defaultChromiumLaunch,
 } from 'chrome-launcher';
 import WebSocket, { WebSocketServer } from 'ws';
-import set from 'set-value';
 
 import { createLogger } from '../util/logger.js';
 import { TempDir } from '../util/temp-dir.js';
 import isDirectory from '../util/is-directory.js';
 import fileExists from '../util/file-exists.js';
+import setValue from '../util/set-value.js';
 
 const log = createLogger(import.meta.url);
 
@@ -430,7 +430,7 @@ export class ChromiumExtensionRunner {
       ...DEFAULT_PREFS,
       ...(this.params.customChromiumPrefs || {}),
     }).reduce((prefs, [key, value]) => {
-      set(prefs, key, value);
+      setValue(prefs, key, value);
       return prefs;
     }, {});
   }

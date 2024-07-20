@@ -81,7 +81,6 @@
     "open": "9.1.0",
     "parse-json": "7.1.1",
     "promise-toolbox": "0.21.0",
-    "set-value": "4.1.0",
     "source-map-support": "0.5.21",
     "strip-bom": "5.0.0",
     "strip-json-comments": "5.0.1",
