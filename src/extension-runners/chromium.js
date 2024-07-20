@@ -17,7 +17,7 @@ import { createLogger } from '../util/logger.js';
 import { TempDir } from '../util/temp-dir.js';
 import isDirectory from '../util/is-directory.js';
 import fileExists from '../util/file-exists.js';
-import setValue from '../util/set-value.js';
+import expandPrefs from '../util/expand-prefs.js';
 
 const log = createLogger(import.meta.url);
 
@@ -426,12 +426,9 @@ export class ChromiumExtensionRunner {
    * "extensions.ui.developer_mode".
    */
   getPrefs() {
-    return Object.entries({
+    return expandPrefs({
       ...DEFAULT_PREFS,
       ...(this.params.customChromiumPrefs || {}),
-    }).reduce((prefs, [key, value]) => {
-      setValue(prefs, key, value);
-      return prefs;
-    }, {});
+    });
   }
 }
