@@ -62,7 +62,7 @@ export default class ADBUtils {
     this.userAbortDiscovery = false;
   }
 
-  runShellCommand(deviceId, cmd) {
+  async runShellCommand(deviceId, cmd) {
     const { adb, adbClient } = this;
 
     log.debug(`Run adb shell command on ${deviceId}: ${JSON.stringify(cmd)}`);

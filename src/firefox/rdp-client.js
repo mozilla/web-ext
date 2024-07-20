@@ -47,7 +47,7 @@ export function parseRDPMessage(data) {
   }
 }
 
-export function connectToFirefox(port) {
+export async function connectToFirefox(port) {
   const client = new FirefoxRDPClient();
   return client.connect(port).then(() => client);
 }
@@ -252,7 +252,7 @@ export default class FirefoxRDPClient extends EventEmitter {
     }
 
     this._handleMessage(rdpMessage);
-    // Caller can try to parse the next message from the remining data.
+    // Caller can try to parse the next message from the remaining data.
     return true;
   }
 

@@ -506,7 +506,7 @@ export class FirefoxAndroidExtensionRunner {
 
     const tcpPort = await findFreeTcpPort();
 
-    // Log the choosen tcp port at info level (useful to the user to be able
+    // Log the chosen tcp port at info level (useful to the user to be able
     // to connect the Firefox DevTools to the Firefox for Android instance).
     log.info(`You can connect to this Android device on TCP port ${tcpPort}`);
 
