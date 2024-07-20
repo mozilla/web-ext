@@ -8,11 +8,17 @@ describe('utils/expand-prefs', () => {
     const input = {
       a: 'a',
       'b.c': 'c',
+      'd.e.f': 'f',
     };
     const expected = {
       a: 'a',
       b: {
         c: 'c',
+      },
+      d: {
+        e: {
+          f: 'f',
+        },
       },
     };
     const actual = expandPrefs(input);
