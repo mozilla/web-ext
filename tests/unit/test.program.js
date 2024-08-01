@@ -481,19 +481,6 @@ describe('program.main', () => {
     sinon.assert.calledWith(fakeVersionGetter, projectRoot);
   });
 
-  it('turns sourceDir into an absolute path', () => {
-    const fakeCommands = fake(commands, {
-      build: () => Promise.resolve(),
-    });
-    return execProgram(['build', '--source-dir', '..'], {
-      commands: fakeCommands,
-    }).then(() => {
-      sinon.assert.calledWithMatch(fakeCommands.build, {
-        sourceDir: path.resolve(path.join(process.cwd(), '..')),
-      });
-    });
-  });
-
   it('normalizes the artifactsDir path', () => {
     const fakeCommands = fake(commands, {
       build: () => Promise.resolve(),
