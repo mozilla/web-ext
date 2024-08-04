@@ -23,7 +23,7 @@ export class ConsoleStream {
   }
 
   write(json) {
-    const packet = JSON.parse(json);
+    const packet = typeof json === 'string' ? JSON.parse(json) : json;
     const thisLevel = this.verbose ? logLevels.values.trace : logLevels.values.info;
     if (packet.level >= thisLevel) {
       const msg = this.format(packet);
