@@ -22,7 +22,7 @@ export class ConsoleStream {
     this.verbose = true;
   }
 
-  write(json) {
+  write(json, { localProcess = process } = {}) {
     const packet = typeof json === 'string' ? JSON.parse(json) : json;
     const thisLevel = this.verbose ? logLevels.values.trace : logLevels.values.info;
     if (packet.level >= thisLevel) {
@@ -30,9 +30,9 @@ export class ConsoleStream {
       if (this.isCapturing) {
         this.capturedMessages.push(msg);
       } else if (packet.level > logLevels.values.info) {
-        process.stderr.write(msg);
+        localProcess.stderr.write(msg);
       } else {
-        process.stdout.write(msg);
+        localProcess.stdout.write(msg);
       }
     }
   }
