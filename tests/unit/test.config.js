@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
+import {writeFileSync} from 'fs';
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
@@ -917,7 +918,7 @@ describe('config', () => {
     it('throws an error if the config file has syntax errors', () => {
       return withTempDir(async (tmpDir) => {
         const configFilePath = path.join(tmpDir.path(), 'config.js');
-        fs.writeFileSync(
+        writeFileSync(
           configFilePath,
           // missing = in two places
           `module.exports {
@@ -931,7 +932,7 @@ describe('config', () => {
     it('provides help message on load failure due to .js ESM config file and no package', () => {
       return withTempDir(async (tmpDir) => {
         const configFilePath = path.join(tmpDir.path(), 'config.js');
-        fs.writeFileSync(
+        writeFileSync(
           configFilePath,
           'export default { sourceDir: "fake/dir" };',
         );
@@ -945,8 +946,8 @@ describe('config', () => {
       withTempDir(async (tmpDir) => {
         const cfgFilePath = path.join(tmpDir.path(), 'config.js');
         const pkgFilePath = path.join(tmpDir.path(), 'package.json');
-        fs.writeFileSync(cfgFilePath, 'module.exports = {};');
-        fs.writeFileSync(pkgFilePath, JSON.stringify({ type: 'module' }));
+        writeFileSync(cfgFilePath, 'module.exports = {};');
+        writeFileSync(pkgFilePath, JSON.stringify({ type: 'module' }));
         const promise = loadJSConfigFile(cfgFilePath);
         await assert.isRejected(promise, UsageError);
         await assert.isRejected(promise, new RegExp(HELP_ERR_MODULE_FROM_ESM));
@@ -963,12 +964,12 @@ describe('config', () => {
           'config-with-import.js',
         );
         const pkgFilePath = path.join(tmpDir.path(), 'package.json');
-        fs.writeFileSync(cfgWithExportFilePath, 'export default {}');
-        fs.writeFileSync(
+        writeFileSync(cfgWithExportFilePath, 'export default {}');
+        writeFileSync(
           cfgWithImportFilePath,
           'import test from "./test.js";',
         );
-        fs.writeFileSync(pkgFilePath, JSON.stringify({ type: 'commonjs' }));
+        writeFileSync(pkgFilePath, JSON.stringify({ type: 'commonjs' }));
 
         const promiseErrOnExport = loadJSConfigFile(cfgWithExportFilePath);
         await assert.isRejected(promiseErrOnExport, UsageError);
@@ -988,7 +989,7 @@ describe('config', () => {
     it('parses successfully .js file as CommonJS config file', () => {
       return withTempDir(async (tmpDir) => {
         const configFilePath = path.join(tmpDir.path(), 'config.js');
-        fs.writeFileSync(
+        writeFileSync(
           configFilePath,
           `module.exports = {
               sourceDir: 'fake/dir',
@@ -1013,7 +1014,7 @@ describe('config', () => {
     it('parses successfully .mjs file as ESM config file when no package type', () =>
       withTempDir(async (tmpDir) => {
         const cfgFilePath = path.join(tmpDir.path(), 'config.mjs');
-        fs.writeFileSync(
+        writeFileSync(
           cfgFilePath,
           'export default { sourceDir: "fake/dir" };',
         );
@@ -1024,7 +1025,7 @@ describe('config', () => {
     it('parses .cjs file as CommonJS config file when no package type', () =>
       withTempDir(async (tmpDir) => {
         const cfgFilePath = path.join(tmpDir.path(), 'config.cjs');
-        fs.writeFileSync(
+        writeFileSync(
           cfgFilePath,
           'module.exports = { sourceDir: "fake/dir" };',
         );
@@ -1035,7 +1036,7 @@ describe('config', () => {
     it('parses package.json file correctly', () => {
       return withTempDir(async (tmpDir) => {
         const configFilePath = path.join(tmpDir.path(), 'package.json');
-        fs.writeFileSync(
+        writeFileSync(
           configFilePath,
           `{
                 "name": "dummy-package-json",
@@ -1053,7 +1054,7 @@ describe('config', () => {
     it('does not throw an error for an empty config', () => {
       return withTempDir(async (tmpDir) => {
         const configFilePath = path.join(tmpDir.path(), 'config.js');
-        fs.writeFileSync(configFilePath, 'module.exports = {};');
+        writeFileSync(configFilePath, 'module.exports = {};');
         await loadJSConfigFile(configFilePath);
       });
     });
@@ -1061,7 +1062,7 @@ describe('config', () => {
     it('returns an empty object when webExt key is not in package.json', () => {
       return withTempDir(async (tmpDir) => {
         const configFilePath = path.join(tmpDir.path(), 'package.json');
-        fs.writeFileSync(
+        writeFileSync(
           configFilePath,
           `{
               "name": "dummy-package-json",

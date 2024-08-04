@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
-import fs from 'fs/promises';
+import {writeFileSync} from 'fs';
 
 import { assert } from 'chai';
 import { describe, it, beforeEach, afterEach } from 'mocha';
@@ -85,12 +85,12 @@ describe('web-ext sign', () => {
 
   it('should use config file if required parameters are not in the arguments', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
-      fs.writeFileSync(
+      writeFileSync(
         path.join(tmpDir, 'web-ext-config.js'),
         GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS,
       );
 
-      fs.writeFileSync(
+      writeFileSync(
         path.join(tmpDir, 'package.json'),
         JSON.stringify({
           webExt: {
@@ -121,7 +121,7 @@ describe('web-ext sign', () => {
   it('should show an error message if the api-key is not set in the config', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
       const configFilePath = path.join(tmpDir, 'web-ext-config.js');
-      fs.writeFileSync(configFilePath, BAD_EXAMPLE_OF_WEB_EXT_CONFIG_JS);
+      writeFileSync(configFilePath, BAD_EXAMPLE_OF_WEB_EXT_CONFIG_JS);
       const argv = [
         'sign',
         '--verbose',

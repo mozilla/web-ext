@@ -1,5 +1,5 @@
 import path from 'path';
-import fs from 'fs/promises';
+import {writeFileSync} from 'fs';
 
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
@@ -29,10 +29,10 @@ describe('web-ext run', () => {
         );
         const watchIgnoredFile = path.join(srcDir, 'ignoredFile3.txt');
 
-        fs.writeFileSync(watchedFile, '');
-        watchedFilesArr.forEach((file) => fs.writeFileSync(file, ''));
-        watchIgnoredArr.forEach((file) => fs.writeFileSync(file, ''));
-        fs.writeFileSync(watchIgnoredFile, '');
+        writeFileSync(watchedFile, '');
+        watchedFilesArr.forEach((file) => writeFileSync(file, ''));
+        watchIgnoredArr.forEach((file) => writeFileSync(file, ''));
+        writeFileSync(watchIgnoredFile, '');
 
         const argv = [
           'run',
