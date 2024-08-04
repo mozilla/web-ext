@@ -1,4 +1,5 @@
-import { fs } from 'mz';
+import fs from 'fs/promises';
+
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
 

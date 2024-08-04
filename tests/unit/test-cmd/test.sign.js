@@ -1,8 +1,8 @@
 import path from 'path';
 import { promisify } from 'util';
+import fs from 'fs/promises';
 
 import copyDir from 'copy-dir';
-import { fs } from 'mz';
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';

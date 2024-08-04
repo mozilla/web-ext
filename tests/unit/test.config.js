@@ -1,9 +1,9 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import * as sinon from 'sinon';
-import { fs } from 'mz';
 
 import { Program } from '../../src/program.js';
 import {

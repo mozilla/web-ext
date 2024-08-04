@@ -1,8 +1,8 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { describe, it } from 'mocha';
 import git from 'git-rev-sync';
-import { fs } from 'mz';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 

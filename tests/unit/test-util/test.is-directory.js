@@ -1,6 +1,6 @@
 import path from 'path';
+import fs from 'fs/promises';
 
-import { fs } from 'mz';
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 

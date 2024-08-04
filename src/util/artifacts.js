@@ -1,4 +1,5 @@
-import { fs } from 'mz';
+import fs from 'fs/promises';
+
 import { mkdirp as defaultAsyncMkdirp } from 'mkdirp';
 
 import { UsageError, isErrorWithCode } from '../errors.js';

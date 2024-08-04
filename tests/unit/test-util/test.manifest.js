@@ -1,9 +1,9 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
 import deepcopy from 'deepcopy';
-import { fs } from 'mz';
 
 import { onlyInstancesOf, InvalidManifest } from '../../../src/errors.js';
 import getValidatedManifest, {

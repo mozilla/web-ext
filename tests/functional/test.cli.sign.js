@@ -1,9 +1,9 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import fs from 'fs/promises';
 
 import { assert } from 'chai';
 import { describe, it, beforeEach, afterEach } from 'mocha';
-import { fs } from 'mz';
 
 import {
   minimalAddonPath,

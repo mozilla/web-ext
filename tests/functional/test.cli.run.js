@@ -1,8 +1,8 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
-import { fs } from 'mz';
 
 import {
   minimalAddonPath,

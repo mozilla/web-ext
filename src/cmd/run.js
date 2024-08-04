@@ -1,6 +1,5 @@
 import path from 'path';
-
-import { fs } from 'mz';
+import fs from 'fs/promises';
 
 import defaultBuildExtension from './build.js';
 import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
