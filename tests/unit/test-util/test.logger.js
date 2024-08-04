@@ -1,7 +1,7 @@
 import { Writable } from 'stream';
 import { pathToFileURL } from 'url';
 
-import bunyan from 'bunyan';
+import {levels as logLevels} from 'pino';
 import * as sinon from 'sinon';
 import { it, describe } from 'mocha';
 import { assert } from 'chai';
@@ -11,13 +11,13 @@ import { createLogger, ConsoleStream } from '../../../src/util/logger.js';
 describe('logger', () => {
   describe('createLogger', () => {
     it('makes file names less redundant', () => {
-      const createBunyanLog = sinon.spy(() => {});
+      const createPinoLog = sinon.spy(() => {});
       const expectedName =
         process.platform === 'win32'
           ? 'C:\\src\\some-file.js'
           : '/src/some-file.js';
-      createLogger(pathToFileURL(expectedName).href, { createBunyanLog });
-      sinon.assert.calledWithMatch(createBunyanLog, { name: expectedName });
+      createLogger(pathToFileURL(expectedName).href, { createPinoLog });
+      sinon.assert.calledWithMatch(createPinoLog, { name: expectedName });
     });
   });
 
@@ -26,7 +26,7 @@ describe('logger', () => {
       return {
         name: 'some name',
         msg: 'some messge',
-        level: bunyan.INFO,
+        level: logLevels.values.info,
         ...overrides,
       };
     }
@@ -56,7 +56,7 @@ describe('logger', () => {
           packet({
             name: 'foo',
             msg: 'some message',
-            level: bunyan.DEBUG,
+            level: logLevels.values.debug,
           }),
         ),
         '[foo][debug] some message\n',
@@ -74,37 +74,37 @@ describe('logger', () => {
     it('does not log debug packets unless verbose', () => {
       const log = new ConsoleStream({ verbose: false });
       const localProcess = fakeProcess();
-      log.write(packet({ level: bunyan.DEBUG }), { localProcess });
+      log.write(packet({ level: logLevels.values.debug }), { localProcess });
       sinon.assert.notCalled(localProcess.stdout.write);
     });
 
     it('does not log trace packets unless verbose', () => {
       const log = new ConsoleStream({ verbose: false });
       const localProcess = fakeProcess();
-      log.write(packet({ level: bunyan.TRACE }), { localProcess });
+      log.write(packet({ level: logLevels.values.trace }), { localProcess });
       sinon.assert.notCalled(localProcess.stdout.write);
     });
 
     it('logs debug packets when verbose', () => {
       const log = new ConsoleStream({ verbose: true });
       const localProcess = fakeProcess();
-      log.write(packet({ level: bunyan.DEBUG }), { localProcess });
+      log.write(packet({ level: logLevels.values.debug }), { localProcess });
       sinon.assert.called(localProcess.stdout.write);
     });
 
     it('logs trace packets when verbose', () => {
       const log = new ConsoleStream({ verbose: true });
       const localProcess = fakeProcess();
-      log.write(packet({ level: bunyan.TRACE }), { localProcess });
+      log.write(packet({ level: logLevels.values.trace }), { localProcess });
       sinon.assert.called(localProcess.stdout.write);
     });
 
     it('logs info packets when verbose or not', () => {
       const log = new ConsoleStream({ verbose: false });
       const localProcess = fakeProcess();
-      log.write(packet({ level: bunyan.INFO }), { localProcess });
+      log.write(packet({ level: logLevels.values.info }), { localProcess });
       log.makeVerbose();
-      log.write(packet({ level: bunyan.INFO }), { localProcess });
+      log.write(packet({ level: logLevels.values.info }), { localProcess });
       sinon.assert.callCount(localProcess.stdout.write, 2);
     });
 
