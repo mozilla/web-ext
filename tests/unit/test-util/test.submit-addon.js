@@ -8,8 +8,8 @@ import { assert, expect } from 'chai';
 import JSZip from 'jszip';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
-// eslint-disable-next-line no-shadow
-import { File, FormData, Response } from 'node-fetch';
+// eslint-disable-next-line no-shadow -- Testing sub-100 Responses, impossible with native
+import { Response } from 'node-fetch';
 
 import { AMO_BASE_URL } from '../../../src/program.js';
 import Client, {

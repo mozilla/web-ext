@@ -1,9 +1,8 @@
 import { createHash } from 'crypto';
-import { createWriteStream, promises as fsPromises } from 'fs';
+import { createWriteStream, promises as fsPromises, readFileSync } from 'fs';
 import { promises as streamPromises } from 'stream';
 
 // eslint-disable-next-line no-shadow
-import fetch, { FormData, fileFromSync } from 'node-fetch';
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -89,7 +88,9 @@ export default class Client {
   }
 
   fileFromSync(path) {
-    return fileFromSync(path);
+    // create a blob from a file path
+    const file = readFileSync(path);
+    return new Blob([file]);
   }
 
   nodeFetch(url, { method, headers, body, agent }) {
