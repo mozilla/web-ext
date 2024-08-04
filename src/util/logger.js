@@ -69,11 +69,5 @@ export function createLogger(
       : 'unknown-module',
     // Capture all log levels and let the stream filter them.
     level: logLevels.values.trace,
-    streams: [
-      {
-        type: 'raw',
-        stream: consoleStream,
-      },
-    ],
-  });
+  }, consoleStream);
 }
