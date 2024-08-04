@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 
 import defaultBuildExtension from './build.js';
 import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
@@ -93,7 +94,7 @@ export default async function run(
           '--firefox-profile or --chromium-profile',
       );
     }
-    const isDir = fs.existsSync(profileDir);
+    const isDir = existsSync(profileDir);
     if (isDir) {
       log.info(`Profile directory ${profileDir} already exists`);
     } else {
