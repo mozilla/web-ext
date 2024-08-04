@@ -898,16 +898,19 @@ describe('program.defaultVersionGetter', () => {
   });
 
   it('returns git commit information in development', function () {
-    return fs.access(path.join(projectRoot, '.git')).then(async () => {
-      const commit = `${git.branch(projectRoot)}-${git.long(projectRoot)}`;
-      const testBuildEnv = { globalEnv: 'development' };
-      assert.equal(
-        await defaultVersionGetter(projectRoot, testBuildEnv),
-        commit,
-      );
-    }, () => {
-      this.skip();
-    });
+    return fs.access(path.join(projectRoot, '.git')).then(
+      async () => {
+        const commit = `${git.branch(projectRoot)}-${git.long(projectRoot)}`;
+        const testBuildEnv = { globalEnv: 'development' };
+        assert.equal(
+          await defaultVersionGetter(projectRoot, testBuildEnv),
+          commit,
+        );
+      },
+      () => {
+        this.skip();
+      },
+    );
   });
 });
 

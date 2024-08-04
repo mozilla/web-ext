@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import path from 'path';
-import {writeFileSync} from 'fs';
+import { writeFileSync } from 'fs';
 
 import { assert } from 'chai';
 import { describe, it, beforeEach, afterEach } from 'mocha';

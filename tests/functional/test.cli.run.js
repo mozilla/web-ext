@@ -1,5 +1,5 @@
 import path from 'path';
-import {writeFileSync} from 'fs';
+import { writeFileSync } from 'fs';
 
 import { describe, it } from 'mocha';
 import { assert } from 'chai';

@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {writeFileSync} from 'fs';
+import { writeFileSync } from 'fs';
 
 import { it, describe } from 'mocha';
 import { assert } from 'chai';

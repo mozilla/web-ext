@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {writeFileSync} from 'fs';
+import { writeFileSync } from 'fs';
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
@@ -965,10 +965,7 @@ describe('config', () => {
         );
         const pkgFilePath = path.join(tmpDir.path(), 'package.json');
         writeFileSync(cfgWithExportFilePath, 'export default {}');
-        writeFileSync(
-          cfgWithImportFilePath,
-          'import test from "./test.js";',
-        );
+        writeFileSync(cfgWithImportFilePath, 'import test from "./test.js";');
         writeFileSync(pkgFilePath, JSON.stringify({ type: 'commonjs' }));
 
         const promiseErrOnExport = loadJSConfigFile(cfgWithExportFilePath);
@@ -1014,10 +1011,7 @@ describe('config', () => {
     it('parses successfully .mjs file as ESM config file when no package type', () =>
       withTempDir(async (tmpDir) => {
         const cfgFilePath = path.join(tmpDir.path(), 'config.mjs');
-        writeFileSync(
-          cfgFilePath,
-          'export default { sourceDir: "fake/dir" };',
-        );
+        writeFileSync(cfgFilePath, 'export default { sourceDir: "fake/dir" };');
         const promise = loadJSConfigFile(cfgFilePath);
         await assert.becomes(promise, { sourceDir: 'fake/dir' });
       }));
