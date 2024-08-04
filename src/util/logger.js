@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url';
 
-import pino, {levels as logLevels} from 'pino';
+import pino, { levels as logLevels } from 'pino';
 
 export class ConsoleStream {
   verbose;
@@ -24,7 +24,9 @@ export class ConsoleStream {
 
   write(json, { localProcess = process } = {}) {
     const packet = typeof json === 'string' ? JSON.parse(json) : json;
-    const thisLevel = this.verbose ? logLevels.values.trace : logLevels.values.info;
+    const thisLevel = this.verbose
+      ? logLevels.values.trace
+      : logLevels.values.info;
     if (packet.level >= thisLevel) {
       const msg = this.format(packet);
       if (this.isCapturing) {
@@ -58,17 +60,17 @@ export const consoleStream = new ConsoleStream();
 
 // createLogger types and implementation.
 
-export function createLogger(
-  moduleURL,
-  { createPinoLog = pino } = {},
-) {
-  return createPinoLog({
-    // Strip the leading src/ from file names (which is in all file names) to
-    // make the name less redundant.
-    name: moduleURL
-      ? fileURLToPath(moduleURL).replace(/^src\//, '')
-      : 'unknown-module',
-    // Capture all log levels and let the stream filter them.
-    level: logLevels.values.trace,
-  }, consoleStream);
+export function createLogger(moduleURL, { createPinoLog = pino } = {}) {
+  return createPinoLog(
+    {
+      // Strip the leading src/ from file names (which is in all file names) to
+      // make the name less redundant.
+      name: moduleURL
+        ? fileURLToPath(moduleURL).replace(/^src\//, '')
+        : 'unknown-module',
+      // Capture all log levels and let the stream filter them.
+      level: logLevels.values.trace,
+    },
+    consoleStream,
+  );
 }

@@ -1,7 +1,7 @@
 import { Writable } from 'stream';
 import { pathToFileURL } from 'url';
 
-import {levels as logLevels} from 'pino';
+import { levels as logLevels } from 'pino';
 import * as sinon from 'sinon';
 import { it, describe } from 'mocha';
 import { assert } from 'chai';
