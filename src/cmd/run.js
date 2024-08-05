@@ -82,7 +82,7 @@ export default async function run(
 
   // Create an alias for --pref since it has been transformed into an
   // object containing one or more preferences.
-  const customPrefs = { ...pref };
+  const customPrefs = pref;
   const manifestData = await getValidatedManifest(sourceDir);
 
   const profileDir = firefoxProfile || chromiumProfile;
