@@ -1,6 +1,6 @@
 import path from 'path';
+import fs from 'fs/promises';
 
-import { fs } from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';

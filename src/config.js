@@ -1,9 +1,9 @@
 import os from 'os';
 import path from 'path';
+import fs from 'fs/promises';
 
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
-import { fs } from 'mz';
 import parseJSON from 'parse-json';
 
 import fileExists from './util/file-exists.js';

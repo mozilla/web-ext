@@ -1,8 +1,8 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import { fs } from 'mz';
 
 import fileExists from '../../../src/util/file-exists.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';

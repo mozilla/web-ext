@@ -1,9 +1,9 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { it, describe } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { fs } from 'mz';
 
 import { onlyInstancesOf, UsageError } from '../../../src/errors.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';

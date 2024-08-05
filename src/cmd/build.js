@@ -1,7 +1,7 @@
 import path from 'path';
 import { createWriteStream } from 'fs';
+import fs from 'fs/promises';
 
-import { fs } from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import defaultFromEvent from 'promise-toolbox/fromEvent';

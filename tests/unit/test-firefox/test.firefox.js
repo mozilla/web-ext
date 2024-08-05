@@ -1,11 +1,11 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import deepcopy from 'deepcopy';
 import * as sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
-import { fs } from 'mz';
 
 import * as firefox from '../../../src/firefox/index.js';
 import {

@@ -1,8 +1,8 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { describe, it } from 'mocha';
 import git from 'git-rev-sync';
-import { fs } from 'mz';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 
@@ -898,17 +898,19 @@ describe('program.defaultVersionGetter', () => {
   });
 
   it('returns git commit information in development', function () {
-    return fs.exists(path.join(projectRoot, '.git')).then(async (exists) => {
-      if (!exists) {
+    return fs.access(path.join(projectRoot, '.git')).then(
+      async () => {
+        const commit = `${git.branch(projectRoot)}-${git.long(projectRoot)}`;
+        const testBuildEnv = { globalEnv: 'development' };
+        assert.equal(
+          await defaultVersionGetter(projectRoot, testBuildEnv),
+          commit,
+        );
+      },
+      () => {
         this.skip();
-      }
-      const commit = `${git.branch(projectRoot)}-${git.long(projectRoot)}`;
-      const testBuildEnv = { globalEnv: 'development' };
-      assert.equal(
-        await defaultVersionGetter(projectRoot, testBuildEnv),
-        commit,
-      );
-    });
+      },
+    );
   });
 });
 

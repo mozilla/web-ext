@@ -1,4 +1,4 @@
-import { fs } from 'mz';
+import fs from 'fs/promises';
 
 import { onlyErrorsWithCode } from '../errors.js';
 
