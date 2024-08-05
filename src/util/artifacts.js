@@ -25,7 +25,7 @@ export async function prepareArtifactsDir(
     }
     // If the artifactsDir already exists, check that we have the write permissions on it.
     try {
-      await asyncFsAccess(artifactsDir, fs.W_OK);
+      await asyncFsAccess(artifactsDir, fs.constants.W_OK);
     } catch (accessErr) {
       if (isErrorWithCode('EACCES', accessErr)) {
         throw new UsageError(
