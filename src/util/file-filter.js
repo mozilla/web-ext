@@ -1,6 +1,6 @@
 import path from 'path';
 
-import multimatch from 'multimatch';
+import micromatch from 'micromatch';
 
 import { createLogger } from './logger.js';
 
@@ -98,7 +98,7 @@ export class FileFilter {
    */
   wantFile(filePath) {
     const resolvedPath = this.resolveWithSourceDir(filePath);
-    const matches = multimatch(resolvedPath, this.filesToIgnore);
+    const matches = micromatch(resolvedPath, this.filesToIgnore);
     if (matches.length > 0) {
       log.debug(`FileFilter: ignoring file ${resolvedPath}`);
       return false;
