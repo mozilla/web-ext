@@ -1,6 +1,7 @@
 import path from 'path';
+import fs from 'fs/promises';
+import { writeFileSync } from 'fs';
 
-import { fs } from 'mz';
 import { it, describe } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -192,7 +193,7 @@ describe('build', () => {
   it('handles repeating localization keys', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(
+      writeFileSync(
         messageFileName,
         `{"extensionName": {
               "message": "example extension",
@@ -233,7 +234,7 @@ describe('build', () => {
   it('handles comments in messages.json', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(
+      writeFileSync(
         messageFileName,
         `{"extensionName": {
               "message": "example extension", // comments
@@ -257,7 +258,7 @@ describe('build', () => {
   it('checks locale file for malformed json', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(messageFileName, '{"simulated:" "json syntax error"');
+      writeFileSync(messageFileName, '{"simulated:" "json syntax error"');
 
       return getDefaultLocalizedName({
         messageFile: messageFileName,
@@ -285,7 +286,7 @@ describe('build', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
       //This is missing the 'message' key
-      fs.writeFileSync(
+      writeFileSync(
         messageFileName,
         `{"extensionName": {
               "description": "example extension"

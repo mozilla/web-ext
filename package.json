@@ -74,7 +74,6 @@
     "jszip": "3.10.1",
     "mkdirp": "3.0.1",
     "multimatch": "6.0.0",
-    "mz": "2.7.0",
     "node-fetch": "3.3.2",
     "node-notifier": "10.0.1",
     "open": "9.1.0",

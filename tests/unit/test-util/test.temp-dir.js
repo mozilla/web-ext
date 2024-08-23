@@ -1,5 +1,6 @@
+import fs from 'fs/promises';
+
 import { describe, it } from 'mocha';
-import { fs } from 'mz';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
