@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import path from 'path';
+import fs from 'fs/promises';
 
 import { it, describe } from 'mocha';
-import { fs } from 'mz';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import Watchpack from 'watchpack';

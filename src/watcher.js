@@ -1,4 +1,5 @@
-import { fs } from 'mz';
+import { existsSync, lstatSync } from 'fs';
+
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
 
@@ -46,7 +47,7 @@ export default function onSourceChange({
 
   if (watchFile) {
     for (const filePath of watchFile) {
-      if (fs.existsSync(filePath) && !fs.lstatSync(filePath).isFile()) {
+      if (existsSync(filePath) && !lstatSync(filePath).isFile()) {
         throw new UsageError(
           'Invalid --watch-file value: ' + `"${filePath}" is not a file.`,
         );
