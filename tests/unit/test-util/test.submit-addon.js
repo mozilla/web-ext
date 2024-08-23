@@ -342,6 +342,21 @@ describe('util.submit-addon', () => {
       assert.equal(client.apiUrl.href, new URL(`${cleanUrl}/addons/`).href);
     });
 
+    describe('fileFromSync', () => {
+      it('should return a File with name set to the file path basename', () =>
+        withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const FILE_BASENAME = 'testfile.txt';
+          const FILE_CONTENT = 'somecontent';
+          const filePath = path.join(tmpDir.path(), FILE_BASENAME);
+          await fsPromises.writeFile(filePath, FILE_CONTENT);
+          const fileRes = client.fileFromSync(filePath);
+          assert.equal(fileRes.name, FILE_BASENAME);
+          assert.equal(await fileRes.text(), FILE_CONTENT);
+          assert.equal(String(fileRes), '[object File]');
+        }));
+    });
+
     describe('getPreviousUuidOrUploadXpi', () => {
       it('calls doUploadSubmit if previous hash is different to current', async () => {
         const oldHash = 'some-hash';
