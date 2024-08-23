@@ -22,8 +22,8 @@ export class ConsoleStream {
     this.verbose = true;
   }
 
-  write(json, { localProcess = process } = {}) {
-    const packet = typeof json === 'string' ? JSON.parse(json) : json;
+  write(jsonString, { localProcess = process } = {}) {
+    const packet = JSON.parse(jsonString);
     const thisLevel = this.verbose
       ? logLevels.values.trace
       : logLevels.values.info;

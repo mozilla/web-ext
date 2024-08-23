@@ -23,12 +23,12 @@ describe('logger', () => {
 
   describe('ConsoleStream', () => {
     function packet(overrides) {
-      return {
+      return JSON.stringify({
         name: 'some name',
         msg: 'some messge',
         level: logLevels.values.info,
         ...overrides,
-      };
+      });
     }
 
     function fakeProcess() {
@@ -52,13 +52,11 @@ describe('logger', () => {
     it('logs names in verbose mode', () => {
       const log = new ConsoleStream({ verbose: true });
       assert.equal(
-        log.format(
-          packet({
-            name: 'foo',
-            msg: 'some message',
-            level: logLevels.values.debug,
-          }),
-        ),
+        log.format({
+          name: 'foo',
+          msg: 'some message',
+          level: logLevels.values.debug,
+        }),
         '[foo][debug] some message\n',
       );
     });
@@ -66,7 +64,7 @@ describe('logger', () => {
     it('does not log names in non-verbose mode', () => {
       const log = new ConsoleStream({ verbose: false });
       assert.equal(
-        log.format(packet({ name: 'foo', msg: 'some message' })),
+        log.format({ name: 'foo', msg: 'some message' }),
         'some message\n',
       );
     });
