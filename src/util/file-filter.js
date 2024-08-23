@@ -1,6 +1,6 @@
 import path from 'path';
 
-import {isMatch} from 'matcher';
+import { isMatch } from 'matcher';
 
 import { createLogger } from './logger.js';
 
