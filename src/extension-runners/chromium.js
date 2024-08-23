@@ -3,10 +3,9 @@
  * in a Chromium-based browser instance.
  */
 
+import fs from 'fs/promises';
 import path from 'path';
 
-import fs from 'fs-extra';
-import { mkdirp as asyncMkdirp } from 'mkdirp';
 import {
   Launcher as ChromeLauncher,
   launch as defaultChromiumLaunch,
@@ -179,12 +178,13 @@ export class ChromiumExtensionRunner {
 
       if (userDataDir && profileDirName) {
         // copy profile dir to this temp user data dir.
-        await fs.copy(
+        await fs.cp(
           path.join(userDataDir, profileDirName),
           path.join(tmpDirPath, profileDirName),
+          { recursive: true },
         );
       } else if (userDataDir) {
-        await fs.copy(userDataDir, tmpDirPath);
+        await fs.cp(userDataDir, tmpDirPath, { recursive: true });
       }
       userDataDir = tmpDirPath;
     }
@@ -273,7 +273,7 @@ export class ChromiumExtensionRunner {
 
     log.debug(`Creating reload-manager-extension in ${extPath}`);
 
-    await asyncMkdirp(extPath);
+    await fs.mkdir(extPath, { recursive: true });
 
     await fs.writeFile(
       path.join(extPath, 'manifest.json'),
