@@ -8,8 +8,6 @@ import { assert, expect } from 'chai';
 import JSZip from 'jszip';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
-// eslint-disable-next-line no-shadow -- Testing sub-100 Responses, impossible with native
-import { File, Response } from 'node-fetch';
 
 import { AMO_BASE_URL } from '../../../src/program.js';
 import Client, {
@@ -18,12 +16,28 @@ import Client, {
   saveIdToFile,
   saveUploadUuidToFile,
   signAddon,
+
+  // eslint-disable-next-line no-shadow -- Not actually available under Node 20. Use global once possible.
+  FileBlob as File,
 } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
 
 class JSONResponse extends Response {
   constructor(data, status) {
     super(JSON.stringify(data), { status });
+  }
+}
+
+// Used to test responses with status < 100 (nodejs native constructor
+// enforces status to be in the 200-599 range and throws if it is not).
+class BadResponse extends Response {
+  constructor(data, fakeStatus) {
+    super(data);
+    this.fakeStatus = fakeStatus;
+  }
+
+  get status() {
+    return this.fakeStatus;
   }
 }
 
@@ -42,6 +56,9 @@ const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
   for (let i = 0; i < responses.length; i++) {
     const { body, status } = responses[i];
     stubMatcher.onCall(i).callsFake(async () => {
+      if (status < 200) {
+        return new BadResponse(body, status);
+      }
       if (typeof body === 'string') {
         return new Response(body, { status });
       }
