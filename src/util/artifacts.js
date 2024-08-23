@@ -1,7 +1,5 @@
 import fs from 'fs/promises';
 
-import { mkdirp as defaultAsyncMkdirp } from 'mkdirp';
-
 import { UsageError, isErrorWithCode } from '../errors.js';
 import { createLogger } from './logger.js';
 
@@ -12,7 +10,7 @@ const defaultAsyncFsAccess = fs.access.bind(fs);
 export async function prepareArtifactsDir(
   artifactsDir,
   {
-    asyncMkdirp = defaultAsyncMkdirp,
+    asyncMkdirp = (dirPath) => fs.mkdir(dirPath, { recursive: true }),
     asyncFsAccess = defaultAsyncFsAccess,
   } = {},
 ) {
