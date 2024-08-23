@@ -1,9 +1,8 @@
+import { basename } from 'path';
 import { createHash } from 'crypto';
-import { createWriteStream, promises as fsPromises } from 'fs';
+import { createWriteStream, promises as fsPromises, readFileSync } from 'fs';
 import { promises as streamPromises } from 'stream';
 
-// eslint-disable-next-line no-shadow
-import fetch, { FormData, fileFromSync } from 'node-fetch';
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
 import { HttpsProxyAgent } from 'https-proxy-agent';
@@ -14,6 +13,29 @@ import { createLogger } from './../util/logger.js';
 const log = createLogger(import.meta.url);
 
 export const defaultAsyncFsReadFile = fsPromises.readFile;
+
+// Used by fileFromSync method to make sure the form-data entry will
+// include a filename derived from the file path.
+//
+// TODO: Get rid of this hack when we will bump the web-ext nodejs
+// version required to nodejs v20 (where the native File constructor
+// exists).
+export class FileBlob extends Blob {
+  #name = '';
+
+  constructor(fileBits, fileName, options) {
+    super(fileBits, options);
+    this.#name = String(fileName);
+  }
+
+  get name() {
+    return this.#name;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'File';
+  }
+}
 
 export class JwtApiAuth {
   #apiKey;
@@ -88,8 +110,13 @@ export default class Client {
     this.userAgentString = userAgentString;
   }
 
-  fileFromSync(path) {
-    return fileFromSync(path);
+  fileFromSync(filePath) {
+    // create a File blob from a file path, and ensure it to have the file path basename
+    // as the associated filename, the AMO server API will be checking it on the form-data
+    // submitted and fail with the error message:
+    // "Unsupported file type, please upload a supported file (.crx, .xpi, .zip)."
+    const fileData = readFileSync(filePath);
+    return new FileBlob([fileData], basename(filePath));
   }
 
   nodeFetch(url, { method, headers, body, agent }) {

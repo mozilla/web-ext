@@ -72,7 +72,6 @@
     "jose": "5.6.3",
     "jszip": "3.10.1",
     "multimatch": "6.0.0",
-    "node-fetch": "3.3.2",
     "node-notifier": "10.0.1",
     "open": "9.1.0",
     "parse-json": "7.1.1",

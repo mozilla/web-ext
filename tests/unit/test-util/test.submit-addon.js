@@ -8,8 +8,6 @@ import { assert, expect } from 'chai';
 import JSZip from 'jszip';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
-// eslint-disable-next-line no-shadow
-import { File, FormData, Response } from 'node-fetch';
 
 import { AMO_BASE_URL } from '../../../src/program.js';
 import Client, {
@@ -18,12 +16,28 @@ import Client, {
   saveIdToFile,
   saveUploadUuidToFile,
   signAddon,
+
+  // eslint-disable-next-line no-shadow -- Not actually available under Node 20. Use global once possible.
+  FileBlob as File,
 } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
 
 class JSONResponse extends Response {
   constructor(data, status) {
     super(JSON.stringify(data), { status });
+  }
+}
+
+// Used to test responses with status < 100 (nodejs native constructor
+// enforces status to be in the 200-599 range and throws if it is not).
+class BadResponse extends Response {
+  constructor(data, fakeStatus) {
+    super(data);
+    this.fakeStatus = fakeStatus;
+  }
+
+  get status() {
+    return this.fakeStatus;
   }
 }
 
@@ -42,6 +56,9 @@ const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
   for (let i = 0; i < responses.length; i++) {
     const { body, status } = responses[i];
     stubMatcher.onCall(i).callsFake(async () => {
+      if (status < 200) {
+        return new BadResponse(body, status);
+      }
       if (typeof body === 'string') {
         return new Response(body, { status });
       }
@@ -340,6 +357,21 @@ describe('util.submit-addon', () => {
       const extraBaseUrl = new URL(`${cleanUrl}?#`);
       const client = new Client({ ...clientDefaults, baseUrl: extraBaseUrl });
       assert.equal(client.apiUrl.href, new URL(`${cleanUrl}/addons/`).href);
+    });
+
+    describe('fileFromSync', () => {
+      it('should return a File with name set to the file path basename', () =>
+        withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const FILE_BASENAME = 'testfile.txt';
+          const FILE_CONTENT = 'somecontent';
+          const filePath = path.join(tmpDir.path(), FILE_BASENAME);
+          await fsPromises.writeFile(filePath, FILE_CONTENT);
+          const fileRes = client.fileFromSync(filePath);
+          assert.equal(fileRes.name, FILE_BASENAME);
+          assert.equal(await fileRes.text(), FILE_CONTENT);
+          assert.equal(String(fileRes), '[object File]');
+        }));
     });
 
     describe('getPreviousUuidOrUploadXpi', () => {
