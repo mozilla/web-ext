@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 
-import chai from 'chai';
+import { assert } from 'chai';
 import { afterEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
 
@@ -35,8 +35,6 @@ const fakeUnixSocketFiles = `
 ${fakeSocketFilePrefix} /dev/socket/mdns
 ${fakeSocketFilePrefix}  ${fakeRDPUnixSocketFile}
 `;
-
-const { assert } = chai;
 
 function getFakeADBKit({ adbClient = {}, adbkitUtil = {}, adbDevice = {} }) {
   const fakeTransfer = new EventEmitter();
