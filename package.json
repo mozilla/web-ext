@@ -115,7 +115,7 @@
     "pretty-quick": "4.0.0",
     "prettyjson": "1.2.5",
     "shelljs": "0.8.5",
-    "sinon": "19.0.0",
+    "sinon": "19.0.2",
     "testdouble": "3.20.2",
     "yauzl": "2.10.0"
   },
