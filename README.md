@@ -222,6 +222,8 @@ This platform stabilized in
 [Firefox 48](https://blog.mozilla.org/addons/2016/04/29/webextensions-in-firefox-48/)
 which was released in April of 2016.
 
+**Note:** Due to changes to the addons platform in Summer 2024, newly published extensions will only work on Firefox 58 and later.
+
 ## Get Involved
 
 Hi! This tool is under active development. To get involved you can watch the repo,
