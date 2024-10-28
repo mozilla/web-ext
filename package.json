@@ -88,7 +88,7 @@
     "zip-dir": "2.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "7.25.7",
+    "@babel/cli": "7.25.9",
     "@babel/core": "7.26.0",
     "@babel/eslint-parser": "7.25.9",
     "@babel/preset-env": "7.26.0",
