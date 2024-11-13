@@ -19,7 +19,11 @@ import fileExists from '../util/file-exists.js';
 
 const log = createLogger(import.meta.url);
 
-const EXCLUDED_CHROME_FLAGS = ['--disable-extensions', '--mute-audio'];
+const EXCLUDED_CHROME_FLAGS = [
+  '--disable-extensions',
+  '--mute-audio',
+  '--disable-component-update',
+];
 
 export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
   (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag),

@@ -52,7 +52,6 @@ describe('util/extension-runners/chromium', async () => {
       '--disable-features=Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,CalculateNativeWinOcclusion,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,AutofillServerCommunication,PrivacySandboxSettings4',
       '--disable-component-extensions-with-background-pages',
       '--disable-background-networking',
-      '--disable-component-update',
       '--disable-client-side-phishing-detection',
       '--disable-sync',
       '--metrics-recording-only',
