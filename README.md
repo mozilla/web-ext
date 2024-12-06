@@ -194,6 +194,24 @@ webExtLogger.consoleStream.makeVerbose();
 webExt.cmd.run({ sourceDir: './src' }, { shouldExitProgram: false });
 ```
 
+You can also access the function for signing directly if you need to provide custom options.
+NOTE: There is limited support for this API, the recommended path is via webExt.cmd.sign():
+
+```js
+import { signAddon } from 'web-ext/util/submit-addon';
+
+signAddon({
+  apiKey,
+  apiSecret,
+  amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
+  id: 'extension-id@example.com',
+  xpiPath: pathToExtension,
+  savedUploadUuidPath: '.amo-upload-uuid',
+  channel: 'unlisted',
+  userAgentString: 'web-ext/0.2',
+});
+```
+
 You can also disable the use of standard input:
 
 ```js
