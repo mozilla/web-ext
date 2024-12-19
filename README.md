@@ -123,7 +123,8 @@ need to relink it.
 
 ## Using web-ext in NodeJS code
 
-**Note:** There is limited support for this API.
+**Note:** web-ext is primarily a command line tool and there is limited support for direct use of its internal API. Backward incompatible changes
+may be introduced in minor and patch version updates to the web-ext npm package.
 
 Aside from [using web-ext on the command line][web-ext-user-docs], you may wish to execute `web-ext` in NodeJS code.
 
@@ -194,24 +195,6 @@ webExtLogger.consoleStream.makeVerbose();
 webExt.cmd.run({ sourceDir: './src' }, { shouldExitProgram: false });
 ```
 
-You can also access the function for signing directly if you need to provide custom options.
-NOTE: There is limited support for this API, the recommended path is via webExt.cmd.sign():
-
-```js
-import { signAddon } from 'web-ext/util/submit-addon';
-
-signAddon({
-  apiKey,
-  apiSecret,
-  amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
-  id: 'extension-id@example.com',
-  xpiPath: pathToExtension,
-  savedUploadUuidPath: '.amo-upload-uuid',
-  channel: 'unlisted',
-  userAgentString: 'web-ext/0.2',
-});
-```
-
 You can also disable the use of standard input:
 
 ```js
@@ -231,6 +214,40 @@ webExt.cmd.run(
     shouldExitProgram: false,
   },
 );
+```
+
+You can also use `webExt.cmd.sign()` to request a signed xpi for a given extension source directory:
+
+```js
+webExt.cmd.sign({
+  // NOTE: Please set userAgentString to a custom one of your choice.
+  userAgentString: 'YOUR-CUSTOM-USERAGENT',
+  apiKey,
+  apiSecret,
+  amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
+  sourceDir: ...,
+  channel: 'unlisted',
+  ...
+});
+```
+
+You can also access the internal signing module directly if you need to submit an xpi file without also building it.
+**Note:** submit-addon is internal web-ext module, using the webExt.cmd.sign() is the recommended API method.
+
+```js
+import { signAddon } from 'web-ext/util/submit-addon';
+
+signAddon({
+  // NOTE: Please set userAgentString to a custom one of your choice.
+  userAgentString: 'YOUR-CUSTOM-USERAGENT',
+  apiKey,
+  apiSecret,
+  amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
+  id: 'extension-id@example.com',
+  xpiPath: pathToExtension,
+  savedUploadUuidPath: '.amo-upload-uuid',
+  channel: 'unlisted',
+});
 ```
 
 ## Should I Use It?
