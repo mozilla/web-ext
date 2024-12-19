@@ -1249,6 +1249,27 @@ describe('util.submit-addon', () => {
         sinon.assert.calledOnce(nodeFetchStub);
       });
 
+      it('fallback to userAgentString "web-ext-lib" if not set', async () => {
+        const clientNoUserAgent = new Client({
+          ...clientDefaults,
+          userAgentString: undefined,
+        });
+
+        const clientNoUserAgentFetchStub = sinon.stub(
+          clientNoUserAgent,
+          'nodeFetch',
+        );
+        clientNoUserAgentFetchStub.resolves(new JSONResponse({}, 200));
+
+        await clientNoUserAgent.fetch(baseUrl, 'POST');
+
+        assert.equal(
+          clientNoUserAgentFetchStub.firstCall.args[1].headers['User-Agent'],
+          'web-ext-lib',
+        );
+        sinon.assert.calledOnce(clientNoUserAgentFetchStub);
+      });
+
       it('uses a specified proxy', async () => {
         nodeFetchStub.resolves(new JSONResponse({}, 200));
         const apiProxyHost = 'proxy.url';
