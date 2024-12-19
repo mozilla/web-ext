@@ -91,7 +91,7 @@ export default class Client {
     approvalCheckInterval = 1000,
     approvalCheckTimeout = 900000, // 15 minutes.
     downloadDir = process.cwd(),
-    userAgentString,
+    userAgentString = 'web-ext-lib',
   }) {
     this.apiAuth = apiAuth;
     if (apiProxy) {
@@ -478,7 +478,7 @@ export async function signAddon({
   savedUploadUuidPath,
   metaDataJson = {},
   submissionSource,
-  userAgentString,
+  userAgentString = 'web-ext-lib',
   SubmitClient = Client,
   ApiAuthClass = JwtApiAuth,
 }) {
