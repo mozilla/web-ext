@@ -635,7 +635,7 @@ Example: $0 --help run.
       },
       reload: {
         describe:
-          'Reload the extension when source files change.' +
+          'Reload the extension when source files change. ' +
           'Disable with --no-reload.',
         demandOption: false,
         default: true,
