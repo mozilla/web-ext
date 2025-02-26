@@ -70,7 +70,7 @@
     "firefox-profile": "4.7.0",
     "fx-runner": "1.4.0",
     "https-proxy-agent": "^7.0.0",
-    "jose": "5.9.6",
+    "jose": "6.0.7",
     "jszip": "3.10.1",
     "multimatch": "6.0.0",
     "node-notifier": "10.0.1",
