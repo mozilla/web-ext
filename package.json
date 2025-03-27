@@ -75,7 +75,7 @@
     "multimatch": "6.0.0",
     "node-notifier": "10.0.1",
     "open": "9.1.0",
-    "parse-json": "7.1.1",
+    "parse-json": "8.2.0",
     "pino": "9.4.0",
     "promise-toolbox": "0.21.0",
     "source-map-support": "0.5.21",
