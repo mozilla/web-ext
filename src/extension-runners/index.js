@@ -307,6 +307,8 @@ export function defaultReloadStrategy(
 
       log.info('\nExiting web-ext on user request');
       extensionRunner.exit();
+      // Release stdin to the parent process
+      process.stdin.destroy();
     });
   }
 }
