@@ -61,7 +61,7 @@
   "dependencies": {
     "@babel/runtime": "7.27.0",
     "@devicefarmer/adbkit": "3.3.8",
-    "addons-linter": "7.9.0",
+    "addons-linter": "7.11.0",
     "camelcase": "8.0.0",
     "chrome-launcher": "1.1.2",
     "debounce": "1.2.1",
