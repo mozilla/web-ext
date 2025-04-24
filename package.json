@@ -74,7 +74,7 @@
     "jszip": "3.10.1",
     "multimatch": "6.0.0",
     "node-notifier": "10.0.1",
-    "open": "9.1.0",
+    "open": "10.1.1",
     "parse-json": "7.1.1",
     "pino": "9.6.0",
     "promise-toolbox": "0.21.0",
