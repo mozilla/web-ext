@@ -207,7 +207,6 @@ export class ChromiumExtensionRunner {
     }
 
     this.chromiumInstance = await this.chromiumLaunch({
-      enableExtensions: true,
       chromePath: chromiumBinary,
       chromeFlags,
       startingUrl,
