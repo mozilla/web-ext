@@ -72,6 +72,10 @@ describe('util/extension-runners/chromium', async () => {
     ];
 
     assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
+
+    // Double-checking that we never include --disable-extensions, because that
+    // prevents extensions from loading.
+    assert.notInclude(DEFAULT_CHROME_FLAGS, '--disable-extensions');
   });
 
   it('installs and runs the extension', async () => {
@@ -86,7 +90,6 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
@@ -299,7 +302,6 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: '/my/custom/chrome-bin',
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
@@ -324,7 +326,6 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
@@ -354,7 +355,6 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
@@ -411,7 +411,6 @@ describe('util/extension-runners/chromium', async () => {
       sinon.assert.calledOnce(params.chromiumLaunch);
       sinon.assert.calledWithMatch(params.chromiumLaunch, {
         ignoreDefaultFlags: true,
-        enableExtensions: true,
         chromePath: undefined,
         userDataDir: usedTempPath,
         chromeFlags: [
@@ -454,7 +453,6 @@ describe('util/extension-runners/chromium', async () => {
         sinon.assert.calledOnce(params.chromiumLaunch);
         sinon.assert.calledWithMatch(params.chromiumLaunch, {
           ignoreDefaultFlags: true,
-          enableExtensions: true,
           chromePath: undefined,
           userDataDir: path.join(tmpPath, 'userDataDir'),
           chromeFlags: [
@@ -498,7 +496,6 @@ describe('util/extension-runners/chromium', async () => {
       sinon.assert.calledOnce(params.chromiumLaunch);
       sinon.assert.calledWithMatch(params.chromiumLaunch, {
         ignoreDefaultFlags: true,
-        enableExtensions: true,
         chromePath: undefined,
         userDataDir: path.join(tmpPath, 'userDataDir'),
         chromeFlags: [
@@ -595,7 +592,6 @@ describe('util/extension-runners/chromium', async () => {
         sinon.assert.calledOnce(params.chromiumLaunch);
         sinon.assert.calledWithMatch(params.chromiumLaunch, {
           ignoreDefaultFlags: true,
-          enableExtensions: true,
           chromePath: undefined,
           userDataDir: usedTempPath,
           chromeFlags: [
