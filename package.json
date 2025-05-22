@@ -59,7 +59,7 @@
     "opera"
   ],
   "dependencies": {
-    "@babel/runtime": "7.27.0",
+    "@babel/runtime": "7.27.1",
     "@devicefarmer/adbkit": "3.3.8",
     "addons-linter": "7.11.0",
     "camelcase": "8.0.0",
