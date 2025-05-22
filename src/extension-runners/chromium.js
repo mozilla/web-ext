@@ -282,12 +282,12 @@ export class ChromiumExtensionRunner {
     await fs.writeFile(
       path.join(extPath, 'manifest.json'),
       JSON.stringify({
-        manifest_version: 2,
+        manifest_version: 3,
         name: 'web-ext Reload Manager Extension',
         version: '1.0',
         permissions: ['management', 'tabs'],
         background: {
-          scripts: ['bg.js'],
+          service_worker: 'bg.js',
         },
       }),
     );
@@ -316,7 +316,7 @@ export class ChromiumExtensionRunner {
         await setEnabled(extensionId, true);
       }
 
-      const ws = new window.WebSocket(
+      const ws = new WebSocket(
         "ws://${wssInfo.address}:${wssInfo.port}");
 
       ws.onmessage = async (evt) => {
