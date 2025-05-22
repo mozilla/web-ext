@@ -93,7 +93,7 @@
     "@babel/core": "7.27.1",
     "@babel/eslint-parser": "7.27.0",
     "@babel/preset-env": "7.27.2",
-    "@babel/register": "7.25.9",
+    "@babel/register": "7.27.1",
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
     "babel-plugin-istanbul": "7.0.0",
