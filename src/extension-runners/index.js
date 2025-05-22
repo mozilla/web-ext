@@ -255,6 +255,9 @@ export function defaultReloadStrategy(
   extensionRunner.registerCleanup(() => {
     watcher.close();
     if (allowInput) {
+      if (isTTY(stdin)) {
+        setRawMode(stdin, false);
+      }
       stdin.pause();
     }
   });
