@@ -63,7 +63,7 @@
     "@devicefarmer/adbkit": "3.3.8",
     "addons-linter": "7.11.0",
     "camelcase": "8.0.0",
-    "chrome-launcher": "1.1.2",
+    "chrome-launcher": "1.2.0",
     "debounce": "1.2.1",
     "decamelize": "6.0.0",
     "es6-error": "4.1.1",
