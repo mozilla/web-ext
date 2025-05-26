@@ -34,6 +34,7 @@ export default async function run(
     noReload = false,
     preInstall = false,
     sourceDir,
+    verbose = false,
     watchFile,
     watchIgnored,
     startUrl,
@@ -188,6 +189,7 @@ export default async function run(
   if (target && target.includes('chromium')) {
     const chromiumRunnerParams = {
       ...commonRunnerParams,
+      verbose,
       chromiumBinary,
       chromiumProfile,
     };

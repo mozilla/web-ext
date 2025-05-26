@@ -211,6 +211,7 @@ export class ChromiumExtensionRunner {
       chromeFlags,
       startingUrl,
       userDataDir,
+      logLevel: this.params.verbose ? 'verbose' : 'silent',
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
     });

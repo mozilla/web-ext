@@ -1,3 +1,4 @@
+import { createServer } from 'http';
 import path from 'path';
 import { spawn } from 'child_process';
 import { promisify } from 'util';
@@ -29,6 +30,13 @@ export const fakeFirefoxPath = path.join(
 export const fakeServerPath = path.join(
   functionalTestsDir,
   'fake-amo-server.js',
+);
+
+export const chromeExtPath = path.join(fixturesDir, 'chrome-extension-mv3');
+// NOTE: Depends on preload_on_windows.cjs to load this!
+export const fakeChromePath = path.join(
+  functionalTestsDir,
+  'fake-chrome-binary.js',
 );
 
 // withTempAddonDir helper
@@ -80,7 +88,21 @@ export function execWebExt(argv, spawnOptions) {
       ...process.env,
       ...spawnOptions.env,
     };
+  } else {
+    spawnOptions.env = { ...process.env };
   }
+
+  if (process.platform === 'win32') {
+    // See preload_on_windows.cjs for an explanation.
+    const preloadPath = path.join(functionalTestsDir, 'preload_on_windows.cjs');
+    // NODE_OPTIONS allows values to be quoted, and anything within to be escaped
+    // with a backslash: https://nodejs.org/api/cli.html#node_optionsoptions
+    // https://github.com/nodejs/node/blob/411495ee9326096e88d12d3f3efae161cbd19efd/src/node_options.cc#L1717-L1741
+    const escapedAbsolutePath = preloadPath.replace(/\\|"/g, '\\$&');
+    spawnOptions.env.NODE_OPTIONS ||= '';
+    spawnOptions.env.NODE_OPTIONS += ` --require "${escapedAbsolutePath}"`;
+  }
+
   const spawnedProcess = spawn(
     process.execPath,
     [webExt, ...argv],
@@ -104,4 +126,75 @@ export function execWebExt(argv, spawnOptions) {
   });
 
   return { argv, waitForExit, spawnedProcess };
+}
+
+export function monitorOutput(spawnedProcess) {
+  const callbacks = new Set();
+  let outputData = '';
+  function checkCallbacks() {
+    for (const callback of callbacks) {
+      const { outputTestFunc, resolve } = callback;
+      if (outputTestFunc(outputData)) {
+        callbacks.delete(callback);
+        resolve();
+      }
+    }
+  }
+  spawnedProcess.stdout.on('data', (data) => {
+    outputData += data;
+    checkCallbacks();
+  });
+
+  const waitUntilOutputMatches = (outputTestFunc) => {
+    return new Promise((resolve) => {
+      callbacks.add({ outputTestFunc, resolve });
+      checkCallbacks();
+    });
+  };
+
+  return { waitUntilOutputMatches };
+}
+
+// Test server to receive request from chrome-extension-mv3, once loaded.
+export async function startServerReceivingHelloFromExtension() {
+  let requestCount = 0;
+  let lastSeenUserAgent;
+  let resolveWaitingForHelloFromExtension;
+  const server = createServer((req, res) => {
+    if (req.url !== '/hello_from_extension') {
+      res.writeHead(404);
+      res.end('test server only handles /hello_from_extension');
+      return;
+    }
+    res.writeHead(200);
+    res.end('test server received /hello_from_extension');
+    lastSeenUserAgent = req.headers['user-agent'];
+    ++requestCount;
+    resolveWaitingForHelloFromExtension?.();
+  });
+  await new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => resolve());
+  });
+  const testServerHost = `127.0.0.1:${server.address().port}`;
+  return {
+    get requestCount() {
+      return requestCount;
+    },
+    get lastSeenUserAgent() {
+      return lastSeenUserAgent;
+    },
+    getHostResolverRulesArgForChromeBinary() {
+      // chrome-extension-mv3 sends requests to http://localhost:1337, but our
+      // test server uses a free port to make sure that it does not conflict
+      // with an existing local server. Pass --host-resolver-rules to Chrome so
+      // that it sends requests targeting localhost:1337 to this test server.
+      return `--host-resolver-rules=MAP localhost:1337 ${testServerHost}`;
+    },
+    waitForHelloFromExtension: () => {
+      return new Promise((resolve) => {
+        resolveWaitingForHelloFromExtension = resolve;
+      });
+    },
+    close: () => new Promise((resolve) => server.close(() => resolve())),
+  };
 }

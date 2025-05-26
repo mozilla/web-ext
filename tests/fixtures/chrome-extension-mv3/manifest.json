@@ -1,0 +1,10 @@
+{
+    "name": "Test extension opens tab on install/reload",
+    "description": "Opens localhost:1337 tab from runtime.onInstalled. Extension ID in Chrome is hgobbjbpnmemikbdbflmolpneekpflab",
+    "version": "1",
+    "manifest_version": 3,
+    "background": {
+        "service_worker": "background.js"
+    },
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmr/8tpL+H1zEIEzrOhC8tkheWH7N7FOfiSnLq9D8Uja+b4W69rPIatslIPd4a53IgLT5qv1UZz03kETaKWDYhxoWbaKWiPtJcHoWKAROZ4Ydk2eC7jDcCKYkhXSgTpDzZBhHkyKZoh10O0AEYeJ+xfCmUJT3PT/CzxrSI4rjXFOBie5FMTgjusLwjiwVSBnO9haE7HqwekGVFvixG5Ao6rXRaZx+mm2+7PLTgMSxaXk1OqBtKmz4da67zZGrnHjiz4a0JHkyRuNkyamT5HFjD9neAWjgSwWD5yXKgJKkwGHePsq2WgSZlWIaKFafcbnoIr91hk5+mRCYVm2l/wgqvwIDAQAB"
+}
