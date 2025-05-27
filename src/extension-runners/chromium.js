@@ -10,7 +10,6 @@ import {
   Launcher as ChromeLauncher,
   launch as defaultChromiumLaunch,
 } from 'chrome-launcher';
-import WebSocket, { WebSocketServer } from 'ws';
 
 import { createLogger } from '../util/logger.js';
 import { TempDir } from '../util/temp-dir.js';
@@ -37,8 +36,6 @@ export class ChromiumExtensionRunner {
   params;
   chromiumInstance;
   chromiumLaunch;
-  reloadManagerExtension;
-  wss;
   exiting;
   _promiseSetupDone;
 
@@ -110,32 +107,9 @@ export class ChromiumExtensionRunner {
    * Setup the Chromium Profile and run a Chromium instance.
    */
   async setupInstance() {
-    // Start a websocket server on a free localhost TCP port.
-    this.wss = await new Promise((resolve) => {
-      const server = new WebSocketServer(
-        // Use a ipv4 host so we don't need to escape ipv6 address
-        // https://github.com/mozilla/web-ext/issues/2331
-        { port: 0, host: '127.0.0.1', clientTracking: true },
-        // Wait the server to be listening (so that the extension
-        // runner can successfully retrieve server address and port).
-        () => resolve(server),
-      );
-    });
-
-    // Prevent unhandled socket error (e.g. when chrome
-    // is exiting, See https://github.com/websockets/ws/issues/1256).
-    this.wss.on('connection', function (socket) {
-      socket.on('error', (err) => {
-        log.debug(`websocket connection error: ${err}`);
-      });
-    });
-
-    // Create the extension that will manage the addon reloads
-    this.reloadManagerExtension = await this.createReloadManagerExtension();
-
     // Start chrome pointing it to a given profile dir
-    const extensions = [this.reloadManagerExtension]
-      .concat(this.params.extensions.map(({ sourceDir }) => sourceDir))
+    const extensions = this.params.extensions
+      .map(({ sourceDir }) => sourceDir)
       .join(',');
 
     const { chromiumBinary } = this.params;
@@ -226,113 +200,6 @@ export class ChromiumExtensionRunner {
     });
   }
 
-  async wssBroadcast(data) {
-    return new Promise((resolve) => {
-      const clients = this.wss ? new Set(this.wss.clients) : new Set();
-
-      function cleanWebExtReloadComplete() {
-        const client = this;
-        client.removeEventListener('message', webExtReloadComplete);
-        client.removeEventListener('close', cleanWebExtReloadComplete);
-        clients.delete(client);
-      }
-
-      const webExtReloadComplete = async (message) => {
-        const msg = JSON.parse(message.data);
-
-        if (msg.type === 'webExtReloadExtensionComplete') {
-          for (const client of clients) {
-            cleanWebExtReloadComplete.call(client);
-          }
-          resolve();
-        }
-      };
-
-      for (const client of clients) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.addEventListener('message', webExtReloadComplete);
-          client.addEventListener('close', cleanWebExtReloadComplete);
-
-          client.send(JSON.stringify(data));
-        } else {
-          clients.delete(client);
-        }
-      }
-
-      if (clients.size === 0) {
-        resolve();
-      }
-    });
-  }
-
-  async createReloadManagerExtension() {
-    const tmpDir = new TempDir();
-    await tmpDir.create();
-    this.registerCleanup(() => tmpDir.remove());
-
-    const extPath = path.join(
-      tmpDir.path(),
-      `reload-manager-extension-${Date.now()}`,
-    );
-
-    log.debug(`Creating reload-manager-extension in ${extPath}`);
-
-    await fs.mkdir(extPath, { recursive: true });
-
-    await fs.writeFile(
-      path.join(extPath, 'manifest.json'),
-      JSON.stringify({
-        manifest_version: 2,
-        name: 'web-ext Reload Manager Extension',
-        version: '1.0',
-        permissions: ['management', 'tabs'],
-        background: {
-          scripts: ['bg.js'],
-        },
-      }),
-    );
-
-    const wssInfo = this.wss.address();
-
-    const bgPage = `(function bgPage() {
-      async function getAllDevExtensions() {
-        const allExtensions = await new Promise(
-          r => chrome.management.getAll(r));
-
-        return allExtensions.filter((extension) => {
-          return extension.enabled &&
-            extension.installType === "development" &&
-            extension.id !== chrome.runtime.id;
-        });
-      }
-
-      const setEnabled = (extensionId, value) =>
-        chrome.runtime.id == extensionId ?
-        new Promise.resolve() :
-        new Promise(r => chrome.management.setEnabled(extensionId, value, r));
-
-      async function reloadExtension(extensionId) {
-        await setEnabled(extensionId, false);
-        await setEnabled(extensionId, true);
-      }
-
-      const ws = new window.WebSocket(
-        "ws://${wssInfo.address}:${wssInfo.port}");
-
-      ws.onmessage = async (evt) => {
-        const msg = JSON.parse(evt.data);
-        if (msg.type === 'webExtReloadAllExtensions') {
-          const devExtensions = await getAllDevExtensions();
-          await Promise.all(devExtensions.map(ext => reloadExtension(ext.id)));
-          ws.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
-        }
-      };
-    })()`;
-
-    await fs.writeFile(path.join(extPath, 'bg.js'), bgPage);
-    return extPath;
-  }
-
   /**
    * Reloads all the extensions, collect any reload error and resolves to
    * an array composed by a single ExtensionRunnerReloadResult object.
@@ -340,9 +207,7 @@ export class ChromiumExtensionRunner {
   async reloadAllExtensions() {
     const runnerName = this.getName();
 
-    await this.wssBroadcast({
-      type: 'webExtReloadAllExtensions',
-    });
+    // TODO: Restore reload functionality using the remote debugging protocol.
 
     process.stdout.write(
       `\rLast extension reload: ${new Date().toTimeString()}`,
@@ -392,21 +257,6 @@ export class ChromiumExtensionRunner {
     if (this.chromiumInstance) {
       await this.chromiumInstance.kill();
       this.chromiumInstance = null;
-    }
-
-    if (this.wss) {
-      // Close all websocket clients, closing the WebSocketServer
-      // does not terminate the existing connection and it wouldn't
-      // resolve until all of the existing connections are closed.
-      for (const wssClient of this.wss?.clients || []) {
-        if (wssClient.readyState === WebSocket.OPEN) {
-          wssClient.terminate();
-        }
-      }
-      await new Promise((resolve) =>
-        this.wss ? this.wss.close(resolve) : resolve(),
-      );
-      this.wss = null;
     }
 
     // Call all the registered cleanup callbacks.
