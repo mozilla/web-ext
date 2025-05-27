@@ -74,6 +74,8 @@ for (const arg of process.argv) {
   }
 }
 
+const loadedFakeExtensions = new Set();
+
 async function fakeLoadChromExtension(dir) {
   process.stderr.write(`[DEBUG] Loading Chrome extension from ${dir}\n`);
 
@@ -116,6 +118,7 @@ async function fakeLoadChromExtension(dir) {
       }
     });
   });
+  loadedFakeExtensions.add(dir);
   return { extensionId: 'hgobbjbpnmemikbdbflmolpneekpflab' };
 }
 
@@ -186,7 +189,60 @@ async function handleChromeDevtoolsProtocolMessage(rawRequest) {
     return { id, result: { id: extensionId } };
   }
 
+  const maybeRes = await simulateResponsesForReloadViaDeveloperPrivate(request);
+  if (maybeRes) {
+    return maybeRes;
+  }
+
   return { id, error: { code: -32601, message: `'${method}' wasn't found` } };
+}
+
+let isAttachingToTarget;
+async function simulateResponsesForReloadViaDeveloperPrivate(request) {
+  // Supports reloadAllExtensionsFallbackForChrome125andEarlier. This is NOT
+  // the full real protocol response; just enough for the simulation to work.
+  // There is no validation whatsoever, since the code is designed for old
+  // Chrome versions, and not going to be updated / maintained in the future.
+  const { id } = request;
+
+  if (request.method === 'Target.getTargets') {
+    return { id, result: { targetInfos: [{ url: 'chrome://newtab' }] } };
+  }
+
+  if (request.method === 'Target.createTarget') {
+    return { id, result: { targetId: 'FAKE_TARGET_ID' } };
+  }
+
+  if (request.method === 'Target.attachToTarget') {
+    isAttachingToTarget = true;
+    return { id, result: { sessionId: 'FAKE_SESSION_ID' } };
+  }
+
+  if (request.method === 'Runtime.evaluate') {
+    if (!request.params.expression.includes('developerPrivate.reload')) {
+      return { id, error: { message: 'Unsupported fake code!' } };
+    }
+    // The actual code is more elaborate, but it is equivalent to looking up
+    // all extensions, reloading them, and returning the number of extensions.
+    // It is possible for the first execution to be too early, in which case
+    // the caller should retry.
+    if (isAttachingToTarget) {
+      isAttachingToTarget = false;
+      return { id, result: { result: { value: 'NOT_READY_PLEASE_RETRY' } } };
+    }
+    const extensionsToReload = Array.from(loadedFakeExtensions);
+    for (const dir of extensionsToReload) {
+      await fakeLoadChromExtension(dir);
+    }
+    return { id, result: { result: { value: extensionsToReload.length } } };
+  }
+
+  if (request.method === 'Target.closeTarget') {
+    return { id };
+  }
+
+  // Unrecognized methods - fall through to caller.
+  return null;
 }
 
 if (ARG_REMOTE_DEBUGGING_PIPE) {
@@ -229,11 +285,9 @@ if (ARG_REMOTE_DEBUGGING_PORT != null) {
 if (ARG_LOAD_EXTENSION) {
   if (TEST_SIMULATE_ENABLE_LOAD_EXTENSION) {
     for (const ext of ARG_LOAD_EXTENSION.split(',')) {
-      fakeLoadChromExtension(ext).catch((e) => {
-        // We have very limited support for loading extensions, ignore
-        // unsupported extensions (such as "web-ext Reload Manager Extension").
-        process.stderr.write(`Failed to load extension ${ext}: ${e}\n`);
-      });
+      // We have very limited support for loading extensions. The following
+      // may reject when an unsupported extension is encountered.
+      fakeLoadChromExtension(ext);
     }
   } else {
     process.stderr.write('--load-extension is not allowed\n');

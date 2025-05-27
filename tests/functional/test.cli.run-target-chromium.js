@@ -215,18 +215,11 @@ describe('web-ext run -t chromium', () => {
 
   describe('with auto-reload', () => {
     it('simulate Chrome 125 (--load-extension only)', async function () {
-      // Older web-ext versions support auto-reload with --load-extension.
-      // fake-chrome-binary does not support the helper extension that was
-      // bundled with previous versions of web-ext,
-      // "web-ext Reload Manager Extension",
-      // and therefore we do not support auto-reload.
-      await testWebExtRun({ expectReload: false, chromeVersion: 125 });
+      await testWebExtRun({ expectReload: true, chromeVersion: 125 });
     });
 
     it('simulate Chrome 126 (--load-extension or --enable-unsafe-extension-debugging)', async function () {
-      // fake-chrome-binary does not support the helper extension that backs
-      // the auto-reload feature via --load-extension.
-      await testWebExtRun({ expectReload: false, chromeVersion: 126 });
+      await testWebExtRun({ expectReload: true, chromeVersion: 126 });
     });
 
     it('simulate Chrome 137 (--enable-unsafe-extension-debugging only)', async function () {
@@ -237,8 +230,6 @@ describe('web-ext run -t chromium', () => {
     });
 
     it(`run real Chrome ${REAL_CHROME_PATH || ''}`, async function () {
-      // TODO: Restore auto-reload functionality.
-      this.skip();
       if (!process.env.TEST_WEBEXT_USE_REAL_CHROME) {
         this.skip();
       }

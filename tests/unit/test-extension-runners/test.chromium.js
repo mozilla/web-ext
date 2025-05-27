@@ -22,6 +22,10 @@ function prepareExtensionRunnerParams({ params } = {}) {
   const fakeChromeInstance = {
     process: new StubChildProcess(),
     kill: sinon.spy(async () => {}),
+    // This is not even close to the real thing, but enough to get the tests to
+    // pass. See tests/functional/test.cli.run-target-chromium.js for full
+    // coverage.
+    remoteDebuggingPipes: { incoming: { closed: true } },
   };
   const runnerParams = {
     extensions: [
@@ -88,6 +92,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
         '--load-extension=/fake/sourceDir',
       ],
       startingUrl: undefined,
@@ -195,6 +200,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: '/my/custom/chrome-bin',
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
         '--load-extension=/fake/sourceDir',
       ],
       startingUrl: undefined,
@@ -217,6 +223,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
         '--load-extension=/fake/sourceDir',
         'url2',
         'url3',
@@ -244,6 +251,7 @@ describe('util/extension-runners/chromium', async () => {
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
         '--load-extension=/fake/sourceDir',
         '--arg1',
         'arg2',
@@ -299,6 +307,7 @@ describe('util/extension-runners/chromium', async () => {
         userDataDir: usedTempPath,
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
+          '--remote-debugging-pipe',
           '--load-extension=/fake/sourceDir',
         ],
         startingUrl: undefined,
@@ -339,6 +348,7 @@ describe('util/extension-runners/chromium', async () => {
           userDataDir: path.join(tmpPath, 'userDataDir'),
           chromeFlags: [
             ...DEFAULT_CHROME_FLAGS,
+            '--remote-debugging-pipe',
             '--load-extension=/fake/sourceDir',
             '--profile-directory=profile',
           ],
@@ -380,6 +390,7 @@ describe('util/extension-runners/chromium', async () => {
         userDataDir: path.join(tmpPath, 'userDataDir'),
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
+          '--remote-debugging-pipe',
           '--load-extension=/fake/sourceDir',
           `--profile-directory=${profileDirName}`,
         ],
@@ -474,6 +485,7 @@ describe('util/extension-runners/chromium', async () => {
           userDataDir: usedTempPath,
           chromeFlags: [
             ...DEFAULT_CHROME_FLAGS,
+            '--remote-debugging-pipe',
             '--load-extension=/fake/sourceDir',
             '--profile-directory=profile',
           ],
