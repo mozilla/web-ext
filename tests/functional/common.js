@@ -131,10 +131,11 @@ export function execWebExt(argv, spawnOptions) {
 export function monitorOutput(spawnedProcess) {
   const callbacks = new Set();
   let outputData = '';
+  let errorData = '';
   function checkCallbacks() {
     for (const callback of callbacks) {
       const { outputTestFunc, resolve } = callback;
-      if (outputTestFunc(outputData)) {
+      if (outputTestFunc(outputData, errorData)) {
         callbacks.delete(callback);
         resolve();
       }
@@ -142,6 +143,10 @@ export function monitorOutput(spawnedProcess) {
   }
   spawnedProcess.stdout.on('data', (data) => {
     outputData += data;
+    checkCallbacks();
+  });
+  spawnedProcess.stderr.on('data', (data) => {
+    errorData += data;
     checkCallbacks();
   });
 

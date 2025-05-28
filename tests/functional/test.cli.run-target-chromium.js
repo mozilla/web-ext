@@ -26,7 +26,7 @@
 
 import path from 'node:path';
 import { existsSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { writeFile, rename } from 'node:fs/promises';
 
 import { describe, it, beforeEach, afterEach } from 'mocha';
 import { assert, expect } from 'chai';
@@ -148,6 +148,46 @@ describe('web-ext run -t chromium', () => {
         assert.equal(testServer.requestCount, 1, 'No reload with --no-reload');
       }
 
+      // Now test what happens if the extension becomes invalid,
+      // then valid again.
+      let isUsingFallbackForChrome125andEarlier = false;
+      if (expectReload) {
+        const manifestPathOld = path.join(srcDir, 'manifest.json');
+        const manifestPathNew = path.join(srcDir, 'manifest.json.deleted');
+        await rename(manifestPathOld, manifestPathNew);
+        await outputMonitor.waitUntilOutputMatches((output, errout) => {
+          if (errout.includes('Cannot load extension via CDP, falling back')) {
+            isUsingFallbackForChrome125andEarlier = true;
+            return true;
+          }
+          return errout.includes('Manifest file is missing or unreadable');
+        });
+        await rename(manifestPathNew, manifestPathOld);
+        if (isUsingFallbackForChrome125andEarlier) {
+          // When an extension is disabled due to a bad manifest, there is
+          // unfortunately no way to revive it, due to https://crbug.com/792277
+          assert.equal(
+            testServer.requestCount,
+            2,
+            'No reload after bad reload when using --load-extension',
+          );
+        } else {
+          if (testServer.requestCount === 2) {
+            await testServer.waitForHelloFromExtension();
+          }
+          assert.equal(testServer.requestCount, 3, 'Reloaded after bad load');
+        }
+        // Sanity check: When using fake-chrome-binary, verify that it falls
+        // back to --load-extension when we expect it to.
+        if (!useRealChrome) {
+          assert.equal(
+            isUsingFallbackForChrome125andEarlier,
+            chromeVersion < 126,
+            'isUsingFallbackForChrome125andEarlier only true in Chrome < 126',
+          );
+        }
+      }
+
       // Must send SIGINT so that chrome-launcher (used by web-ext) has a
       // chance to terminate the browser that it spawned. Using plain kill
       // can cause Chrome processes to be left behind.
@@ -166,7 +206,9 @@ describe('web-ext run -t chromium', () => {
       // Example of showing stderr from the last minute:
       // find /tmp/ -mmin 1 -name chrome-err.log -exec cat {} \; ;echo
       await cmd.waitForExit;
-      if (expectReload) {
+      if (expectReload && !isUsingFallbackForChrome125andEarlier) {
+        assert.equal(testServer.requestCount, 3, 'No unexpected requests');
+      } else if (expectReload && isUsingFallbackForChrome125andEarlier) {
         assert.equal(testServer.requestCount, 2, 'No unexpected requests');
       } else {
         assert.equal(testServer.requestCount, 1, 'No unexpected requests');
