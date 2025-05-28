@@ -188,9 +188,6 @@ describe('web-ext run -t chromium', () => {
     });
 
     it('simulate Chrome 137 (--enable-unsafe-extension-debugging only)', async function () {
-      // TODO: web-ext does not use --enable-unsafe-extension-debugging yet.
-      this.skip();
-
       // Chrome 137 and later can only load extensions via
       // --enable-unsafe-extension-debugging plus --remote-debugging-pipe.
       await testWebExtRun({ noReload: true, chromeVersion: 137 });
@@ -223,9 +220,6 @@ describe('web-ext run -t chromium', () => {
     });
 
     it('simulate Chrome 137 (--enable-unsafe-extension-debugging only)', async function () {
-      // TODO: web-ext does not use --enable-unsafe-extension-debugging yet.
-      this.skip();
-
       await testWebExtRun({ expectReload: true, chromeVersion: 137 });
     });
 
