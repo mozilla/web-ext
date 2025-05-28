@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { createReadStream, createWriteStream } from 'node:fs';
+import { createReadStream, createWriteStream, existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import net from 'node:net';
@@ -185,6 +185,16 @@ async function handleChromeDevtoolsProtocolMessage(rawRequest) {
     }
     // No further validation: Unknown keys in params are accepted by Chrome.
 
+    if (!existsSync(path.join(request.params.path, 'manifest.json'))) {
+      return {
+        id,
+        error: {
+          code: -32600,
+          message: 'Manifest file is missing or unreadable',
+        },
+      };
+    }
+
     const { extensionId } = await fakeLoadChromExtension(request.params.path);
     return { id, result: { id: extensionId } };
   }
@@ -198,6 +208,7 @@ async function handleChromeDevtoolsProtocolMessage(rawRequest) {
 }
 
 let isAttachingToTarget;
+let isDisabledDueToLoadFailure;
 async function simulateResponsesForReloadViaDeveloperPrivate(request) {
   // Supports reloadAllExtensionsFallbackForChrome125andEarlier. This is NOT
   // the full real protocol response; just enough for the simulation to work.
@@ -232,6 +243,29 @@ async function simulateResponsesForReloadViaDeveloperPrivate(request) {
     }
     const extensionsToReload = Array.from(loadedFakeExtensions);
     for (const dir of extensionsToReload) {
+      if (!existsSync(path.join(dir, 'manifest.json'))) {
+        isDisabledDueToLoadFailure = true;
+        // In reality an exception has many more fields, but for simplicity we
+        // omit anything we don't already rely on.
+        return {
+          id,
+          result: {
+            exceptionDetails: {
+              text: 'Uncaught (in promise) Error: Manifest file is missing or unreadable',
+            },
+          },
+        };
+      }
+      if (isDisabledDueToLoadFailure) {
+        // In theory, one would expect to be able to reload an extension that
+        // failed to load. In practice, that is not the case, the developer
+        // has to manually enter chrome://extensions/, use the file picker to
+        // select the original extension. This weird issue is tracked at
+        // https://crbug.com/792277 (but even if it were to be fixed, we are
+        // never going to encounter the fix, since this code path is only
+        // taken for Chrome 125 and earlier, which will never be fixed).
+        continue;
+      }
       await fakeLoadChromExtension(dir);
     }
     return { id, result: { result: { value: extensionsToReload.length } } };
