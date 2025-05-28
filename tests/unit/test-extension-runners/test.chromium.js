@@ -1,4 +1,5 @@
 import path from 'path';
+import EventEmitter from 'events';
 
 import { assert } from 'chai';
 import { describe, it, beforeEach } from 'mocha';
@@ -18,14 +19,33 @@ import { TempDir, withTempDir } from '../../../src/util/temp-dir.js';
 import fileExists from '../../../src/util/file-exists.js';
 import isDirectory from '../../../src/util/is-directory.js';
 
-function prepareExtensionRunnerParams({ params } = {}) {
+function prepareExtensionRunnerParams(
+  { params } = {},
+  { loadUnpackedUnsupported = false } = {},
+) {
+  // This is not even close to the real thing, but enough to get the tests to
+  // pass. See tests/functional/test.cli.run-target-chromium.js for full
+  // coverage.
+  const incoming = new EventEmitter();
+  const outgoing = new EventEmitter();
+  outgoing.write = (data) => {
+    const request = JSON.parse(data.slice(0, -1)); // trim trailing \x00.
+    const response = { id: request.id };
+    if (request.method === 'Extensions.loadUnpacked') {
+      if (loadUnpackedUnsupported) {
+        response.error = { message: "'Extensions.loadUnpacked' wasn't found" };
+      } else {
+        response.result = { extensionId: 'fakeExtensionId' };
+      }
+    }
+    incoming.emit('data', `${JSON.stringify(response)}\x00`);
+  };
   const fakeChromeInstance = {
     process: new StubChildProcess(),
-    kill: sinon.spy(async () => {}),
-    // This is not even close to the real thing, but enough to get the tests to
-    // pass. See tests/functional/test.cli.run-target-chromium.js for full
-    // coverage.
-    remoteDebuggingPipes: { incoming: { closed: true } },
+    kill: sinon.spy(async () => {
+      incoming.emit('close');
+    }),
+    remoteDebuggingPipes: { incoming, outgoing },
   };
   const runnerParams = {
     extensions: [
@@ -37,6 +57,9 @@ function prepareExtensionRunnerParams({ params } = {}) {
     keepProfileChanges: false,
     startUrl: undefined,
     chromiumLaunch: sinon.spy(async () => {
+      // Note: When loadUnpackedUnsupported is true, we expect this method
+      // to be called twice. We should ideally return a new instance, but for
+      // simplicity just return the same, and use resetHistory() as needed.
       return fakeChromeInstance;
     }),
     desktopNotifications: sinon.spy(() => {}),
@@ -93,7 +116,7 @@ describe('util/extension-runners/chromium', async () => {
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
-        '--load-extension=/fake/sourceDir',
+        '--enable-unsafe-extension-debugging',
       ],
       startingUrl: undefined,
     });
@@ -112,6 +135,7 @@ describe('util/extension-runners/chromium', async () => {
     );
 
     fakeChromeInstance.process.emit('close');
+    fakeChromeInstance.remoteDebuggingPipes.incoming.emit('close');
 
     await onceExiting;
   });
@@ -142,6 +166,7 @@ describe('util/extension-runners/chromium', async () => {
 
     const exitDone = runnerInstance.exit();
     fakeChromeInstance.process.emit('close');
+    fakeChromeInstance.remoteDebuggingPipes.incoming.emit('close');
 
     await exitDone;
 
@@ -201,7 +226,7 @@ describe('util/extension-runners/chromium', async () => {
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
-        '--load-extension=/fake/sourceDir',
+        '--enable-unsafe-extension-debugging',
       ],
       startingUrl: undefined,
     });
@@ -224,7 +249,7 @@ describe('util/extension-runners/chromium', async () => {
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
-        '--load-extension=/fake/sourceDir',
+        '--enable-unsafe-extension-debugging',
         'url2',
         'url3',
       ],
@@ -252,7 +277,7 @@ describe('util/extension-runners/chromium', async () => {
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
-        '--load-extension=/fake/sourceDir',
+        '--enable-unsafe-extension-debugging',
         '--arg1',
         'arg2',
         '--arg3',
@@ -308,7 +333,7 @@ describe('util/extension-runners/chromium', async () => {
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
           '--remote-debugging-pipe',
-          '--load-extension=/fake/sourceDir',
+          '--enable-unsafe-extension-debugging',
         ],
         startingUrl: undefined,
       });
@@ -349,7 +374,7 @@ describe('util/extension-runners/chromium', async () => {
           chromeFlags: [
             ...DEFAULT_CHROME_FLAGS,
             '--remote-debugging-pipe',
-            '--load-extension=/fake/sourceDir',
+            '--enable-unsafe-extension-debugging',
             '--profile-directory=profile',
           ],
           startingUrl: undefined,
@@ -391,7 +416,7 @@ describe('util/extension-runners/chromium', async () => {
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
           '--remote-debugging-pipe',
-          '--load-extension=/fake/sourceDir',
+          '--enable-unsafe-extension-debugging',
           `--profile-directory=${profileDirName}`,
         ],
         startingUrl: undefined,
@@ -486,7 +511,7 @@ describe('util/extension-runners/chromium', async () => {
           chromeFlags: [
             ...DEFAULT_CHROME_FLAGS,
             '--remote-debugging-pipe',
-            '--load-extension=/fake/sourceDir',
+            '--enable-unsafe-extension-debugging',
             '--profile-directory=profile',
           ],
           startingUrl: undefined,
@@ -503,6 +528,43 @@ describe('util/extension-runners/chromium', async () => {
         spy.restore();
       }),
   );
+
+  it('falls back to --load-extension when needed (old Chrome)', async () => {
+    const { params, fakeChromeInstance } = prepareExtensionRunnerParams(
+      {},
+      { loadUnpackedUnsupported: true },
+    );
+    const runnerInstance = new ChromiumExtensionRunner(params);
+
+    await runnerInstance.run();
+    sinon.assert.calledOnce(fakeChromeInstance.kill);
+    fakeChromeInstance.kill.resetHistory();
+
+    sinon.assert.calledTwice(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch.firstCall, {
+      ignoreDefaultFlags: true,
+      chromePath: undefined,
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
+        '--enable-unsafe-extension-debugging',
+      ],
+      startingUrl: undefined,
+    });
+    sinon.assert.calledWithMatch(params.chromiumLaunch.secondCall, {
+      ignoreDefaultFlags: true,
+      chromePath: undefined,
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
+        '--load-extension=/fake/sourceDir',
+      ],
+      startingUrl: undefined,
+    });
+
+    await runnerInstance.exit();
+    sinon.assert.calledOnce(fakeChromeInstance.kill);
+  });
 
   describe('reloadAllExtensions', () => {
     let runnerInstance;

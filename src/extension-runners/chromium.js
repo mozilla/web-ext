@@ -159,7 +159,9 @@ export class ChromiumExtensionRunner {
     const { chromiumLaunch = defaultChromiumLaunch } = params;
     this.params = params;
     this.chromiumLaunch = chromiumLaunch;
-    this.forceUseDeprecatedLoadExtension = true;
+    // We will try to use Extensions.loadUnpacked first (Chrome 126+), and if
+    // that does not work fall back to --load-extension.
+    this.forceUseDeprecatedLoadExtension = false;
     this.cleanupCallbacks = new Set();
   }
 
@@ -224,6 +226,12 @@ export class ChromiumExtensionRunner {
    * Setup the Chromium Profile and run a Chromium instance.
    */
   async setupInstance() {
+    // NOTE: This function may be called twice, if the user is using an old
+    // Chrome version (before Chrome 126), because then we have to add a
+    // command-line flag (--load-extension) to load the extension. For details,
+    // see:
+    // https://github.com/mozilla/web-ext/issues/3388#issuecomment-2906982117
+
     // Start chrome pointing it to a given profile dir
     const extensions = this.params.extensions.map(({ sourceDir }) => sourceDir);
 
@@ -238,7 +246,9 @@ export class ChromiumExtensionRunner {
     const chromeFlags = [...DEFAULT_CHROME_FLAGS];
     chromeFlags.push('--remote-debugging-pipe');
 
-    if (this.forceUseDeprecatedLoadExtension) {
+    if (!this.forceUseDeprecatedLoadExtension) {
+      chromeFlags.push('--enable-unsafe-extension-debugging');
+    } else {
       chromeFlags.push(`--load-extension=${extensions.join(',')}`);
     }
 
@@ -309,7 +319,12 @@ export class ChromiumExtensionRunner {
     });
     this.cdp = new ChromeDevtoolsProtocolClient(this.chromiumInstance);
 
+    const initialChromiumInstance = this.chromiumInstance;
     this.chromiumInstance.process.once('close', () => {
+      if (this.chromiumInstance !== initialChromiumInstance) {
+        // This happens when we restart Chrome to fall back to --load-extension.
+        return;
+      }
       this.chromiumInstance = null;
 
       if (!this.exiting) {
@@ -318,15 +333,38 @@ export class ChromiumExtensionRunner {
       }
     });
 
-    // Connect with the CDP to verify that we are indeed connected to Chrome.
-    // This works with Chrome 69 and later, see
-    // https://github.com/mozilla/web-ext/issues/3388#issuecomment-2906982117
-    try {
-      log.debug('Verifying chrome devtools protocol connection...');
-      const { userAgent } = await this.cdp.sendCommand('Browser.getVersion');
-      log.info(`Launched Chromium: ${userAgent}`);
-    } catch (e) {
-      log.error(e);
+    if (!this.forceUseDeprecatedLoadExtension) {
+      // Assume that the required Extensions.loadUnpacked CDP method is
+      // supported. If it is not, we will fall back to --load-extension.
+      let cdpSupportsExtensionsLoadUnpacked = true;
+      for (const sourceDir of extensions) {
+        try {
+          await this.cdp.sendCommand('Extensions.loadUnpacked', {
+            path: sourceDir,
+          });
+        } catch (e) {
+          // Chrome 125- will emit the following message:
+          if (e.message === "'Extensions.loadUnpacked' wasn't found") {
+            cdpSupportsExtensionsLoadUnpacked = false;
+            break;
+          }
+          log.error(`Failed to load extension at ${sourceDir}: ${e.message}`);
+          // We do not have to throw - the extension can work again when
+          // auto-reload is used. But users may like a hard fail, and this is
+          // consistent with the firefox runner.
+          throw e;
+        }
+      }
+      if (!cdpSupportsExtensionsLoadUnpacked) {
+        // Retry once, now with --load-extension.
+        log.warn('Cannot load extension via CDP, falling back to old method');
+        this.forceUseDeprecatedLoadExtension = true;
+        this.chromiumInstance = null;
+        await initialChromiumInstance.kill();
+        await this.cdp.waitUntilDisconnected();
+        this.cdp = null;
+        return this.setupInstance();
+      }
     }
   }
 
@@ -339,6 +377,16 @@ export class ChromiumExtensionRunner {
 
     if (this.forceUseDeprecatedLoadExtension) {
       this.reloadAllExtensionsFallbackForChrome125andEarlier();
+    } else {
+      for (const { sourceDir } of this.params.extensions) {
+        try {
+          await this.cdp.sendCommand('Extensions.loadUnpacked', {
+            path: sourceDir,
+          });
+        } catch (e) {
+          log.error(`Failed to load extension at ${sourceDir}: ${e.message}`);
+        }
+      }
     }
 
     process.stdout.write(
