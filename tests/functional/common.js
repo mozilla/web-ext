@@ -21,11 +21,10 @@ export const webExt = process.env.TEST_WEB_EXT_BIN
 export const fixturesDir = path.join(functionalTestsDir, '..', 'fixtures');
 export const minimalAddonPath = path.join(fixturesDir, 'minimal-web-ext');
 export const fixturesUseAsLibrary = path.join(fixturesDir, 'webext-as-library');
+// NOTE: Depends on preload_on_windows.cjs to load this on Windows!
 export const fakeFirefoxPath = path.join(
   functionalTestsDir,
-  process.platform === 'win32'
-    ? 'fake-firefox-binary.bat'
-    : 'fake-firefox-binary.js',
+  'fake-firefox-binary.js',
 );
 export const fakeServerPath = path.join(
   functionalTestsDir,
@@ -33,7 +32,7 @@ export const fakeServerPath = path.join(
 );
 
 export const chromeExtPath = path.join(fixturesDir, 'chrome-extension-mv3');
-// NOTE: Depends on preload_on_windows.cjs to load this!
+// NOTE: Depends on preload_on_windows.cjs to load this on Windows!
 export const fakeChromePath = path.join(
   functionalTestsDir,
   'fake-chrome-binary.js',
