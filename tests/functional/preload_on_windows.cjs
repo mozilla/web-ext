@@ -20,7 +20,10 @@ const child_process = require('node:child_process');
 const orig_spawn = child_process.spawn;
 child_process.spawn = function(command, args, options, ...remainingArgs) {
   if (typeof command === 'string') {
-    if (command.endsWith('fake-chrome-binary.js')) {
+    if (
+      command.endsWith('fake-chrome-binary.js') ||
+      command.endsWith('fake-firefox-binary.js')
+    ) {
       args = args ? [command, ...args] : [command];
       command = process.execPath;
     }
