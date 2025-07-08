@@ -1,6 +1,12 @@
 import { createHash } from 'crypto';
 import { promises as fsPromises, readFileSync } from 'fs';
 import path from 'path';
+// eslint-disable-next-line no-shadow -- TODO: Remove when we require Node v20+.
+import { File } from 'node:buffer';
+// ^ note: this was introduced in v18.13.0. Because of its unavailability in
+// earlier versions, the actual implementation in submit-addon.js retrieves
+// the File constructor in a different way, which also works in Node 18.0.0.
+// Our CI tests with Node 18.19.0 as the lowest version, so this passes tests.
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import CRC32 from 'crc-32';
@@ -16,9 +22,6 @@ import Client, {
   saveIdToFile,
   saveUploadUuidToFile,
   signAddon,
-
-  // eslint-disable-next-line no-shadow -- Not actually available under Node 20. Use global once possible.
-  FileBlob as File,
 } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
 
@@ -371,6 +374,25 @@ describe('util.submit-addon', () => {
           assert.equal(fileRes.name, FILE_BASENAME);
           assert.equal(await fileRes.text(), FILE_CONTENT);
           assert.equal(String(fileRes), '[object File]');
+        }));
+
+      it('should return a File whose name is preserved in FormData', () =>
+        withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const FILE_BASENAME = 'testfile.txt';
+          const FILE_CONTENT = 'somecontent';
+          const filePath = path.join(tmpDir.path(), FILE_BASENAME);
+          await fsPromises.writeFile(filePath, FILE_CONTENT);
+          const fileRes = client.fileFromSync(filePath);
+
+          // Regression test for https://github.com/mozilla/web-ext/issues/3418
+          const fd = new FormData();
+          fd.set('upload', fileRes);
+          const fileOut = fd.get('upload');
+
+          assert.equal(fileOut.name, FILE_BASENAME);
+          assert.equal(fileOut.size, FILE_CONTENT.length);
+          assert.equal(await fileOut.text(), FILE_CONTENT);
         }));
     });
 
