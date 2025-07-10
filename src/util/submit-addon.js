@@ -14,29 +14,6 @@ const log = createLogger(import.meta.url);
 
 export const defaultAsyncFsReadFile = fsPromises.readFile;
 
-// Used by fileFromSync method to make sure the form-data entry will
-// include a filename derived from the file path.
-//
-// TODO: Get rid of this hack when we will bump the web-ext nodejs
-// version required to nodejs v20 (where the native File constructor
-// exists).
-export class FileBlob extends Blob {
-  #name = '';
-
-  constructor(fileBits, fileName, options) {
-    super(fileBits, options);
-    this.#name = String(fileName);
-  }
-
-  get name() {
-    return this.#name;
-  }
-
-  get [Symbol.toStringTag]() {
-    return 'File';
-  }
-}
-
 export class JwtApiAuth {
   #apiKey;
   #apiSecret;
@@ -116,7 +93,21 @@ export default class Client {
     // submitted and fail with the error message:
     // "Unsupported file type, please upload a supported file (.crx, .xpi, .zip)."
     const fileData = readFileSync(filePath);
-    return new FileBlob([fileData], basename(filePath));
+    // eslint-disable-next-line no-shadow -- File is in Node v20.0.0+.
+    let File = global.File;
+    // TODO: Use the File global directly without the fallback when we drop
+    // support for Node versions before v20.
+    if (typeof File === 'undefined') {
+      // Even without File being public, its interface and constructor could
+      // be accessed indirectly from the FormData interface. According to the
+      // FormData spec (that Node.js implements, via undici), the entry value
+      // of a FormData is always a scalar value or a File:
+      // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#form-entry-value
+      const fd = new FormData();
+      fd.set('x', new Blob([]));
+      File = fd.get('x').constructor;
+    }
+    return new File([fileData], basename(filePath));
   }
 
   nodeFetch(url, { method, headers, body, agent }) {
