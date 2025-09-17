@@ -42,6 +42,7 @@ export default function lint(
     shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
     minManifestVersion: 2,
     maxManifestVersion: 3,
+    enableDataCollectionPermissions: true,
     // This mimics the first command line argument from yargs, which should be
     // the directory to the extension.
     _: [sourceDir],
