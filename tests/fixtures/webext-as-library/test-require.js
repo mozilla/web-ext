@@ -1,21 +1,13 @@
-const assert = require('assert');
-
 const {testModuleExports, testModuleExportedUtils} = require('./helpers.js');
 
 
 (async () => {
-  // Trying to require web-ext as a CommonJS module is not supported anymore
-  // and it should be throwing the expected ERR_REQUIRE_ESM error.
-  assert.throws(
-    () => require('web-ext'),
-    {
-      name: 'Error',
-      code: 'ERR_REQUIRE_ESM',
-    }
-  );
-
-  // But it should still be possible to import it in a CommonJS module
-  // using a dynamic import.
+  // Prior to Node v20.19, it was not possible to load web-ext with `require()`
+  // but that changed in Node v20.19 according to
+  // https://nodejs.org/en/blog/release/v20.19.0#requireesm-is-now-enabled-by-default.
+  //
+  // We are not going to verify that. Instead, we only verify that we can
+  // import web-ext using a dynamic import in a CommonJS module.
   const {cmd, main} = await import('web-ext'); // eslint-disable-line import/no-unresolved
 
   await testModuleExports({cmd, main});
