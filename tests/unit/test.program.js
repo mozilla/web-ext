@@ -638,7 +638,7 @@ describe('program.main', () => {
       return configObject;
     });
 
-    await execProgram(['lint', '--config', 'path/to/web-ext-config.js'], {
+    await execProgram(['lint', '--config', 'path/to/web-ext-config.mjs'], {
       commands: fakeCommands,
       runOptions: {
         loadJSConfigFile: fakeLoadJSConfigFile,
@@ -665,7 +665,7 @@ describe('program.main', () => {
       return configObject;
     });
 
-    const discoveredFile = 'fake/config.js';
+    const discoveredFile = 'fake/config.mjs';
     await execProgram(['lint'], {
       commands: fakeCommands,
       runOptions: {
@@ -703,9 +703,9 @@ describe('program.main', () => {
       lint: () => Promise.resolve(),
     });
 
-    const globalConfig = 'home/dir/.web-ext-config.js';
-    const projectConfig = 'project/dir/web-ext-config.js';
-    const customConfig = path.resolve('custom/web-ext-config.js');
+    const globalConfig = 'home/dir/.web-ext-config.mjs';
+    const projectConfig = 'project/dir/web-ext-config.mjs';
+    const customConfig = path.resolve('custom/web-ext-config.mjs');
 
     const loadJSConfigFile = makeConfigLoader({
       configObjects: {
@@ -756,8 +756,8 @@ describe('program.main', () => {
       lint: () => Promise.resolve(),
     });
 
-    const globalConfig = path.resolve('home/dir/.web-ext-config.js');
-    const customConfig = path.resolve('custom/web-ext-config.js');
+    const globalConfig = path.resolve('home/dir/.web-ext-config.mjs');
+    const customConfig = path.resolve('custom/web-ext-config.mjs');
 
     const finalSourceDir = path.resolve('final/source-dir');
     const loadJSConfigFile = makeConfigLoader({
@@ -792,7 +792,7 @@ describe('program.main', () => {
       lint: () => Promise.resolve(),
     });
 
-    const customConfig = path.resolve('custom/web-ext-config.js');
+    const customConfig = path.resolve('custom/web-ext-config.mjs');
 
     const loadJSConfigFile = makeConfigLoader({
       configObjects: {

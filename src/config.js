@@ -12,29 +12,6 @@ import { UsageError, WebExtError } from './errors.js';
 
 const log = createLogger(import.meta.url);
 
-// NOTE: this error message is used in an interpolated string (while the other two help
-// messages are being logged as is).
-export const WARN_LEGACY_JS_EXT = [
-  'should be renamed to ".cjs" or ".mjs" file extension to ensure its format is not ambiguous.',
-  'Config files with the ".js" file extension are deprecated and will not be loaded anymore',
-  'in a future web-ext major version.',
-].join(' ');
-
-export const HELP_ERR_MODULE_FROM_ESM = [
-  'This config file belongs to a package.json file with "type" set to "module".',
-  'Change the file extension to ".cjs" or rewrite it as an ES module and use the ".mjs" file extension.',
-].join(' ');
-
-export const HELP_ERR_IMPORTEXPORT_CJS = [
-  'This config file is defined as an ES module, but it belongs to either a project directory',
-  'with a package.json file with "type" set to "commonjs" or one without any package.json file.',
-  'Change the file extension to ".mjs" to fix the config loading error.',
-].join(' ');
-
-const ERR_IMPORT_FROM_CJS = 'Cannot use import statement outside a module';
-const ERR_EXPORT_FROM_CJS = "Unexpected token 'export'";
-const ERR_MODULE_FROM_ESM = 'module is not defined in ES module scope';
-
 export function applyConfigToArgv({
   argv,
   argvFromCLI,
@@ -145,12 +122,18 @@ export async function loadJSConfigFile(filePath) {
     `Loading JS config file: "${filePath}" ` +
       `(resolved to "${resolvedFilePath}")`,
   );
+
   if (filePath.endsWith('.js')) {
-    log.warn(`WARNING: config file ${filePath} ${WARN_LEGACY_JS_EXT}`);
+    throw new UsageError(
+      ` Invalid config file "${resolvedFilePath}": the file extension should be` +
+        '".cjs" or ".mjs". More information at: https://mzl.la/web-ext-config-file',
+    );
   }
+
   let configObject;
   try {
     const nonce = `${Date.now()}-${Math.random()}`;
+
     let configModule;
     if (resolvedFilePath.endsWith('package.json')) {
       configModule = parseJSON(
@@ -165,35 +148,36 @@ export async function loadJSConfigFile(filePath) {
       // ES modules may expose both a default and named exports and so
       // we merge the named exports on top of what may have been set in
       // the default export.
+      if (filePath.endsWith('.cjs')) {
+        // Remove the additional 'module.exports' named export that Node.js >=
+        // 24 is returning from the dynamic import call (in addition to being
+        // also set on the default property as in Node.js < 24).
+        delete esmConfigMod['module.exports'];
+      }
       configObject = { ...configDefault, ...esmConfigMod };
     } else {
       configObject = { ...configModule };
     }
   } catch (error) {
-    log.debug('Handling error:', error);
-    let errorMessage = error.message;
-    if (error.message.startsWith(ERR_MODULE_FROM_ESM)) {
-      errorMessage = HELP_ERR_MODULE_FROM_ESM;
-    } else if (
-      [ERR_IMPORT_FROM_CJS, ERR_EXPORT_FROM_CJS].includes(error.message)
-    ) {
-      errorMessage = HELP_ERR_IMPORTEXPORT_CJS;
-    }
-    throw new UsageError(
-      `Cannot read config file: ${resolvedFilePath}\n` +
-        `Error: ${errorMessage}`,
+    const configFileError = new UsageError(
+      `Cannot read config file "${resolvedFilePath}":\n${error}`,
     );
+    configFileError.cause = error;
+    throw configFileError;
   }
+
   if (filePath.endsWith('package.json')) {
     log.debug('Looking for webExt key inside package.json file');
     configObject = configObject.webExt || {};
   }
+
   if (Object.keys(configObject).length === 0) {
     log.debug(
       `Config file ${resolvedFilePath} did not define any options. ` +
         'Did you set module.exports = {...}?',
     );
   }
+
   return configObject;
 }
 
