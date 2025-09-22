@@ -283,5 +283,5 @@ Here is a partial list of examples:
     [signing](https://addons-server.readthedocs.io/en/latest/topics/api/v4_frozen/signing.html)
     extensions.
 
-[web-ext-user-docs]: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext
+[web-ext-user-docs]: https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/
 [dynamic-imports]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports
