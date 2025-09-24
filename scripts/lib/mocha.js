@@ -20,10 +20,6 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
     shell.echo(`\nSetting mocha timeout from env var: ${MOCHA_TIMEOUT}\n`);
   }
 
-  // Pass testdouble node loader to support ESM module mocking and
-  // transpiling on the fly the tests modules.
-  binArgs.push('-n="loader=testdouble"');
-
   const res = spawnSync(binPath, binArgs, {
     ...execMochaOptions,
     env: {

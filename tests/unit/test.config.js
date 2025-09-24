@@ -11,9 +11,6 @@ import {
   applyConfigToArgv,
   discoverConfigFiles,
   loadJSConfigFile,
-  HELP_ERR_IMPORTEXPORT_CJS,
-  HELP_ERR_MODULE_FROM_ESM,
-  WARN_LEGACY_JS_EXT,
 } from '../../src/config.js';
 import { withTempDir } from '../../src/util/temp-dir.js';
 import { UsageError, WebExtError } from '../../src/errors.js';
@@ -48,7 +45,7 @@ function makeArgv({
 
 const applyConf = (params) =>
   applyConfigToArgv({
-    configFileName: 'some/path/to/config.js',
+    configFileName: 'some/path/to/config.mjs',
     ...params,
   });
 
@@ -433,7 +430,7 @@ describe('config', () => {
         },
         UsageError,
         'The config file ' +
-          'at some/path/to/config.js specified an unknown option: "randomDir"',
+          'at some/path/to/config.mjs specified an unknown option: "randomDir"',
       );
     });
 
@@ -452,7 +449,7 @@ describe('config', () => {
       assert.throws(
         () => applyConf({ ...params, configObject }),
         UsageError,
-        'The config file at some/path/to/config.js specified the ' +
+        'The config file at some/path/to/config.mjs specified the ' +
           'type of "retries" incorrectly as "string" (expected type "number")',
       );
     });
@@ -474,7 +471,7 @@ describe('config', () => {
           applyConf({ ...params, configObject });
         },
         UsageError,
-        'The config file at some/path/to/config.js ' +
+        'The config file at some/path/to/config.mjs ' +
           'specified the type of "sourceDir" incorrectly',
       );
     });
@@ -709,7 +706,7 @@ describe('config', () => {
       assert.throws(
         () => applyConf({ ...params, configObject }),
         UsageError,
-        'The config file at some/path/to/config.js ' +
+        'The config file at some/path/to/config.mjs ' +
           'specified the type of "apiUrl" incorrectly',
       );
     });
@@ -766,7 +763,7 @@ describe('config', () => {
         },
         UsageError,
         'The config file at ' +
-          'some/path/to/config.js specified an unknown option: "randomOption"',
+          'some/path/to/config.mjs specified an unknown option: "randomOption"',
       );
     });
 
@@ -793,7 +790,7 @@ describe('config', () => {
           applyConf({ ...params, configObject });
         },
         UsageError,
-        'The config file at some/path/to/config.js ' +
+        'The config file at some/path/to/config.mjs ' +
           'specified the type of "apiUrl" incorrectly',
       );
     });
@@ -830,7 +827,7 @@ describe('config', () => {
             applyConf({ ...params, configObject });
           },
           UsageError,
-          'The config file at some/path/to/config.js ' +
+          'The config file at some/path/to/config.mjs ' +
             'specified the type of "apiUrl" incorrectly',
         );
       },
@@ -897,7 +894,7 @@ describe('config', () => {
           });
         },
         UsageError,
-        'The config file at some/path/to/config.js ' +
+        'The config file at some/path/to/config.mjs ' +
           'specified the type of "apiUrl" incorrectly as "number"' +
           ' (expected type "string")',
       );
@@ -908,7 +905,7 @@ describe('config', () => {
     it('throws an error if the config file does not exist', () => {
       return withTempDir(async (tmpDir) => {
         const promise = loadJSConfigFile(
-          path.join(tmpDir.path(), 'non-existant-config.js'),
+          path.join(tmpDir.path(), 'non-existant-config.mjs'),
         );
         await assert.isRejected(promise, UsageError);
         await assert.isRejected(promise, /Cannot read config file/);
@@ -917,11 +914,11 @@ describe('config', () => {
 
     it('throws an error if the config file has syntax errors', () => {
       return withTempDir(async (tmpDir) => {
-        const configFilePath = path.join(tmpDir.path(), 'config.js');
+        const configFilePath = path.join(tmpDir.path(), 'config.mjs');
         writeFileSync(
           configFilePath,
-          // missing = in two places
-          `module.exports {
+          // missing =
+          `export default {
                 sourceDir 'path/to/fake/source/dir',
               };`,
         );
@@ -929,61 +926,7 @@ describe('config', () => {
       });
     });
 
-    it('provides help message on load failure due to .js ESM config file and no package', () => {
-      return withTempDir(async (tmpDir) => {
-        const configFilePath = path.join(tmpDir.path(), 'config.js');
-        writeFileSync(
-          configFilePath,
-          'export default { sourceDir: "fake/dir" };',
-        );
-        const promise = loadJSConfigFile(configFilePath);
-        await assert.isRejected(promise, UsageError);
-        await assert.isRejected(promise, new RegExp(HELP_ERR_IMPORTEXPORT_CJS));
-      });
-    });
-
-    it('provides help message on load failure due to .js CJS config file and type module package', () =>
-      withTempDir(async (tmpDir) => {
-        const cfgFilePath = path.join(tmpDir.path(), 'config.js');
-        const pkgFilePath = path.join(tmpDir.path(), 'package.json');
-        writeFileSync(cfgFilePath, 'module.exports = {};');
-        writeFileSync(pkgFilePath, JSON.stringify({ type: 'module' }));
-        const promise = loadJSConfigFile(cfgFilePath);
-        await assert.isRejected(promise, UsageError);
-        await assert.isRejected(promise, new RegExp(HELP_ERR_MODULE_FROM_ESM));
-      }));
-
-    it('provides help message on load failure due to .js ESM config file and type commonjs package', () =>
-      withTempDir(async (tmpDir) => {
-        const cfgWithExportFilePath = path.join(
-          tmpDir.path(),
-          'config-with-export.js',
-        );
-        const cfgWithImportFilePath = path.join(
-          tmpDir.path(),
-          'config-with-import.js',
-        );
-        const pkgFilePath = path.join(tmpDir.path(), 'package.json');
-        writeFileSync(cfgWithExportFilePath, 'export default {}');
-        writeFileSync(cfgWithImportFilePath, 'import test from "./test.js";');
-        writeFileSync(pkgFilePath, JSON.stringify({ type: 'commonjs' }));
-
-        const promiseErrOnExport = loadJSConfigFile(cfgWithExportFilePath);
-        await assert.isRejected(promiseErrOnExport, UsageError);
-        await assert.isRejected(
-          promiseErrOnExport,
-          new RegExp(HELP_ERR_IMPORTEXPORT_CJS),
-        );
-
-        const promiseErrOnImport = loadJSConfigFile(cfgWithImportFilePath);
-        await assert.isRejected(promiseErrOnImport, UsageError);
-        await assert.isRejected(
-          promiseErrOnImport,
-          new RegExp(HELP_ERR_IMPORTEXPORT_CJS),
-        );
-      }));
-
-    it('parses successfully .js file as CommonJS config file', () => {
+    it('does not parse .js files', () => {
       return withTempDir(async (tmpDir) => {
         const configFilePath = path.join(tmpDir.path(), 'config.js');
         writeFileSync(
@@ -996,15 +939,8 @@ describe('config', () => {
         consoleStream.startCapturing();
 
         const promise = loadJSConfigFile(configFilePath);
-
-        const { capturedMessages } = consoleStream;
-        consoleStream.stopCapturing();
-
-        await assert.becomes(promise, { sourceDir: 'fake/dir' });
-        assert.include(
-          capturedMessages.join('\n'),
-          `WARNING: config file ${configFilePath} ${WARN_LEGACY_JS_EXT}`,
-        );
+        await assert.isRejected(promise, UsageError);
+        await assert.isRejected(promise, /the file extension should be/);
       });
     });
 
@@ -1047,7 +983,7 @@ describe('config', () => {
 
     it('does not throw an error for an empty config', () => {
       return withTempDir(async (tmpDir) => {
-        const configFilePath = path.join(tmpDir.path(), 'config.js');
+        const configFilePath = path.join(tmpDir.path(), 'config.cjs');
         writeFileSync(configFilePath, 'module.exports = {};');
         await loadJSConfigFile(configFilePath);
       });
@@ -1084,7 +1020,7 @@ describe('config', () => {
         // will be discovered because it's inside current working
         // directory
         const packageJSON = path.join(process.cwd(), 'package.json');
-        const homeDirConfig = path.join(tmpDir.path(), '.web-ext-config.js');
+        const homeDirConfig = path.join(tmpDir.path(), '.web-ext-config.cjs');
         await fs.writeFile(homeDirConfig, 'module.exports = {}');
         assert.deepEqual(
           // Stub out getHomeDir() so that it returns tmpDir.path()
@@ -1103,7 +1039,7 @@ describe('config', () => {
         process.chdir(tmpDir.path());
         try {
           const expectedConfig = path.resolve(
-            path.join(process.cwd(), '.web-ext-config.js'),
+            path.join(process.cwd(), '.web-ext-config.cjs'),
           );
           await fs.writeFile(expectedConfig, 'module.exports = {}');
 
@@ -1127,13 +1063,9 @@ describe('config', () => {
           const globalConfigCjs = path.resolve(
             path.join(fakeHomeDir, '.web-ext-config.cjs'),
           );
-          const globalConfig = path.resolve(
-            path.join(fakeHomeDir, '.web-ext-config.js'),
-          );
 
           await fs.writeFile(globalConfigMjs, 'export default {}');
           await fs.writeFile(globalConfigCjs, 'module.exports = {}');
-          await fs.writeFile(globalConfig, 'module.exports = {}');
 
           const packageJSONConfig = path.resolve(
             path.join(process.cwd(), 'package.json'),
@@ -1153,13 +1085,9 @@ describe('config', () => {
           const projectConfigCjs = path.resolve(
             path.join(process.cwd(), '.web-ext-config.cjs'),
           );
-          const projectConfig = path.resolve(
-            path.join(process.cwd(), '.web-ext-config.js'),
-          );
 
           await fs.writeFile(projectConfigMjs, 'export default {}');
           await fs.writeFile(projectConfigCjs, 'module.exports = {}');
-          await fs.writeFile(projectConfig, 'module.exports = {}');
 
           const projectConfigUndottedMjs = path.resolve(
             path.join(process.cwd(), 'web-ext-config.mjs'),
@@ -1167,13 +1095,9 @@ describe('config', () => {
           const projectConfigUndottedCjs = path.resolve(
             path.join(process.cwd(), 'web-ext-config.cjs'),
           );
-          const projectConfigUndotted = path.resolve(
-            path.join(process.cwd(), 'web-ext-config.js'),
-          );
 
           await fs.writeFile(projectConfigUndottedMjs, 'export default {}');
           await fs.writeFile(projectConfigUndottedCjs, 'module.exports = {}');
-          await fs.writeFile(projectConfigUndotted, 'module.exports = {}');
 
           assert.deepEqual(
             await _discoverConfigFiles({
@@ -1182,14 +1106,11 @@ describe('config', () => {
             [
               globalConfigMjs,
               globalConfigCjs,
-              globalConfig,
               packageJSONConfig,
               projectConfigUndottedMjs,
               projectConfigUndottedCjs,
-              projectConfigUndotted,
               projectConfigMjs,
               projectConfigCjs,
-              projectConfig,
             ],
           );
         } finally {

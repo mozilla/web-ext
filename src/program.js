@@ -331,6 +331,9 @@ export class Program {
       if (error.code) {
         log.error(`Error code: ${error.code}\n`);
       }
+      if (error.cause && adjustedArgv.verbose) {
+        log.error(`Error cause: ${error.cause.stack}\n`);
+      }
 
       log.debug(`Command executed: ${cmd}`);
 
