@@ -7,7 +7,10 @@ import shell from 'shelljs';
 
 import { withTempDir, fixturesUseAsLibrary } from './common.js';
 
-const npm = shell.which('npm')?.toString();
+let npm = shell.which('npm')?.toString();
+if (process.platform === 'win32') {
+  npm = `"${npm}"`;
+}
 const node = shell.which('node')?.toString();
 
 const dirname = path.dirname(fileURLToPath(import.meta.url || ''));
@@ -29,6 +32,8 @@ describe('web-ext imported as a library', () => {
       execFileSync(npm, ['install', packageDir], {
         cwd: tmpDir.path(),
         stdio: 'inherit',
+        // See: https://nodejs.org/api/child_process.html#spawning-bat-and-cmd-files-on-windows
+        shell: process.platform === 'win32',
       });
       shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-import.mjs'], {
@@ -39,7 +44,11 @@ describe('web-ext imported as a library', () => {
 
   it('can be imported as a CommonJS module', async () => {
     await withTempDir(async (tmpDir) => {
-      execFileSync(npm, ['install', packageDir], { cwd: tmpDir.path() });
+      execFileSync(npm, ['install', packageDir], {
+        cwd: tmpDir.path(),
+        // See: https://nodejs.org/api/child_process.html#spawning-bat-and-cmd-files-on-windows
+        shell: process.platform === 'win32',
+      });
       shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
       execFileSync(node, ['--experimental-modules', 'test-require.js'], {
         cwd: tmpDir.path(),

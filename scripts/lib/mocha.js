@@ -29,6 +29,8 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
       NODE_ENV: 'test',
     },
     stdio: 'inherit',
+    // See: https://nodejs.org/api/child_process.html#spawning-bat-and-cmd-files-on-windows
+    shell: process.platform === 'win32',
   });
 
   if (res.error) {
