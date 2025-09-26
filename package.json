@@ -93,7 +93,7 @@
     "@babel/eslint-parser": "7.28.4",
     "@babel/preset-env": "7.28.3",
     "@babel/register": "7.28.3",
-    "@commitlint/cli": "19.8.1",
+    "@commitlint/cli": "20.0.0",
     "@commitlint/config-conventional": "19.8.1",
     "babel-plugin-istanbul": "7.0.1",
     "babel-plugin-transform-inline-environment-variables": "0.4.4",
