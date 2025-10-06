@@ -1,6 +1,7 @@
 import net from 'net';
 import EventEmitter from 'events';
 import domain from 'domain';
+
 import { isErrorWithCode } from '../errors.js';
 
 export const DEFAULT_PORT = 6000;
