@@ -93,7 +93,11 @@ export default class FirefoxRDPClient extends EventEmitter {
         this._rdpConnection = conn;
         conn.on('data', this._onData);
         conn.on('error', (err) => {
-          if (isErrorWithCode('ECONNREFUSED', err) || isErrorWithCode('ENOTFOUND', err) || isErrorWithCode('ETIMEDOUT', err)) {
+          if (
+            isErrorWithCode('ECONNREFUSED', err) ||
+            isErrorWithCode('ENOTFOUND', err) ||
+            isErrorWithCode('ETIMEDOUT', err)
+          ) {
             reject(err);
           } else {
             this._onError(err);
