@@ -95,7 +95,7 @@ export default class FirefoxRDPClient extends EventEmitter {
           if (isErrorWithCode('ECONNREFUSED', err) || isErrorWithCode('ENOTFOUND', err) || isErrorWithCode('ETIMEDOUT', err)) {
             reject(err);
           } else {
-            this._onError();
+            this._onError(err);
           }
         });
         conn.on('end', this._onEnd);
