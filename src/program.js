@@ -519,7 +519,7 @@ Example: $0 --help run.
     )
     .command(
       'sign',
-      'Sign the extension so it can be installed in Firefox',
+      'Submit the extension to Mozilla Add-ons (AMO) for signing so it can be installed in Firefox',
       commands.sign,
       {
         'amo-base-url': {
