@@ -72,8 +72,8 @@ export class RemoteFirefox {
         return Promise.reject(
           new RemoteTempInstallNotSupported(
             'This version of Firefox does not provide an add-ons actor for ' +
-              'remote installation.'
-          )
+              'remote installation.',
+          ),
         );
       }
       return response.addonsActor;
@@ -88,14 +88,14 @@ export class RemoteFirefox {
       if (response.addonsActor == null) {
         log.debug(
           'listTabs returned a falsey addonsActor: ' +
-            `${JSON.stringify(response)}`
+            `${JSON.stringify(response)}`,
         );
         return Promise.reject(
           new RemoteTempInstallNotSupported(
             'This is an older version of Firefox that does not provide an ' +
               'add-ons actor for remote installation. Try Firefox 49 or ' +
-              'higher.'
-          )
+              'higher.',
+          ),
         );
       }
       return response.addonsActor;
@@ -134,12 +134,12 @@ export class RemoteFirefox {
         }
       }
       log.debug(
-        `Remote Firefox has these addons: ${response.addons.map((a) => a.id)}`
+        `Remote Firefox has these addons: ${response.addons.map((a) => a.id)}`,
       );
       return Promise.reject(
         new WebExtError(
-          'The remote Firefox does not have your extension installed'
-        )
+          'The remote Firefox does not have your extension installed',
+        ),
       );
     } catch (err) {
       const message = requestErrorToMessage(err);
@@ -159,7 +159,7 @@ export class RemoteFirefox {
         log.debug(`Remote Firefox only supports: ${supportedRequestTypes}`);
         throw new UsageError(
           'This Firefox version does not support add-on reloading. ' +
-            'Re-run with --no-reload'
+            'Re-run with --no-reload',
         );
       } else {
         this.checkedForAddonReloading = true;
@@ -173,7 +173,7 @@ export class RemoteFirefox {
     await this.checkForAddonReloading(addon);
     await this.addonRequest(addon, 'reload');
     process.stdout.write(
-      `\rLast extension reload: ${new Date().toTimeString()}`
+      `\rLast extension reload: ${new Date().toTimeString()}`,
     );
     log.debug('\n');
   }
@@ -183,7 +183,7 @@ export class RemoteFirefox {
 
 export async function connect(
   port,
-  { connectToFirefox = defaultFirefoxConnector } = {}
+  { connectToFirefox = defaultFirefoxConnector } = {},
 ) {
   log.debug(`Connecting to Firefox on port ${port}`);
   const client = await connectToFirefox(port);
@@ -196,7 +196,7 @@ export async function connect(
 export async function connectWithMaxRetries(
   // A max of 250 will try connecting for 30 seconds.
   { maxRetries = 250, retryInterval = 120, port },
-  { connectToFirefox = connect } = {}
+  { connectToFirefox = connect } = {},
 ) {
   async function establishConnection() {
     var lastError;
@@ -213,7 +213,7 @@ export async function connectWithMaxRetries(
 
           lastError = error;
           log.debug(
-            `Retrying Firefox (${retries}); connection error: ${error}`
+            `Retrying Firefox (${retries}); connection error: ${error}`,
           );
         } else {
           log.error(error.stack);

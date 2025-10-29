@@ -1,9 +1,9 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { it, describe } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { fs } from 'mz';
 
 import { onlyInstancesOf, UsageError } from '../../../src/errors.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
@@ -25,7 +25,7 @@ describe('prepareArtifactsDir', () => {
       prepareArtifactsDir(tmpDir.path()).then(() => {
         // Make sure everything is still cool with this path.
         return fs.stat(tmpDir.path());
-      })
+      }),
     ));
 
   it('ensures the path is really a directory', () =>
@@ -38,7 +38,7 @@ describe('prepareArtifactsDir', () => {
         .catch(
           onlyInstancesOf(UsageError, (error) => {
             assert.match(error.message, /not a directory/);
-          })
+          }),
         );
     }));
 
@@ -64,7 +64,7 @@ describe('prepareArtifactsDir', () => {
           .catch(
             onlyInstancesOf(UsageError, (error) => {
               assert.match(error.message, /Cannot access.*lacks permissions/);
-            })
+            }),
           );
       });
     });
@@ -83,7 +83,7 @@ describe('prepareArtifactsDir', () => {
           .catch(
             onlyInstancesOf(UsageError, (error) => {
               assert.match(error.message, /exists.*lacks permissions/);
-            })
+            }),
           );
       });
     });
@@ -103,7 +103,7 @@ describe('prepareArtifactsDir', () => {
           .catch(
             onlyInstancesOf(UsageError, (error) => {
               assert.match(error.message, /Cannot create.*lacks permissions/);
-            })
+            }),
           );
       });
     });
@@ -120,13 +120,13 @@ describe('prepareArtifactsDir', () => {
   it('throws error when creating a folder if there is not enough space', () =>
     withTempDir(async (tmpDir) => {
       const fakeAsyncMkdirp = sinon.spy(() =>
-        Promise.reject(new ErrorWithCode('ENOSPC', 'an error'))
+        Promise.reject(new ErrorWithCode('ENOSPC', 'an error')),
       );
       const tmpPath = path.join(tmpDir.path(), 'build', 'subdir');
 
       await assert.isRejected(
         prepareArtifactsDir(tmpPath, { asyncMkdirp: fakeAsyncMkdirp }),
-        'ENOSPC: an error'
+        'ENOSPC: an error',
       );
 
       sinon.assert.called(fakeAsyncMkdirp);
@@ -135,10 +135,10 @@ describe('prepareArtifactsDir', () => {
   it('throws on unexpected errors', () =>
     withTempDir(async (tmpDir) => {
       const fakeAsyncFsAccess = sinon.spy(() =>
-        Promise.reject(new Error('Unexpected fs.access error'))
+        Promise.reject(new Error('Unexpected fs.access error')),
       );
       const fakeAsyncMkdirp = sinon.spy(() =>
-        Promise.reject(new Error('Unexpected mkdirp error'))
+        Promise.reject(new Error('Unexpected mkdirp error')),
       );
 
       await assert.isRejected(
@@ -146,7 +146,7 @@ describe('prepareArtifactsDir', () => {
           asyncFsAccess: fakeAsyncFsAccess,
           asyncMkdirp: fakeAsyncMkdirp,
         }),
-        /Unexpected fs.access error/
+        /Unexpected fs.access error/,
       );
 
       sinon.assert.called(fakeAsyncFsAccess);

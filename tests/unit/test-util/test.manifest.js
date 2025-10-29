@@ -1,9 +1,9 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
 import deepcopy from 'deepcopy';
-import { fs } from 'mz';
 
 import { onlyInstancesOf, InvalidManifest } from '../../../src/errors.js';
 import getValidatedManifest, {
@@ -24,7 +24,7 @@ describe('util/manifest', () => {
           .then(() => getValidatedManifest(tmpDir.path()))
           .then((manifestData) => {
             assert.deepEqual(manifestData, basicManifest);
-          })
+          }),
       ));
 
     it('allows manifests without an applications property', () =>
@@ -33,7 +33,7 @@ describe('util/manifest', () => {
           .then(() => getValidatedManifest(tmpDir.path()))
           .then((manifestData) => {
             assert.deepEqual(manifestData, manifestWithoutApps);
-          })
+          }),
       ));
 
     it('reports an error for a missing manifest file', () => {
@@ -46,7 +46,7 @@ describe('util/manifest', () => {
             // Make sure the filename is included in the exception message.
             // This is actually done by default in file system error messages.
             assert.include(error.message, nonExistentDir);
-          })
+          }),
         );
     });
 
@@ -65,16 +65,16 @@ describe('util/manifest', () => {
             onlyInstancesOf(InvalidManifest, (error) => {
               assert.match(
                 error.message,
-                /Error parsing manifest\.json file at /
+                /Error parsing manifest\.json file at /,
               );
               // Matching error messages from either Node.js < 19 or Node.js >= 19
               // See comments in tests/unit/test-cmd/test.build.js
               assert.match(
                 error.message,
-                /Unexpected token "," \(0x2C\) in JSON at position 51|Expected double-quoted property name in JSON at position 51/
+                /Unexpected token "," \(0x2C\) in JSON at position 51|Expected double-quoted property name in JSON at position 51/,
               );
               assert.include(error.message, manifestFile);
-            })
+            }),
           );
       }));
 
@@ -91,12 +91,12 @@ describe('util/manifest', () => {
                 onlyInstancesOf(InvalidManifest, (error) => {
                   assert.match(
                     error.message,
-                    /Manifest at .* is invalid: missing "name" property/
+                    /Manifest at .* is invalid: missing "name" property/,
                   );
                   assert.include(error.message, manifestFile);
-                })
+                }),
               );
-          }
+          },
         );
       }));
 
@@ -113,12 +113,12 @@ describe('util/manifest', () => {
                 onlyInstancesOf(InvalidManifest, (error) => {
                   assert.match(
                     error.message,
-                    /Manifest at .* is invalid: missing "version" property/
+                    /Manifest at .* is invalid: missing "version" property/,
                   );
                   assert.include(error.message, manifestFile);
-                })
+                }),
               );
-          }
+          },
         );
       }));
 
@@ -135,12 +135,12 @@ describe('util/manifest', () => {
                 onlyInstancesOf(InvalidManifest, (error) => {
                   assert.match(
                     error.message,
-                    /Manifest at .* is invalid: missing "applications.gecko".*/
+                    /Manifest at .* is invalid: missing "applications.gecko".*/,
                   );
                   assert.include(error.message, manifestFile);
-                })
+                }),
               );
-          }
+          },
         );
       }));
 
@@ -169,9 +169,9 @@ describe('util/manifest', () => {
               onlyInstancesOf(InvalidManifest, (error) => {
                 assert.match(
                   error.message,
-                  /missing "name" property; missing "version" property/
+                  /missing "name" property; missing "version" property/,
                 );
-              })
+              }),
             );
         });
       }));
@@ -213,7 +213,7 @@ describe('util/manifest', () => {
         const error = await assert.isRejected(promise, InvalidManifest);
         await assert.isRejected(
           promise,
-          /Error parsing manifest\.json file at .* in JSON at position 133/
+          /Error parsing manifest\.json file at .* in JSON at position 133/,
         );
         assert.include(error.message, manifestFile);
       }));
@@ -230,7 +230,7 @@ describe('util/manifest', () => {
               ...manifestWithoutApps,
               [key]: basicManifest.applications,
             }),
-            id
+            id,
           );
         });
 
@@ -240,7 +240,7 @@ describe('util/manifest', () => {
               ...manifestWithoutApps,
               [key]: {},
             }),
-            undefined
+            undefined,
           );
         });
       });
@@ -257,7 +257,7 @@ describe('util/manifest', () => {
             browser_specific_settings: { gecko: { id: bssId } },
             applications: { gecko: { id: appId } },
           }),
-          bssId
+          bssId,
         );
 
         // This test that we are matching what Firefox does in this scenario.
@@ -267,7 +267,7 @@ describe('util/manifest', () => {
             browser_specific_settings: { gecko: {} },
             applications: { gecko: { id: appId } },
           }),
-          undefined
+          undefined,
         );
       });
 
@@ -278,7 +278,7 @@ describe('util/manifest', () => {
             browser_specific_settings: {},
             applications: { gecko: { id: appId } },
           }),
-          appId
+          appId,
         );
       });
     });

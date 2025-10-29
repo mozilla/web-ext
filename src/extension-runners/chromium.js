@@ -3,15 +3,13 @@
  * in a Chromium-based browser instance.
  */
 
+import fs from 'fs/promises';
 import path from 'path';
 
-import fs from 'fs-extra';
-import asyncMkdirp from 'mkdirp';
 import {
   Launcher as ChromeLauncher,
   launch as defaultChromiumLaunch,
 } from 'chrome-launcher';
-import WebSocket, { WebSocketServer } from 'ws';
 
 import { createLogger } from '../util/logger.js';
 import { TempDir } from '../util/temp-dir.js';
@@ -20,11 +18,128 @@ import fileExists from '../util/file-exists.js';
 
 const log = createLogger(import.meta.url);
 
-const EXCLUDED_CHROME_FLAGS = ['--disable-extensions', '--mute-audio'];
+const EXCLUDED_CHROME_FLAGS = [
+  '--disable-extensions',
+  '--mute-audio',
+  '--disable-component-update',
+];
 
 export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
-  (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag)
+  (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag),
 );
+
+// This is a client for the Chrome Devtools protocol. The methods and results
+// are documented at https://chromedevtools.github.io/devtools-protocol/tot/
+class ChromeDevtoolsProtocolClient {
+  #receivedData = '';
+  #isProcessingMessage = false;
+  #lastId = 0;
+  #deferredResponses = new Map();
+  #disconnected = false;
+  #disconnectedPromise;
+  #resolveDisconnectedPromise;
+
+  // Print all exchanged CDP messages to ease debugging.
+  TEST_LOG_VERBOSE_CDP = process.env.TEST_LOG_VERBOSE_CDP;
+
+  constructor(chromiumInstance) {
+    // remoteDebuggingPipes is from chrome-launcher, see
+    // https://github.com/GoogleChrome/chrome-launcher/pull/347
+    const { incoming, outgoing } = chromiumInstance.remoteDebuggingPipes;
+    this.#disconnectedPromise = new Promise((resolve) => {
+      this.#resolveDisconnectedPromise = resolve;
+    });
+    if (incoming.closed) {
+      // Strange. Did Chrome fail to start, or exit on startup?
+      log.warn('CDP already disconnected at initialization');
+      this.#finalizeDisconnect();
+      return;
+    }
+    incoming.on('data', (data) => {
+      this.#receivedData += data;
+      this.#processNextMessage();
+    });
+    incoming.on('error', (error) => {
+      log.error(error);
+      this.#finalizeDisconnect();
+    });
+    incoming.on('close', () => this.#finalizeDisconnect());
+    this.outgoingPipe = outgoing;
+  }
+
+  waitUntilDisconnected() {
+    return this.#disconnectedPromise;
+  }
+
+  async sendCommand(method, params, sessionId = undefined) {
+    if (this.#disconnected) {
+      throw new Error(`CDP disconnected, cannot send: command ${method}`);
+    }
+    const message = {
+      id: ++this.#lastId,
+      method,
+      params,
+      sessionId,
+    };
+    const rawMessage = `${JSON.stringify(message)}\x00`;
+    if (this.TEST_LOG_VERBOSE_CDP) {
+      process.stderr.write(`[CDP] [SEND] ${rawMessage}\n`);
+    }
+    return new Promise((resolve, reject) => {
+      // CDP will always send a response.
+      this.#deferredResponses.set(message.id, { method, resolve, reject });
+      this.outgoingPipe.write(rawMessage);
+    });
+  }
+
+  #processNextMessage() {
+    if (this.#isProcessingMessage) {
+      return;
+    }
+    this.#isProcessingMessage = true;
+    let end = this.#receivedData.indexOf('\x00');
+    while (end !== -1) {
+      const rawMessage = this.#receivedData.slice(0, end);
+      this.#receivedData = this.#receivedData.slice(end + 1); // +1 skips \x00.
+      try {
+        if (this.TEST_LOG_VERBOSE_CDP) {
+          process.stderr.write(`[CDP] [RECV] ${rawMessage}\n`);
+        }
+        const { id, error, result } = JSON.parse(rawMessage);
+        const deferredResponse = this.#deferredResponses.get(id);
+        if (deferredResponse) {
+          this.#deferredResponses.delete(id);
+          if (error) {
+            const err = new Error(error.message || 'Unexpected CDP response');
+            deferredResponse.reject(err);
+          } else {
+            deferredResponse.resolve(result);
+          }
+        } else {
+          // Dropping events and non-response messages since we don't need it.
+        }
+      } catch (e) {
+        log.error(e);
+      }
+      end = this.#receivedData.indexOf('\x00');
+    }
+    this.#isProcessingMessage = false;
+    if (this.#disconnected) {
+      for (const { method, reject } of this.#deferredResponses.values()) {
+        reject(new Error(`CDP connection closed before response to ${method}`));
+      }
+      this.#deferredResponses.clear();
+      this.#resolveDisconnectedPromise();
+    }
+  }
+
+  #finalizeDisconnect() {
+    if (!this.#disconnected) {
+      this.#disconnected = true;
+      this.#processNextMessage();
+    }
+  }
+}
 
 /**
  * Implements an IExtensionRunner which manages a Chromium instance.
@@ -34,8 +149,9 @@ export class ChromiumExtensionRunner {
   params;
   chromiumInstance;
   chromiumLaunch;
-  reloadManagerExtension;
-  wss;
+  // --load-extension is deprecated, but only supported in Chrome 126+, see:
+  // https://github.com/mozilla/web-ext/issues/3388#issuecomment-2906982117
+  forceUseDeprecatedLoadExtension;
   exiting;
   _promiseSetupDone;
 
@@ -43,6 +159,9 @@ export class ChromiumExtensionRunner {
     const { chromiumLaunch = defaultChromiumLaunch } = params;
     this.params = params;
     this.chromiumLaunch = chromiumLaunch;
+    // We will try to use Extensions.loadUnpacked first (Chrome 126+), and if
+    // that does not work fall back to --load-extension.
+    this.forceUseDeprecatedLoadExtension = false;
     this.cleanupCallbacks = new Set();
   }
 
@@ -107,62 +226,14 @@ export class ChromiumExtensionRunner {
    * Setup the Chromium Profile and run a Chromium instance.
    */
   async setupInstance() {
-    // Start a websocket server on a free localhost TCP port.
-    this.wss = await new Promise((resolve) => {
-      const server = new WebSocketServer(
-        // Use a ipv4 host so we don't need to escape ipv6 address
-        // https://github.com/mozilla/web-ext/issues/2331
-        { port: 0, host: '127.0.0.1', clientTracking: true },
-        // Wait the server to be listening (so that the extension
-        // runner can successfully retrieve server address and port).
-        () => resolve(server)
-      );
-    });
-
-    // Prevent unhandled socket error (e.g. when chrome
-    // is exiting, See https://github.com/websockets/ws/issues/1256).
-    this.wss.on('connection', function (socket) {
-      socket.on('error', (err) => {
-        log.debug(`websocket connection error: ${err}`);
-      });
-    });
-
-    const chromeFlags = [...DEFAULT_CHROME_FLAGS];
-    let startingUrl;
-    let specialStartingUrls = [];
-    if (this.params.startUrl) {
-      const specialUrlFormats = ['chrome://', 'chrome-extension://'];
-      const startingUrls = Array.isArray(this.params.startUrl)
-        ? this.params.startUrl
-        : [this.params.startUrl];
-
-      // Extract URLs starting with chrome:// from startingUrls and let bg.js open them instead
-      specialStartingUrls = startingUrls.filter((item) =>
-        specialUrlFormats.some((format) =>
-          item.toLowerCase().startsWith(format)
-        )
-      );
-
-      const strippedStartingUrls = startingUrls.filter(
-        (item) =>
-          !specialUrlFormats.some((format) =>
-            item.toLowerCase().startsWith(format)
-          )
-      );
-
-      startingUrl = strippedStartingUrls.shift();
-      chromeFlags.push(...strippedStartingUrls);
-    }
-
-    // Create the extension that will manage the addon reloads
-    this.reloadManagerExtension = await this.createReloadManagerExtension(
-      specialStartingUrls
-    );
+    // NOTE: This function may be called twice, if the user is using an old
+    // Chrome version (before Chrome 126), because then we have to add a
+    // command-line flag (--load-extension) to load the extension. For details,
+    // see:
+    // https://github.com/mozilla/web-ext/issues/3388#issuecomment-2906982117
 
     // Start chrome pointing it to a given profile dir
-    const extensions = [this.reloadManagerExtension]
-      .concat(this.params.extensions.map(({ sourceDir }) => sourceDir))
-      .join(',');
+    const extensions = this.params.extensions.map(({ sourceDir }) => sourceDir);
 
     const { chromiumBinary } = this.params;
 
@@ -172,7 +243,14 @@ export class ChromiumExtensionRunner {
       log.debug(`(chromiumBinary: ${chromiumBinary})`);
     }
 
-    chromeFlags.push(`--load-extension=${extensions}`);
+    const chromeFlags = [...DEFAULT_CHROME_FLAGS];
+    chromeFlags.push('--remote-debugging-pipe');
+
+    if (!this.forceUseDeprecatedLoadExtension) {
+      chromeFlags.push('--enable-unsafe-extension-debugging');
+    } else {
+      chromeFlags.push(`--load-extension=${extensions.join(',')}`);
+    }
 
     if (this.params.args) {
       chromeFlags.push(...this.params.args);
@@ -181,7 +259,7 @@ export class ChromiumExtensionRunner {
     // eslint-disable-next-line prefer-const
     let { userDataDir, profileDirName } =
       await ChromiumExtensionRunner.getProfilePaths(
-        this.params.chromiumProfile
+        this.params.chromiumProfile,
       );
 
     if (userDataDir && this.params.keepProfileChanges) {
@@ -193,7 +271,7 @@ export class ChromiumExtensionRunner {
           'The profile you provided is not in a ' +
             'user-data-dir. The changes cannot be kept. Please either ' +
             'remove --keep-profile-changes or use a profile in a ' +
-            'user-data-dir directory'
+            'user-data-dir directory',
         );
       }
     } else if (!this.params.keepProfileChanges) {
@@ -206,12 +284,13 @@ export class ChromiumExtensionRunner {
 
       if (userDataDir && profileDirName) {
         // copy profile dir to this temp user data dir.
-        await fs.copy(
+        await fs.cp(
           path.join(userDataDir, profileDirName),
-          path.join(tmpDirPath, profileDirName)
+          path.join(tmpDirPath, profileDirName),
+          { recursive: true },
         );
       } else if (userDataDir) {
-        await fs.copy(userDataDir, tmpDirPath);
+        await fs.cp(userDataDir, tmpDirPath, { recursive: true });
       }
       userDataDir = tmpDirPath;
     }
@@ -221,16 +300,22 @@ export class ChromiumExtensionRunner {
     }
 
     this.chromiumInstance = await this.chromiumLaunch({
-      enableExtensions: true,
       chromePath: chromiumBinary,
       chromeFlags,
       startingUrl,
       userDataDir,
+      logLevel: this.params.verbose ? 'verbose' : 'silent',
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
     });
+    this.cdp = new ChromeDevtoolsProtocolClient(this.chromiumInstance);
 
+    const initialChromiumInstance = this.chromiumInstance;
     this.chromiumInstance.process.once('close', () => {
+      if (this.chromiumInstance !== initialChromiumInstance) {
+        // This happens when we restart Chrome to fall back to --load-extension.
+        return;
+      }
       this.chromiumInstance = null;
 
       if (!this.exiting) {
@@ -238,125 +323,40 @@ export class ChromiumExtensionRunner {
         this.exit();
       }
     });
-  }
 
-  async wssBroadcast(data) {
-    return new Promise((resolve) => {
-      const clients = this.wss ? new Set(this.wss.clients) : new Set();
-
-      function cleanWebExtReloadComplete() {
-        const client = this;
-        client.removeEventListener('message', webExtReloadComplete);
-        client.removeEventListener('close', cleanWebExtReloadComplete);
-        clients.delete(client);
-      }
-
-      const webExtReloadComplete = async (message) => {
-        const msg = JSON.parse(message.data);
-
-        if (msg.type === 'webExtReloadExtensionComplete') {
-          for (const client of clients) {
-            cleanWebExtReloadComplete.call(client);
+    if (!this.forceUseDeprecatedLoadExtension) {
+      // Assume that the required Extensions.loadUnpacked CDP method is
+      // supported. If it is not, we will fall back to --load-extension.
+      let cdpSupportsExtensionsLoadUnpacked = true;
+      for (const sourceDir of extensions) {
+        try {
+          await this.cdp.sendCommand('Extensions.loadUnpacked', {
+            path: sourceDir,
+          });
+        } catch (e) {
+          // Chrome 125- will emit the following message:
+          if (e.message === "'Extensions.loadUnpacked' wasn't found") {
+            cdpSupportsExtensionsLoadUnpacked = false;
+            break;
           }
-          resolve();
-        }
-      };
-
-      for (const client of clients) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.addEventListener('message', webExtReloadComplete);
-          client.addEventListener('close', cleanWebExtReloadComplete);
-
-          client.send(JSON.stringify(data));
-        } else {
-          clients.delete(client);
+          log.error(`Failed to load extension at ${sourceDir}: ${e.message}`);
+          // We do not have to throw - the extension can work again when
+          // auto-reload is used. But users may like a hard fail, and this is
+          // consistent with the firefox runner.
+          throw e;
         }
       }
-
-      if (clients.size === 0) {
-        resolve();
+      if (!cdpSupportsExtensionsLoadUnpacked) {
+        // Retry once, now with --load-extension.
+        log.warn('Cannot load extension via CDP, falling back to old method');
+        this.forceUseDeprecatedLoadExtension = true;
+        this.chromiumInstance = null;
+        await initialChromiumInstance.kill();
+        await this.cdp.waitUntilDisconnected();
+        this.cdp = null;
+        return this.setupInstance();
       }
-    });
-  }
-
-  async createReloadManagerExtension(specialStartingUrls) {
-    const tmpDir = new TempDir();
-    await tmpDir.create();
-    this.registerCleanup(() => tmpDir.remove());
-
-    const extPath = path.join(
-      tmpDir.path(),
-      `reload-manager-extension-${Date.now()}`
-    );
-
-    log.debug(`Creating reload-manager-extension in ${extPath}`);
-
-    await asyncMkdirp(extPath);
-
-    await fs.writeFile(
-      path.join(extPath, 'manifest.json'),
-      JSON.stringify({
-        manifest_version: 2,
-        name: 'web-ext Reload Manager Extension',
-        version: '1.0',
-        permissions: ['management', 'tabs'],
-        background: {
-          scripts: ['bg.js'],
-        },
-      })
-    );
-
-    const wssInfo = this.wss.address();
-
-    const bgPage = `(function bgPage() {
-      async function getAllDevExtensions() {
-        const allExtensions = await new Promise(
-          r => chrome.management.getAll(r));
-
-        return allExtensions.filter((extension) => {
-          return extension.enabled &&
-            extension.installType === "development" &&
-            extension.id !== chrome.runtime.id;
-        });
-      }
-
-      const setEnabled = (extensionId, value) =>
-        chrome.runtime.id == extensionId ?
-        new Promise.resolve() :
-        new Promise(r => chrome.management.setEnabled(extensionId, value, r));
-
-      async function reloadExtension(extensionId) {
-        await setEnabled(extensionId, false);
-        await setEnabled(extensionId, true);
-      }
-
-      const ws = new window.WebSocket(
-        "ws://${wssInfo.address}:${wssInfo.port}");
-
-        
-      const chromeTabList = ${JSON.stringify(specialStartingUrls)}
-      if (chromeTabList.length > 0) {   
-        chrome.runtime.onInstalled.addListener(details => {
-          if (details.reason === chrome.runtime.OnInstalledReason.INSTALL ) {
-            chromeTabList.forEach(url => {
-              chrome.tabs.create({ url });
-            });
-          }           
-        });
-      }
-   
-      ws.onmessage = async (evt) => {
-        const msg = JSON.parse(evt.data);
-        if (msg.type === 'webExtReloadAllExtensions') {
-          const devExtensions = await getAllDevExtensions();
-          await Promise.all(devExtensions.map(ext => reloadExtension(ext.id)));
-          ws.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
-        }
-      };
-    })()`;
-
-    await fs.writeFile(path.join(extPath, 'bg.js'), bgPage);
-    return extPath;
+    }
   }
 
   /**
@@ -366,16 +366,156 @@ export class ChromiumExtensionRunner {
   async reloadAllExtensions() {
     const runnerName = this.getName();
 
-    await this.wssBroadcast({
-      type: 'webExtReloadAllExtensions',
-    });
+    if (this.forceUseDeprecatedLoadExtension) {
+      this.reloadAllExtensionsFallbackForChrome125andEarlier();
+    } else {
+      for (const { sourceDir } of this.params.extensions) {
+        try {
+          await this.cdp.sendCommand('Extensions.loadUnpacked', {
+            path: sourceDir,
+          });
+        } catch (e) {
+          log.error(`Failed to load extension at ${sourceDir}: ${e.message}`);
+        }
+      }
+    }
 
     process.stdout.write(
-      `\rLast extension reload: ${new Date().toTimeString()}`
+      `\rLast extension reload: ${new Date().toTimeString()}`,
     );
     log.debug('\n');
 
     return [{ runnerName }];
+  }
+
+  async reloadAllExtensionsFallbackForChrome125andEarlier() {
+    // Ideally, we'd like to use the "Extensions.loadUnpacked" CDP command to
+    // reload an extension, but that is unsupported in Chrome 125 and earlier.
+    //
+    // As a fallback, connect to chrome://extensions/ and reload from there.
+    // Since we are targeting old Chrome versions, we can safely use the
+    // chrome.developerPrivate APIs, because these are never going to change
+    // for the old browser versions. Do NOT use this for newer versions!
+    //
+    // Target.* CDP methods documented at: https://chromedevtools.github.io/devtools-protocol/tot/Target/
+    // developerPrivate documented at:
+    // https://source.chromium.org/chromium/chromium/src/+/main:chrome/common/extensions/api/developer_private.idl
+    //
+    // Specific revision that exposed developerPrivate to chrome://extensions/:
+    // https://source.chromium.org/chromium/chromium/src/+/main:chrome/common/extensions/api/developer_private.idl;drc=69bf75316e7ae533c0a0dccc1a56ca019aa95a1e
+    // https://chromium.googlesource.com/chromium/src.git/+/69bf75316e7ae533c0a0dccc1a56ca019aa95a1e
+    //
+    // Specific revision that introduced developerPrivate.getExtensionsInfo:
+    // https://source.chromium.org/chromium/chromium/src/+/main:chrome/common/extensions/api/developer_private.idl;drc=69bf75316e7ae533c0a0dccc1a56ca019aa95a1e
+    //
+    // The above changes are from 2015; The --remote-debugging-pipe feature
+    // that we rely on for CDP was added in 2018; this is the version of the
+    // developerPrivate API at that time:
+    // https://source.chromium.org/chromium/chromium/src/+/main:chrome/common/extensions/api/developer_private.idl;drc=c9ae59c8f37d487f1f01c222deb6b7d1f51c99c2
+
+    // Find an existing chrome://extensions/ tab, if it exists.
+    let { targetInfos: targets } = await this.cdp.sendCommand(
+      'Target.getTargets',
+      { filter: [{ type: 'tab' }] },
+    );
+    targets = targets.filter((t) => t.url.startsWith('chrome://extensions/'));
+    let targetId;
+    const hasExistingTarget = targets.length > 0;
+    if (hasExistingTarget) {
+      targetId = targets[0].targetId;
+    } else {
+      const result = await this.cdp.sendCommand('Target.createTarget', {
+        url: 'chrome://extensions/',
+        newWindow: true,
+        background: true,
+        windowState: 'minimized',
+      });
+      targetId = result.targetId;
+    }
+    const codeToEvaluateInChrome = async () => {
+      // This function is serialized and executed in Chrome. Designed for
+      // compatibility with Chrome 69 - 125. Do not use JS syntax of functions
+      // that are not supported in these versions!
+
+      // eslint-disable-next-line no-undef
+      const developerPrivate = chrome.developerPrivate;
+      if (!developerPrivate || !developerPrivate.getExtensionsInfo) {
+        // When chrome://extensions/ is still loading, its document URL may be
+        // about:blank and the chrome.developerPrivate API is not exposed.
+        return 'NOT_READY_PLEASE_RETRY';
+      }
+      const extensionIds = [];
+      await new Promise((resolve) => {
+        developerPrivate.getExtensionsInfo((extensions) => {
+          for (const extension of extensions || []) {
+            if (extension.location === 'UNPACKED') {
+              // We only care about those loaded via --load-extension.
+              extensionIds.push(extension.id);
+            }
+          }
+          resolve();
+        });
+      });
+      const reloadPromises = extensionIds.map((extensionId) => {
+        return new Promise((resolve, reject) => {
+          developerPrivate.reload(
+            extensionId,
+            // Suppress alert dialog when load fails.
+            { failQuietly: true, populateErrorForUnpacked: true },
+            (loadError) => {
+              if (loadError) {
+                reject(new Error(loadError.error));
+              } else {
+                resolve();
+              }
+            },
+          );
+        });
+      });
+      await Promise.all(reloadPromises);
+      return reloadPromises.length;
+    };
+    try {
+      const targetResult = await this.cdp.sendCommand('Target.attachToTarget', {
+        targetId,
+        flatten: true,
+      });
+      if (!targetResult.sessionId) {
+        throw new Error('Unexpectedly, no sessionId from attachToTarget');
+      }
+      // In practice, we're going to run the logic only once. But if we are
+      // unlucky, chrome://extensions is still loading, so we will then retry.
+      for (let i = 0; i < 3; ++i) {
+        const evalResult = await this.cdp.sendCommand(
+          'Runtime.evaluate',
+          {
+            expression: `(${codeToEvaluateInChrome})();`,
+            awaitPromise: true,
+          },
+          targetResult.sessionId,
+        );
+        const evalResultReturnValue = evalResult.result?.value;
+        if (evalResultReturnValue === 'NOT_READY_PLEASE_RETRY') {
+          await new Promise((r) => setTimeout(r, 200 * i));
+          continue;
+        }
+        if (evalResult.exceptionDetails) {
+          log.error(`Failed to reload: ${evalResult.exceptionDetails.text}`);
+        }
+        if (evalResultReturnValue !== this.params.extensions.length) {
+          log.warn(`Failed to reload extensions: ${evalResultReturnValue}`);
+        }
+        break;
+      }
+    } finally {
+      if (!hasExistingTarget && targetId) {
+        try {
+          await this.cdp.sendCommand('Target.closeTarget', { targetId });
+        } catch (e) {
+          log.error(e);
+        }
+      }
+    }
   }
 
   /**
@@ -383,7 +523,7 @@ export class ChromiumExtensionRunner {
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
   async reloadExtensionBySourceDir(
-    extensionSourceDir // eslint-disable-line no-unused-vars
+    extensionSourceDir, // eslint-disable-line no-unused-vars
   ) {
     // TODO(rpl): detect the extension ids assigned to the
     // target extensions and map it to the extensions source dir
@@ -420,19 +560,9 @@ export class ChromiumExtensionRunner {
       this.chromiumInstance = null;
     }
 
-    if (this.wss) {
-      // Close all websocket clients, closing the WebSocketServer
-      // does not terminate the existing connection and it wouldn't
-      // resolve until all of the existing connections are closed.
-      for (const wssClient of this.wss?.clients || []) {
-        if (wssClient.readyState === WebSocket.OPEN) {
-          wssClient.terminate();
-        }
-      }
-      await new Promise((resolve) =>
-        this.wss ? this.wss.close(resolve) : resolve()
-      );
-      this.wss = null;
+    if (this.cdp) {
+      await this.cdp.waitUntilDisconnected();
+      this.cdp = null;
     }
 
     // Call all the registered cleanup callbacks.

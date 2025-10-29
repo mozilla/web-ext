@@ -18,6 +18,11 @@ async function testModuleExportedUtils() {
   assert.equal(typeof utilLogger.createLogger, 'function');
   assert.equal(typeof utilLogger.ConsoleStream?.constructor, 'function');
   assert.ok(utilLogger.consoleStream instanceof utilLogger.ConsoleStream);
+
+  const utilSubmitAddon = await import('web-ext/util/submit-addon'); // eslint-disable-line import/no-unresolved
+  assert.equal(typeof utilSubmitAddon.signAddon, 'function');
+  assert.equal(typeof utilSubmitAddon.default, 'function');
+  assert.equal(typeof utilSubmitAddon.JwtApiAuth, 'function');
 }
 
 function assertImportedADB({expectLoaded}) {

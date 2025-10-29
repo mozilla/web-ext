@@ -1,4 +1,4 @@
-import { fs } from 'mz';
+import fs from 'fs/promises';
 
 import { onlyErrorsWithCode } from '../errors.js';
 
@@ -20,6 +20,6 @@ export default function isDirectory(path) {
     .catch(
       onlyErrorsWithCode(['ENOENT', 'ENOTDIR'], () => {
         return false;
-      })
+      }),
     );
 }

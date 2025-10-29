@@ -60,7 +60,7 @@ function prepareExtensionRunnerParams({
         }),
         ...fakeFirefoxApp,
       },
-      debuggerPort
+      debuggerPort,
     ),
     firefoxClient: () => {
       return Promise.resolve(remoteFirefox);
@@ -95,13 +95,13 @@ describe('util/extension-runners/firefox-desktop', () => {
     sinon.assert.calledOnce(remoteFirefox.installTemporaryAddon);
     sinon.assert.calledWithMatch(
       remoteFirefox.installTemporaryAddon,
-      params.extensions[0].sourceDir
+      params.extensions[0].sourceDir,
     );
 
     sinon.assert.calledOnce(params.firefoxApp.createProfile);
     sinon.assert.calledWith(
       params.firefoxApp.createProfile,
-      sinon.match({ customPrefs })
+      sinon.match({ customPrefs }),
     );
 
     sinon.assert.calledOnce(params.firefoxApp.run);
@@ -128,7 +128,7 @@ describe('util/extension-runners/firefox-desktop', () => {
       fakeRemoteFirefox: {
         // Simulate an older Firefox that will throw this error.
         installTemporaryAddon: sinon.spy(() =>
-          Promise.reject(new RemoteTempInstallNotSupported(''))
+          Promise.reject(new RemoteTempInstallNotSupported('')),
         ),
       },
     });
@@ -143,7 +143,7 @@ describe('util/extension-runners/firefox-desktop', () => {
         onlyInstancesOf(WebExtError, (error) => {
           sinon.assert.called(remoteFirefox.installTemporaryAddon);
           assert.match(error.message, /use --pre-install/);
-        })
+        }),
       );
   });
 
@@ -165,8 +165,8 @@ describe('util/extension-runners/firefox-desktop', () => {
       sinon.match.any,
       sinon.match.has(
         'binaryArgs',
-        sinon.match.array.deepEquals(expectedBinaryArgs)
-      )
+        sinon.match.array.deepEquals(expectedBinaryArgs),
+      ),
     );
   }
 
@@ -175,7 +175,7 @@ describe('util/extension-runners/firefox-desktop', () => {
       {
         browserConsole: true,
       },
-      ['-jsconsole']
+      ['-jsconsole'],
     );
   });
 
@@ -184,7 +184,7 @@ describe('util/extension-runners/firefox-desktop', () => {
       {
         startUrl: 'url1',
       },
-      ['--url', 'url1']
+      ['--url', 'url1'],
     );
   });
 
@@ -193,7 +193,7 @@ describe('util/extension-runners/firefox-desktop', () => {
       {
         startUrl: ['url1', 'url2'],
       },
-      ['--url', 'url1', '--url', 'url2']
+      ['--url', 'url1', '--url', 'url2'],
     );
   });
 
@@ -202,7 +202,7 @@ describe('util/extension-runners/firefox-desktop', () => {
       {
         args: ['-headless=true', '-jsconsole'],
       },
-      ['-headless=true', '-jsconsole']
+      ['-headless=true', '-jsconsole'],
     );
   });
 
@@ -221,7 +221,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     sinon.assert.calledOnce(params.firefoxApp.copyProfile);
     sinon.assert.calledWith(
       params.firefoxApp.copyProfile,
-      sinon.match(params.profilePath)
+      sinon.match(params.profilePath),
     );
   });
 
@@ -241,7 +241,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     sinon.assert.calledOnce(params.firefoxApp.useProfile);
     sinon.assert.calledWith(
       params.firefoxApp.useProfile,
-      sinon.match(params.profilePath)
+      sinon.match(params.profilePath),
     );
   });
 
@@ -276,14 +276,14 @@ describe('util/extension-runners/firefox-desktop', () => {
         manifestData,
         profile: fakeProfile,
         extensionPath: sourceDir,
-      })
+      }),
     );
     const install = params.firefoxApp.installExtension.firstCall.args[0];
 
     assert.equal(install.asProxy, true);
     assert.equal(
       install.manifestData.applications.gecko.id,
-      manifestData.applications?.gecko?.id
+      manifestData.applications?.gecko?.id,
     );
     assert.deepEqual(install.profile, fakeProfile);
     // This needs to be the source of the extension.
@@ -294,7 +294,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     const { params } = prepareExtensionRunnerParams({
       fakeRemoteFirefox: {
         installTemporaryAddon: sinon.spy(() =>
-          Promise.resolve(tempInstallResultMissingAddonId)
+          Promise.resolve(tempInstallResultMissingAddonId),
         ),
       },
     });
@@ -307,7 +307,7 @@ describe('util/extension-runners/firefox-desktop', () => {
         assert.equal(error instanceof WebExtError, true);
         assert.equal(
           error && error.message,
-          'Unexpected missing addonId in the installAsTemporaryAddon result'
+          'Unexpected missing addonId in the installAsTemporaryAddon result',
         );
       });
   });
@@ -362,7 +362,7 @@ describe('util/extension-runners/firefox-desktop', () => {
         assert.equal(error instanceof WebExtError, true);
         assert.equal(
           error && error.message,
-          'No firefox instance is currently running'
+          'No firefox instance is currently running',
         );
       });
   });
@@ -385,7 +385,7 @@ describe('util/extension-runners/firefox-desktop', () => {
     await runnerInstance.run();
 
     await runnerInstance.reloadExtensionBySourceDir(
-      params.extensions[0].sourceDir
+      params.extensions[0].sourceDir,
     );
 
     sinon.assert.calledOnce(remoteFirefox.reloadAddon);
@@ -405,7 +405,7 @@ describe('util/extension-runners/firefox-desktop', () => {
         assert.equal(
           error && error.message,
           'Extension not reloadable: no addonId has been mapped to ' +
-            '"/non-existent/source-dir"'
+            '"/non-existent/source-dir"',
         );
       });
 
@@ -429,8 +429,8 @@ describe('util/extension-runners/firefox-desktop', () => {
       assert.ok(
         error &&
           error.message.includes(
-            `Error on extension loaded from ${sourceDir}: `
-          )
+            `Error on extension loaded from ${sourceDir}: `,
+          ),
       );
     });
 

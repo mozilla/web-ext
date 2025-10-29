@@ -24,11 +24,13 @@ references:
   # set of nodejs versions that should be tested.
   # The nodejs version set as `nodejs_current` is the one used to
   # release the package on npm.
+  #
+  # See https://nodejs.org/en/about/previous-releases for updates to nodejs versions.
   nodejs_versions:
     # nvm-windows wants a full Node version, not just `<major>.<minor>`.
-    - &nodejs_current "16.14.2"
-    - &nodejs_next "18.15"
-    - &nodejs_experimental "19.3"
+    - &nodejs_current "20.19.5"
+    - &nodejs_next "22.19"
+    - &nodejs_experimental "24.8"
 
   nodejs_enum: &nodejs_enum
     type: enum
@@ -173,13 +175,24 @@ jobs:
           node_env: test
       ## Skip code coverage and the additional legacy bundling tests on jobs
       ## running on the next nodejs versions.
-      - unless:
+      - when:
           condition:
-            equal: [*nodejs_current, << parameters.nodejs >>]
+            equal: [*nodejs_next, << parameters.nodejs >>]
           steps:
             - run:
-                name: run linting checks and unit tests
-                command: npm run test
+                  name: run linting checks and unit tests
+                  command: npm run test
+            - run_functional_tests
+      ## Allow npm run test to fail when running on nodejs experimental.
+      # TODO(https://github.com/mozilla/web-ext/issues/3015): change this to do not
+      # allow failures on nodejs 21 once fixed by a testdouble dependency update.
+      - when:
+          condition:
+            equal: [*nodejs_experimental, << parameters.nodejs >>]
+          steps:
+            - run:
+                  name: run linting checks and unit tests (but allow failure)
+                  command: npm run test || echo "NOTE - Unit tests failed, but allowed to fail on nodejs experimental"
             - run_functional_tests
       ## Steps only executed in jobs running on the current nodejs version.
       - when:

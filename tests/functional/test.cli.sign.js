@@ -1,9 +1,9 @@
 import { spawn } from 'child_process';
 import path from 'path';
+import { writeFileSync } from 'fs';
 
 import { assert } from 'chai';
 import { describe, it, beforeEach, afterEach } from 'mocha';
-import { fs } from 'mz';
 
 import {
   minimalAddonPath,
@@ -13,11 +13,11 @@ import {
   reportCommandErrors,
 } from './common.js';
 
-// Put this as "web-ext-config.js" in the current directory, and replace
+// Put this as "web-ext-config.mjs" in the current directory, and replace
 // "FAKEAPIKEY" and "FAKEAPISECRET" with the actual values to enable
 // "web-ext sign" without passing those values via the CLI parameters.
 const GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS = `
-module.exports = {
+export default {
   sign: {
     apiKey: "FAKEAPIKEY",
     apiSecret: "FAKEAPISECRET",
@@ -27,7 +27,7 @@ module.exports = {
 
 // Do NOT use this to specify the API key and secret. It won't work.
 const BAD_EXAMPLE_OF_WEB_EXT_CONFIG_JS = `
-module.exports = {
+export default {
   // Bad config: those should be under the "sign" key.
   apiKey: "FAKEAPIKEY",
   apiSecret: "FAKEAPISECRET",
@@ -53,13 +53,15 @@ describe('web-ext sign', () => {
     }
   });
 
-  it('should accept: --source-dir SRCDIR --api-url-prefix URL', () =>
+  it('should accept: --source-dir SRCDIR --amo-base-url URL', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
       const argv = [
         'sign',
         '--verbose',
-        '--api-url-prefix',
-        'http://localhost:8989/fake/api/v4',
+        '--channel',
+        'listed',
+        '--amo-base-url',
+        'http://localhost:8989/fake/api/v5',
         '--api-key',
         'FAKEAPIKEY',
         '--api-secret',
@@ -83,21 +85,22 @@ describe('web-ext sign', () => {
 
   it('should use config file if required parameters are not in the arguments', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
-      fs.writeFileSync(
-        path.join(tmpDir, 'web-ext-config.js'),
-        GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS
+      writeFileSync(
+        path.join(tmpDir, 'web-ext-config.mjs'),
+        GOOD_EXAMPLE_OF_WEB_EXT_CONFIG_JS,
       );
 
-      fs.writeFileSync(
+      writeFileSync(
         path.join(tmpDir, 'package.json'),
         JSON.stringify({
           webExt: {
             sign: {
-              apiUrlPrefix: 'http://localhost:8989/fake/api/v4',
+              amoBaseUrl: 'http://localhost:8989/fake/api/v5',
+              channel: 'listed',
             },
             sourceDir: srcDir,
           },
-        })
+        }),
       );
 
       const argv = ['sign', '--verbose'];
@@ -117,8 +120,8 @@ describe('web-ext sign', () => {
 
   it('should show an error message if the api-key is not set in the config', () =>
     withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir, tmpDir) => {
-      const configFilePath = path.join(tmpDir, 'web-ext-config.js');
-      fs.writeFileSync(configFilePath, BAD_EXAMPLE_OF_WEB_EXT_CONFIG_JS);
+      const configFilePath = path.join(tmpDir, 'web-ext-config.mjs');
+      writeFileSync(configFilePath, BAD_EXAMPLE_OF_WEB_EXT_CONFIG_JS);
       const argv = [
         'sign',
         '--verbose',
@@ -128,11 +131,11 @@ describe('web-ext sign', () => {
       ];
       const cmd = execWebExt(argv, { cwd: tmpDir });
 
-      return cmd.waitForExit.then(({ exitCode, stdout }) => {
+      return cmd.waitForExit.then(({ exitCode, stderr }) => {
         assert.notEqual(exitCode, 0);
         assert.match(
-          stdout,
-          /web-ext-config.js specified an unknown option: "apiKey"/
+          stderr,
+          /web-ext-config.mjs specified an unknown option: "apiKey"/,
         );
       });
     }));

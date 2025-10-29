@@ -1,11 +1,11 @@
 import path from 'path';
+import fs from 'fs/promises';
 
 import deepcopy from 'deepcopy';
 import * as sinon from 'sinon';
 import FirefoxProfile from 'firefox-profile';
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
-import { fs } from 'mz';
 
 import * as firefox from '../../../src/firefox/index.js';
 import {
@@ -235,23 +235,23 @@ describe('firefox', () => {
       await runFirefox({ fxRunner: runner, devtools: false });
       assert.notOk(
         consoleStream.capturedMessages.find((msg) =>
-          msg.includes(expectedMessage)
-        )
+          msg.includes(expectedMessage),
+        ),
       );
       assert.notOk(
         consoleStream.capturedMessages.find((msg) =>
-          msg.includes(expectedURLToDocs)
-        )
+          msg.includes(expectedURLToDocs),
+        ),
       );
 
       consoleStream.flushCapturedLogs();
 
       await runFirefox({ fxRunner: runner, devtools: true });
       const foundMessage = consoleStream.capturedMessages.find((msg) =>
-        msg.includes(expectedMessage)
+        msg.includes(expectedMessage),
       );
       const foundDocURL = consoleStream.capturedMessages.find((msg) =>
-        msg.includes(expectedURLToDocs)
+        msg.includes(expectedURLToDocs),
       );
 
       // Expect the logs to be found.
@@ -285,7 +285,7 @@ describe('firefox', () => {
       // profile because on CI there will not be a Firefox
       // user directory.
       const copyFromUserProfile = sinon.spy((config, cb) =>
-        cb(new Error('simulated: could not find profile'))
+        cb(new Error('simulated: could not find profile')),
       );
 
       return firefox
@@ -299,9 +299,9 @@ describe('firefox', () => {
             assert.equal(copyFromUserProfile.called, true);
             assert.match(
               error.message,
-              /Could not copy Firefox profile from .*non_existent_path/
+              /Could not copy Firefox profile from .*non_existent_path/,
             );
-          })
+          }),
         );
     });
 
@@ -314,7 +314,7 @@ describe('firefox', () => {
         },
       };
       const copyFromUserProfile = sinon.spy((config, callback) =>
-        callback(null, profileToCopy)
+        callback(null, profileToCopy),
       );
 
       return firefox
@@ -327,7 +327,7 @@ describe('firefox', () => {
           sinon.assert.calledWithMatch(copyFromUserProfile, { name });
           assert.equal(
             profile.defaultPreferences.thing,
-            profileToCopy.defaultPreferences.thing
+            profileToCopy.defaultPreferences.thing,
           );
         });
     });
@@ -336,7 +336,7 @@ describe('firefox', () => {
       withBaseProfile((baseProfile) => {
         const app = 'fennec';
         const configureThisProfile = sinon.spy((profile) =>
-          Promise.resolve(profile)
+          Promise.resolve(profile),
         );
 
         return firefox
@@ -358,7 +358,7 @@ describe('firefox', () => {
       assert.equal(isDefault, true);
 
       const isDevEditionDefault = await firefox.isDefaultProfile(
-        'dev-edition-default'
+        'dev-edition-default',
       );
       assert.equal(isDevEditionDefault, true);
     });
@@ -379,13 +379,13 @@ describe('firefox', () => {
 
         const isDefault = await firefox.isDefaultProfile(
           'manually-set-default',
-          FakeProfileFinder
+          FakeProfileFinder,
         );
         assert.equal(isDefault, true, 'Manually configured default profile');
 
         const isNotDefault = await firefox.isDefaultProfile(
           'unkown-profile-name',
-          FakeProfileFinder
+          FakeProfileFinder,
         );
         assert.equal(isNotDefault, false, 'Unknown profile name');
       });
@@ -397,7 +397,7 @@ describe('firefox', () => {
         const FakeProfileFinder = createFakeProfileFinder(profilesDirPath);
         const absProfilePath = path.join(
           profilesDirPath,
-          'fake-manually-default-profile'
+          'fake-manually-default-profile',
         );
 
         await createFakeProfilesIni(profilesDirPath, [
@@ -420,33 +420,33 @@ describe('firefox', () => {
 
         const isFirefoxDefaultPath = await firefox.isDefaultProfile(
           path.join(profilesDirPath, 'fake-default-profile'),
-          FakeProfileFinder
+          FakeProfileFinder,
         );
         assert.equal(isFirefoxDefaultPath, true, 'Firefox default profile');
 
         const isDevEditionDefaultPath = await firefox.isDefaultProfile(
           path.join(profilesDirPath, 'fake-devedition-default-profile'),
-          FakeProfileFinder
+          FakeProfileFinder,
         );
         assert.equal(
           isDevEditionDefaultPath,
           true,
-          'Firefox DevEdition default profile'
+          'Firefox DevEdition default profile',
         );
 
         const isManuallyDefault = await firefox.isDefaultProfile(
           absProfilePath,
-          FakeProfileFinder
+          FakeProfileFinder,
         );
         assert.equal(
           isManuallyDefault,
           true,
-          'Manually configured default profile'
+          'Manually configured default profile',
         );
 
         const isNotDefault = await firefox.isDefaultProfile(
           path.join(profilesDirPath, 'unkown-profile-dir'),
-          FakeProfileFinder
+          FakeProfileFinder,
         );
         assert.equal(isNotDefault, false, 'Unknown profile path');
       });
@@ -459,7 +459,7 @@ describe('firefox', () => {
 
         const isNotDefault = await firefox.isDefaultProfile(
           '/tmp/my-custom-profile-dir',
-          FakeProfileFinder
+          FakeProfileFinder,
         );
 
         assert.equal(isNotDefault, false);
@@ -479,7 +479,7 @@ describe('firefox', () => {
           await firefox.isDefaultProfile(
             '/tmp/my-custom-profile-dir',
             FakeProfileFinder,
-            fakeFsStat
+            fakeFsStat,
           );
         } catch (error) {
           exception = error;
@@ -516,14 +516,14 @@ describe('firefox', () => {
           // Check for some default pref set by FirefoxProfile.
           assert.include(
             prefFile.toString(),
-            '"startup.homepage_welcome_url", "about:blank"'
+            '"startup.homepage_welcome_url", "about:blank"',
           );
         });
     });
 
     it('configures a profile', () => {
       const configureThisProfile = sinon.spy((profile) =>
-        Promise.resolve(profile)
+        Promise.resolve(profile),
       );
       const app = 'fennec';
       return firefox
@@ -539,7 +539,7 @@ describe('firefox', () => {
   describe('useProfile', () => {
     it('rejects to a UsageError when used on a default Firefox profile', async () => {
       const configureThisProfile = sinon.spy((profile) =>
-        Promise.resolve(profile)
+        Promise.resolve(profile),
       );
       const isFirefoxDefaultProfile = sinon.spy(() => Promise.resolve(true));
       let exception;
@@ -555,7 +555,7 @@ describe('firefox', () => {
       assert.instanceOf(exception, UsageError);
       assert.match(
         exception && exception.message,
-        /Cannot use --keep-profile-changes on a default profile/
+        /Cannot use --keep-profile-changes on a default profile/,
       );
     });
 
@@ -574,7 +574,7 @@ describe('firefox', () => {
       await assert.isRejected(promise, UsageError);
       await assert.isRejected(
         promise,
-        /The request "profileName" profile name cannot be resolved/
+        /The request "profileName" profile name cannot be resolved/,
       );
     });
 
@@ -619,14 +619,14 @@ describe('firefox', () => {
         sinon.assert.calledOnce(isFirefoxDefaultProfile);
         sinon.assert.calledWith(
           isFirefoxDefaultProfile,
-          sinon.match('profileName')
+          sinon.match('profileName'),
         );
       }));
 
     it('configures a profile', () =>
       withBaseProfile((baseProfile) => {
         const configureThisProfile = sinon.spy((profile) =>
-          Promise.resolve(profile)
+          Promise.resolve(profile),
         );
         const profilePath = baseProfile.path();
         return firefox
@@ -714,7 +714,7 @@ describe('firefox', () => {
       assert.equal(
         await profileFinder('someName'),
         expectedResolvedProfilePath,
-        'Got the expected profile path resolved'
+        'Got the expected profile path resolved',
       );
 
       sinon.assert.called(fakeReadProfiles);
@@ -743,7 +743,7 @@ describe('firefox', () => {
       assert.equal(
         res,
         undefined,
-        'Got an undefined result when the profiles.ini file does not exist'
+        'Got an undefined result when the profiles.ini file does not exist',
       );
     });
 
@@ -765,7 +765,7 @@ describe('firefox', () => {
       await assert.isRejected(
         promise,
         'unspecified error',
-        'Throws expected error'
+        'Throws expected error',
       );
       sinon.assert.called(fakeReadProfiles);
       sinon.assert.notCalled(fakeGetPath);
@@ -828,7 +828,7 @@ describe('firefox', () => {
             // Check for some pref set by configureProfile().
             assert.include(
               prefFile.toString(),
-              '"devtools.debugger.remote-enabled", true'
+              '"devtools.debugger.remote-enabled", true',
             );
           });
       }));
@@ -845,12 +845,12 @@ describe('firefox', () => {
             // Check for custom pref set by configureProfile().
             assert.include(
               prefFile.toString(),
-              '"extensions.checkCompatibility.nightly", true'
+              '"extensions.checkCompatibility.nightly", true',
             );
             // Check that one of the default preferences is set as well
             assert.include(
               prefFile.toString(),
-              '"devtools.debugger.remote-enabled", true'
+              '"devtools.debugger.remote-enabled", true',
             );
           });
       }));
@@ -904,7 +904,7 @@ describe('firefox', () => {
           .catch(
             onlyInstancesOf(UsageError, (error) => {
               assert.match(error.message, /explicit extension ID is required/);
-            })
+            }),
           );
       }));
 
@@ -921,7 +921,7 @@ describe('firefox', () => {
           .then(() => {
             const proxyFile = path.join(
               data.profile.extensionsDir,
-              'basic-manifest@web-ext-test-suite'
+              'basic-manifest@web-ext-test-suite',
             );
             return fs.readFile(proxyFile);
           })
@@ -946,10 +946,10 @@ describe('firefox', () => {
             onlyInstancesOf(WebExtError, (error) => {
               assert.match(
                 error.message,
-                /must be the extension source directory/
+                /must be the extension source directory/,
               );
               assert.include(error.message, extensionPath);
-            })
+            }),
           );
       }));
 
@@ -969,7 +969,7 @@ describe('firefox', () => {
           .catch(
             onlyInstancesOf(WebExtError, (error) => {
               assert.match(error.message, /unexpectedly empty/);
-            })
+            }),
           );
       }));
 
@@ -983,7 +983,7 @@ describe('firefox', () => {
             ...data,
             asyncFsStat: fakeAsyncFsStat,
           }),
-          /Unexpected fs.stat error/
+          /Unexpected fs.stat error/,
         );
 
         sinon.assert.calledOnce(fakeAsyncFsStat);

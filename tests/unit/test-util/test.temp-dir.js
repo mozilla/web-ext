@@ -1,5 +1,6 @@
+import fs from 'fs/promises';
+
 import { describe, it } from 'mocha';
-import { fs } from 'mz';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 
@@ -29,7 +30,7 @@ describe('util.withTempDir', () => {
         tmpPathExisted = Boolean(await fs.stat(tmpPath));
         throw new Error('simulated error');
       }),
-      'simulated error'
+      'simulated error',
     );
 
     assert.equal(tmpPathExisted, true);

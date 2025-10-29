@@ -1,6 +1,7 @@
 import path from 'path';
+import nodeFs from 'fs';
+import fs from 'fs/promises';
 
-import { fs } from 'mz';
 import { afterEach, beforeEach, describe, it } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -39,7 +40,7 @@ async function prepareRun(fakeInstallResult) {
         getFakeRemoteFirefox({
           installTemporaryAddon: () =>
             Promise.resolve(fakeInstallResult || tempInstallResult),
-        })
+        }),
       );
     }),
     reloadStrategy: sinon.spy(() => {
@@ -78,11 +79,11 @@ describe('run', () => {
 
     androidRunnerStub = sinon.stub(
       firefoxAndroidModule,
-      'FirefoxAndroidExtensionRunner'
+      'FirefoxAndroidExtensionRunner',
     );
     desktopRunnerStub = sinon.stub(
       firefoxDesktopModule,
-      'FirefoxDesktopExtensionRunner'
+      'FirefoxDesktopExtensionRunner',
     );
     chromiumRunnerStub = sinon.stub(chromiumModule, 'ChromiumExtensionRunner');
 
@@ -128,6 +129,21 @@ describe('run', () => {
     });
   });
 
+  it('turns sourceDir into an absolute path', async () => {
+    const getFakeManifest = sinon.spy();
+    const cmd = await prepareRun();
+
+    await cmd.run(
+      { sourceDir: '.' },
+      { getValidatedManifest: getFakeManifest },
+    );
+
+    sinon.assert.calledOnce(desktopRunnerStub);
+    const runnerParams = desktopRunnerStub.firstCall.args[0];
+    const [{ sourceDir: expectedSourceDir }] = runnerParams.extensions;
+    assert.equal(expectedSourceDir, process.cwd());
+  });
+
   it('passes the expected parameters to the extension runner', async () => {
     const cmd = await prepareRun();
     const runOptions = {
@@ -165,7 +181,7 @@ describe('run', () => {
         firefoxProfile: runnerParams.profilePath,
         args: runnerParams.args,
       },
-      expectedRunnerParams
+      expectedRunnerParams,
     );
     assert.equal(runnerParams.extensions.length, 1);
     assert.equal(runnerParams.extensions[0].sourceDir, cmd.argv.sourceDir);
@@ -183,7 +199,7 @@ describe('run', () => {
         firefoxApp: runnerParams.firefoxApp,
         firefoxClient: runnerParams.firefoxClient,
       },
-      { firefoxApp, firefoxClient }
+      { firefoxApp, firefoxClient },
     );
   });
 
@@ -191,7 +207,7 @@ describe('run', () => {
     const cmd = await prepareRun();
     await assert.isRejected(
       cmd.run({ noReload: false, watchFile: 'invalid-value.txt' }),
-      /Unexpected watchFile type/
+      /Unexpected watchFile type/,
     );
   });
 
@@ -301,7 +317,7 @@ describe('run', () => {
     assert.equal(
       chromiumBinary,
       fakeChromiumBinary,
-      'Got the expected chromiumBinary option'
+      'Got the expected chromiumBinary option',
     );
   });
 
@@ -321,7 +337,7 @@ describe('run', () => {
     assert.equal(
       chromiumProfile,
       fakeChromiumProfile,
-      'Got the expected chromiumProfile option'
+      'Got the expected chromiumProfile option',
     );
   });
 
@@ -353,18 +369,18 @@ describe('run', () => {
   describe('profile-create-new option', () => {
     beforeEach(() => {
       sinon.stub(fs, 'mkdir');
-      sinon.stub(fs, 'existsSync');
+      sinon.stub(nodeFs, 'existsSync');
     });
 
     afterEach(() => {
       fs.mkdir.restore();
-      fs.existsSync.restore();
+      nodeFs.existsSync.restore();
     });
 
     const fakeProfile = '/pretend/path/to/profile';
 
     async function testCreateProfileIfMissing(expectProfileExists, runParams) {
-      fs.existsSync.returns(expectProfileExists);
+      nodeFs.existsSync.returns(expectProfileExists);
       const cmd = await prepareRun();
 
       await cmd.run(runParams);
@@ -382,7 +398,7 @@ describe('run', () => {
         assert.equal(
           chromiumProfile,
           fakeProfile,
-          'Got the expected chromiumProfile option'
+          'Got the expected chromiumProfile option',
         );
       } else {
         sinon.assert.calledOnce(desktopRunnerStub);
@@ -390,7 +406,7 @@ describe('run', () => {
         assert.equal(
           firefoxProfile,
           fakeProfile,
-          'Got the expected firefoxProfile option'
+          'Got the expected firefoxProfile option',
         );
       }
     }
@@ -428,26 +444,8 @@ describe('run', () => {
       await assert.isRejected(promise, cmd.errors.UsageError);
       await assert.isRejected(
         promise,
-        /requires --firefox-profile or --chromium-profile/
+        /requires --firefox-profile or --chromium-profile/,
       );
-    });
-  });
-
-  describe('firefox-preview', () => {
-    it('supports the MV3 preview', async () => {
-      const cmd = await prepareRun();
-      const runOptions = {
-        firefoxPreview: ['mv3'],
-      };
-
-      await cmd.run(runOptions);
-
-      sinon.assert.calledOnce(desktopRunnerStub);
-      const runnerParams = desktopRunnerStub.firstCall.args[0];
-
-      assert.deepEqual(runnerParams.customPrefs, {
-        'extensions.manifestV3.enabled': true,
-      });
     });
   });
 });

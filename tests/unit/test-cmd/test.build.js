@@ -1,6 +1,7 @@
 import path from 'path';
+import fs from 'fs/promises';
+import { writeFileSync } from 'fs';
 
-import { fs } from 'mz';
 import { it, describe } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -40,7 +41,7 @@ describe('build', () => {
         .then((buildResult) => {
           assert.match(
             buildResult.extensionPath,
-            /minimal_extension-1\.0\.zip$/
+            /minimal_extension-1\.0\.zip$/,
           );
           return buildResult.extensionPath;
         })
@@ -53,7 +54,7 @@ describe('build', () => {
             'manifest.json',
           ]);
           return zipFile.close();
-        })
+        }),
     );
   });
 
@@ -88,7 +89,7 @@ describe('build', () => {
           log.info(error);
           assert.instanceOf(error, UsageError);
           assert.match(error.message, /Manifest key "missingKey" is missing/);
-        })
+        }),
     );
   });
 
@@ -101,9 +102,9 @@ describe('build', () => {
       }).then((buildResult) => {
         assert.match(
           path.basename(buildResult.extensionPath),
-          /minimal-example_web-ext-test-suite-1.0\.xpi$/
+          /minimal-example_web-ext-test-suite-1.0\.xpi$/,
         );
-      })
+      }),
     );
   });
 
@@ -115,9 +116,9 @@ describe('build', () => {
       }).then((buildResult) => {
         assert.match(
           buildResult.extensionPath,
-          /name_of_the_extension-1\.0\.zip$/
+          /name_of_the_extension-1\.0\.zip$/,
         );
-      })
+      }),
     );
   });
 
@@ -131,9 +132,9 @@ describe('build', () => {
       }).then((buildResult) => {
         assert.match(
           buildResult.extensionPath,
-          /prefix-name_w_o_slash_o_ends_with\.zip$/
+          /prefix-name_w_o_slash_o_ends_with\.zip$/,
         );
-      })
+      }),
     );
   });
 
@@ -150,9 +151,9 @@ describe('build', () => {
           assert.instanceOf(error, UsageError);
           assert.match(
             error.message,
-            /Filename "foo\/1.0.xpi" should not contain a path/
+            /Filename "foo\/1.0.xpi" should not contain a path/,
           );
-        })
+        }),
     );
   });
 
@@ -169,9 +170,9 @@ describe('build', () => {
           assert.instanceOf(error, UsageError);
           assert.match(
             error.message,
-            /Filename "1.0.unknown-ext" should have a zip or xpi extension/
+            /Filename "1.0.unknown-ext" should have a zip or xpi extension/,
           );
-        })
+        }),
     );
   });
 
@@ -183,22 +184,22 @@ describe('build', () => {
       }).then((buildResult) => {
         assert.match(
           buildResult.extensionPath,
-          /extension_with_dashed_locale-1\.0\.zip$/
+          /extension_with_dashed_locale-1\.0\.zip$/,
         );
-      })
+      }),
     );
   });
 
   it('handles repeating localization keys', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(
+      writeFileSync(
         messageFileName,
         `{"extensionName": {
               "message": "example extension",
               "description": "example description"
             }
-          }`
+          }`,
       );
 
       const manifestWithRepeatingPattern = {
@@ -233,13 +234,13 @@ describe('build', () => {
   it('handles comments in messages.json', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(
+      writeFileSync(
         messageFileName,
         `{"extensionName": {
               "message": "example extension", // comments
               "description": "example with comments"
             }
-          }`
+          }`,
       );
 
       return getDefaultLocalizedName({
@@ -257,7 +258,7 @@ describe('build', () => {
   it('checks locale file for malformed json', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
-      fs.writeFileSync(messageFileName, '{"simulated:" "json syntax error"');
+      writeFileSync(messageFileName, '{"simulated:" "json syntax error"');
 
       return getDefaultLocalizedName({
         messageFile: messageFileName,
@@ -273,7 +274,7 @@ describe('build', () => {
           // [3] https://chromium-review.googlesource.com/c/v8/v8/+/3652254
           assert.match(
             error.message,
-            /Unexpected string in JSON at position 14|Expected ':' after property name in JSON at position 14/
+            /Unexpected string in JSON at position 14|Expected ':' after property name in JSON at position 14/,
           );
           assert.match(error.message, /^Error parsing messages\.json/);
           assert.include(error.message, messageFileName);
@@ -285,12 +286,12 @@ describe('build', () => {
     return withTempDir((tmpDir) => {
       const messageFileName = path.join(tmpDir.path(), 'messages.json');
       //This is missing the 'message' key
-      fs.writeFileSync(
+      writeFileSync(
         messageFileName,
         `{"extensionName": {
               "description": "example extension"
               }
-          }`
+          }`,
       );
 
       const basicLocalizedManifest = {
@@ -306,7 +307,7 @@ describe('build', () => {
           assert.instanceOf(error, UsageError);
           assert.match(
             error.message,
-            /The locale file .*messages\.json is missing key: extensionName/
+            /The locale file .*messages\.json is missing key: extensionName/,
           );
         });
     });
@@ -323,12 +324,12 @@ describe('build', () => {
         assert.instanceOf(error, UsageError);
         assert.match(
           error.message,
-          /Error: ENOENT: no such file or directory, open .*messages.json/
+          /Error: ENOENT: no such file or directory, open .*messages.json/,
         );
         assert.match(error.message, /^Error reading messages.json/);
         assert.include(
           error.message,
-          '/path/to/non-existent-dir/messages.json'
+          '/path/to/non-existent-dir/messages.json',
         );
       });
   });
@@ -341,7 +342,7 @@ describe('build', () => {
           sourceDir: fixturePath('minimal-web-ext'),
           artifactsDir: tmpDir.path(),
         },
-        { manifestData: manifestWithoutApps }
+        { manifestData: manifestWithoutApps },
       );
     });
   });
@@ -368,11 +369,11 @@ describe('build', () => {
         },
         {
           manifestData: basicManifest,
-        }
+        },
       ).then((buildResult) => {
         assert.match(buildResult.extensionPath, /the_extension-0\.0\.1\.zip$/);
         return buildResult.extensionPath;
-      })
+      }),
     ));
 
   it('asks FileFilter what files to include in the ZIP', () => {
@@ -388,14 +389,14 @@ describe('build', () => {
           sourceDir: fixturePath('minimal-web-ext'),
           artifactsDir: tmpDir.path(),
         },
-        { fileFilter }
+        { fileFilter },
       )
         .then((buildResult) => zipFile.open(buildResult.extensionPath))
         .then(() => zipFile.extractFilenames())
         .then((fileNames) => {
           assert.notInclude(fileNames, 'background-script.js');
           return zipFile.close();
-        })
+        }),
     );
   });
 
@@ -416,7 +417,7 @@ describe('build', () => {
           manifestData: basicManifest,
           onSourceChange,
           fileFilter,
-        }
+        },
       )
         .then((buildResult) => {
           // Make sure we still have a build result.
@@ -473,7 +474,7 @@ describe('build', () => {
           manifestData: basicManifest,
           onSourceChange,
           packageCreator,
-        }
+        },
       )
         .then(() => {
           sinon.assert.called(onSourceChange);
@@ -481,8 +482,8 @@ describe('build', () => {
           const { onChange } = onSourceChange.firstCall.args[0];
           packageResult = Promise.reject(
             new Error(
-              'Simulate an error on the second call to packageCreator()'
-            )
+              'Simulate an error on the second call to packageCreator()',
+            ),
           );
           // Invoke the stub packageCreator() again which should throw an error
           return onChange();
@@ -491,7 +492,7 @@ describe('build', () => {
         .catch((error) => {
           assert.include(
             error.message,
-            'Simulate an error on the second call to packageCreator()'
+            'Simulate an error on the second call to packageCreator()',
           );
         });
     }));
@@ -500,7 +501,7 @@ describe('build', () => {
     return withTempDir((tmpDir) => {
       const testFileName = path.join(
         tmpDir.path(),
-        'minimal_extension-1.0.zip'
+        'minimal_extension-1.0.zip',
       );
       return fs
         .writeFile(testFileName, 'test')
@@ -508,13 +509,13 @@ describe('build', () => {
           build({
             sourceDir: fixturePath('minimal-web-ext'),
             artifactsDir: tmpDir.path(),
-          })
+          }),
         )
         .catch((error) => {
           assert.instanceOf(error, UsageError);
           assert.match(
             error.message,
-            /Extension exists at the destination path/
+            /Extension exists at the destination path/,
           );
         });
     });
@@ -524,7 +525,7 @@ describe('build', () => {
     return withTempDir((tmpDir) => {
       const testFileName = path.join(
         tmpDir.path(),
-        'minimal_extension-1.0.zip'
+        'minimal_extension-1.0.zip',
       );
       return fs
         .writeFile(testFileName, 'test')
@@ -533,12 +534,12 @@ describe('build', () => {
             sourceDir: fixturePath('minimal-web-ext'),
             artifactsDir: tmpDir.path(),
             overwriteDest: true,
-          })
+          }),
         )
         .then((buildResult) => {
           assert.match(
             buildResult.extensionPath,
-            /minimal_extension-1\.0\.zip$/
+            /minimal_extension-1\.0\.zip$/,
           );
         });
     });
@@ -560,7 +561,7 @@ describe('build', () => {
         .then((buildResult) => {
           assert.match(
             buildResult.extensionPath,
-            /minimal_extension-1\.0\.zip$/
+            /minimal_extension-1\.0\.zip$/,
           );
           return buildResult.extensionPath;
         })
@@ -576,7 +577,7 @@ describe('build', () => {
             'node_modules/pkg1/file1.txt',
           ]);
           return zipFile.close();
-        })
+        }),
     );
   });
 
@@ -584,7 +585,7 @@ describe('build', () => {
     it('makes names safe for writing to a file system', () => {
       assert.equal(
         safeFileName("Bob Loblaw's 2005 law-blog.net"),
-        'bob_loblaw_s_2005_law-blog.net'
+        'bob_loblaw_s_2005_law-blog.net',
       );
     });
   });
@@ -634,7 +635,7 @@ describe('build', () => {
       assert.throws(
         () => getStringPropertyValue('foo', { foo: '' }),
         UsageError,
-        /Manifest key "foo" value is an empty string/
+        /Manifest key "foo" value is an empty string/,
       );
     });
   });

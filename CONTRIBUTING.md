@@ -140,7 +140,7 @@ program.command(
       describe: 'Watch for file changes and re-build as needed',
       type: 'boolean',
     },
-  }
+  },
 );
 ```
 
@@ -214,7 +214,7 @@ so as not to disturb any real `addons.mozilla.org` data.
 
   ```
   web-ext sign --api-key user:123 --api-secret abc1234 \
-      --api-url-prefix https://addons-dev.allizom.org/api/v4
+      --amo-base-url https://addons-dev.allizom.org/api/v5/
   ```
 
 - Signed add-ons created with the development API are hard to install into

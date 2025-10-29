@@ -59,7 +59,7 @@ export class ZipFile {
     return new Promise((resolve, reject) => {
       if (!this._zip) {
         throw new Error(
-          'Cannot operate on a falsey zip file. Call open() first.'
+          'Cannot operate on a falsey zip file. Call open() first.',
         );
       }
 
@@ -104,7 +104,7 @@ export function fixturePath(...pathParts) {
     moduleURLToDirname(import.meta.url),
     '..',
     'fixtures',
-    ...pathParts
+    ...pathParts,
   );
 }
 
@@ -175,7 +175,7 @@ export function fake(original, methods = {}, skipProperties = []) {
   Object.keys(methods).forEach((key) => {
     if (!original[key]) {
       throw new Error(
-        `Cannot define method "${key}"; it does not exist on the original`
+        `Cannot define method "${key}"; it does not exist on the original`,
       );
     }
     stub[key] = methods[key];
@@ -327,14 +327,12 @@ export function mockModule({
   // on windows (which would be looking as "C:\\C:\\Users\\...").
   const baseDir = path.dirname(fileURLToPath(importerModuleURL));
   const fullModuleURL = pathToFileURL(
-    path.resolve(path.join(baseDir, moduleURL))
+    path.resolve(path.join(baseDir, moduleURL)),
   ).href;
 
   td.replaceEsm(fullModuleURL, namedExports, defaultExport);
-  global.__webextMocks?.add(fullModuleURL);
 }
 
 export function resetMockModules() {
   td.reset();
-  global.__webextMocks?.clear();
 }

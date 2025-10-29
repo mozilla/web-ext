@@ -26,7 +26,7 @@ shell.exec(
           NODE_ENV: 'production',
         },
       }
-    : {}
+    : {},
 );
 
 if (testProductionMode) {
@@ -48,7 +48,7 @@ if (testProductionMode) {
         'node_modules',
         'web-ext',
         'bin',
-        'web-ext'
+        'web-ext',
       ),
     },
   };
@@ -71,7 +71,7 @@ let ok = mochaFunctional(execMochaOptions);
 // Try to re-run the functional tests once more if they fails on a CI windows worker (#1510).
 if (!ok && process.env.CI_RETRY_ONCE) {
   console.log(
-    '*** Functional tests failure on a CI window worker, trying to re-run once more...'
+    '*** Functional tests failure on a CI window worker, trying to re-run once more...',
   );
   ok = mochaFunctional(execMochaOptions);
 }

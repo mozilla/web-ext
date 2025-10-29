@@ -14,7 +14,7 @@ describe('errors', () => {
       return Promise.reject(new SyntaxError('simulated error')).catch(
         onlyInstancesOf(SyntaxError, (error) => {
           assert.instanceOf(error, SyntaxError);
-        })
+        }),
       );
     });
 
@@ -23,7 +23,7 @@ describe('errors', () => {
         .catch(
           onlyInstancesOf(TypeError, () => {
             throw new Error('Unexpectedly caught the wrong error');
-          })
+          }),
         )
         .then(makeSureItFails())
         .catch((error) => {
@@ -45,7 +45,7 @@ describe('errors', () => {
       return Promise.reject(new ErrorWithCode()).catch(
         onlyErrorsWithCode('SOME_CODE', (error) => {
           assert.equal(error.code, 'SOME_CODE');
-        })
+        }),
       );
     });
 
@@ -53,7 +53,7 @@ describe('errors', () => {
       return Promise.reject(new ErrorWithErrno()).catch(
         onlyErrorsWithCode(53, (error) => {
           assert.equal(error.errno, 53);
-        })
+        }),
       );
     });
 
@@ -62,7 +62,7 @@ describe('errors', () => {
         .catch(
           onlyErrorsWithCode('SOME_CODE', () => {
             throw new Error('Unexpectedly caught the wrong error');
-          })
+          }),
         )
         .then(makeSureItFails())
         .catch((error) => {
@@ -74,7 +74,7 @@ describe('errors', () => {
       return Promise.reject(new ErrorWithCode()).catch(
         onlyErrorsWithCode(['OTHER_CODE', 'SOME_CODE'], (error) => {
           assert.equal(error.code, 'SOME_CODE');
-        })
+        }),
       );
     });
 
@@ -82,7 +82,7 @@ describe('errors', () => {
       return Promise.reject(new ErrorWithErrno()).catch(
         onlyErrorsWithCode([34, 53], (error) => {
           assert.equal(error.errno, 53);
-        })
+        }),
       );
     });
 
@@ -91,7 +91,7 @@ describe('errors', () => {
         .catch(
           onlyErrorsWithCode(['OTHER_CODE', 'ANOTHER_CODE'], () => {
             throw new Error('Unexpectedly caught the wrong error');
-          })
+          }),
         )
         .then(makeSureItFails())
         .catch((error) => {
@@ -105,7 +105,7 @@ describe('errors', () => {
       assert.equal(isErrorWithCode('SOME_CODE', new ErrorWithCode()), true);
       assert.equal(
         isErrorWithCode(['SOME_CODE', 'OTHER_CODE'], new ErrorWithCode()),
-        true
+        true,
       );
     });
 
@@ -113,7 +113,7 @@ describe('errors', () => {
       assert.equal(isErrorWithCode('OTHER_CODE', new ErrorWithCode()), false);
       assert.equal(
         isErrorWithCode(['OTHER_CODE', 'ANOTHER_CODE'], new ErrorWithCode()),
-        false
+        false,
       );
       assert.equal(isErrorWithCode('ANY_CODE', new Error()), false);
     });

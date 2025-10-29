@@ -1,8 +1,8 @@
 import path from 'path';
+import { writeFileSync } from 'fs';
 
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
-import { fs } from 'mz';
 
 import {
   minimalAddonPath,
@@ -22,17 +22,17 @@ describe('web-ext run', () => {
       withTempAddonDir({ addonPath: minimalAddonPath }, (srcDir) => {
         const watchedFile = path.join(srcDir, 'watchedFile.txt');
         const watchedFilesArr = ['watchedFile1', 'watchedFile2'].map((file) =>
-          path.join(srcDir, file)
+          path.join(srcDir, file),
         );
         const watchIgnoredArr = ['ignoredFile1.txt', 'ignoredFile2.txt'].map(
-          (file) => path.join(srcDir, file)
+          (file) => path.join(srcDir, file),
         );
         const watchIgnoredFile = path.join(srcDir, 'ignoredFile3.txt');
 
-        fs.writeFileSync(watchedFile, '');
-        watchedFilesArr.forEach((file) => fs.writeFileSync(file, ''));
-        watchIgnoredArr.forEach((file) => fs.writeFileSync(file, ''));
-        fs.writeFileSync(watchIgnoredFile, '');
+        writeFileSync(watchedFile, '');
+        watchedFilesArr.forEach((file) => writeFileSync(file, ''));
+        watchIgnoredArr.forEach((file) => writeFileSync(file, ''));
+        writeFileSync(watchIgnoredFile, '');
 
         const argv = [
           'run',
@@ -77,7 +77,7 @@ describe('web-ext run', () => {
                 stdout,
                 stderr,
               },
-              'The fake Firefox binary has not been executed'
+              'The fake Firefox binary has not been executed',
             );
           } else if (exitCode !== 0) {
             reportCommandErrors({
@@ -88,7 +88,7 @@ describe('web-ext run', () => {
             });
           }
         });
-      })
+      }),
   );
 
   it('should not accept: --watch-file <directory>', () =>
@@ -110,8 +110,8 @@ describe('web-ext run', () => {
         },
       };
 
-      return execWebExt(argv, spawnOptions).waitForExit.then(({ stdout }) => {
-        assert.match(stdout, /Invalid --watch-file value: .+ is not a file./);
+      return execWebExt(argv, spawnOptions).waitForExit.then(({ stderr }) => {
+        assert.match(stderr, /Invalid --watch-file value: .+ is not a file./);
       });
     }));
 

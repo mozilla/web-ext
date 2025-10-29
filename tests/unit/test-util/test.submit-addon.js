@@ -1,6 +1,12 @@
 import { createHash } from 'crypto';
 import { promises as fsPromises, readFileSync } from 'fs';
 import path from 'path';
+// eslint-disable-next-line no-shadow -- TODO: Remove when we require Node v20+.
+import { File } from 'node:buffer';
+// ^ note: this was introduced in v18.13.0. Because of its unavailability in
+// earlier versions, the actual implementation in submit-addon.js retrieves
+// the File constructor in a different way, which also works in Node 18.0.0.
+// Our CI tests with Node 18.19.0 as the lowest version, so this passes tests.
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import CRC32 from 'crc-32';
@@ -8,8 +14,6 @@ import { assert, expect } from 'chai';
 import JSZip from 'jszip';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
-// eslint-disable-next-line no-shadow
-import { File, FormData, Response } from 'node-fetch';
 
 import { AMO_BASE_URL } from '../../../src/program.js';
 import Client, {
@@ -27,14 +31,37 @@ class JSONResponse extends Response {
   }
 }
 
+// Used to test responses with status < 100 (nodejs native constructor
+// enforces status to be in the 200-599 range and throws if it is not).
+class BadResponse extends Response {
+  constructor(data, fakeStatus) {
+    super(data);
+    this.fakeStatus = fakeStatus;
+  }
+
+  get status() {
+    return this.fakeStatus;
+  }
+}
+
 const mockNodeFetch = (nodeFetchStub, url, method, responses) => {
+  // Trust us... You don't want to know why... but if you really do like nightmares
+  // take a look to the details and links kindly provided in this comment
+  // that helped investigating this:
+  // https://github.com/mozilla/web-ext/issues/2917#issuecomment-1766000545
+  const urlMatch = url instanceof URL ? url.href : url;
   const stubMatcher = nodeFetchStub.withArgs(
-    url instanceof URL ? url : new URL(url),
-    sinon.match.has('method', method)
+    sinon.match(
+      (urlArg) => urlMatch === (urlArg instanceof URL ? urlArg.href : urlArg),
+    ),
+    sinon.match.has('method', method),
   );
   for (let i = 0; i < responses.length; i++) {
     const { body, status } = responses[i];
     stubMatcher.onCall(i).callsFake(async () => {
+      if (status < 200) {
+        return new BadResponse(body, status);
+      }
       if (typeof body === 'string') {
         return new Response(body, { status });
       }
@@ -50,17 +77,24 @@ describe('util.submit-addon', () => {
     let getPreviousUuidOrUploadXpiStub;
     let postNewAddonStub;
     let putVersionStub;
+    let fileFromSyncStub;
     const uploadUuid = '{some-upload-uuid}';
+    const fakeFileFromSync = new File([], 'foo.xpi');
 
     beforeEach(() => {
       statStub = sinon
         .stub(fsPromises, 'stat')
+        .onFirstCall()
         .resolves({ isFile: () => true });
+      statStub.callThrough();
       getPreviousUuidOrUploadXpiStub = sinon
         .stub(Client.prototype, 'getPreviousUuidOrUploadXpi')
         .resolves(uploadUuid);
       postNewAddonStub = sinon.stub(Client.prototype, 'postNewAddon');
       putVersionStub = sinon.stub(Client.prototype, 'putVersion');
+      fileFromSyncStub = sinon
+        .stub(Client.prototype, 'fileFromSync')
+        .returns(fakeFileFromSync);
     });
 
     afterEach(() => {
@@ -68,13 +102,15 @@ describe('util.submit-addon', () => {
       getPreviousUuidOrUploadXpiStub.restore();
       postNewAddonStub.restore();
       putVersionStub.restore();
+      fileFromSyncStub.restore();
     });
 
     const signAddonDefaults = {
       apiKey: 'some-key',
       apiSecret: 'ffff',
       amoBaseUrl: AMO_BASE_URL,
-      timeout: 1,
+      validationCheckTimeout: 2,
+      approvalCheckoutTimeout: 1,
       downloadDir: '/some-dir/',
       xpiPath: '/some.xpi',
       channel: 'some-channel',
@@ -92,11 +128,13 @@ describe('util.submit-addon', () => {
       const clientSpy = sinon.spy(Client);
       const apiAuthSpy = sinon.spy(JwtApiAuth);
       const userAgentString = 'web-ext/666.a.b';
+      const apiProxy = 'https://proxy.url';
 
       await signAddon({
         ...signAddonDefaults,
         apiKey,
         apiSecret,
+        apiProxy,
         amoBaseUrl,
         downloadDir,
         userAgentString,
@@ -112,12 +150,14 @@ describe('util.submit-addon', () => {
       sinon.assert.calledOnce(clientSpy);
       assert.deepEqual(clientSpy.firstCall.args[0], {
         apiAuth: {},
+        apiProxy,
         baseUrl,
-        validationCheckTimeout: signAddonDefaults.timeout,
-        approvalCheckTimeout: signAddonDefaults.timeout,
+        validationCheckTimeout: signAddonDefaults.validationCheckTimeout,
+        approvalCheckTimeout: signAddonDefaults.approvalCheckTimeout,
         downloadDir,
         userAgentString,
       });
+      sinon.assert.notCalled(fileFromSyncStub);
     });
 
     it('calls postNewAddon if `id` is undefined', async () => {
@@ -156,7 +196,7 @@ describe('util.submit-addon', () => {
       await assert.isRejected(
         signAddonPromise,
         `error with ${signAddonDefaults.xpiPath}: ` +
-          'Error: ENOENT: no such file or directory'
+          'Error: ENOENT: no such file or directory',
       );
     });
 
@@ -165,7 +205,7 @@ describe('util.submit-addon', () => {
       const signAddonPromise = signAddon({ ...signAddonDefaults, amoBaseUrl });
       await assert.isRejected(
         signAddonPromise,
-        `Invalid AMO API base URL: ${amoBaseUrl}`
+        `Invalid AMO API base URL: ${amoBaseUrl}`,
       );
     });
 
@@ -180,8 +220,74 @@ describe('util.submit-addon', () => {
         postNewAddonStub,
         uploadUuid,
         signAddonDefaults.savedIdPath,
-        metaDataJson
+        metaDataJson,
       );
+    });
+
+    it('includes source data to be patched if submissionSource defined for new addon', async () => {
+      const submissionSource = 'path/to/source/zip';
+      statStub.onSecondCall().resolves({ isFile: () => true });
+      await signAddon({
+        ...signAddonDefaults,
+        submissionSource,
+      });
+
+      sinon.assert.calledWith(fileFromSyncStub, submissionSource);
+      sinon.assert.calledWith(
+        postNewAddonStub,
+        uploadUuid,
+        signAddonDefaults.savedIdPath,
+        {},
+        { version: { source: fakeFileFromSync } },
+      );
+    });
+
+    it('includes source data to be patched if submissionSource defined for new version', async () => {
+      const submissionSource = 'path/to/source/zip';
+      statStub.onSecondCall().resolves({ isFile: () => true });
+      const id = '@thisID';
+      await signAddon({
+        ...signAddonDefaults,
+        submissionSource,
+        id,
+      });
+
+      sinon.assert.calledWith(fileFromSyncStub, submissionSource);
+      sinon.assert.calledWith(
+        putVersionStub,
+        uploadUuid,
+        id,
+        {},
+        { version: { source: fakeFileFromSync } },
+      );
+    });
+
+    it('throws error if submissionSource is not found', async () => {
+      const submissionSource = 'path/to/source/zip';
+      const signAddonPromise = signAddon({
+        ...signAddonDefaults,
+        submissionSource,
+      });
+      await assert.isRejected(
+        signAddonPromise,
+        `error with ${submissionSource}: ` +
+          'Error: ENOENT: no such file or directory',
+      );
+    });
+
+    it('throws error if submissionSource is a directory', async () => {
+      await withTempDir(async (tmpDir) => {
+        const submissionSource = path.join(tmpDir.path(), 'someDirectory');
+        await fsPromises.mkdir(submissionSource);
+        const signAddonPromise = signAddon({
+          ...signAddonDefaults,
+          submissionSource,
+        });
+        await assert.isRejected(
+          signAddonPromise,
+          `error with ${submissionSource}: ` + 'Error: not a file',
+        );
+      });
     });
   });
 
@@ -215,6 +321,7 @@ describe('util.submit-addon', () => {
       // Note: most of the fields are omitted here, these are just the essentials.
       id: 456,
       channel: 'a-channel',
+      edit_url: 'http://amo/devhub-url',
       file: {
         id: 789,
         hash: 'abcd',
@@ -244,7 +351,7 @@ describe('util.submit-addon', () => {
       const client = new Client({ ...clientDefaults, baseUrl: noSlashBaseUrl });
       assert.equal(
         client.apiUrl.href,
-        new URL(`${noSlashBaseUrl.href}/addons/`).href
+        new URL(`${noSlashBaseUrl.href}/addons/`).href,
       );
     });
 
@@ -253,6 +360,40 @@ describe('util.submit-addon', () => {
       const extraBaseUrl = new URL(`${cleanUrl}?#`);
       const client = new Client({ ...clientDefaults, baseUrl: extraBaseUrl });
       assert.equal(client.apiUrl.href, new URL(`${cleanUrl}/addons/`).href);
+    });
+
+    describe('fileFromSync', () => {
+      it('should return a File with name set to the file path basename', () =>
+        withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const FILE_BASENAME = 'testfile.txt';
+          const FILE_CONTENT = 'somecontent';
+          const filePath = path.join(tmpDir.path(), FILE_BASENAME);
+          await fsPromises.writeFile(filePath, FILE_CONTENT);
+          const fileRes = client.fileFromSync(filePath);
+          assert.equal(fileRes.name, FILE_BASENAME);
+          assert.equal(await fileRes.text(), FILE_CONTENT);
+          assert.equal(String(fileRes), '[object File]');
+        }));
+
+      it('should return a File whose name is preserved in FormData', () =>
+        withTempDir(async (tmpDir) => {
+          const client = new Client(clientDefaults);
+          const FILE_BASENAME = 'testfile.txt';
+          const FILE_CONTENT = 'somecontent';
+          const filePath = path.join(tmpDir.path(), FILE_BASENAME);
+          await fsPromises.writeFile(filePath, FILE_CONTENT);
+          const fileRes = client.fileFromSync(filePath);
+
+          // Regression test for https://github.com/mozilla/web-ext/issues/3418
+          const fd = new FormData();
+          fd.set('upload', fileRes);
+          const fileOut = fd.get('upload');
+
+          assert.equal(fileOut.name, FILE_BASENAME);
+          assert.equal(fileOut.size, FILE_CONTENT.length);
+          assert.equal(await fileOut.text(), FILE_CONTENT);
+        }));
     });
 
     describe('getPreviousUuidOrUploadXpi', () => {
@@ -279,7 +420,7 @@ describe('util.submit-addon', () => {
           channel,
           uuidFilePath,
           saveUploadUuidStub,
-          getUploadUuidStub
+          getUploadUuidStub,
         );
 
         assert.equal(returnedUuid, newUuid);
@@ -311,7 +452,7 @@ describe('util.submit-addon', () => {
           channel,
           uuidFilePath,
           saveUploadUuidStub,
-          getUploadUuidStub
+          getUploadUuidStub,
         );
 
         assert.equal(returnedUuid, uploadUuid);
@@ -343,7 +484,7 @@ describe('util.submit-addon', () => {
           newChannel,
           uuidFilePath,
           saveUploadUuidStub,
-          getUploadUuidStub
+          getUploadUuidStub,
         );
 
         assert.equal(returnedUuid, newUuid);
@@ -365,7 +506,7 @@ describe('util.submit-addon', () => {
         });
         await fsPromises.writeFile(
           zipFilePath,
-          await zip.generateAsync({ type: 'nodebuffer' })
+          await zip.generateAsync({ type: 'nodebuffer' }),
         );
         return zip;
       };
@@ -396,12 +537,12 @@ describe('util.submit-addon', () => {
                 path: manifestFileName,
                 crc32: CRC32.str(manifestContents),
               },
-            ])
+            ]),
           );
 
           assert.equal(
             await client.hashXpiCrcs(zipFilePath),
-            originalHash.digest('hex')
+            originalHash.digest('hex'),
           );
         });
       });
@@ -418,7 +559,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             ...files,
@@ -427,7 +568,7 @@ describe('util.submit-addon', () => {
 
           assert.notEqual(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -445,7 +586,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             ...files,
@@ -454,7 +595,7 @@ describe('util.submit-addon', () => {
 
           assert.notEqual(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -473,7 +614,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             [manifestFileName, manifestContents],
@@ -482,7 +623,7 @@ describe('util.submit-addon', () => {
 
           assert.notEqual(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -502,7 +643,7 @@ describe('util.submit-addon', () => {
 
           const otherZipFilePath = path.join(
             tmpDir.path(),
-            'otherextension.zip'
+            'otherextension.zip',
           );
           await buildZip(otherZipFilePath, [
             [jsFileName, jsFileContents],
@@ -511,7 +652,7 @@ describe('util.submit-addon', () => {
 
           assert.equal(
             await client.hashXpiCrcs(someZipFilePath),
-            await client.hashXpiCrcs(otherZipFilePath)
+            await client.hashXpiCrcs(otherZipFilePath),
           );
         });
       });
@@ -532,7 +673,7 @@ describe('util.submit-addon', () => {
               body: sampleUploadDetail,
               status: 200,
             },
-          ]
+          ],
         );
 
         const xpiPath = '/some/path.xpi';
@@ -556,7 +697,7 @@ describe('util.submit-addon', () => {
             headers: {
               Authorization: authHeaderValue,
             },
-          })
+          }),
         );
       });
     });
@@ -579,11 +720,11 @@ describe('util.submit-addon', () => {
               body: {},
               status: 200,
             },
-          ]
+          ],
         );
 
         const clientPromise = client.waitForValidation(uploadUuid);
-        await assert.isRejected(clientPromise, 'Validation: timeout.');
+        await assert.isRejected(clientPromise, 'Validation: timeout exceeded.');
       });
 
       it('waits for validation that passes', async () => {
@@ -604,7 +745,7 @@ describe('util.submit-addon', () => {
               body: { processed: true, valid: true, uuid: uploadUuid },
               status: 200,
             },
-          ]
+          ],
         );
 
         const returnUuid = await client.waitForValidation(uploadUuid);
@@ -630,7 +771,7 @@ describe('util.submit-addon', () => {
               body: { processed: true, valid: false, url: validationUrl },
               status: 200,
             },
-          ]
+          ],
         );
 
         const clientPromise = client.waitForValidation(uploadUuid);
@@ -645,7 +786,7 @@ describe('util.submit-addon', () => {
           sinon.stub(client, 'nodeFetch'),
           new URL('addons/addon/', baseUrl),
           'POST',
-          [{ body: sampleAddonDetail, status: 202 }]
+          [{ body: sampleAddonDetail, status: 202 }],
         );
         const uploadUuid = 'some-uuid';
         const returnData = await client.doNewAddonSubmit(uploadUuid, {});
@@ -675,7 +816,7 @@ describe('util.submit-addon', () => {
         sinon.assert.calledWith(
           nodeFetchStub,
           sinon.match.instanceOf(URL),
-          sinon.match({ method: 'POST', body })
+          sinon.match({ method: 'POST', body }),
         );
       });
     });
@@ -689,7 +830,7 @@ describe('util.submit-addon', () => {
           nodeFetchStub,
           new URL(`addons/addon/${guid}/`, baseUrl),
           'PUT',
-          [{ body: sampleAddonDetail, status: 202 }]
+          [{ body: sampleAddonDetail, status: 202 }],
         );
         const uploadUuid = 'some-other-uuid';
 
@@ -700,7 +841,7 @@ describe('util.submit-addon', () => {
           sinon.match({
             method: 'PUT',
             body: JSON.stringify({ version: { upload: uploadUuid } }),
-          })
+          }),
         );
       });
 
@@ -728,7 +869,43 @@ describe('util.submit-addon', () => {
         sinon.assert.calledWith(
           nodeFetchStub,
           sinon.match.instanceOf(URL),
-          sinon.match({ method: 'PUT', body })
+          sinon.match({ method: 'PUT', body }),
+        );
+      });
+    });
+
+    describe('doFormDataPatch', () => {
+      const addonId = 'some-addon-id';
+      const versionId = 123456;
+      const dataField1 = 'someField';
+      const dataField2 = 'otherField';
+      const data = { dataField1: 'value', dataField2: 0 };
+      const formData = new FormData();
+      formData.append(dataField1, data[dataField1]);
+      formData.append(dataField2, data[dataField2]);
+
+      it('creates the url from addon and version', async () => {
+        const client = new Client(clientDefaults);
+        const fetchStub = sinon
+          .stub(client, 'fetch')
+          .resolves(new Response('', { ok: true, status: 200 }));
+        await client.doFormDataPatch(data, addonId, versionId);
+        const patchUrl = new URL(
+          `addon/${addonId}/versions/${versionId}/`,
+          client.apiUrl,
+        );
+
+        sinon.assert.calledWith(fetchStub, patchUrl, 'PATCH', formData);
+      });
+
+      it('catches and throws for non ok responses', async () => {
+        const client = new Client(clientDefaults);
+        sinon.stub(client, 'fetch').resolves();
+        const response = client.doFormDataPatch(data, addonId, versionId);
+
+        assert.isRejected(
+          response,
+          `Uploading ${dataField1}${dataField2} failed`,
         );
       });
     });
@@ -745,13 +922,21 @@ describe('util.submit-addon', () => {
         const versionId = 0;
         const detailUrl = new URL(
           `addons/addon/${addonId}/versions/${versionId}/`,
-          baseUrl
+          baseUrl,
         );
         mockNodeFetch(sinon.stub(client, 'nodeFetch'), detailUrl, 'GET', [
           { body: {}, status: 200 },
         ]);
-        const clientPromise = client.waitForApproval(addonId, versionId);
-        await assert.isRejected(clientPromise, 'Approval: timeout.');
+        const editUrl = 'some-edit-url';
+        const clientPromise = client.waitForApproval(
+          addonId,
+          versionId,
+          editUrl,
+        );
+        await assert.isRejected(
+          clientPromise,
+          `Approval: timeout exceeded. When approved the signed XPI file can be downloaded from ${editUrl}`,
+        );
       });
 
       it('waits for approval', async () => {
@@ -764,7 +949,7 @@ describe('util.submit-addon', () => {
         const versionId = 0;
         const detailUrl = new URL(
           `addons/addon/${addonId}/versions/${versionId}/`,
-          baseUrl
+          baseUrl,
         );
         const url = new URL('file/download/url', baseUrl);
         mockNodeFetch(sinon.stub(client, 'nodeFetch'), detailUrl, 'GET', [
@@ -816,7 +1001,7 @@ describe('util.submit-addon', () => {
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
         await assert.isRejected(
           clientPromise,
-          `Downloading ${filename} failed`
+          `Downloading ${filename} failed`,
         );
       });
 
@@ -827,7 +1012,7 @@ describe('util.submit-addon', () => {
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
         await assert.isRejected(
           clientPromise,
-          `Downloading ${filename} failed`
+          `Downloading ${filename} failed`,
         );
       });
 
@@ -843,7 +1028,7 @@ describe('util.submit-addon', () => {
         const clientPromise = client.downloadSignedFile(fileUrl, addonId);
         await assert.isRejected(
           clientPromise,
-          `Downloading ${filename} failed`
+          `Downloading ${filename} failed`,
         );
       });
     });
@@ -878,7 +1063,7 @@ describe('util.submit-addon', () => {
               body: { file: { status: 'public', url } },
               status: 200,
             },
-          ]
+          ],
         );
         mockNodeFetch(nodeFetchStub, url, 'GET', [
           { body: `${versionId}`, status: 200 },
@@ -894,10 +1079,16 @@ describe('util.submit-addon', () => {
           nodeFetchStub,
           new URL('addons/addon/', baseUrl),
           'POST',
-          [{ body: sampleAddonDetail, status: 200 }]
+          [{ body: sampleAddonDetail, status: 200 }],
         );
         addApprovalMocks(versionId);
-        await client.postNewAddon(uploadUuid, idFile, {}, saveIdStub);
+        await client.postNewAddon(
+          uploadUuid,
+          idFile,
+          {},
+          undefined,
+          saveIdStub,
+        );
         sinon.assert.calledWith(saveIdStub, idFile, sampleAddonDetail.guid);
       });
 
@@ -908,11 +1099,73 @@ describe('util.submit-addon', () => {
           nodeFetchStub,
           new URL(`addons/addon/${addonId}/`, baseUrl),
           'PUT',
-          [{ body: sampleAddonDetail, status: 200 }]
+          [{ body: sampleAddonDetail, status: 200 }],
         );
 
         addApprovalMocks(versionId);
         await client.putVersion(uploadUuid, `${addonId}`, {});
+      });
+
+      describe('doAfterSubmit', () => {
+        const downloadUrl = 'https://a.download/url';
+        const newVersionId = sampleVersionDetail.id;
+        const editUrl = sampleVersionDetail.editUrl;
+        const patchData = { version: { source: 'somesource' } };
+
+        let approvalStub;
+        let downloadStub;
+        let doFormDataPatchStub;
+
+        before(() => {
+          approvalStub = sinon
+            .stub(client, 'waitForApproval')
+            .resolves(downloadUrl);
+          downloadStub = sinon.stub(client, 'downloadSignedFile').resolves();
+          doFormDataPatchStub = sinon
+            .stub(client, 'doFormDataPatch')
+            .resolves();
+        });
+
+        afterEach(() => {
+          approvalStub.resetHistory();
+          downloadStub.resetHistory();
+          doFormDataPatchStub.resetHistory();
+        });
+
+        it('skips download if approval timeout is 0', async () => {
+          client.approvalCheckTimeout = 0;
+          await client.doAfterSubmit(addonId, newVersionId, editUrl);
+          sinon.assert.notCalled(approvalStub);
+          sinon.assert.notCalled(downloadStub);
+        });
+
+        it('downloads the signed xpi if approval timeout > 0', async () => {
+          client.approvalCheckTimeout = 1;
+          await client.doAfterSubmit(addonId, newVersionId, editUrl);
+          sinon.assert.calledWith(approvalStub, addonId, newVersionId);
+          sinon.assert.calledWith(downloadStub, new URL(downloadUrl), addonId);
+        });
+
+        it('calls doFormDataPatch if patchData.version is defined', async () => {
+          client.approvalCheckTimeout = 0;
+          await client.doAfterSubmit(addonId, newVersionId, editUrl, patchData);
+
+          sinon.assert.calledWith(
+            doFormDataPatchStub,
+            patchData.version,
+            addonId,
+            newVersionId,
+          );
+        });
+
+        it('does not call doFormDataPatch is patchData.version is undefined', async () => {
+          client.approvalCheckTimeout = 0;
+          await client.doAfterSubmit(addonId, newVersionId, editUrl, {
+            version: undefined,
+          });
+
+          sinon.assert.notCalled(doFormDataPatchStub);
+        });
       });
     });
 
@@ -929,7 +1182,7 @@ describe('util.submit-addon', () => {
           { body: {}, status: 400 },
         ]);
         const clientPromise = client.fetchJson(baseUrl);
-        await assert.isRejected(clientPromise, 'Bad Request: 400.');
+        await assert.isRejected(clientPromise, 'Bad Request: 400\n{}');
       });
 
       it('rejects with a promise on < 100 responses', async () => {
@@ -977,7 +1230,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
-          'application/json'
+          'application/json',
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -989,7 +1242,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
-          undefined
+          undefined,
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -1001,7 +1254,7 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['Content-Type'],
-          undefined
+          undefined,
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -1013,7 +1266,43 @@ describe('util.submit-addon', () => {
 
         assert.equal(
           nodeFetchStub.firstCall.args[1].headers['User-Agent'],
-          client.userAgentString
+          client.userAgentString,
+        );
+        sinon.assert.calledOnce(nodeFetchStub);
+      });
+
+      it('fallback to userAgentString "web-ext-lib" if not set', async () => {
+        const clientNoUserAgent = new Client({
+          ...clientDefaults,
+          userAgentString: undefined,
+        });
+
+        const clientNoUserAgentFetchStub = sinon.stub(
+          clientNoUserAgent,
+          'nodeFetch',
+        );
+        clientNoUserAgentFetchStub.resolves(new JSONResponse({}, 200));
+
+        await clientNoUserAgent.fetch(baseUrl, 'POST');
+
+        assert.equal(
+          clientNoUserAgentFetchStub.firstCall.args[1].headers['User-Agent'],
+          'web-ext-lib',
+        );
+        sinon.assert.calledOnce(clientNoUserAgentFetchStub);
+      });
+
+      it('uses a specified proxy', async () => {
+        nodeFetchStub.resolves(new JSONResponse({}, 200));
+        const apiProxyHost = 'proxy.url';
+        const apiProxy = `https://${apiProxyHost}`;
+        client.apiProxy = apiProxy;
+
+        await client.fetch(baseUrl, 'POST');
+
+        assert.equal(
+          nodeFetchStub.firstCall.args[1].agent.proxy.host,
+          apiProxyHost,
         );
         sinon.assert.calledOnce(nodeFetchStub);
       });
@@ -1106,7 +1395,7 @@ describe('util.submit-addon', () => {
             uploadUuid: '',
             channel: '',
             xpiCrcHash: '',
-          })
+          }),
       );
     });
 

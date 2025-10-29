@@ -1,6 +1,6 @@
 import path from 'path';
+import fs from 'fs/promises';
 
-import { fs } from 'mz';
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 
@@ -37,7 +37,7 @@ describe('util.isDirectory', () => {
       return isDirectory(path.join(tmpDir.path(), 'missing-leaf')).then(
         (dirExists) => {
           assert.equal(dirExists, false);
-        }
+        },
       );
     }));
 });

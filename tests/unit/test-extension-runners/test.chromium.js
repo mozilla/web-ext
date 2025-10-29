@@ -2,13 +2,11 @@ import path from 'path';
 import EventEmitter from 'events';
 
 import { assert } from 'chai';
-import { describe, it, beforeEach, afterEach } from 'mocha';
+import { describe, it, beforeEach } from 'mocha';
 import deepcopy from 'deepcopy';
 import fs from 'fs-extra';
 import * as sinon from 'sinon';
-import WebSocket from 'ws';
 
-import getValidatedManifest from '../../../src/util/manifest.js';
 import { basicManifest, StubChildProcess } from '../helpers.js';
 import {
   ChromiumExtensionRunner,
@@ -21,10 +19,33 @@ import { TempDir, withTempDir } from '../../../src/util/temp-dir.js';
 import fileExists from '../../../src/util/file-exists.js';
 import isDirectory from '../../../src/util/is-directory.js';
 
-function prepareExtensionRunnerParams({ params } = {}) {
+function prepareExtensionRunnerParams(
+  { params } = {},
+  { loadUnpackedUnsupported = false } = {},
+) {
+  // This is not even close to the real thing, but enough to get the tests to
+  // pass. See tests/functional/test.cli.run-target-chromium.js for full
+  // coverage.
+  const incoming = new EventEmitter();
+  const outgoing = new EventEmitter();
+  outgoing.write = (data) => {
+    const request = JSON.parse(data.slice(0, -1)); // trim trailing \x00.
+    const response = { id: request.id };
+    if (request.method === 'Extensions.loadUnpacked') {
+      if (loadUnpackedUnsupported) {
+        response.error = { message: "'Extensions.loadUnpacked' wasn't found" };
+      } else {
+        response.result = { extensionId: 'fakeExtensionId' };
+      }
+    }
+    incoming.emit('data', `${JSON.stringify(response)}\x00`);
+  };
   const fakeChromeInstance = {
     process: new StubChildProcess(),
-    kill: sinon.spy(async () => {}),
+    kill: sinon.spy(async () => {
+      incoming.emit('close');
+    }),
+    remoteDebuggingPipes: { incoming, outgoing },
   };
   const runnerParams = {
     extensions: [
@@ -36,6 +57,9 @@ function prepareExtensionRunnerParams({ params } = {}) {
     keepProfileChanges: false,
     startUrl: undefined,
     chromiumLaunch: sinon.spy(async () => {
+      // Note: When loadUnpackedUnsupported is true, we expect this method
+      // to be called twice. We should ideally return a new instance, but for
+      // simplicity just return the same, and use resetHistory() as needed.
       return fakeChromeInstance;
     }),
     desktopNotifications: sinon.spy(() => {}),
@@ -49,10 +73,9 @@ describe('util/extension-runners/chromium', async () => {
   it('uses the expected chrome flags', () => {
     // Flags from chrome-launcher v0.14.0
     const expectedFlags = [
-      '--disable-features=Translate',
+      '--disable-features=Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,CalculateNativeWinOcclusion,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,AutofillServerCommunication,PrivacySandboxSettings4',
       '--disable-component-extensions-with-background-pages',
       '--disable-background-networking',
-      '--disable-component-update',
       '--disable-client-side-phishing-detection',
       '--disable-sync',
       '--metrics-recording-only',
@@ -66,9 +89,17 @@ describe('util/extension-runners/chromium', async () => {
       '--password-store=basic',
       '--use-mock-keychain',
       '--force-fieldtrials=*BackgroundTracing/default/',
+      '--disable-hang-monitor',
+      '--disable-prompt-on-repost',
+      '--disable-domain-reliability',
+      '--propagate-iph-for-testing',
     ];
 
     assert.deepEqual(DEFAULT_CHROME_FLAGS, expectedFlags);
+
+    // Double-checking that we never include --disable-extensions, because that
+    // prevents extensions from loading.
+    assert.notInclude(DEFAULT_CHROME_FLAGS, '--disable-extensions');
   });
 
   it('installs and runs the extension', async () => {
@@ -78,16 +109,14 @@ describe('util/extension-runners/chromium', async () => {
 
     await runnerInstance.run();
 
-    const { reloadManagerExtension } = runnerInstance;
-
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
-        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+        '--remote-debugging-pipe',
+        '--enable-unsafe-extension-debugging',
       ],
       startingUrl: undefined,
     });
@@ -96,168 +125,17 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledOnce(fakeChromeInstance.kill);
   });
 
-  it('installs a "reload manager" companion extension', async () => {
-    const { params } = prepareExtensionRunnerParams();
-    const runnerInstance = new ChromiumExtensionRunner(params);
-    await runnerInstance.run();
-
-    const { reloadManagerExtension } = runnerInstance;
-
-    assert.equal(await fs.exists(reloadManagerExtension), true);
-    const managerExtManifest = await getValidatedManifest(
-      reloadManagerExtension
-    );
-    assert.deepEqual(managerExtManifest.permissions, ['management', 'tabs']);
-
-    await runnerInstance.exit();
-  });
-
-  it(
-    'does insert special urls in companion extension ' +
-      '& excludes them from args',
-    async () => {
-      const { params } = prepareExtensionRunnerParams({
-        params: {
-          startUrl: [
-            'url1',
-            'chrome://version',
-            'url2',
-            'chrome://extensions',
-            'chrome-extension://id/page.html',
-          ],
-        },
-      });
-      const runnerInstance = new ChromiumExtensionRunner(params);
-      await runnerInstance.run();
-
-      const { reloadManagerExtension } = runnerInstance;
-
-      assert.equal(await fs.exists(reloadManagerExtension), true);
-
-      const bgScript = path.join(reloadManagerExtension, 'bg.js');
-      const expectedStr =
-        'const chromeTabList = ["chrome://version","chrome://extensions","chrome-extension://id/page.html"]';
-      assert.include(
-        await fs.readFile(bgScript, 'utf8'),
-        expectedStr,
-        'bg.js does not contain special urls'
-      );
-
-      sinon.assert.calledOnce(params.chromiumLaunch);
-      //assert special urls are not present
-      sinon.assert.calledWithMatch(params.chromiumLaunch, {
-        ignoreDefaultFlags: true,
-        enableExtensions: true,
-        chromePath: undefined,
-        chromeFlags: [
-          ...DEFAULT_CHROME_FLAGS,
-          'url2',
-          `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
-        ],
-        startingUrl: 'url1',
-      });
-
-      await runnerInstance.exit();
-    }
-  );
-
-  it('controls the "reload manager" from a websocket server', async () => {
-    const { params } = prepareExtensionRunnerParams();
-    const runnerInstance = new ChromiumExtensionRunner(params);
-    await runnerInstance.run();
-
-    const wssInfo = runnerInstance.wss.address();
-    const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
-    const wsClient = new WebSocket(wsURL);
-
-    await new Promise((resolve) => wsClient.on('open', resolve));
-
-    // Clear console stream from previous messages and start recording
-    consoleStream.stopCapturing();
-    consoleStream.flushCapturedLogs();
-    consoleStream.startCapturing();
-    // Make verbose to capture debug logs.
-    consoleStream.makeVerbose();
-
-    // Emit a fake socket object as a new wss connection.
-
-    const fakeSocket = new EventEmitter();
-    sinon.spy(fakeSocket, 'on');
-    runnerInstance.wss?.emit('connection', fakeSocket);
-    sinon.assert.calledOnce(fakeSocket.on);
-
-    fakeSocket.emit('error', new Error('Fake wss socket ERROR'));
-
-    // Retrieve captures logs and stop capturing.
-    const { capturedMessages } = consoleStream;
-    consoleStream.stopCapturing();
-
-    assert.ok(
-      capturedMessages.some(
-        (message) =>
-          message.match('[debug]') && message.match('Fake wss socket ERROR')
-      )
-    );
-
-    const reload = (client, resolve, data) => {
-      client.send(JSON.stringify({ type: 'webExtReloadExtensionComplete' }));
-      resolve(data);
-    };
-
-    const waitForReloadAll = new Promise((resolve) =>
-      wsClient.on('message', (data) => reload(wsClient, resolve, data))
-    );
-    await runnerInstance.reloadAllExtensions();
-    assert.deepEqual(JSON.parse(await waitForReloadAll), {
-      type: 'webExtReloadAllExtensions',
-    });
-
-    // TODO(rpl): change this once we improve the manager extension to be able
-    // to reload a single extension.
-    const waitForReloadOne = new Promise((resolve) =>
-      wsClient.on('message', (data) => reload(wsClient, resolve, data))
-    );
-    await runnerInstance.reloadExtensionBySourceDir('/fake/sourceDir');
-    assert.deepEqual(JSON.parse(await waitForReloadOne), {
-      type: 'webExtReloadAllExtensions',
-    });
-
-    // Verify that if one websocket connection gets closed, a second websocket
-    // connection still receives the control messages.
-    const wsClient2 = new WebSocket(wsURL);
-    await new Promise((resolve) => wsClient2.on('open', resolve));
-    wsClient.close();
-
-    const waitForReloadClient2 = new Promise((resolve) =>
-      wsClient2.on('message', (data) => reload(wsClient2, resolve, data))
-    );
-
-    await runnerInstance.reloadAllExtensions();
-    assert.deepEqual(JSON.parse(await waitForReloadClient2), {
-      type: 'webExtReloadAllExtensions',
-    });
-
-    const waitForReloadAllAgain = new Promise((resolve) =>
-      wsClient2.on('message', (data) => reload(wsClient2, resolve, data))
-    );
-    await runnerInstance.reloadAllExtensions();
-    assert.deepEqual(JSON.parse(await waitForReloadAllAgain), {
-      type: 'webExtReloadAllExtensions',
-    });
-
-    await runnerInstance.exit();
-  });
-
   it('exits if the chrome instance is shutting down', async () => {
     const { params, fakeChromeInstance } = prepareExtensionRunnerParams();
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
     const onceExiting = new Promise((resolve) =>
-      runnerInstance.registerCleanup(resolve)
+      runnerInstance.registerCleanup(resolve),
     );
 
     fakeChromeInstance.process.emit('close');
+    fakeChromeInstance.remoteDebuggingPipes.incoming.emit('close');
 
     await onceExiting;
   });
@@ -272,7 +150,7 @@ describe('util/extension-runners/chromium', async () => {
     });
 
     const onceExiting = new Promise((resolve) =>
-      runnerInstance.registerCleanup(resolve)
+      runnerInstance.registerCleanup(resolve),
     );
 
     await runnerInstance.exit();
@@ -288,6 +166,7 @@ describe('util/extension-runners/chromium', async () => {
 
     const exitDone = runnerInstance.exit();
     fakeChromeInstance.process.emit('close');
+    fakeChromeInstance.remoteDebuggingPipes.incoming.emit('close');
 
     await exitDone;
 
@@ -327,8 +206,8 @@ describe('util/extension-runners/chromium', async () => {
         (message) =>
           message.match('[debug]') &&
           message.match('ignored setup error on chromium runner shutdown') &&
-          message.match('Fake chromiumLaunch ERROR')
-      )
+          message.match('Fake chromiumLaunch ERROR'),
+      ),
     );
   });
 
@@ -340,16 +219,14 @@ describe('util/extension-runners/chromium', async () => {
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
-    const { reloadManagerExtension } = runnerInstance;
-
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: '/my/custom/chrome-bin',
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
-        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+        '--remote-debugging-pipe',
+        '--enable-unsafe-extension-debugging',
       ],
       startingUrl: undefined,
     });
@@ -365,15 +242,14 @@ describe('util/extension-runners/chromium', async () => {
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
-    const { reloadManagerExtension } = runnerInstance;
-
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
+        '--enable-unsafe-extension-debugging',
         'url2',
         'url3',
         `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
@@ -395,18 +271,14 @@ describe('util/extension-runners/chromium', async () => {
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
-    const { reloadManagerExtension } = runnerInstance;
-
     sinon.assert.calledOnce(params.chromiumLaunch);
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       ignoreDefaultFlags: true,
-      enableExtensions: true,
       chromePath: undefined,
       chromeFlags: [
         ...DEFAULT_CHROME_FLAGS,
-        'url2',
-        'url3',
-        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+        '--remote-debugging-pipe',
+        '--enable-unsafe-extension-debugging',
         '--arg1',
         'arg2',
         '--arg3',
@@ -427,7 +299,7 @@ describe('util/extension-runners/chromium', async () => {
     const runnerInstance = new ChromiumExtensionRunner(params);
     await runnerInstance.run();
 
-    const usedTempPath = spy.returnValues[2];
+    const usedTempPath = spy.returnValues[1];
 
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       userDataDir: usedTempPath,
@@ -450,19 +322,17 @@ describe('util/extension-runners/chromium', async () => {
       const runnerInstance = new ChromiumExtensionRunner(params);
       await runnerInstance.run();
 
-      const usedTempPath = spy.returnValues[2];
-
-      const { reloadManagerExtension } = runnerInstance;
+      const usedTempPath = spy.returnValues[1];
 
       sinon.assert.calledOnce(params.chromiumLaunch);
       sinon.assert.calledWithMatch(params.chromiumLaunch, {
         ignoreDefaultFlags: true,
-        enableExtensions: true,
         chromePath: undefined,
         userDataDir: usedTempPath,
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
-          `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+          '--remote-debugging-pipe',
+          '--enable-unsafe-extension-debugging',
         ],
         startingUrl: undefined,
       });
@@ -482,7 +352,7 @@ describe('util/extension-runners/chromium', async () => {
         await fs.mkdirs(path.join(tmpPath, 'userDataDir/profile'));
         await fs.outputFile(
           path.join(tmpPath, 'userDataDir/profile/Secure Preferences'),
-          ''
+          '',
         );
 
         const { params } = prepareExtensionRunnerParams({
@@ -495,24 +365,22 @@ describe('util/extension-runners/chromium', async () => {
         const runnerInstance = new ChromiumExtensionRunner(params);
         await runnerInstance.run();
 
-        const { reloadManagerExtension } = runnerInstance;
-
         sinon.assert.calledOnce(params.chromiumLaunch);
         sinon.assert.calledWithMatch(params.chromiumLaunch, {
           ignoreDefaultFlags: true,
-          enableExtensions: true,
           chromePath: undefined,
           userDataDir: path.join(tmpPath, 'userDataDir'),
           chromeFlags: [
             ...DEFAULT_CHROME_FLAGS,
-            `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+            '--remote-debugging-pipe',
+            '--enable-unsafe-extension-debugging',
             '--profile-directory=profile',
           ],
           startingUrl: undefined,
         });
 
         await runnerInstance.exit();
-      })
+      }),
   );
 
   it('does support some special chars in profile-directory flag', async () =>
@@ -526,7 +394,7 @@ describe('util/extension-runners/chromium', async () => {
       await fs.mkdirs(path.join(tmpPath, 'userDataDir', profileDirName));
       await fs.outputFile(
         path.join(tmpPath, 'userDataDir', profileDirName, 'Secure Preferences'),
-        ''
+        '',
       );
 
       const { params } = prepareExtensionRunnerParams({
@@ -539,17 +407,15 @@ describe('util/extension-runners/chromium', async () => {
       const runnerInstance = new ChromiumExtensionRunner(params);
       await runnerInstance.run();
 
-      const { reloadManagerExtension } = runnerInstance;
-
       sinon.assert.calledOnce(params.chromiumLaunch);
       sinon.assert.calledWithMatch(params.chromiumLaunch, {
         ignoreDefaultFlags: true,
-        enableExtensions: true,
         chromePath: undefined,
         userDataDir: path.join(tmpPath, 'userDataDir'),
         chromeFlags: [
           ...DEFAULT_CHROME_FLAGS,
-          `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+          '--remote-debugging-pipe',
+          '--enable-unsafe-extension-debugging',
           `--profile-directory=${profileDirName}`,
         ],
         startingUrl: undefined,
@@ -594,7 +460,7 @@ describe('util/extension-runners/chromium', async () => {
       // the userDataDir is missing a file Local State to be validated as such
       await fs.outputFile(
         path.join(tmpPath, 'userDataDir/profile/Secure Preferences'),
-        ''
+        '',
       );
 
       const { params } = prepareExtensionRunnerParams({
@@ -620,7 +486,7 @@ describe('util/extension-runners/chromium', async () => {
         await fs.mkdirs(path.join(tmpPath, 'userDataDir/profile'));
         await fs.outputFile(
           path.join(tmpPath, 'userDataDir/profile/Secure Preferences'),
-          ''
+          '',
         );
 
         const { params } = prepareExtensionRunnerParams({
@@ -634,19 +500,17 @@ describe('util/extension-runners/chromium', async () => {
         const runnerInstance = new ChromiumExtensionRunner(params);
         await runnerInstance.run();
 
-        const usedTempPath = spy.returnValues[2];
-
-        const { reloadManagerExtension } = runnerInstance;
+        const usedTempPath = spy.returnValues[1];
 
         sinon.assert.calledOnce(params.chromiumLaunch);
         sinon.assert.calledWithMatch(params.chromiumLaunch, {
           ignoreDefaultFlags: true,
-          enableExtensions: true,
           chromePath: undefined,
           userDataDir: usedTempPath,
           chromeFlags: [
             ...DEFAULT_CHROME_FLAGS,
-            `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
+            '--remote-debugging-pipe',
+            '--enable-unsafe-extension-debugging',
             '--profile-directory=profile',
           ],
           startingUrl: undefined,
@@ -655,85 +519,59 @@ describe('util/extension-runners/chromium', async () => {
         assert.isTrue(await isDirectory(path.join(usedTempPath, 'profile')));
         assert.isTrue(
           await fileExists(
-            path.join(usedTempPath, 'profile/Secure Preferences')
-          )
+            path.join(usedTempPath, 'profile/Secure Preferences'),
+          ),
         );
 
         await runnerInstance.exit();
         spy.restore();
-      })
+      }),
   );
+
+  it('falls back to --load-extension when needed (old Chrome)', async () => {
+    const { params, fakeChromeInstance } = prepareExtensionRunnerParams(
+      {},
+      { loadUnpackedUnsupported: true },
+    );
+    const runnerInstance = new ChromiumExtensionRunner(params);
+
+    await runnerInstance.run();
+    sinon.assert.calledOnce(fakeChromeInstance.kill);
+    fakeChromeInstance.kill.resetHistory();
+
+    sinon.assert.calledTwice(params.chromiumLaunch);
+    sinon.assert.calledWithMatch(params.chromiumLaunch.firstCall, {
+      ignoreDefaultFlags: true,
+      chromePath: undefined,
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
+        '--enable-unsafe-extension-debugging',
+      ],
+      startingUrl: undefined,
+    });
+    sinon.assert.calledWithMatch(params.chromiumLaunch.secondCall, {
+      ignoreDefaultFlags: true,
+      chromePath: undefined,
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
+        '--load-extension=/fake/sourceDir',
+      ],
+      startingUrl: undefined,
+    });
+
+    await runnerInstance.exit();
+    sinon.assert.calledOnce(fakeChromeInstance.kill);
+  });
 
   describe('reloadAllExtensions', () => {
     let runnerInstance;
-    let wsClient;
 
     beforeEach(async () => {
       const { params } = prepareExtensionRunnerParams();
       runnerInstance = new ChromiumExtensionRunner(params);
       await runnerInstance.run();
-    });
-
-    const connectClient = async () => {
-      if (!runnerInstance.wss) {
-        throw new Error('WebSocker server is not running');
-      }
-      const wssInfo = runnerInstance.wss.address();
-      const wsURL = `ws://${wssInfo.address}:${wssInfo.port}`;
-      wsClient = new WebSocket(wsURL);
-      await new Promise((resolve) => wsClient.on('open', resolve));
-    };
-
-    afterEach(async () => {
-      if (wsClient && wsClient.readyState === WebSocket.OPEN) {
-        wsClient.close();
-        wsClient = null;
-      }
-      await runnerInstance.exit();
-    });
-
-    it('does not resolve before complete message from client', async () => {
-      let reloadMessage = false;
-      await connectClient();
-
-      wsClient.on('message', (message) => {
-        const msg = JSON.parse(message);
-
-        if (msg.type === 'webExtReloadAllExtensions') {
-          assert.equal(reloadMessage, false);
-
-          setTimeout(() => {
-            const respondMsg = JSON.stringify({
-              type: 'webExtReloadExtensionComplete',
-            });
-            wsClient.send(respondMsg);
-            reloadMessage = true;
-          }, 333);
-        }
-      });
-
-      await runnerInstance.reloadAllExtensions();
-      assert.equal(reloadMessage, true);
-    });
-
-    it('resolve when any client send complete message', async () => {
-      await connectClient();
-      wsClient.on('message', () => {
-        const msg = JSON.stringify({ type: 'webExtReloadExtensionComplete' });
-        wsClient.send(msg);
-      });
-      await runnerInstance.reloadAllExtensions();
-    });
-
-    it('resolve when all client disconnect', async () => {
-      await connectClient();
-      await new Promise((resolve) => {
-        wsClient.on('close', () => {
-          resolve(runnerInstance.reloadAllExtensions());
-        });
-        wsClient.close();
-      });
-      wsClient = null;
     });
 
     it('resolve when not client connected', async () => {

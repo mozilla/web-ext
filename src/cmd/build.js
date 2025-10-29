@@ -1,7 +1,7 @@
 import path from 'path';
 import { createWriteStream } from 'fs';
+import fs from 'fs/promises';
 
-import { fs } from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import defaultFromEvent from 'promise-toolbox/fromEvent';
@@ -35,7 +35,7 @@ export async function getDefaultLocalizedName({ messageFile, manifestData }) {
     messageContents = await fs.readFile(messageFile, { encoding: 'utf-8' });
   } catch (error) {
     throw new UsageError(
-      `Error reading messages.json file at ${messageFile}: ${error}`
+      `Error reading messages.json file at ${messageFile}: ${error}`,
     );
   }
 
@@ -46,7 +46,7 @@ export async function getDefaultLocalizedName({ messageFile, manifestData }) {
     messageData = parseJSON(stripJsonComments(messageContents));
   } catch (error) {
     throw new UsageError(
-      `Error parsing messages.json file at ${messageFile}: ${error}`
+      `Error parsing messages.json file at ${messageFile}: ${error}`,
     );
   }
 
@@ -55,13 +55,13 @@ export async function getDefaultLocalizedName({ messageFile, manifestData }) {
     (match, messageName) => {
       if (!(messageData[messageName] && messageData[messageName].message)) {
         const error = new UsageError(
-          `The locale file ${messageFile} ` + `is missing key: ${messageName}`
+          `The locale file ${messageFile} ` + `is missing key: ${messageName}`,
         );
         throw error;
       } else {
         return messageData[messageName].message;
       }
-    }
+    },
   );
   return Promise.resolve(extensionName);
 }
@@ -72,7 +72,7 @@ export function getStringPropertyValue(prop, obj) {
   const value = properties.reduce((prev, curr) => prev && prev[curr], obj);
   if (!['string', 'number'].includes(typeof value)) {
     throw new UsageError(
-      `Manifest key "${prop}" is missing or has an invalid type: ${value}`
+      `Manifest key "${prop}" is missing or has an invalid type: ${value}`,
     );
   }
   const stringValue = `${value}`;
@@ -87,9 +87,9 @@ function getPackageNameFromTemplate(filenameTemplate, manifestData) {
     /{([A-Za-z0-9._]+?)}/g,
     (match, manifestProperty) => {
       return safeFileName(
-        getStringPropertyValue(manifestProperty, manifestData)
+        getStringPropertyValue(manifestProperty, manifestData),
       );
-    }
+    },
   );
 
   // Validate the resulting packageName string, after interpolating the manifest property
@@ -98,13 +98,13 @@ function getPackageNameFromTemplate(filenameTemplate, manifestData) {
   if (parsed.dir) {
     throw new UsageError(
       `Invalid filename template "${filenameTemplate}". ` +
-        `Filename "${packageName}" should not contain a path`
+        `Filename "${packageName}" should not contain a path`,
     );
   }
   if (!['.zip', '.xpi'].includes(parsed.ext)) {
     throw new UsageError(
       `Invalid filename template "${filenameTemplate}". ` +
-        `Filename "${packageName}" should have a zip or xpi extension`
+        `Filename "${packageName}" should have a zip or xpi extension`,
     );
   }
 
@@ -121,7 +121,7 @@ export async function defaultPackageCreator(
     showReadyMessage,
     filename = DEFAULT_FILENAME_TEMPLATE,
   },
-  { fromEvent = defaultFromEvent } = {}
+  { fromEvent = defaultFromEvent } = {},
 ) {
   let id;
   if (manifestData) {
@@ -144,7 +144,7 @@ export async function defaultPackageCreator(
       sourceDir,
       '_locales',
       default_locale,
-      'messages.json'
+      'messages.json',
     );
     log.debug('Manifest declared default_locale, localizing extension name');
     const extensionName = await getDefaultLocalizedName({
@@ -156,7 +156,7 @@ export async function defaultPackageCreator(
   }
 
   const packageName = safeFileName(
-    getPackageNameFromTemplate(filenameTemplate, manifestData)
+    getPackageNameFromTemplate(filenameTemplate, manifestData),
   );
   const extensionPath = path.join(artifactsDir, packageName);
 
@@ -176,7 +176,7 @@ export async function defaultPackageCreator(
     if (!overwriteDest) {
       throw new UsageError(
         `Extension exists at the destination path: ${extensionPath}\n` +
-          'Use --overwrite-dest to enable overwriting.'
+          'Use --overwrite-dest to enable overwriting.',
       );
     }
     log.info(`Destination exists, overwriting: ${extensionPath}`);
@@ -215,7 +215,7 @@ export default async function build(
     onSourceChange = defaultSourceWatcher,
     packageCreator = defaultPackageCreator,
     showReadyMessage = true,
-  } = {}
+  } = {},
 ) {
   const rebuildAsNeeded = asNeeded; // alias for `build --as-needed`
   log.info(`Building web extension from ${sourceDir}`);

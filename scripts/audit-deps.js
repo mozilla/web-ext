@@ -12,7 +12,7 @@ import stripJsonComments from 'strip-json-comments';
 
 const npmVersion = parseInt(
   shell.exec('npm --version', { silent: true }).stdout.split('.')[0],
-  10
+  10,
 );
 const npmCmd = npmVersion >= 6 ? 'npm' : 'npx npm@latest';
 
@@ -53,7 +53,7 @@ if (auditReport) {
     if (auditReport.error.code === 'ENETUNREACH') {
       console.log(
         'npm was not able to reach the api endpoint:',
-        auditReport.error.summary
+        auditReport.error.summary,
       );
       console.log('Retrying...');
       auditReport = getNpmAuditJSON();
@@ -73,7 +73,7 @@ if (auditReport) {
     console.error(
       'ERROR: npm audit JSON is using a new format not yet supported.',
       '\nPlease file a bug in the github repository and attach the following JSON data sample to it:',
-      `\n\n${JSON.stringify(auditReport, null, 2)}`
+      `\n\n${JSON.stringify(auditReport, null, 2)}`,
     );
   } else if (auditReport.auditReportVersion === 2) {
     // New npm audit json format introduced in npm v8.
@@ -83,10 +83,30 @@ if (auditReport) {
       // packages in the audit json report. We need to normalize the data so
       // that we always deal with a list of objects.
       item.via = item.via.reduce((acc, via) => {
-        if (typeof via === 'object') {
-          acc.push(via);
+        const addAdvisoryDetails = (entries, newEntry) => {
+          if (entries.some((entry) => entry.url === newEntry.url)) {
+            // The advisory url is already listed, no need to add a new entry.
+            return;
+          }
+          entries.push(newEntry);
+        };
+
+        if (typeof via === 'string') {
+          // Resolve the actual security advisory details recursively.
+          const recursivelyResolveVia = (currVia) => {
+            const resolvedVia = auditReport.vulnerabilities[currVia].via;
+            for (const viaEntry of resolvedVia) {
+              if (typeof viaEntry === 'string') {
+                recursivelyResolveVia(viaEntry);
+              } else {
+                addAdvisoryDetails(acc, viaEntry);
+              }
+            }
+          };
+
+          recursivelyResolveVia(via);
         } else {
-          acc.push(...auditReport.vulnerabilities[via].via);
+          addAdvisoryDetails(acc, via);
         }
 
         return acc;
@@ -146,7 +166,7 @@ function formatAdvisory(adv) {
 
 if (ignoredIssues.length > 0) {
   console.log(
-    '\n== audit-deps: ignored security issues (based on .nsprc exceptions)\n'
+    '\n== audit-deps: ignored security issues (based on .nsprc exceptions)\n',
   );
 
   for (const adv of ignoredIssues) {

@@ -25,7 +25,7 @@ async function wrapADBCall(asyncFn) {
       throw new UsageError(
         'No adb executable has been found. ' +
           'You can Use --adb-bin, --adb-host/--adb-port ' +
-          'to configure it manually if needed.'
+          'to configure it manually if needed.',
       );
     }
 
@@ -62,7 +62,7 @@ export default class ADBUtils {
     this.userAbortDiscovery = false;
   }
 
-  runShellCommand(deviceId, cmd) {
+  async runShellCommand(deviceId, cmd) {
     const { adb, adbClient } = this;
 
     log.debug(`Run adb shell command on ${deviceId}: ${JSON.stringify(cmd)}`);
@@ -86,13 +86,31 @@ export default class ADBUtils {
     return devices.map((dev) => dev.id);
   }
 
-  async discoverInstalledFirefoxAPKs(deviceId, firefoxApk) {
-    log.debug(`Listing installed Firefox APKs on ${deviceId}`);
+  async getCurrentUser(deviceId) {
+    log.debug(`Retrieving  current user on ${deviceId}`);
 
+    const currentUser = await this.runShellCommand(deviceId, [
+      'am',
+      'get-current-user',
+    ]);
+
+    const userId = parseInt(currentUser.trim());
+    if (isNaN(userId)) {
+      throw new WebExtError(`Unable to retrieve current user on ${deviceId}`);
+    }
+    return userId;
+  }
+
+  async discoverInstalledFirefoxAPKs(deviceId, firefoxApk) {
+    const userId = await this.getCurrentUser(deviceId);
+
+    log.debug(`Listing installed Firefox APKs on ${deviceId}`);
     const pmList = await this.runShellCommand(deviceId, [
       'pm',
       'list',
       'packages',
+      '--user',
+      `${userId}`,
     ]);
 
     return pmList
@@ -112,62 +130,6 @@ export default class ADBUtils {
 
         return false;
       });
-  }
-
-  async getAndroidVersionNumber(deviceId) {
-    const androidVersion = (
-      await this.runShellCommand(deviceId, ['getprop', 'ro.build.version.sdk'])
-    ).trim();
-
-    const androidVersionNumber = parseInt(androidVersion);
-
-    // No need to check the granted runtime permissions on Android versions < Lollypop.
-    if (isNaN(androidVersionNumber)) {
-      throw new WebExtError(
-        'Unable to discovery android version on ' +
-          `${deviceId}: ${androidVersion}`
-      );
-    }
-
-    return androidVersionNumber;
-  }
-
-  // Raise an UsageError when the given APK does not have the required runtime permissions.
-  async ensureRequiredAPKRuntimePermissions(deviceId, apk, permissions) {
-    const permissionsMap = {};
-
-    // Initialize every permission to false in the permissions map.
-    for (const perm of permissions) {
-      permissionsMap[perm] = false;
-    }
-
-    // Retrieve the permissions information for the given apk.
-    const pmDumpLogs = (
-      await this.runShellCommand(deviceId, ['pm', 'dump', apk])
-    ).split('\n');
-
-    // Set to true the required permissions that have been granted.
-    for (const line of pmDumpLogs) {
-      for (const perm of permissions) {
-        if (
-          line.includes(`${perm}: granted=true`) ||
-          line.includes(`${perm}, granted=true`)
-        ) {
-          permissionsMap[perm] = true;
-        }
-      }
-    }
-
-    for (const perm of permissions) {
-      if (!permissionsMap[perm]) {
-        throw new UsageError(
-          `Required ${perm} has not be granted for ${apk}. ` +
-            'Please grant them using the Android Settings ' +
-            'or using the following adb command:\n' +
-            `\t adb shell pm grant ${apk} ${perm}\n`
-        );
-      }
-    }
   }
 
   async amForceStopAPK(deviceId, apk) {
@@ -190,7 +152,7 @@ export default class ADBUtils {
     if (testDirOut !== '1') {
       throw new WebExtError(
         `Cannot create artifacts directory ${artifactsDir} ` +
-          `because it exists on ${deviceId}.`
+          `because it exists on ${deviceId}.`,
       );
     }
 
@@ -231,7 +193,7 @@ export default class ADBUtils {
         const artifactsDir = `${DEVICE_DIR_BASE}${file.name}`;
 
         log.debug(
-          `Removing artifacts directory ${artifactsDir} from device ${deviceId}`
+          `Removing artifacts directory ${artifactsDir} from device ${deviceId}`,
         );
 
         await this.runShellCommand(deviceId, ['rm', '-rf', artifactsDir]);
@@ -252,7 +214,7 @@ export default class ADBUtils {
     this.artifactsDirMap.delete(deviceId);
 
     log.debug(
-      `Removing ${artifactsDir} artifacts directory on ${deviceId} device`
+      `Removing ${artifactsDir} artifacts directory on ${deviceId} device`,
     );
 
     await this.runShellCommand(deviceId, ['rm', '-rf', artifactsDir]);
@@ -348,7 +310,7 @@ export default class ADBUtils {
   async discoverRDPUnixSocket(
     deviceId,
     apk,
-    { maxDiscoveryTime, retryInterval } = {}
+    { maxDiscoveryTime, retryInterval } = {},
   ) {
     let rdpUnixSockets = [];
 
@@ -362,13 +324,13 @@ export default class ADBUtils {
       log.info(msg);
       if (this.userAbortDiscovery) {
         throw new UsageError(
-          'Exiting Firefox Remote Debugging socket discovery on user request'
+          'Exiting Firefox Remote Debugging socket discovery on user request',
         );
       }
 
       if (Date.now() - discoveryStartedAt > maxDiscoveryTime) {
         throw new WebExtError(
-          'Timeout while waiting for the Android Firefox Debugger Socket'
+          'Timeout while waiting for the Android Firefox Debugger Socket',
         );
       }
 
@@ -395,7 +357,7 @@ export default class ADBUtils {
     if (rdpUnixSockets.length > 1) {
       throw new WebExtError(
         'Unexpected multiple RDP sockets: ' +
-          `${JSON.stringify(rdpUnixSockets)}`
+          `${JSON.stringify(rdpUnixSockets)}`,
       );
     }
 

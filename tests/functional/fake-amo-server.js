@@ -6,30 +6,64 @@
 import http from 'http';
 
 const FAKE_REPLIES = [
+  // Upload responses, see https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#upload-detail-object
+
+  // Upload response with processed false (which is expected to polling
+  // until the processed becomes true).
   {
-    url: 'http://localhost:8989/validation-results/',
+    uuid: '{fake-upload-uuid}',
+    channel: 'unlisted',
+    processed: false,
   },
+  // Upload response with processed false (which is expected to stop polling
+  // the upload status and move to fetch the version details).
   {
-    guid: 'an-addon-guid',
-    active: true,
+    uuid: '{fake-upload-uuid}',
+    channel: 'unlisted',
     processed: true,
+    submitted: false,
+    url: 'http://localhost:8989/fake-validation-result',
     valid: true,
-    reviewed: true,
+    validation: {},
+    version: { id: 123 },
   },
+
+  // Version responses, see https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#version-detail.
+
+  // Version response with file.status unreviewed (which is expected to polling
+  // until the file.status becomes public).
   {
-    guid: 'an-addon-guid',
-    active: true,
-    processed: true,
-    valid: true,
-    automated_signing: true,
+    id: 123,
+    guid: 'fake-guid',
+    channel: 'unlisted',
+    edit_url: 'http://localhost:8989/fake-devhub-url',
     reviewed: true,
-    files: [
-      {
-        signed: true,
-        download_url: 'http://localhost:8989/some-signed-file-1.2.3.xpi',
-      },
-    ],
+    file: {
+      id: 456,
+      hash: '29bd832510553001a178ecf1e74111ee65cf5286d22215008be2c23757a4e4fd',
+      status: 'unreviewed',
+      url: 'http://localhost:8989/fake-download-url.xpi',
+    },
+    version: { id: 123 },
   },
+  // Version response with file.status public (which is expected to stop the
+  // polling waiting for a signed xpi to download).
+  {
+    id: 123,
+    guid: 'fake-guid',
+    channel: 'unlisted',
+    edit_url: 'http://localhost:8989/fake-devhub-url',
+    reviewed: true,
+    file: {
+      id: 456,
+      hash: '29bd832510553001a178ecf1e74111ee65cf5286d22215008be2c23757a4e4fd',
+      status: 'public',
+      url: 'http://localhost:8989/fake-download-url.xpi',
+    },
+    version: { id: 123 },
+  },
+
+  // Final fake xpi download response.
   {},
 ];
 
@@ -55,7 +89,7 @@ http
       process.exit(1);
     }
   })
-  .listen(8989, '127.0.0.1', () => {
+  .listen(8989, 'localhost', () => {
     process.stdout.write('listening');
     process.stdout.uncork();
   });

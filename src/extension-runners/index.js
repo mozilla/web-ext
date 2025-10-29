@@ -89,7 +89,7 @@ export class MultiExtensionRunner {
             runnerName: runner.getName(),
             reloadError: error,
           };
-        }
+        },
       );
 
       promises.push(reloadPromise);
@@ -124,7 +124,7 @@ export class MultiExtensionRunner {
             reloadError: error,
             sourceDir,
           };
-        }
+        },
       );
 
       promises.push(reloadPromise);
@@ -149,7 +149,7 @@ export class MultiExtensionRunner {
       promises.push(
         new Promise((resolve) => {
           runner.registerCleanup(resolve);
-        })
+        }),
       );
     }
 
@@ -234,7 +234,7 @@ export function defaultReloadStrategy(
     createWatcher = defaultWatcherCreator,
     stdin = process.stdin,
     kill = process.kill,
-  } = {}
+  } = {},
 ) {
   const allowInput = !noInput;
   if (!allowInput) {
@@ -255,6 +255,9 @@ export function defaultReloadStrategy(
   extensionRunner.registerCleanup(() => {
     watcher.close();
     if (allowInput) {
+      if (isTTY(stdin)) {
+        setRawMode(stdin, false);
+      }
       stdin.pause();
     }
   });

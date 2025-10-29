@@ -1,6 +1,6 @@
 import path from 'path';
+import fs from 'fs/promises';
 
-import { fs } from 'mz';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import stripJsonComments from 'strip-json-comments';
@@ -22,7 +22,7 @@ export default async function getValidatedManifest(sourceDir) {
     manifestContents = await fs.readFile(manifestFile, { encoding: 'utf-8' });
   } catch (error) {
     throw new InvalidManifest(
-      `Could not read manifest.json file at ${manifestFile}: ${error}`
+      `Could not read manifest.json file at ${manifestFile}: ${error}`,
     );
   }
 
@@ -34,7 +34,7 @@ export default async function getValidatedManifest(sourceDir) {
     manifestData = parseJSON(stripJsonComments(manifestContents));
   } catch (error) {
     throw new InvalidManifest(
-      `Error parsing manifest.json file at ${manifestFile}: ${error}`
+      `Error parsing manifest.json file at ${manifestFile}: ${error}`,
     );
   }
 
@@ -58,7 +58,7 @@ export default async function getValidatedManifest(sourceDir) {
 
   if (errors.length) {
     throw new InvalidManifest(
-      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`
+      `Manifest at ${manifestFile} is invalid: ${errors.join('; ')}`,
     );
   }
 
@@ -71,7 +71,7 @@ export function getManifestId(manifestData) {
     manifestData.applications,
   ];
   for (const apps of manifestApps) {
-    // If both bss and applicants contains a defined gecko property,
+    // If both bss and applications contain a defined gecko property,
     // we prefer bss even if the id property isn't available.
     // This match what Firefox does in this particular scenario, see
     // https://searchfox.org/mozilla-central/rev/828f2319c0195d7f561ed35533aef6fe183e68e3/toolkit/mozapps/extensions/internal/XPIInstall.jsm#470-474,488

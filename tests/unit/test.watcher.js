@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import path from 'path';
+import fs from 'fs/promises';
 
 import { it, describe } from 'mocha';
-import { fs } from 'mz';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import Watchpack from 'watchpack';
@@ -76,7 +76,7 @@ describe('watcher', () => {
           setTimeout(() => {
             watcher.close();
             resolve(assertParams);
-          }, 500)
+          }, 500),
         ),
       ]);
     });
@@ -129,7 +129,7 @@ describe('watcher', () => {
         .catch((error) => {
           assert.match(
             error.message,
-            /Invalid --watch-file value: .+ is not a file./
+            /Invalid --watch-file value: .+ is not a file./,
           );
         });
     });
@@ -192,7 +192,7 @@ describe('watcher', () => {
         const onChange = sinon.spy();
         const tmpPath = tmpDir.path();
         const files = ['foo.txt', 'bar.txt', 'foobar.txt'].map((filePath) =>
-          path.join(tmpPath, filePath)
+          path.join(tmpPath, filePath),
         );
 
         const watcher = onSourceChange({
@@ -200,7 +200,7 @@ describe('watcher', () => {
           artifactsDir: path.join(tmpPath, 'web-ext-artifacts'),
           onChange,
           watchIgnored: ['foo.txt'].map((filePath) =>
-            path.join(tmpPath, filePath)
+            path.join(tmpPath, filePath),
           ),
           shouldWatchFile: (filePath) => filePath !== tmpPath,
           debounceTime,
@@ -215,7 +215,7 @@ describe('watcher', () => {
 
         async function assertOnChange(filePath, expectedCallCount) {
           const promiseOnChanged = new Promise((resolve) =>
-            watchAll.once('change', (f) => resolve(f))
+            watchAll.once('change', (f) => resolve(f)),
           );
           await waitDebounce();
           await fs.writeFile(filePath, '<content>');

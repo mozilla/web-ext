@@ -1,4 +1,6 @@
-import { fs } from 'mz';
+import path from 'path';
+import fs from 'fs/promises';
+import nodeFs from 'fs';
 
 import defaultBuildExtension from './build.js';
 import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
@@ -32,12 +34,12 @@ export default async function run(
     noReload = false,
     preInstall = false,
     sourceDir,
+    verbose = false,
     watchFile,
     watchIgnored,
     startUrl,
     target,
     args,
-    firefoxPreview = [],
     // Android CLI options.
     adbBin,
     adbHost,
@@ -59,13 +61,14 @@ export default async function run(
     reloadStrategy = defaultReloadStrategy,
     MultiExtensionRunner = DefaultMultiExtensionRunner,
     getValidatedManifest = defaultGetValidatedManifest,
-  } = {}
+  } = {},
 ) {
+  sourceDir = path.resolve(sourceDir);
   log.info(`Running web extension from ${sourceDir}`);
   if (preInstall) {
     log.info(
       "Disabled auto-reloading because it's not possible with " +
-        '--pre-install'
+        '--pre-install',
     );
     noReload = true;
   }
@@ -80,12 +83,7 @@ export default async function run(
 
   // Create an alias for --pref since it has been transformed into an
   // object containing one or more preferences.
-  const customPrefs = { ...pref };
-  if (firefoxPreview.includes('mv3')) {
-    log.info('Configuring Firefox preferences for Manifest V3');
-    customPrefs['extensions.manifestV3.enabled'] = true;
-  }
-
+  const customPrefs = pref;
   const manifestData = await getValidatedManifest(sourceDir);
 
   const profileDir = firefoxProfile || chromiumProfile;
@@ -94,10 +92,10 @@ export default async function run(
     if (!profileDir) {
       throw new UsageError(
         '--profile-create-if-missing requires ' +
-          '--firefox-profile or --chromium-profile'
+          '--firefox-profile or --chromium-profile',
       );
     }
-    const isDir = fs.existsSync(profileDir);
+    const isDir = nodeFs.existsSync(profileDir);
     if (isDir) {
       log.info(`Profile directory ${profileDir} already exists`);
     } else {
@@ -176,7 +174,7 @@ export default async function run(
           {
             // Suppress the message usually logged by web-ext build.
             showReadyMessage: false,
-          }
+          },
         );
       },
     };
@@ -191,6 +189,7 @@ export default async function run(
   if (target && target.includes('chromium')) {
     const chromiumRunnerParams = {
       ...commonRunnerParams,
+      verbose,
       chromiumBinary,
       chromiumProfile,
     };

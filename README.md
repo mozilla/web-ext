@@ -5,8 +5,6 @@ This is a command line tool to help build, run, and test
 
 [![CircleCI](https://circleci.com/gh/mozilla/web-ext.svg?style=svg)](https://circleci.com/gh/mozilla/web-ext)
 [![codecov](https://codecov.io/gh/mozilla/web-ext/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla/web-ext)
-[![Dependency Status](https://david-dm.org/mozilla/web-ext.svg)](https://david-dm.org/mozilla/web-ext)
-[![devDependency Status](https://david-dm.org/mozilla/web-ext/dev-status.svg)](https://david-dm.org/mozilla/web-ext#info=devDependencies)
 [![npm version](https://badge.fury.io/js/web-ext.svg)](https://badge.fury.io/js/web-ext)
 
 Ultimately, it aims to support browser extensions in a standard, portable,
@@ -16,35 +14,37 @@ cross-platform way. Initially, it will provide a streamlined experience for deve
 ## Documentation
 
 - [Getting started with web-ext][web-ext-user-docs]
-- [Command reference](https://extensionworkshop.com/documentation/develop/web-ext-command-reference)
+- [Command reference](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/)
 
 Here are the commands you can run. Click on each one for detailed documentation or use `--help` on the command line, such as `web-ext build --help`.
 
-- [`run`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-run)
+- [`run`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-run)
   - Run the extension
-- [`lint`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-lint)
+- [`lint`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-lint)
   - Validate the extension source
-- [`sign`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-sign)
+- [`sign`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-sign)
   - Sign the extension so it can be installed in Firefox
-- [`build`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-build)
+- [`build`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-build)
   - Create an extension package from source
-- [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference#web-ext-docs)
+- [`docs`](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/#web-ext-docs)
   - Open the `web-ext` documentation in a browser
 
-## Installation from npm
+## Installation
+
+### Using npm
 
 First, make sure you are running the current
 [LTS](https://github.com/nodejs/LTS)
 (long term support) version of
 [NodeJS](https://nodejs.org/en/).
 
-### Global command
+#### Global command
 
 You can install this command onto your machine globally with:
 
     npm install --global web-ext
 
-### For your project
+#### For your project
 
 Alternatively, you can install this command as one of the
 [`devDependencies`](https://docs.npmjs.com/files/package.json#devdependencies)
@@ -72,11 +72,19 @@ version on the command line with this:
 
     npm run start:firefox -- --firefox=nightly
 
+### Using Homebrew (unofficial)
+
+The community maintains a `web-ext` formula.
+
+```sh
+brew install web-ext
+```
+
 ## Installation from source
 
 You'll need:
 
-- [Node.js](https://nodejs.org/en/), 16.0.0 or higher
+- [Node.js](https://nodejs.org/en/) (current [LTS](https://github.com/nodejs/LTS))
 - [npm](https://www.npmjs.com/), 8.0.0 or higher is recommended
 
 Optionally, you may like:
@@ -115,7 +123,8 @@ need to relink it.
 
 ## Using web-ext in NodeJS code
 
-**Note:** There is limited support for this API.
+**Note:** web-ext is primarily a command line tool and there is limited support for direct use of its internal API. Backward incompatible changes
+may be introduced in minor and patch version updates to the web-ext npm package.
 
 Aside from [using web-ext on the command line][web-ext-user-docs], you may wish to execute `web-ext` in NodeJS code.
 
@@ -141,7 +150,7 @@ webExt.cmd
       // You need to specify this one so that your NodeJS application
       // can continue running after web-ext is finished.
       shouldExitProgram: false,
-    }
+    },
   )
   .then((extensionRunner) => {
     // The command has finished. Each command resolves its
@@ -203,8 +212,42 @@ webExt.cmd.run(
       version: '1.0.0',
     }),
     shouldExitProgram: false,
-  }
+  },
 );
+```
+
+You can also use `webExt.cmd.sign()` to request a signed xpi for a given extension source directory:
+
+```js
+webExt.cmd.sign({
+  // NOTE: Please set userAgentString to a custom one of your choice.
+  userAgentString: 'YOUR-CUSTOM-USERAGENT',
+  apiKey,
+  apiSecret,
+  amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
+  sourceDir: ...,
+  channel: 'unlisted',
+  ...
+});
+```
+
+You can also access the internal signing module directly if you need to submit an xpi file without also building it.
+**Note:** submit-addon is internal web-ext module, using the webExt.cmd.sign() is the recommended API method.
+
+```js
+import { signAddon } from 'web-ext/util/submit-addon';
+
+signAddon({
+  // NOTE: Please set userAgentString to a custom one of your choice.
+  userAgentString: 'YOUR-CUSTOM-USERAGENT',
+  apiKey,
+  apiSecret,
+  amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
+  id: 'extension-id@example.com',
+  xpiPath: pathToExtension,
+  savedUploadUuidPath: '.amo-upload-uuid',
+  channel: 'unlisted',
+});
 ```
 
 ## Should I Use It?
@@ -237,8 +280,8 @@ Here is a partial list of examples:
 - Integrating with services.
   - Mozilla offers some useful services such as
     [linting](https://github.com/mozilla/addons-linter) and
-    [signing](https://addons-server.readthedocs.io/en/latest/topics/api/signing.html)
+    [signing](https://addons-server.readthedocs.io/en/latest/topics/api/v4_frozen/signing.html)
     extensions.
 
-[web-ext-user-docs]: https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Getting_started_with_web-ext
+[web-ext-user-docs]: https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/
 [dynamic-imports]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports
