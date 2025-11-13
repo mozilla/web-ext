@@ -299,15 +299,6 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(`--profile-directory=${profileDirName}`);
     }
 
-    let startingUrl;
-    if (this.params.startUrl) {
-      const startingUrls = Array.isArray(this.params.startUrl)
-        ? this.params.startUrl
-        : [this.params.startUrl];
-      startingUrl = startingUrls.shift();
-      chromeFlags.push(...startingUrls);
-    }
-
     this.chromiumInstance = await this.chromiumLaunch({
       chromePath: chromiumBinary,
       chromeFlags,
