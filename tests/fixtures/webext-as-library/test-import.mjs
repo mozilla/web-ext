@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
 import webExt from 'web-ext';
 
-// eslint-disable-next-line import/extensions
+// eslint-disable-next-line import/default
 import helpers from './helpers.js';
 
 const {testModuleExports, testModuleExportedUtils} = helpers;

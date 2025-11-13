@@ -4,7 +4,6 @@ import { createLogger } from '../util/logger.js';
 
 const log = createLogger(import.meta.url);
 
-// eslint-disable-next-line max-len
 export const url =
   'https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/';
 

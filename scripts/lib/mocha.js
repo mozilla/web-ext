@@ -1,3 +1,4 @@
+/* eslint no-console:0 */
 import { spawnSync } from 'child_process';
 
 import shell from 'shelljs';
