@@ -5,8 +5,5 @@ module.exports = {
   diff: true,
   package: './package.json',
   reporter: 'spec',
-  require: [
-    '@babel/register',
-    './tests/setup.js',
-  ]
+  require: ['@babel/register', './tests/setup.js'],
 };

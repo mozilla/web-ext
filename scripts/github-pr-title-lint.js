@@ -1,4 +1,4 @@
-/* eslint max-len: 0 */
+/* eslint max-len: 0, no-console:0 */
 
 import https from 'https';
 import { execSync } from 'child_process';
