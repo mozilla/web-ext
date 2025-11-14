@@ -92,7 +92,7 @@ export default function sign(
       const metadataFileBuffer = await asyncFsReadFile(amoMetadata);
       try {
         metaDataJson = JSON.parse(metadataFileBuffer.toString());
-      } catch (err) {
+      } catch {
         throw new UsageError('Invalid JSON in listing metadata');
       }
     }

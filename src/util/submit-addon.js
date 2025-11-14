@@ -486,7 +486,7 @@ export async function signAddon({
   let baseUrl;
   try {
     baseUrl = new URL(amoBaseUrl);
-  } catch (err) {
+  } catch {
     throw new Error(`Invalid AMO API base URL: ${amoBaseUrl}`);
   }
 

@@ -1,5 +1,0 @@
-lib/
-!scripts/lib
-coverage/
-artifacts/
-commitlint.config.js

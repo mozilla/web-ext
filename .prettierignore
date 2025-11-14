@@ -14,4 +14,6 @@ LICENSE
 
 # allow files we want to process
 !*.js
+!*.cjs
+!*.mjs
 !*.md

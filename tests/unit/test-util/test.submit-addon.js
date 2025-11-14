@@ -8,7 +8,6 @@ import { File } from 'node:buffer';
 // the File constructor in a different way, which also works in Node 18.0.0.
 // Our CI tests with Node 18.19.0 as the lowest version, so this passes tests.
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 import CRC32 from 'crc-32';
 import { assert, expect } from 'chai';
 import JSZip from 'jszip';
