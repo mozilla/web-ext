@@ -117,6 +117,7 @@ describe('util/extension-runners/chromium', async () => {
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
         '--enable-unsafe-extension-debugging',
+        '--disable-blink-features=AutomationControlled',
       ],
       startingUrl: undefined,
     });
@@ -227,6 +228,7 @@ describe('util/extension-runners/chromium', async () => {
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
         '--enable-unsafe-extension-debugging',
+        '--disable-blink-features=AutomationControlled',
       ],
       startingUrl: undefined,
     });
@@ -250,6 +252,7 @@ describe('util/extension-runners/chromium', async () => {
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
         '--enable-unsafe-extension-debugging',
+        '--disable-blink-features=AutomationControlled',
         'url2',
         'url3',
       ],
@@ -281,10 +284,37 @@ describe('util/extension-runners/chromium', async () => {
         '--arg1',
         'arg2',
         '--arg3',
+        '--disable-blink-features=AutomationControlled',
         'url2',
         'url3',
       ],
       startingUrl: 'url1',
+    });
+
+    await runnerInstance.exit();
+  });
+
+  it("doesn't disable `AutomationControlled` when corresponding arg is passed", async () => {
+    // If the `--enable-blink-features=AutomationControlled` flag is passed,
+    // `--disable-blink-features=AutomationControlled` should not be passed.
+    const { params } = prepareExtensionRunnerParams({
+      params: {
+        args: ['--enable-blink-features=CSSVariables,AutomationControlled'],
+      },
+    });
+
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      ignoreDefaultFlags: true,
+      chromePath: undefined,
+      chromeFlags: [
+        ...DEFAULT_CHROME_FLAGS,
+        '--remote-debugging-pipe',
+        '--enable-unsafe-extension-debugging',
+        '--enable-blink-features=CSSVariables,AutomationControlled',
+      ],
     });
 
     await runnerInstance.exit();
@@ -334,6 +364,7 @@ describe('util/extension-runners/chromium', async () => {
           ...DEFAULT_CHROME_FLAGS,
           '--remote-debugging-pipe',
           '--enable-unsafe-extension-debugging',
+          '--disable-blink-features=AutomationControlled',
         ],
         startingUrl: undefined,
       });
@@ -375,6 +406,7 @@ describe('util/extension-runners/chromium', async () => {
             ...DEFAULT_CHROME_FLAGS,
             '--remote-debugging-pipe',
             '--enable-unsafe-extension-debugging',
+            '--disable-blink-features=AutomationControlled',
             '--profile-directory=profile',
           ],
           startingUrl: undefined,
@@ -417,6 +449,7 @@ describe('util/extension-runners/chromium', async () => {
           ...DEFAULT_CHROME_FLAGS,
           '--remote-debugging-pipe',
           '--enable-unsafe-extension-debugging',
+          '--disable-blink-features=AutomationControlled',
           `--profile-directory=${profileDirName}`,
         ],
         startingUrl: undefined,
@@ -512,6 +545,7 @@ describe('util/extension-runners/chromium', async () => {
             ...DEFAULT_CHROME_FLAGS,
             '--remote-debugging-pipe',
             '--enable-unsafe-extension-debugging',
+            '--disable-blink-features=AutomationControlled',
             '--profile-directory=profile',
           ],
           startingUrl: undefined,
@@ -548,6 +582,7 @@ describe('util/extension-runners/chromium', async () => {
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
         '--enable-unsafe-extension-debugging',
+        '--disable-blink-features=AutomationControlled',
       ],
       startingUrl: undefined,
     });
@@ -558,6 +593,7 @@ describe('util/extension-runners/chromium', async () => {
         ...DEFAULT_CHROME_FLAGS,
         '--remote-debugging-pipe',
         '--load-extension=/fake/sourceDir',
+        '--disable-blink-features=AutomationControlled',
       ],
       startingUrl: undefined,
     });
