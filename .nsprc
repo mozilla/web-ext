@@ -1,3 +1,6 @@
 {
-  "exceptions": []
+  "exceptions": [
+    // Blocked on: https://github.com/mochajs/mocha/issues/5534
+    "https://github.com/advisories/GHSA-5j98-mcp5-4vw2"
+  ]
 }
