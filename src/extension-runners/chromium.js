@@ -256,6 +256,21 @@ export class ChromiumExtensionRunner {
       chromeFlags.push(...this.params.args);
     }
 
+    // `--remote-debugging-pipe` results in `navigator.webdriver == true` in
+    // the launched Chromium instance (unless a Chromium session exists
+    // already, in which case the existing session is used, which typically
+    // has `navigator.webdriver == false`). This breaks websites with bot
+    // detection features. The following flag prevents this.
+    // Only pass this flag if `--enable-blink-features=AutomationControlled`
+    // is not passed.
+    if (
+      !chromeFlags.some((flag) =>
+        /^--enable-blink-features=(.*,)?AutomationControlled(,|$)/.test(flag),
+      )
+    ) {
+      chromeFlags.push('--disable-blink-features=AutomationControlled');
+    }
+
     // eslint-disable-next-line prefer-const
     let { userDataDir, profileDirName } =
       await ChromiumExtensionRunner.getProfilePaths(
