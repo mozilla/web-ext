@@ -252,6 +252,7 @@ describe('util/extension-runners/chromium', async () => {
         '--enable-unsafe-extension-debugging',
         'url2',
         'url3',
+        `--load-extension=${reloadManagerExtension},/fake/sourceDir`,
       ],
       startingUrl: 'url1',
     });
@@ -281,8 +282,6 @@ describe('util/extension-runners/chromium', async () => {
         '--arg1',
         'arg2',
         '--arg3',
-        'url2',
-        'url3',
       ],
       startingUrl: 'url1',
     });
