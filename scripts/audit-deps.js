@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint no-console:0 */
 
 // This nodejs script loads the .nsprc's "exceptions" list (as `nsp check` used to support) and
 // and then filters the output of `npm audit --json` to check if any of the security advisories

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint no-console:0 */
 
 import eslint from './lib/eslint.js';
 import { mochaUnit } from './lib/mocha.js';
