@@ -11,15 +11,13 @@ const log = createLogger(import.meta.url);
 export async function createExtensionRunner(config) {
   switch (config.target) {
     case 'firefox-desktop': {
-      const { FirefoxDesktopExtensionRunner } = await import(
-        './firefox-desktop.js'
-      );
+      const { FirefoxDesktopExtensionRunner } =
+        await import('./firefox-desktop.js');
       return new FirefoxDesktopExtensionRunner(config.params);
     }
     case 'firefox-android': {
-      const { FirefoxAndroidExtensionRunner } = await import(
-        './firefox-android.js'
-      );
+      const { FirefoxAndroidExtensionRunner } =
+        await import('./firefox-android.js');
       return new FirefoxAndroidExtensionRunner(config.params);
     }
     case 'chromium': {
