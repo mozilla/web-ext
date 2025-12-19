@@ -108,7 +108,7 @@
     "deepcopy": "2.1.0",
     "eslint": "9.39.0",
     "eslint-plugin-import": "2.32.0",
-    "fs-extra": "11.3.2",
+    "fs-extra": "11.3.3",
     "git-rev-sync": "3.0.2",
     "globals": "16.5.0",
     "html-entities": "2.6.0",
