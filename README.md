@@ -61,8 +61,10 @@ the source code for your extension.
 `package.json`
 
 ```json
-"scripts": {
-  "start:firefox": "web-ext run --source-dir ./extension-dist/",
+{
+  "scripts": {
+    "start:firefox": "web-ext run --source-dir ./extension-dist/"
+  }
 }
 ```
 
