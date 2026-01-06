@@ -250,6 +250,12 @@ signAddon({
 });
 ```
 
+## Using web-ext in CI envionments.
+
+### GitHub actions
+
+For seamless integration with GitHub Actions, the [kewisch/action-web-ext](https://github.com/kewisch/action-web-ext) third party action provides a robust wrapper around the official web-ext library.
+
 ## Should I Use It?
 
 Yes! The web-ext tool enables you to build and ship extensions for Firefox.
