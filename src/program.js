@@ -760,6 +760,14 @@ Example: $0 --help run.
         type: 'string',
         requiresArg: true,
       },
+      'firefox-debugger-socket': {
+        describe:
+          'Connect to the specified debugger socket on the Android device. ' +
+          'Example: @org.mozilla.fenix/firefox-debugger-socket',
+        demandOption: false,
+        type: 'string',
+        requiresArg: true,
+      },
     })
     .command('lint', 'Validate the extension source', commands.lint, {
       output: {
