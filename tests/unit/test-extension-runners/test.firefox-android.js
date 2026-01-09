@@ -115,6 +115,7 @@ function prepareSelectedDeviceAndAPKParams(
     pushFile: sinon.spy(() => Promise.resolve()),
     startFirefoxAPK: sinon.spy(() => Promise.resolve()),
     setupForward: sinon.spy(() => Promise.resolve()),
+    isSocketResponsive: sinon.spy(() => Promise.resolve(true)),
     clearArtifactsDir: sinon.spy(() => Promise.resolve()),
     detectOrRemoveOldArtifacts: sinon.spy(() => Promise.resolve(true)),
     setUserAbortDiscovery: sinon.spy(() => {}),
