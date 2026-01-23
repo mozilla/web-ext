@@ -1,3 +1,6 @@
 {
-  "exceptions": []
+  "exceptions": [
+    // Blocked on upstream fix https://github.com/mochajs/mocha/issues/5657
+    "https://github.com/advisories/GHSA-73rr-hh4g-fpgx"
+  ]
 }
