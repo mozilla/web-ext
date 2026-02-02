@@ -95,7 +95,7 @@
     "@babel/register": "7.28.6",
     "@commitlint/cli": "20.4.0",
     "@commitlint/config-conventional": "20.3.1",
-    "@eslint/compat": "2.0.1",
+    "@eslint/compat": "2.0.2",
     "@eslint/eslintrc": "3.3.3",
     "@eslint/js": "9.39.2",
     "babel-plugin-istanbul": "7.0.1",
