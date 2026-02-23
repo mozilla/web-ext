@@ -1,6 +1,12 @@
 {
   "exceptions": [
     // Blocked on upstream fix https://github.com/mochajs/mocha/issues/5657
+    "https://github.com/advisories/GHSA-73rr-hh4g-fpgx",
+    // Minimatch ReDoS via repeated patterns on minimatch < 10.2.1 (via eslint and eslint plugins)
+    "https://github.com/advisories/GHSA-3ppc-4f35-3m26",
+    // ajv ReDoS on ajv < 6.14.0 (via addons-linter)
+    "https://github.com/advisories/GHSA-2g4f-4pwh-qvx6",
+    // jsdiff DoS on diff >=6.0.0 <8.0.3 (via mocha)
     "https://github.com/advisories/GHSA-73rr-hh4g-fpgx"
   ]
 }
