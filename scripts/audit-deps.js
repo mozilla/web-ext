@@ -97,6 +97,12 @@ if (auditReport) {
           const recursivelyResolveVia = (currVia) => {
             const resolvedVia = auditReport.vulnerabilities[currVia].via;
             for (const viaEntry of resolvedVia) {
+              if (viaEntry === via) {
+                // Break infinite recursion on circular dependencies
+                // while resolving via entries.
+                continue;
+              }
+
               if (typeof viaEntry === 'string') {
                 recursivelyResolveVia(viaEntry);
               } else {
