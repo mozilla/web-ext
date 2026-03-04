@@ -3,6 +3,8 @@
     // Minimatch ReDoS via repeated patterns on minimatch < 10.2.1 (via eslint and eslint plugins)
     "https://github.com/advisories/GHSA-3ppc-4f35-3m26",
     // jsdiff DoS on diff >=6.0.0 <8.0.3 (via mocha)
-    "https://github.com/advisories/GHSA-73rr-hh4g-fpgx"
+    "https://github.com/advisories/GHSA-73rr-hh4g-fpgx",
+    // serialize-javascript <=7.0.2 (via mocha)
+    "https://github.com/advisories/GHSA-5c6j-r48x-rmvq"
   ]
 }
