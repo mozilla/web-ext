@@ -49,6 +49,7 @@ export default async function run(
     adbRemoveOldArtifacts,
     firefoxApk,
     firefoxApkComponent,
+    firefoxDebuggerSocket,
     // Chromium CLI options.
     chromiumBinary,
     chromiumProfile,
@@ -150,6 +151,7 @@ export default async function run(
       preInstall,
       firefoxApk,
       firefoxApkComponent,
+      firefoxDebuggerSocket,
       adbDevice,
       adbHost,
       adbPort,
