@@ -13,3 +13,4 @@ dist/*
 artifacts/*
 coverage/*
 lib/
+.idea
