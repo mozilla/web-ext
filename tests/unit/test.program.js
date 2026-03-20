@@ -614,6 +614,27 @@ describe('program.main', () => {
     });
   });
 
+  it('converts chromium custom preferences into a Map', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return execProgram(
+      [
+        'run',
+        '--chromium-pref',
+        'extensions.ui.developer_mode=false',
+        '--chromium-pref',
+        'browser.theme.color=dark',
+      ],
+      { commands: fakeCommands },
+    ).then(() => {
+      const { chromiumPref } = fakeCommands.run.firstCall.args[0];
+      assert.instanceOf(chromiumPref, Map);
+      assert.strictEqual(chromiumPref.get('extensions.ui.developer_mode'), false);
+      assert.strictEqual(chromiumPref.get('browser.theme.color'), 'dark');
+    });
+  });
+
   it('passes shouldExitProgram option to commands', () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
