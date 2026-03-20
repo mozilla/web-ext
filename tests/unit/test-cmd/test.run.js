@@ -7,8 +7,8 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import {
-  fixturePath,
   FakeExtensionRunner,
+  fixturePath,
   getFakeFirefox,
   getFakeRemoteFirefox,
   mockModule,
@@ -339,6 +339,22 @@ describe('run', () => {
       fakeChromiumProfile,
       'Got the expected chromiumProfile option',
     );
+  });
+
+  it('provides chromium custom preferences to the Chromium runner params', async () => {
+    const fakeChromiumPref = new Map([['extensions.ui.developer_mode', false]]);
+    const cmd = await prepareRun();
+    await cmd.run({
+      target: ['chromium'],
+      chromiumPref: fakeChromiumPref,
+    });
+
+    sinon.assert.calledWithMatch(chromiumRunnerStub, {
+      customChromiumPrefs: sinon.match.instanceOf(Map),
+    });
+
+    const { customChromiumPrefs } = chromiumRunnerStub.firstCall.args[0];
+    assert.strictEqual(customChromiumPrefs, fakeChromiumPref);
   });
 
   it('creates multiple extension runners', async () => {

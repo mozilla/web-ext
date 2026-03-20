@@ -1,11 +1,12 @@
 /**
- * Given an object where the keys are the flattened path to a
+ * Given a Map where the keys are the flattened path to a
  * preference, and the value is the value to set at that path, return
  * an object where the paths are fully expanded.
  */
 export default function expandPrefs(prefs) {
   const prefsMap = new Map();
-  for (const [key, value] of Object.entries(prefs)) {
+
+  for (const [key, value] of prefs) {
     let submap = prefsMap;
     const props = key.split('.');
     const lastProp = props.pop();
