@@ -7,8 +7,8 @@ import fs from 'fs/promises';
 import path from 'path';
 
 import {
-  launch as defaultChromiumLaunch,
   Launcher as ChromeLauncher,
+  launch as defaultChromiumLaunch,
 } from 'chrome-launcher';
 
 import { createLogger } from '../util/logger.js';
@@ -29,7 +29,7 @@ export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
   (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag),
 );
 
-const DEFAULT_PREFS = { 'extensions.ui.developer_mode': true };
+const DEFAULT_CHROMIUM_PREFS = { 'extensions.ui.developer_mode': true };
 
 // This is a client for the Chrome Devtools protocol. The methods and results
 // are documented at https://chromedevtools.github.io/devtools-protocol/tot/
@@ -608,7 +608,7 @@ export class ChromiumExtensionRunner {
    */
   getPrefs() {
     return expandPrefs({
-      ...DEFAULT_PREFS,
+      ...DEFAULT_CHROMIUM_PREFS,
       ...this.params.customChromiumPrefs,
     });
   }
