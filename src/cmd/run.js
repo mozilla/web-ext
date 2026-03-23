@@ -51,7 +51,7 @@ export default async function run(
     firefoxApkComponent,
     // Chromium CLI options.
     chromiumBinary,
-    chromiumPref = new Map(),
+    chromiumPref = {},
     chromiumProfile,
   },
   {

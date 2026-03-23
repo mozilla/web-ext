@@ -7,8 +7,8 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import {
-  FakeExtensionRunner,
   fixturePath,
+  FakeExtensionRunner,
   getFakeFirefox,
   getFakeRemoteFirefox,
   mockModule,

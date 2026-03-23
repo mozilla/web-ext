@@ -29,7 +29,7 @@ export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
   (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag),
 );
 
-const DEFAULT_PREFS = new Map([['extensions.ui.developer_mode', true]]);
+const DEFAULT_PREFS = { 'extensions.ui.developer_mode': true };
 
 // This is a client for the Chrome Devtools protocol. The methods and results
 // are documented at https://chromedevtools.github.io/devtools-protocol/tot/
@@ -170,6 +170,19 @@ export class ChromiumExtensionRunner {
 
   // Method exported from the IExtensionRunner interface.
 
+  /**
+   * Returns the runner name.
+   */
+  getName() {
+    return 'Chromium';
+  }
+
+  async run() {
+    // Run should never be called more than once.
+    this._promiseSetupDone = this.setupInstance();
+    await this._promiseSetupDone;
+  }
+
   static async isUserDataDir(dirPath) {
     const localStatePath = path.join(dirPath, 'Local State');
     const defaultPath = path.join(dirPath, 'Default');
@@ -210,19 +223,6 @@ export class ChromiumExtensionRunner {
       userDataDir: chromiumProfile,
       profileDirName: null,
     };
-  }
-
-  /**
-   * Returns the runner name.
-   */
-  getName() {
-    return 'Chromium';
-  }
-
-  async run() {
-    // Run should never be called more than once.
-    this._promiseSetupDone = this.setupInstance();
-    await this._promiseSetupDone;
   }
 
   /**
@@ -607,8 +607,9 @@ export class ChromiumExtensionRunner {
    * "extensions.ui.developer_mode".
    */
   getPrefs() {
-    return expandPrefs(
-      new Map([...DEFAULT_PREFS, ...this.params.customChromiumPrefs]),
-    );
+    return expandPrefs({
+      ...DEFAULT_PREFS,
+      ...this.params.customChromiumPrefs,
+    });
   }
 }
