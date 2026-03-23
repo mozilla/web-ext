@@ -14,7 +14,6 @@ import {
   createLogger,
 } from './util/logger.js';
 import { coerceCLICustomPreference } from './firefox/preferences.js';
-import { coerceCLICustomChromiumPreference } from './util/chromium-preferences.js';
 import { checkForUpdates as defaultUpdateChecker } from './util/updates.js';
 import {
   applyConfigToArgv as defaultApplyConfigToArgv,
@@ -630,7 +629,7 @@ Example: $0 --help run.
         requiresArg: true,
         type: 'array',
         coerce: (arg) =>
-          arg != null ? coerceCLICustomChromiumPreference(arg) : undefined,
+          arg != null ? coerceCLICustomPreference(arg) : undefined,
       },
       'chromium-profile': {
         describe: 'Path to a custom Chromium profile',

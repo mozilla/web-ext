@@ -2,7 +2,7 @@ import path from 'path';
 import EventEmitter from 'events';
 
 import { assert } from 'chai';
-import { beforeEach, describe, it } from 'mocha';
+import { describe, it, beforeEach } from 'mocha';
 import deepcopy from 'deepcopy';
 import fs from 'fs-extra';
 import * as sinon from 'sinon';
@@ -12,7 +12,9 @@ import {
   ChromiumExtensionRunner,
   DEFAULT_CHROME_FLAGS,
 } from '../../../src/extension-runners/chromium.js';
-import { consoleStream } from '../../../src/util/logger.js';
+import {
+  consoleStream, // instance is imported to inspect logged messages
+} from '../../../src/util/logger.js';
 import { TempDir, withTempDir } from '../../../src/util/temp-dir.js';
 import fileExists from '../../../src/util/file-exists.js';
 import isDirectory from '../../../src/util/is-directory.js';
@@ -601,13 +603,13 @@ describe('util/extension-runners/chromium', async () => {
   });
 
   describe('getPrefs', () => {
-    it('merges default and custom preferences from a Map', () => {
+    it('merges default and custom preferences from an object', () => {
       const { params } = prepareExtensionRunnerParams({
         params: {
-          customChromiumPrefs: new Map([
-            ['extensions.ui.developer_mode', false],
-            ['browser.theme.color', 'dark'],
-          ]),
+          customChromiumPrefs: {
+            'extensions.ui.developer_mode': false,
+            'browser.theme.color': 'dark',
+          },
         },
       });
 

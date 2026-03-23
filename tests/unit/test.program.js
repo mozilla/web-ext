@@ -614,7 +614,7 @@ describe('program.main', () => {
     });
   });
 
-  it('converts chromium custom preferences into a Map', () => {
+  it('converts chromium custom preferences into an object', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
     });
@@ -629,9 +629,9 @@ describe('program.main', () => {
       { commands: fakeCommands },
     ).then(() => {
       const { chromiumPref } = fakeCommands.run.firstCall.args[0];
-      assert.instanceOf(chromiumPref, Map);
-      assert.strictEqual(chromiumPref.get('extensions.ui.developer_mode'), false);
-      assert.strictEqual(chromiumPref.get('browser.theme.color'), 'dark');
+      assert.isObject(chromiumPref);
+      assert.strictEqual(chromiumPref['extensions.ui.developer_mode'], false);
+      assert.strictEqual(chromiumPref['browser.theme.color'], 'dark');
     });
   });
 
