@@ -72,7 +72,7 @@
     "https-proxy-agent": "^7.0.0",
     "jose": "5.9.6",
     "jszip": "3.10.1",
-    "multimatch": "6.0.0",
+    "multimatch": "8.0.0",
     "node-notifier": "10.0.1",
     "open": "11.0.0",
     "parse-json": "8.3.0",
