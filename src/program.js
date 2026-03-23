@@ -10,15 +10,15 @@ import { Parser as yargsParser } from 'yargs/helpers';
 import defaultCommands from './cmd/index.js';
 import { UsageError } from './errors.js';
 import {
-  consoleStream as defaultLogStream,
   createLogger,
+  consoleStream as defaultLogStream,
 } from './util/logger.js';
 import { coerceCLICustomPreference } from './firefox/preferences.js';
 import { checkForUpdates as defaultUpdateChecker } from './util/updates.js';
 import {
-  applyConfigToArgv as defaultApplyConfigToArgv,
   discoverConfigFiles as defaultConfigDiscovery,
   loadJSConfigFile as defaultLoadJSConfigFile,
+  applyConfigToArgv as defaultApplyConfigToArgv,
 } from './config.js';
 
 const log = createLogger(import.meta.url);
