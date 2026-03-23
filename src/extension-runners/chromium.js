@@ -29,7 +29,7 @@ export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
   (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag),
 );
 
-const DEFAULT_CHROMIUM_PREFS = { 'extensions.ui.developer_mode': true };
+const DEFAULT_PREFS = { 'extensions.ui.developer_mode': true };
 
 // This is a client for the Chrome Devtools protocol. The methods and results
 // are documented at https://chromedevtools.github.io/devtools-protocol/tot/
@@ -608,7 +608,7 @@ export class ChromiumExtensionRunner {
    */
   getPrefs() {
     return expandPrefs({
-      ...DEFAULT_CHROMIUM_PREFS,
+      ...DEFAULT_PREFS,
       ...this.params.customChromiumPrefs,
     });
   }
