@@ -5,15 +5,19 @@
  */
 export default function expandPrefs(prefs) {
   const prefsMap = new Map();
+
   for (const [key, value] of Object.entries(prefs)) {
     let submap = prefsMap;
     const props = key.split('.');
     const lastProp = props.pop();
+
     for (const prop of props) {
       if (!submap.has(prop)) {
         submap.set(prop, new Map());
       }
+
       submap = submap.get(prop);
+
       if (!(submap instanceof Map)) {
         throw new Error(
           `Cannot set ${key} because a value already exists at ${prop}`,
