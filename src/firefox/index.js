@@ -3,10 +3,10 @@ import path from 'path';
 import { promisify } from 'util';
 import fs from 'fs/promises';
 
-import { default as defaultFxRunner } from 'fx-runner';
 import FirefoxProfile from 'firefox-profile';
 import fromEvent from 'promise-toolbox/fromEvent';
 
+import { runFirefox as defaultFxRunner } from './fx-runner/index.js';
 import isDirectory from '../util/is-directory.js';
 import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
 import { getPrefs as defaultPrefGetter } from './preferences.js';
@@ -43,38 +43,11 @@ export async function run(
 
   const remotePort = await findRemotePort();
 
-  if (firefoxBinary && firefoxBinary.startsWith('flatpak:')) {
-    const flatpakAppId = firefoxBinary.substring(8);
-    log.debug(`Configuring Firefox with flatpak: appId=${flatpakAppId}`);
-
-    // This should be resolved by the fx-runner.
-    firefoxBinary = 'flatpak';
-    binaryArgs = [
-      'run',
-      `--filesystem=${profile.path()}`,
-      ...extensions.map(({ sourceDir }) => `--filesystem=${sourceDir}:ro`),
-      // We need to share the network namespace because we want to connect to
-      // Firefox with the remote protocol. There is no way to tell flatpak to
-      // only expose a port AFAIK.
-      '--share=network',
-      // Kill the entire sandbox when the launching process dies, which is what
-      // we want since exiting web-ext involves `kill` and the process executed
-      // here is `flatpak run`.
-      '--die-with-parent',
-      flatpakAppId,
-    ].concat(...(binaryArgs || []));
-  }
-
   const results = await fxRunner({
-    // if this is falsey, fxRunner tries to find the default one.
     binary: firefoxBinary,
-    'binary-args': binaryArgs,
-    // For Flatpak we need to respect the order of the command arguments because
-    // we have arguments for Flapack (first) and then Firefox.
-    'binary-args-first': firefoxBinary === 'flatpak',
-    // This ensures a new instance of Firefox is created. It has nothing
-    // to do with the devtools remote debugger.
-    'no-remote': true,
+    binaryArgs,
+    extensions,
+    noRemote: true,
     listen: remotePort,
     foreground: true,
     profile: profile.path(),
@@ -82,7 +55,6 @@ export async function run(
       ...process.env,
       ...defaultFirefoxEnv,
     },
-    verbose: true,
   });
 
   const firefox = results.process;

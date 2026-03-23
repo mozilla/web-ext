@@ -126,8 +126,7 @@ describe('firefox', () => {
       return runFirefox({ fxRunner, binaryArgs }).then(() => {
         sinon.assert.called(fxRunner);
         sinon.assert.calledWithMatch(fxRunner, {
-          'binary-args': binaryArgs,
-          'binary-args-first': false,
+          binaryArgs,
         });
       });
     });
@@ -210,16 +209,8 @@ describe('firefox', () => {
       }).then(() => {
         sinon.assert.called(runner);
         sinon.assert.calledWithMatch(runner, {
-          binary: 'flatpak',
-          'binary-args': [
-            'run',
-            `--filesystem=${profile.path()}`,
-            '--filesystem=/path/to/extension:ro',
-            '--share=network',
-            '--die-with-parent',
-            'org.mozilla.firefox',
-          ],
-          'binary-args-first': true,
+          binary: firefoxBinary,
+          extensions,
         });
       });
     });
