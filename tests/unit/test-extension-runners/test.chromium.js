@@ -602,6 +602,34 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledOnce(fakeChromeInstance.kill);
   });
 
+  describe('getPrefs', () => {
+    it('merges default and custom preferences from an object', () => {
+      const { params } = prepareExtensionRunnerParams({
+        params: {
+          customChromiumPrefs: {
+            'extensions.ui.developer_mode': false,
+            'browser.theme.color': 'dark',
+          },
+        },
+      });
+
+      const runnerInstance = new ChromiumExtensionRunner(params);
+
+      assert.deepEqual(runnerInstance.getPrefs(), {
+        extensions: {
+          ui: {
+            developer_mode: false,
+          },
+        },
+        browser: {
+          theme: {
+            color: 'dark',
+          },
+        },
+      });
+    });
+  });
+
   describe('reloadAllExtensions', () => {
     let runnerInstance;
 
