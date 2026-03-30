@@ -852,6 +852,28 @@ describe('program.main', () => {
     assert.equal(options.firefoxApkComponent, 'CustomView');
   });
 
+  it('passes a custom Firefox debugger socket via --firefox-debugger-socket', async () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+
+    const customSocket = '@org.mozilla.fenix/firefox-debugger-socket';
+
+    await execProgram(
+      [
+        'run',
+        '--firefox-debugger-socket',
+        customSocket,
+        '-t',
+        'firefox-android',
+      ],
+      { commands: fakeCommands },
+    );
+
+    const options = fakeCommands.run.firstCall.args[0];
+    assert.equal(options.firefoxDebuggerSocket, customSocket);
+  });
+
   describe('--no-input', () => {
     const fakeCommands = fake(commands, {
       run: () => Promise.resolve(),
