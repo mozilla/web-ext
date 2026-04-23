@@ -36,11 +36,9 @@ export async function createExtensionRunner(config) {
  */
 export class MultiExtensionRunner {
   extensionRunners;
-  desktopNotifications;
 
   constructor(params) {
     this.extensionRunners = params.runners;
-    this.desktopNotifications = params.desktopNotifications;
   }
 
   // Method exported from the IExtensionRunner interface.
@@ -70,8 +68,7 @@ export class MultiExtensionRunner {
    * collect any reload error, and resolves to an array composed by
    * a ExtensionRunnerReloadResult object per managed runner.
    *
-   * Any detected reload error is also logged on the terminal and shows as a
-   * desktop notification.
+   * Any detected reload error is also logged on the terminal.
    */
   async reloadAllExtensions() {
     log.debug('Reloading all reloadable add-ons');
@@ -104,8 +101,7 @@ export class MultiExtensionRunner {
    * collect any reload error and resolves to an array composed by
    * a ExtensionRunnerReloadResult object per managed runner.
    *
-   * Any detected reload error is also logged on the terminal and shows as a
-   * desktop notification.
+   * Any detected reload error is also logged on the terminal.
    */
   async reloadExtensionBySourceDir(sourceDir) {
     log.debug(`Reloading add-on at ${sourceDir}`);
@@ -183,11 +179,6 @@ export class MultiExtensionRunner {
 
         log.error(`\n${message}`);
         log.debug(reloadError.stack);
-
-        this.desktopNotifications({
-          title: 'web-ext run: extension reload error',
-          message,
-        });
       }
     }
   }

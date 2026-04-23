@@ -3,7 +3,6 @@ import fs from 'fs/promises';
 import nodeFs from 'fs';
 
 import defaultBuildExtension from './build.js';
-import { showDesktopNotification as defaultDesktopNotifications } from '../util/desktop-notifier.js';
 import * as defaultFirefoxApp from '../firefox/index.js';
 import { connectWithMaxRetries as defaultFirefoxClient } from '../firefox/remote.js';
 import { createLogger } from '../util/logger.js';
@@ -55,7 +54,6 @@ export default async function run(
   },
   {
     buildExtension = defaultBuildExtension,
-    desktopNotifications = defaultDesktopNotifications,
     firefoxApp = defaultFirefoxApp,
     firefoxClient = defaultFirefoxClient,
     reloadStrategy = defaultReloadStrategy,
@@ -112,7 +110,6 @@ export default async function run(
     keepProfileChanges,
     startUrl,
     args,
-    desktopNotifications,
   };
 
   if (!target || target.length === 0 || target.includes('firefox-desktop')) {
@@ -160,7 +157,6 @@ export default async function run(
       // Injected dependencies.
       firefoxApp,
       firefoxClient,
-      desktopNotifications: defaultDesktopNotifications,
       buildSourceDir: (extensionSourceDir, tmpArtifactsDir) => {
         return buildExtension(
           {
@@ -202,7 +198,6 @@ export default async function run(
   }
 
   const extensionRunner = new MultiExtensionRunner({
-    desktopNotifications,
     runners,
   });
 

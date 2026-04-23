@@ -11,6 +11,7 @@ import {
   MultiExtensionRunner,
 } from '../../../src/extension-runners/index.js';
 import { createFakeStdin, FakeExtensionRunner } from '../helpers.js';
+import { consoleStream } from '../../../src/util/logger.js';
 
 function createFakeExtensionRunner({ params = {}, overriddenMethods = {} }) {
   const runner = new FakeExtensionRunner(params);
@@ -25,7 +26,6 @@ function createFakeExtensionRunner({ params = {}, overriddenMethods = {} }) {
 function prepareExtensionRunnerParams(params) {
   return {
     runners: [new FakeExtensionRunner(), new FakeExtensionRunner()],
-    desktopNotifications: sinon.spy(() => {}),
     ...params,
   };
 }
@@ -133,44 +133,47 @@ describe('util/extension-runners', () => {
       sinon.assert.calledOnce(anotherFakeExtensionRunner.exit);
     });
 
-    it('shows a desktop notification on errors while reloading all extensions', async () => {
+    it('logs errors to the console while reloading all extensions', async () => {
       const params = prepareExtensionRunnerParams();
       const fakeExtensionRunner = createFakeExtensionRunner({
         overriddenMethods: {
           getName: () => 'fakeExtensionRunner',
-          reloadAllExtensions: () => {
-            return Promise.reject(new Error('reload error 1'));
-          },
+          reloadAllExtensions: () =>
+            Promise.reject(new Error('reload error 1')),
         },
       });
       const anotherFakeExtensionRunner = createFakeExtensionRunner({
         overriddenMethods: {
           getName: () => 'anotherFakeExtensionRunner',
-          reloadAllExtensions: () => {
-            return Promise.reject(new Error('reload error 2'));
-          },
+          reloadAllExtensions: () =>
+            Promise.reject(new Error('reload error 2')),
         },
       });
 
       params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
-
       const runnerInstance = new MultiExtensionRunner(params);
 
+      consoleStream.flushCapturedLogs();
       await runnerInstance.reloadAllExtensions();
 
       sinon.assert.calledOnce(fakeExtensionRunner.reloadAllExtensions);
       sinon.assert.calledOnce(anotherFakeExtensionRunner.reloadAllExtensions);
-      sinon.assert.callCount(params.desktopNotifications, 2);
-      sinon.assert.calledWith(
-        params.desktopNotifications,
-        sinon.match({
-          title: sinon.match(/web-ext run: extension reload error/),
-          message: sinon.match(/on "fakeExtensionRunner" - reload error 1/),
-        }),
+
+      const { capturedMessages } = consoleStream;
+
+      assert.ok(
+        capturedMessages.some(
+          (msg) => msg.match('[error]') && msg.match('reload error 1'),
+        ),
+      );
+      assert.ok(
+        capturedMessages.some(
+          (msg) => msg.match('[error]') && msg.match('reload error 2'),
+        ),
       );
     });
 
-    it('shows a desktop notification on errors while reloading an extension', async () => {
+    it('collects reload errors in results when reloading an extension', async () => {
       const params = prepareExtensionRunnerParams();
       const fakeExtensionRunner = createFakeExtensionRunner({
         overriddenMethods: {
@@ -191,7 +194,10 @@ describe('util/extension-runners', () => {
 
       const runnerInstance = new MultiExtensionRunner(params);
       const sourceDir = '/fake/sourceDir';
+
+      consoleStream.flushCapturedLogs();
       const res = await runnerInstance.reloadExtensionBySourceDir(sourceDir);
+      const { capturedMessages } = consoleStream;
       const errors = res.filter((r) => r.reloadError);
 
       assert.equal(res.length, 2);
@@ -201,16 +207,11 @@ describe('util/extension-runners', () => {
       sinon.assert.calledOnce(
         anotherFakeExtensionRunner.reloadExtensionBySourceDir,
       );
-      sinon.assert.calledOnce(params.desktopNotifications);
 
-      sinon.assert.calledWith(
-        params.desktopNotifications,
-        sinon.match({
-          title: sinon.match(/web-ext run: extension reload error/),
-          message: sinon.match(
-            /"\/fake\/sourceDir" on "fakeExtensionRunner" - reload error 1/,
-          ),
-        }),
+      assert.ok(
+        capturedMessages.some(
+          (msg) => msg.match('[error]') && msg.match('reload error 1'),
+        ),
       );
     });
 
