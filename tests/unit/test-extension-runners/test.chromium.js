@@ -108,8 +108,10 @@ describe('util/extension-runners/chromium', async () => {
     await runnerInstance.run();
     sinon.assert.calledWithMatch(params.chromiumLaunch, {
       prefs: {
-        ui: {
-          developer_mode: true,
+        extensions: {
+          ui: {
+            developer_mode: true,
+          },
         },
       },
     });
