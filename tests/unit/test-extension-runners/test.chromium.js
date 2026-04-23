@@ -70,6 +70,28 @@ function prepareExtensionRunnerParams(
 }
 
 describe('util/extension-runners/chromium', async () => {
+  describe('developer_mode pref', () => {
+    it('defaults extensions.ui.developer_mode to true', async () => {
+      const { params } = prepareExtensionRunnerParams();
+      const runnerInstance = new ChromiumExtensionRunner(params);
+      const prefs = runnerInstance.getPrefs();
+      assert.propertyVal(prefs.extensions.ui, 'developer_mode', true);
+    });
+
+    it('allows overriding extensions.ui.developer_mode to false', async () => {
+      const { params } = prepareExtensionRunnerParams({
+        params: {
+          customChromiumPrefs: {
+            'extensions.ui.developer_mode': false,
+          },
+        },
+      });
+      const runnerInstance = new ChromiumExtensionRunner(params);
+      const prefs = runnerInstance.getPrefs();
+      assert.propertyVal(prefs.extensions.ui, 'developer_mode', false);
+    });
+  });
+
   it('uses the expected chrome flags', () => {
     // Flags from chrome-launcher v0.14.0
     const expectedFlags = [
@@ -120,6 +142,13 @@ describe('util/extension-runners/chromium', async () => {
         '--disable-blink-features=AutomationControlled',
       ],
       startingUrl: undefined,
+      prefs: {
+        extensions: {
+          ui: {
+            developer_mode: true,
+          },
+        },
+      },
     });
 
     await runnerInstance.exit();
@@ -603,7 +632,7 @@ describe('util/extension-runners/chromium', async () => {
   });
 
   describe('getPrefs', () => {
-    it('merges default and custom preferences from an object', () => {
+    it('merges default and custom preferences from an object and passes them to the launcher', async () => {
       const { params } = prepareExtensionRunnerParams({
         params: {
           customChromiumPrefs: {
@@ -615,7 +644,7 @@ describe('util/extension-runners/chromium', async () => {
 
       const runnerInstance = new ChromiumExtensionRunner(params);
 
-      assert.deepEqual(runnerInstance.getPrefs(), {
+      const expectedPrefs = {
         extensions: {
           ui: {
             developer_mode: false,
@@ -626,6 +655,13 @@ describe('util/extension-runners/chromium', async () => {
             color: 'dark',
           },
         },
+      };
+
+      assert.deepEqual(runnerInstance.getPrefs(), expectedPrefs);
+
+      await runnerInstance.run();
+      sinon.assert.calledWithMatch(params.chromiumLaunch, {
+        prefs: expectedPrefs,
       });
     });
   });
