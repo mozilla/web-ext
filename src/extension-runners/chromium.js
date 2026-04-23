@@ -334,6 +334,7 @@ export class ChromiumExtensionRunner {
       logLevel: this.params.verbose ? 'verbose' : 'silent',
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
+      prefs: this.getPrefs(),
     });
     this.cdp = new ChromeDevtoolsProtocolClient(this.chromiumInstance);
 
