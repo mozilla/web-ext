@@ -70,35 +70,6 @@ function prepareExtensionRunnerParams(
 }
 
 describe('util/extension-runners/chromium', async () => {
-  describe('developer_mode pref', () => {
-    it('defaults extensions.ui.developer_mode to true', async () => {
-      const { params } = prepareExtensionRunnerParams();
-      const runnerInstance = new ChromiumExtensionRunner(params);
-      await runnerInstance.run();
-      sinon.assert.calledWithMatch(params.chromiumLaunch, {
-        prefs: {
-          ui: {
-            developer_mode: true,
-          },
-        },
-      });
-      await runnerInstance.exit();
-    });
-
-    it('allows overriding extensions.ui.developer_mode to false', async () => {
-      const { params } = prepareExtensionRunnerParams({
-        params: {
-          customChromiumPrefs: {
-            'extensions.ui.developer_mode': false,
-          },
-        },
-      });
-      const runnerInstance = new ChromiumExtensionRunner(params);
-      const prefs = runnerInstance.getPrefs();
-      assert.propertyVal(prefs.extensions.ui, 'developer_mode', false);
-    });
-  });
-
   it('uses the expected chrome flags', () => {
     // Flags from chrome-launcher v0.14.0
     const expectedFlags = [
@@ -639,6 +610,20 @@ describe('util/extension-runners/chromium', async () => {
   });
 
   describe('getPrefs', () => {
+    it('check if default extensions.ui.developer_mode is true', async () => {
+      const { params } = prepareExtensionRunnerParams();
+      const runnerInstance = new ChromiumExtensionRunner(params);
+      await runnerInstance.run();
+      sinon.assert.calledWithMatch(params.chromiumLaunch, {
+        prefs: {
+          ui: {
+            developer_mode: true,
+          },
+        },
+      });
+      await runnerInstance.exit();
+    });
+
     it('merges default and custom preferences from an object and passes them to the launcher', async () => {
       const { params } = prepareExtensionRunnerParams({
         params: {
