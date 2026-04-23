@@ -74,8 +74,15 @@ describe('util/extension-runners/chromium', async () => {
     it('defaults extensions.ui.developer_mode to true', async () => {
       const { params } = prepareExtensionRunnerParams();
       const runnerInstance = new ChromiumExtensionRunner(params);
-      const prefs = runnerInstance.getPrefs();
-      assert.propertyVal(prefs.extensions.ui, 'developer_mode', true);
+      await runnerInstance.run();
+      sinon.assert.calledWithMatch(params.chromiumLaunch, {
+        prefs: {
+          ui: {
+            developer_mode: true,
+          },
+        },
+      });
+      await runnerInstance.exit();
     });
 
     it('allows overriding extensions.ui.developer_mode to false', async () => {
