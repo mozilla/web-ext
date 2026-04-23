@@ -95,6 +95,9 @@ const prefsFirefox = {
   // the privacy info page to be opened on every "web-ext run".
   // (See #1114 for rationale)
   'datareporting.policy.firstRunURL': '',
+
+  // Prevent the terms-of-use modal from appearing on every "web-ext run". (See #3478)
+  'termsofuse.bypassNotification': true,
 };
 
 const prefs = {
