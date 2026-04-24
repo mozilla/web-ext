@@ -163,12 +163,12 @@ describe('util/extension-runners', () => {
 
       assert.ok(
         capturedMessages.some(
-          (msg) => msg.match('[error]') && msg.match('reload error 1'),
+          (msg) => msg.includes('[error]') && msg.includes('reload error 1'),
         ),
       );
       assert.ok(
         capturedMessages.some(
-          (msg) => msg.match('[error]') && msg.match('reload error 2'),
+          (msg) => msg.includes('[error]') && msg.includes('reload error 2'),
         ),
       );
     });
@@ -210,7 +210,7 @@ describe('util/extension-runners', () => {
 
       assert.ok(
         capturedMessages.some(
-          (msg) => msg.match('[error]') && msg.match('reload error 1'),
+          (msg) => msg.includes('[error]') && msg.includes('reload error 1'),
         ),
       );
     });
