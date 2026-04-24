@@ -16,6 +16,8 @@ describe('firefox/preferences', () => {
       assert.equal(prefs['devtools.debugger.remote-enabled'], true);
       // This is a Firefox only pref.
       assert.equal(prefs['devtools.chrome.enabled'], true);
+      // This pref makes content scripts visible in the DevTools debugger.
+      assert.equal(prefs['devtools.debugger.show-content-scripts'], true);
       // This is a Firefox only pref that we set to prevent Firefox
       // to open the privacy policy info page on every "web-ext run".
       assert.equal(prefs['datareporting.policy.firstRunURL'], '');

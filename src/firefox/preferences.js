@@ -73,6 +73,7 @@ const prefsFirefox = {
   'startup.homepage_welcome_url.additional': '',
   'devtools.errorconsole.enabled': true,
   'devtools.chrome.enabled': true,
+  'devtools.debugger.show-content-scripts': true,
 
   // From:
   // http://hg.mozilla.org/mozilla-central/file/1dd81c324ac7/build/automation.py.in//l388
