@@ -21,6 +21,8 @@ describe('firefox/preferences', () => {
       // This is a Firefox only pref that we set to prevent Firefox
       // to open the privacy policy info page on every "web-ext run".
       assert.equal(prefs['datareporting.policy.firstRunURL'], '');
+      // This pref prevents the terms-of-use modal from blocking web-ext run (see #3478).
+      assert.equal(prefs['termsofuse.bypassNotification'], true);
     });
 
     it('gets Fennec prefs with some defaults', () => {
