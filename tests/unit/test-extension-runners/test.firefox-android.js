@@ -76,7 +76,6 @@ function prepareExtensionRunnerParams({
     firefoxClient: sinon.spy(() => {
       return Promise.resolve(remoteFirefox);
     }),
-    desktopNotifications: sinon.spy(() => {}),
     stdin: new EventEmitter(),
     ...(params || {}),
   };

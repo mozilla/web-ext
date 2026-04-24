@@ -47,7 +47,6 @@ async function prepareRun(fakeInstallResult) {
       log.debug('fake: reloadStrategy()');
     }),
     MultiExtensionRunner: sinon.spy(FakeExtensionRunner),
-    desktopNotifications: sinon.spy(() => {}),
   };
 
   const cmdRun = await import('../../../src/cmd/run.js');

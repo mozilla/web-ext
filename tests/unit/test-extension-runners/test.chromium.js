@@ -62,7 +62,6 @@ function prepareExtensionRunnerParams(
       // simplicity just return the same, and use resetHistory() as needed.
       return fakeChromeInstance;
     }),
-    desktopNotifications: sinon.spy(() => {}),
     ...(params || {}),
   };
 

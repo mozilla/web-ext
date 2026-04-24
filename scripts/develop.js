@@ -4,7 +4,6 @@
 import path from 'path';
 
 import Watchpack from 'watchpack';
-import notifier from 'node-notifier';
 
 import config from './lib/config.js';
 import eslint from './lib/eslint.js';
@@ -17,10 +16,6 @@ const COVERAGE =
 const wp = new Watchpack();
 wp.watch(config.watch.files, config.watch.dirs);
 
-function notify(message) {
-  notifier.notify({ title: 'web-ext develop: ', message });
-}
-
 let changed = new Set();
 
 async function runTasks(changes) {
@@ -28,29 +23,24 @@ async function runTasks(changes) {
     .slice(0, 5)
     .join(' ')}...`;
   console.log(changesDetected);
-  notify(changesDetected);
 
   console.log('\nRunning eslint checks');
   if (!eslint()) {
-    notify('eslint errors');
     return;
   }
 
   console.log('\nRunning unit tests');
   if (!mochaUnit({}, COVERAGE)) {
-    notify('mocha unit tests errors');
     return;
   }
 
   console.log('\nBuilding web-ext');
   if (!babel()) {
-    notify('babel build errors');
     return;
   }
 
   console.log('\nRunning functional tests');
   if (!mochaFunctional()) {
-    notify('mocha functional tests errors');
     return;
   }
 }
