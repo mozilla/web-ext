@@ -60,24 +60,17 @@ describe('watcher', () => {
         tmpDirPath: tmpDir.path(),
       };
 
-      return Promise.race([
-        whenFilesChanged.then(() => {
-          watcher.close();
-          // This delay seems to avoid stat errors from the watcher
-          // which can happen when the temp dir is deleted (presumably
-          // before watcher.close() has removed all listeners).
-          return new Promise((resolve) => {
-            setTimeout(resolve, 2, assertParams);
-          });
-        }),
+      await Promise.race([
+        whenFilesChanged,
         // Time out if no files are changed
-        new Promise((resolve) =>
-          setTimeout(() => {
-            watcher.close();
-            resolve(assertParams);
-          }, 500),
-        ),
+        new Promise((resolve) => setTimeout(resolve, 1000)),
       ]);
+      watcher.close();
+      // This delay seems to avoid stat errors from the watcher
+      // which can happen when the temp dir is deleted (presumably
+      // before watcher.close() has removed all listeners).
+      await new Promise((resolve) => setTimeout(resolve, 2));
+      return assertParams;
     });
 
   it('watches for changes in the sourceDir', async () => {
@@ -95,6 +88,17 @@ describe('watcher', () => {
   });
 
   describe('--watch-file option is passed in', () => {
+    let promiseWatchChangeNotTouched;
+    it('does not change if watched file is not touched (setup)', () => {
+      // The "not changed" test here takes at least one second (the time before
+      // we conclude that the file has not changed), while the next test has
+      // been observed to take around half a second. Schedule this test without
+      // waiting, to allow the next test to run in parallel to save time.
+      promiseWatchChangeNotTouched = watchChange({
+        watchFile: ['bar.txt'],
+        touchedFile: 'foo.txt',
+      });
+    });
     it('changes if the watched file is touched', async () => {
       const { onChange, watchedFilePath, watchedDirPath, tmpDirPath } =
         await watchChange({
@@ -107,12 +111,9 @@ describe('watcher', () => {
       assert.equal(watchedFilePath, path.join(tmpDirPath, 'foo.txt'));
     });
 
-    it('does not change if watched file is not touched', async () => {
+    it('does not change if watched file is not touched (await)', async () => {
       const { onChange, watchedFilePath, watchedDirPath, tmpDirPath } =
-        await watchChange({
-          watchFile: ['bar.txt'],
-          touchedFile: 'foo.txt',
-        });
+        await promiseWatchChangeNotTouched;
 
       sinon.assert.notCalled(onChange);
       assert.isUndefined(watchedDirPath);
