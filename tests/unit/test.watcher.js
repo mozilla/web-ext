@@ -14,10 +14,13 @@ import { withTempDir } from '../../src/util/temp-dir.js';
 import { makeSureItFails } from './helpers.js';
 
 describe('watcher', () => {
-  const watchChange = ({ watchFile, touchedFile } = {}) =>
+  const watchChange = ({ prepTempDir, watchFile, touchedFile } = {}) =>
     withTempDir(async (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
       const someFile = path.join(tmpDir.path(), touchedFile);
+      if (prepTempDir) {
+        await prepTempDir(tmpDir);
+      }
 
       if (watchFile) {
         watchFile = watchFile.map((f) => path.join(tmpDir.path(), f));
@@ -236,5 +239,108 @@ describe('watcher', () => {
         // test directory.
         await waitDebounce();
       }));
+  });
+
+  describe('watcher ignores _metadata', () => {
+    // _metadata should be ignored to avoid reload loop, see:
+    // https://github.com/mozilla/web-ext/issues/3468
+
+    // _metadata/generated_indexed_rulesets/_ruleset1 (original test case)
+    let promiseTouchedMetadataDirContent;
+    // Immediate child of _metadata without subdirectory.
+    let promiseTouchedMetadataDirWithoutSub;
+    // _metadata is also ignored when nested, not just at the top.
+    let promiseTouchedMetadataDirNested;
+    // _metadata is a directory, but the implementation also ignores files...
+    let promiseTouchedMetadataFile;
+    // Check behavior of --watch-file=_metadata
+    let promiseTouchedMetadataFileWithWatchFile;
+    // Chrome may also write "Cached Theme.pak" (outside _metadata directory).
+    let promiseTouchedTheme;
+
+    it('ignores change to _metadata directory content (setup)', () => {
+      // Simulates scenario from https://github.com/mozilla/web-ext/issues/3468
+      promiseTouchedMetadataDirContent = watchChange({
+        prepTempDir: async (tmpDir) => {
+          const metadataDir = path.join(tmpDir.path(), '_metadata');
+          await fs.mkdir(metadataDir);
+          await fs.mkdir(path.join(metadataDir, 'generated_indexed_rulesets'));
+        },
+        touchedFile: path.join(
+          '_metadata',
+          'generated_indexed_rulesets',
+          '_ruleset1',
+        ),
+      });
+    });
+
+    it('ignores change to _metadata directory without subdirectory (setup)', () => {
+      // Simulates scenario from https://github.com/mozilla/web-ext/issues/3468
+      promiseTouchedMetadataDirWithoutSub = watchChange({
+        prepTempDir: async (tmpDir) => {
+          await fs.mkdir(path.join(tmpDir.path(), '_metadata'));
+        },
+        touchedFile: path.join('_metadata', 'somefile'),
+      });
+    });
+
+    it('ignores change to non-toplevel _metadata directory (setup)', () => {
+      promiseTouchedMetadataDirNested = watchChange({
+        prepTempDir: async (tmpDir) => {
+          const parentDir = path.join(tmpDir.path(), 'parent');
+          await fs.mkdir(parentDir);
+          await fs.mkdir(path.join(parentDir, '_metadata'));
+        },
+        touchedFile: path.join('parent', '_metadata', 'somefile'),
+      });
+    });
+
+    it('ignores change to _metadata file (setup)', () => {
+      promiseTouchedMetadataFile = watchChange({ touchedFile: '_metadata' });
+    });
+
+    it('ignores change to _metadata file despite --watch-file (setup)', () => {
+      promiseTouchedMetadataFileWithWatchFile = watchChange({
+        watchFile: ['_metadata'],
+        touchedFile: '_metadata',
+      });
+    });
+
+    it('igmores change to Cached Theme.pak (setup)', () => {
+      // When a theme is loaded in Chrome, it writes to "Cached Theme.pak" in
+      // the source directory, which would result in permanent auto-reload
+      // unless we disabled auto reload.
+      promiseTouchedTheme = watchChange({ touchedFile: 'Cached Theme.pak' });
+    });
+
+    it('ignores change to _metadata directory content (await)', async () => {
+      const { onChange } = await promiseTouchedMetadataDirContent;
+      sinon.assert.notCalled(onChange);
+    });
+
+    it('ignores change to _metadata directory without subdirectory (await)', async () => {
+      const { onChange } = await promiseTouchedMetadataDirWithoutSub;
+      sinon.assert.notCalled(onChange);
+    });
+
+    it('ignores change to non-toplevel _metadata directory (await)', async () => {
+      const { onChange } = await promiseTouchedMetadataDirNested;
+      sinon.assert.notCalled(onChange);
+    });
+
+    it('ignores change to _metadata file (await)', async () => {
+      const { onChange } = await promiseTouchedMetadataFile;
+      sinon.assert.notCalled(onChange);
+    });
+
+    it('ignores change to _metadata file despite --watch-file (await)', async () => {
+      const { onChange } = await promiseTouchedMetadataFileWithWatchFile;
+      sinon.assert.notCalled(onChange);
+    });
+
+    it('igmores change to Cached Theme.pak (await)', async () => {
+      const { onChange } = await promiseTouchedTheme;
+      sinon.assert.notCalled(onChange);
+    });
   });
 });
