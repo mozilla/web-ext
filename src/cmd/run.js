@@ -206,8 +206,6 @@ export default async function run(
   if (noReload) {
     log.info('Automatic extension reloading has been disabled');
   } else {
-    log.info('The extension will reload if any source file changes');
-
     reloadStrategy({
       extensionRunner,
       sourceDir,
@@ -217,6 +215,8 @@ export default async function run(
       ignoreFiles,
       noInput,
     });
+
+    log.info('The extension will reload if any source file changes');
   }
 
   return extensionRunner;
