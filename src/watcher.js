@@ -25,10 +25,18 @@ export default function onSourceChange({
   const ignored =
     watchIgnored && process.platform === 'win32'
       ? watchIgnored.map((it) => it.replace(/\\/g, '/'))
-      : watchIgnored;
+      : (watchIgnored || []).slice(0);
+
+  // Chrome may write to the loaded extension directory:
+  // https://github.com/mozilla/web-ext/issues/3468
+  // Ignore these to avoid permanent auto-reload.
+  // Although these files are only expected at the top level, we ignore them
+  // globally in case a subdirectory is also loaded as a Chrome extension.
+  ignored.push('**/_metadata');
+  ignored.push('**/Cached Theme.pak');
 
   // TODO: For network disks, we would need to add {poll: true}.
-  const watcher = ignored ? new Watchpack({ ignored }) : new Watchpack();
+  const watcher = new Watchpack({ ignored });
 
   // Allow multiple files to be changed before reloading the extension
   const executeImmediately = false;
