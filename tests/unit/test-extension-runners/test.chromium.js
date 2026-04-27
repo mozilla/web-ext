@@ -101,6 +101,22 @@ describe('util/extension-runners/chromium', async () => {
     assert.notInclude(DEFAULT_CHROME_FLAGS, '--disable-extensions');
   });
 
+  it('check if default extensions.ui.developer_mode is true', async () => {
+    const { params } = prepareExtensionRunnerParams();
+    const runnerInstance = new ChromiumExtensionRunner(params);
+    await runnerInstance.run();
+    sinon.assert.calledWithMatch(params.chromiumLaunch, {
+      prefs: {
+        extensions: {
+          ui: {
+            developer_mode: true,
+          },
+        },
+      },
+    });
+    await runnerInstance.exit();
+  });
+
   it('installs and runs the extension', async () => {
     const { params, fakeChromeInstance } = prepareExtensionRunnerParams();
     const runnerInstance = new ChromiumExtensionRunner(params);
@@ -119,6 +135,13 @@ describe('util/extension-runners/chromium', async () => {
         '--disable-blink-features=AutomationControlled',
       ],
       startingUrl: undefined,
+      prefs: {
+        extensions: {
+          ui: {
+            developer_mode: true,
+          },
+        },
+      },
     });
 
     await runnerInstance.exit();
@@ -599,6 +622,41 @@ describe('util/extension-runners/chromium', async () => {
 
     await runnerInstance.exit();
     sinon.assert.calledOnce(fakeChromeInstance.kill);
+  });
+
+  describe('getPrefs', () => {
+    it('merges default and custom preferences from an object and passes them to the launcher', async () => {
+      const { params } = prepareExtensionRunnerParams({
+        params: {
+          customChromiumPrefs: {
+            'extensions.ui.developer_mode': false,
+            'browser.theme.color': 'dark',
+          },
+        },
+      });
+
+      const runnerInstance = new ChromiumExtensionRunner(params);
+
+      const expectedPrefs = {
+        extensions: {
+          ui: {
+            developer_mode: false,
+          },
+        },
+        browser: {
+          theme: {
+            color: 'dark',
+          },
+        },
+      };
+
+      assert.deepEqual(runnerInstance.getPrefs(), expectedPrefs);
+
+      await runnerInstance.run();
+      sinon.assert.calledWithMatch(params.chromiumLaunch, {
+        prefs: expectedPrefs,
+      });
+    });
   });
 
   describe('reloadAllExtensions', () => {

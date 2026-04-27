@@ -340,6 +340,22 @@ describe('run', () => {
     );
   });
 
+  it('provides chromium custom preferences to the Chromium runner params', async () => {
+    const fakeChromiumPref = { 'extensions.ui.developer_mode': false };
+    const cmd = await prepareRun();
+    await cmd.run({
+      target: ['chromium'],
+      chromiumPref: fakeChromiumPref,
+    });
+
+    sinon.assert.calledWithMatch(chromiumRunnerStub, {
+      customChromiumPrefs: sinon.match.object,
+    });
+
+    const { customChromiumPrefs } = chromiumRunnerStub.firstCall.args[0];
+    assert.strictEqual(customChromiumPrefs, fakeChromiumPref);
+  });
+
   it('creates multiple extension runners', async () => {
     const cmd = await prepareRun();
     await cmd.run({ target: ['firefox-android', 'firefox-desktop'] });

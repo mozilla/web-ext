@@ -15,6 +15,7 @@ import { createLogger } from '../util/logger.js';
 import { TempDir } from '../util/temp-dir.js';
 import isDirectory from '../util/is-directory.js';
 import fileExists from '../util/file-exists.js';
+import expandPrefs from '../util/expand-prefs.js';
 
 const log = createLogger(import.meta.url);
 
@@ -27,6 +28,8 @@ const EXCLUDED_CHROME_FLAGS = [
 export const DEFAULT_CHROME_FLAGS = ChromeLauncher.defaultFlags().filter(
   (flag) => !EXCLUDED_CHROME_FLAGS.includes(flag),
 );
+
+const DEFAULT_PREFS = { 'extensions.ui.developer_mode': true };
 
 // This is a client for the Chrome Devtools protocol. The methods and results
 // are documented at https://chromedevtools.github.io/devtools-protocol/tot/
@@ -331,6 +334,7 @@ export class ChromiumExtensionRunner {
       logLevel: this.params.verbose ? 'verbose' : 'silent',
       // Ignore default flags to keep the extension enabled.
       ignoreDefaultFlags: true,
+      prefs: this.getPrefs(),
     });
     this.cdp = new ChromeDevtoolsProtocolClient(this.chromiumInstance);
 
@@ -597,5 +601,16 @@ export class ChromiumExtensionRunner {
         log.error(error);
       }
     }
+  }
+
+  /**
+   * Returns a deep preferences object based on a set of flat preferences, like
+   * "extensions.ui.developer_mode".
+   */
+  getPrefs() {
+    return expandPrefs({
+      ...DEFAULT_PREFS,
+      ...this.params.customChromiumPrefs,
+    });
   }
 }
