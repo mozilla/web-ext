@@ -92,7 +92,7 @@
     "@babel/eslint-parser": "7.28.6",
     "@babel/preset-env": "7.29.2",
     "@babel/register": "7.28.6",
-    "@commitlint/cli": "20.5.0",
+    "@commitlint/cli": "20.5.2",
     "@commitlint/config-conventional": "20.5.0",
     "@eslint/compat": "2.0.5",
     "@eslint/eslintrc": "3.3.5",
