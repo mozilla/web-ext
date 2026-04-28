@@ -230,19 +230,36 @@ export function defaultReloadStrategy(
     log.debug('Input has been disabled because of noInput==true');
   }
 
-  const watcher = createWatcher({
-    reloadExtension: (watchedSourceDir) => {
-      extensionRunner.reloadExtensionBySourceDir(watchedSourceDir);
-    },
-    sourceDir,
-    watchFile,
-    watchIgnored,
-    artifactsDir,
-    ignoreFiles,
-  });
+  const watchers = [];
+  const doCreateWatcher = (sourceDirPath) => {
+    const watcher = createWatcher({
+      reloadExtension: (watchedSourceDir) => {
+        extensionRunner.reloadExtensionBySourceDir(watchedSourceDir);
+      },
+      sourceDir: sourceDirPath,
+      watchFile,
+      watchIgnored,
+      artifactsDir,
+      ignoreFiles,
+    });
+    watchers.push(watcher);
+  };
+  doCreateWatcher(Array.isArray(sourceDir) ? sourceDir[0] : sourceDir);
+  if (Array.isArray(sourceDir) && !watchFile) {
+    // Need a watcher for each individual source directory, unless --watch-file
+    // is specified, in which case we do not monitor any source directory.
+    for (const sourceDirPath of sourceDir.slice(1)) {
+      // TODO: It does not make sense to use the same artifactsDir for all
+      // extensions. Should we use none or the same for each instead?
+      // For now a user can ignore them anyway with the --ignore-files flag.
+      doCreateWatcher(sourceDirPath);
+    }
+  }
 
   extensionRunner.registerCleanup(() => {
-    watcher.close();
+    for (const watcher of watchers) {
+      watcher.close();
+    }
     if (allowInput) {
       if (isTTY(stdin)) {
         setRawMode(stdin, false);
