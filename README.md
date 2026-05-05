@@ -250,6 +250,16 @@ signAddon({
 });
 ```
 
+## Reproducible builds
+
+`web-ext build` produces byte-for-byte identical ZIP archives when run repeatedly against the same source tree. Entries are added in a stable alphabetical order and every entry's timestamp is fixed, so the archive's checksum only changes when the source content changes. This is useful when [addons.mozilla.org](https://addons.mozilla.org) reviewers ask for a build script that reproduces the exact uploaded artifact.
+
+The fixed timestamp itself is arbitrary — what matters for reproducibility is that it doesn't depend on when the build runs. By default, every entry is stamped with `1980-01-01T00:00:00Z`, the earliest time the ZIP format can represent, picked because it makes it obvious the timestamp is synthetic rather than a real file mtime. To use a meaningful timestamp instead — for example, the commit time of the source tree — set the [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/docs/source-date-epoch/) environment variable to a Unix timestamp in seconds before invoking `web-ext build`:
+
+```sh
+SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) web-ext build
+```
+
 ## Should I Use It?
 
 Yes! The web-ext tool enables you to build and ship extensions for Firefox.

@@ -6,6 +6,7 @@ import { it, describe } from 'mocha';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as promiseToolbox from 'promise-toolbox';
+import JSZip from 'jszip';
 
 import build, {
   safeFileName,
@@ -56,6 +57,60 @@ describe('build', () => {
           return zipFile.close();
         }),
     );
+  });
+
+  async function assertAllEntriesHaveDate(extensionPath, expectedMs) {
+    const zip = await JSZip.loadAsync(await fs.readFile(extensionPath));
+    const entryNames = Object.keys(zip.files);
+    assert.isAbove(
+      entryNames.length,
+      0,
+      'zip should contain at least one entry',
+    );
+    for (const name of entryNames) {
+      // ZIP DOS time encodes seconds in 5 bits (halved), so the on-disk
+      // resolution is 2 seconds. JSZip rounds when generating, so the
+      // round-tripped Date may be up to 2s off the value we passed in.
+      assert.closeTo(
+        zip.files[name].date.getTime(),
+        expectedMs,
+        2000,
+        `entry ${name} has unexpected timestamp ${zip.files[name].date.toISOString()}`,
+      );
+    }
+  }
+
+  it('stamps every zip entry with the default fixed timestamp', () =>
+    withTempDir(async (tmpDir) => {
+      const { extensionPath } = await build({
+        sourceDir: fixturePath('minimal-web-ext'),
+        artifactsDir: tmpDir.path(),
+      });
+      // Default is 1980-01-01T00:00:00Z, the earliest time the ZIP format
+      // can represent. The actual value doesn't matter — what matters is
+      // that it is fixed, not derived from "now".
+      await assertAllEntriesHaveDate(extensionPath, Date.UTC(1980, 0, 1));
+    }));
+
+  it('stamps every zip entry with SOURCE_DATE_EPOCH when set', async () => {
+    const epochSeconds = 1700000000;
+    const original = process.env.SOURCE_DATE_EPOCH;
+    process.env.SOURCE_DATE_EPOCH = String(epochSeconds);
+    try {
+      await withTempDir(async (tmpDir) => {
+        const { extensionPath } = await build({
+          sourceDir: fixturePath('minimal-web-ext'),
+          artifactsDir: tmpDir.path(),
+        });
+        await assertAllEntriesHaveDate(extensionPath, epochSeconds * 1000);
+      });
+    } finally {
+      if (original === undefined) {
+        delete process.env.SOURCE_DATE_EPOCH;
+      } else {
+        process.env.SOURCE_DATE_EPOCH = original;
+      }
+    }
   });
 
   it('configures a build command with the expected fileFilter', () => {
