@@ -5,7 +5,7 @@ import fs from 'fs/promises';
 import parseJSON from 'parse-json';
 import stripBom from 'strip-bom';
 import defaultFromEvent from 'promise-toolbox/fromEvent';
-import zipDir from 'zip-dir';
+import JSZip from 'jszip';
 
 import defaultSourceWatcher from '../watcher.js';
 import getValidatedManifest, { getManifestId } from '../util/manifest.js';
@@ -16,6 +16,77 @@ import { createFileFilter as defaultFileFilterCreator } from '../util/file-filte
 
 const log = createLogger(import.meta.url);
 const DEFAULT_FILENAME_TEMPLATE = '{name}-{version}.zip';
+
+// 1980-01-01 UTC — the earliest timestamp representable in a ZIP entry.
+const ZIP_EPOCH_SECONDS = 315532800;
+
+// Build a ZIP buffer with deterministic byte output: entries are sorted
+// alphabetically, and every entry's timestamp is fixed (overridable via the
+// SOURCE_DATE_EPOCH environment variable, per the Reproducible Builds spec).
+export async function createDeterministicZip(sourceDir, { filter } = {}) {
+  const epochSeconds = process.env.SOURCE_DATE_EPOCH
+    ? Number(process.env.SOURCE_DATE_EPOCH)
+    : ZIP_EPOCH_SECONDS;
+  if (!Number.isFinite(epochSeconds)) {
+    throw new UsageError(
+      `Invalid SOURCE_DATE_EPOCH value: ${process.env.SOURCE_DATE_EPOCH}`,
+    );
+  }
+  const fixedDate = new Date(epochSeconds * 1000);
+
+  const resolvedRoot = path.resolve(sourceDir);
+  const entries = [];
+
+  async function walk(dir) {
+    const dirents = await fs.readdir(dir, { withFileTypes: true });
+    dirents.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    for (const dirent of dirents) {
+      const full = path.join(dir, dirent.name);
+      const stat = await fs.lstat(full);
+      if (filter && !filter(full, stat)) {
+        continue;
+      }
+      if (dirent.isDirectory()) {
+        entries.push({ full, isDir: true });
+        await walk(full);
+      } else if (dirent.isFile()) {
+        entries.push({ full, isDir: false });
+      }
+    }
+  }
+  await walk(resolvedRoot);
+
+  const zip = new JSZip();
+  for (const entry of entries) {
+    // ZIP entries always use forward slashes, regardless of host OS.
+    const relative = path
+      .relative(resolvedRoot, entry.full)
+      .split(path.sep)
+      .join('/');
+    // `createFolders: false` keeps JSZip from injecting parent-folder
+    // entries with a current-time `Date()`. The walk above already emits
+    // every directory explicitly, so we control all entry timestamps.
+    if (entry.isDir) {
+      zip.file(relative, null, {
+        dir: true,
+        date: fixedDate,
+        createFolders: false,
+      });
+    } else {
+      const data = await fs.readFile(entry.full);
+      zip.file(relative, data, { date: fixedDate, createFolders: false });
+    }
+  }
+
+  // platform: 'UNIX' fixes the external-attribute byte; without it JSZip
+  // derives it from process.platform, which would make the same source
+  // produce different bytes on Windows vs Linux.
+  return zip.generateAsync({
+    compression: 'DEFLATE',
+    type: 'nodebuffer',
+    platform: 'UNIX',
+  });
+}
 
 export function safeFileName(name) {
   return name.toLowerCase().replace(/[^a-z0-9.-]+/g, '_');
@@ -131,7 +202,7 @@ export async function defaultPackageCreator(
     manifestData = await getValidatedManifest(sourceDir);
   }
 
-  const buffer = await zipDir(sourceDir, {
+  const buffer = await createDeterministicZip(sourceDir, {
     filter: (...args) => fileFilter.wantFile(...args),
   });
 
