@@ -3,8 +3,11 @@
  * in a Firefox for Android instance.
  */
 
+import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
+
+import JSZip from 'jszip';
 
 import { withTempDir } from '../util/temp-dir.js';
 import DefaultADBUtils from '../util/adb.js';
@@ -24,7 +27,6 @@ const ignoredParams = {
   keepProfileChanges: '--keep-profile-changes',
   browserConsole: '--browser-console',
   preInstall: '--pre-install',
-  startUrl: '--start-url',
   args: '--args',
 };
 
@@ -116,6 +118,8 @@ export class FirefoxAndroidExtensionRunner {
     // Connect to RDP socket on the local tcp server, install all the pushed extension
     // and keep track of the built and installed extension by extension sourceDir.
     await this.rdpInstallExtensions();
+
+    await this.launchStartUrlsIfNeeded();
   }
 
   // Method exported from the IExtensionRunner interface.
@@ -567,6 +571,85 @@ export class FirefoxAndroidExtensionRunner {
       }
 
       this.reloadableExtensions.set(extension.sourceDir, addonId);
+    }
+  }
+
+  /**
+   * Creates a helper extension to open --start-url as needed.
+   * Must be called after rdpInstallExtensions().
+   *
+   * The opened tabs could be in the background, if Fenix's homescreen is shown
+   * when the app launches. This is a limitation of Firefox for Android.
+   */
+  async launchStartUrlsIfNeeded() {
+    const {
+      adbUtils,
+      selectedAdbDevice,
+      selectedArtifactsDir,
+      params: { startUrl },
+    } = this;
+    if (!startUrl?.length) {
+      return;
+    }
+    const urls = Array.isArray(startUrl) ? startUrl : [startUrl];
+
+    log.debug(`Trying to open URLs: ${urls.join(' ')}`);
+
+    async function backgroundScript(urlsToOpen) {
+      // eslint-disable-next-line no-undef
+      const browser = globalThis.browser;
+      for (const url of urlsToOpen) {
+        try {
+          await browser.tabs.create({ url });
+        } catch (e) {
+          // Ignore invalid URLs.
+          Promise.reject(e);
+        }
+      }
+      await browser.management.uninstallSelf();
+    }
+    // The extension ID and file name here are chosen to be unique. In theory
+    // if users choose the same extension ID, this would overwrite their
+    // extension. They should simply not choose these identifiers!
+    const xpiFileName = 'web-ext-internal-helper-to-open-start-urls.xpi';
+    const adbExtensionPath = `${selectedArtifactsDir}/${xpiFileName}`;
+    const manifestJson = JSON.stringify({
+      name: 'web-ext helper to open URLs',
+      description: 'web-ext helper to open URLs in new tabs and self-destruct',
+      version: '1',
+      manifest_version: 3,
+      background: { scripts: ['background.js'] },
+      permissions: ['notifications'],
+      browser_specific_settings: {
+        gecko: { id: '@web-ext-internal-helper-to-open-start-urls' },
+        gecko_android: {},
+      },
+    });
+    const backgroundJs = `(${backgroundScript})(${JSON.stringify(urls)})`;
+    await withTempDir(async (tmpDir) => {
+      const zip = new JSZip();
+      zip.file('manifest.json', manifestJson);
+      zip.file('background.js', backgroundJs);
+      const rawZipBytes = await zip.generateAsync({
+        compression: 'DEFLATE',
+        type: 'nodebuffer',
+      });
+      const extensionPath = path.join(tmpDir.path(), xpiFileName);
+      await fs.writeFile(extensionPath, rawZipBytes);
+
+      await adbUtils.pushFile(
+        selectedAdbDevice,
+        extensionPath,
+        adbExtensionPath,
+      );
+    });
+    try {
+      // this.remoteFirefox is initialized by rdpInstallExtensions.
+      await this.remoteFirefox.installTemporaryAddon(adbExtensionPath);
+      log.debug('Successfully installed helper extension to open URLs');
+    } catch (e) {
+      // Unexpected, but not a fatal error from web-ext's perspective.
+      log.error(`Failed to open URLs via internal helper extension: ${e}`);
     }
   }
 }
