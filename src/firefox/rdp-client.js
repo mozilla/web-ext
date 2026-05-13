@@ -2,6 +2,8 @@ import net from 'net';
 import EventEmitter from 'events';
 import domain from 'domain';
 
+import { isErrorWithCode } from '../errors.js';
+
 export const DEFAULT_PORT = 6000;
 export const DEFAULT_HOST = '127.0.0.1';
 
@@ -90,7 +92,17 @@ export default class FirefoxRDPClient extends EventEmitter {
 
         this._rdpConnection = conn;
         conn.on('data', this._onData);
-        conn.on('error', this._onError);
+        conn.on('error', (err) => {
+          if (
+            isErrorWithCode('ECONNREFUSED', err) ||
+            isErrorWithCode('ENOTFOUND', err) ||
+            isErrorWithCode('ETIMEDOUT', err)
+          ) {
+            reject(err);
+          } else {
+            this._onError(err);
+          }
+        });
         conn.on('end', this._onEnd);
         conn.on('timeout', this._onTimeout);
 
