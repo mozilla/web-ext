@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 
-import { describe, it } from 'mocha';
+import { after, before, describe, it } from 'mocha';
 import git from 'git-rev-sync';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
@@ -29,7 +29,32 @@ import {
 
 const { spy } = sinon;
 
+const localeEnvVars = ['LC_ALL', 'LC_MESSAGES', 'LANG', 'LANGUAGE'];
+const stableLocale = 'en_US.UTF-8';
+
 describe('program.Program', () => {
+  let originalLocaleEnv;
+
+  before(() => {
+    // yargs localizes some validation errors based on the environment locale.
+    // Keep tests that assert on these messages deterministic across systems.
+    originalLocaleEnv = {};
+    localeEnvVars.forEach((name) => {
+      originalLocaleEnv[name] = process.env[name];
+      process.env[name] = stableLocale;
+    });
+  });
+
+  after(() => {
+    localeEnvVars.forEach((name) => {
+      if (originalLocaleEnv[name] === undefined) {
+        delete process.env[name];
+      } else {
+        process.env[name] = originalLocaleEnv[name];
+      }
+    });
+  });
+
   function execProgram(program, options = {}) {
     const fakeProcess = createFakeProcess();
     const absolutePackageDir = path.join(
