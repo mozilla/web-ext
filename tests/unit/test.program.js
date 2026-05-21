@@ -29,30 +29,24 @@ import {
 
 const { spy } = sinon;
 
-const localeEnvVars = ['LC_ALL', 'LC_MESSAGES', 'LANG', 'LANGUAGE'];
 const stableLocale = 'en_US.UTF-8';
 
 describe('program.Program', () => {
-  let originalLocaleEnv;
+  let originalLcAll;
 
   before(() => {
     // yargs localizes some validation errors based on the environment locale.
     // Keep tests that assert on these messages deterministic across systems.
-    originalLocaleEnv = {};
-    localeEnvVars.forEach((name) => {
-      originalLocaleEnv[name] = process.env[name];
-      process.env[name] = stableLocale;
-    });
+    originalLcAll = process.env.LC_ALL;
+    process.env.LC_ALL = stableLocale;
   });
 
   after(() => {
-    localeEnvVars.forEach((name) => {
-      if (originalLocaleEnv[name] === undefined) {
-        delete process.env[name];
-      } else {
-        process.env[name] = originalLocaleEnv[name];
-      }
-    });
+    if (originalLcAll === undefined) {
+      delete process.env.LC_ALL;
+    } else {
+      process.env.LC_ALL = originalLcAll;
+    }
   });
 
   function execProgram(program, options = {}) {
