@@ -29,8 +29,6 @@ import {
 
 const { spy } = sinon;
 
-const stableLocale = 'en_US.UTF-8';
-
 describe('program.Program', () => {
   let originalLcAll;
 
@@ -38,7 +36,7 @@ describe('program.Program', () => {
     // yargs localizes some validation errors based on the environment locale.
     // Keep tests that assert on these messages deterministic across systems.
     originalLcAll = process.env.LC_ALL;
-    process.env.LC_ALL = stableLocale;
+    process.env.LC_ALL = 'en_US.UTF-8';
   });
 
   after(() => {
