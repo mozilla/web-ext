@@ -90,7 +90,7 @@
     "@babel/cli": "7.28.6",
     "@babel/core": "7.29.0",
     "@babel/eslint-parser": "7.28.6",
-    "@babel/preset-env": "7.29.5",
+    "@babel/preset-env": "7.29.7",
     "@babel/register": "7.29.3",
     "@commitlint/cli": "21.0.1",
     "@commitlint/config-conventional": "21.0.1",
