@@ -4,6 +4,8 @@
     "https://github.com/advisories/GHSA-73rr-hh4g-fpgx",
     // serialize-javascript  <=7.0.4
     "https://github.com/advisories/GHSA-5c6j-r48x-rmvq",
-    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v"
+    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v",
+    // js-yaml <=4.1.1
+    "https://github.com/advisories/GHSA-h67p-54hq-rp68"
   ]
 }
