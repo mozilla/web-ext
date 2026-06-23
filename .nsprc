@@ -4,10 +4,6 @@
     "https://github.com/advisories/GHSA-73rr-hh4g-fpgx",
     // serialize-javascript  <=7.0.4
     "https://github.com/advisories/GHSA-5c6j-r48x-rmvq",
-    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v",
-    // uuid < 14.0.0
-    "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
-    // brace-expansion >= 5.0.0, < 5.0.6
-    "https://github.com/advisories/GHSA-jxxr-4gwj-5jf2"
+    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v"
   ]
 }
