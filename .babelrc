@@ -9,7 +9,7 @@
     ]
   ],
   "plugins": [
-    ["transform-inline-environment-variables", {
+    ["./scripts/babel-plugin-inline-environment-variables.cjs", {
       "include": [
         "WEBEXT_BUILD_ENV"
       ]
