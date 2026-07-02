@@ -52,6 +52,7 @@ export class FirefoxAndroidExtensionRunner {
   exiting;
   selectedAdbDevice;
   selectedFirefoxApk;
+  firefoxDebuggerSocket;
   selectedArtifactsDir;
   selectedRDPSocketFile;
   selectedTCPPort;
@@ -458,7 +459,7 @@ export class FirefoxAndroidExtensionRunner {
       adbUtils,
       selectedAdbDevice,
       selectedFirefoxApk,
-      params: { adbDiscoveryTimeout },
+      params: { adbDiscoveryTimeout, firefoxDebuggerSocket },
     } = this;
 
     const stdin = this.params.stdin || process.stdin;
@@ -482,23 +483,25 @@ export class FirefoxAndroidExtensionRunner {
     if (isTTY(stdin)) {
       readline.emitKeypressEvents(stdin);
       setRawMode(stdin, true);
-
       stdin.on('keypress', handleCtrlC);
     }
 
-    try {
-      // Got a debugger socket file to connect.
-      this.selectedRDPSocketFile = await adbUtils.discoverRDPUnixSocket(
-        selectedAdbDevice,
-        selectedFirefoxApk,
-        {
-          maxDiscoveryTime: unixSocketDiscoveryMaxTime,
-          retryInterval: unixSocketDiscoveryRetryInterval,
-        },
-      );
-    } finally {
-      if (isTTY(stdin)) {
-        stdin.removeListener('keypress', handleCtrlC);
+    if (firefoxDebuggerSocket) {
+      this.selectedRDPSocketFile = firefoxDebuggerSocket;
+    } else {
+      try {
+        this.selectedRDPSocketFile = await adbUtils.discoverRDPUnixSocket(
+          selectedAdbDevice,
+          selectedFirefoxApk,
+          {
+            maxDiscoveryTime: unixSocketDiscoveryMaxTime,
+            retryInterval: unixSocketDiscoveryRetryInterval,
+          },
+        );
+      } finally {
+        if (isTTY(stdin)) {
+          stdin.removeListener('keypress', handleCtrlC);
+        }
       }
     }
 
@@ -519,6 +522,17 @@ export class FirefoxAndroidExtensionRunner {
       forwardSocketSpec,
       `tcp:${tcpPort}`,
     );
+
+    try {
+      await adbUtils.isSocketResponsive(tcpPort, {
+        maxDiscoveryTime: unixSocketDiscoveryMaxTime,
+        retryInterval: unixSocketDiscoveryRetryInterval,
+      });
+    } finally {
+      if (isTTY(stdin)) {
+        stdin.removeListener('keypress', handleCtrlC);
+      }
+    }
 
     this.selectedTCPPort = tcpPort;
   }
