@@ -12,10 +12,7 @@ module.exports = function ({ types: t }) {
 
   function getComputedKey(path) {
     const { node } = path;
-    if (node.computed) {
-      return node.property;
-    }
-    if (t.isIdentifier(node.property)) {
+    if (!node.computed && t.isIdentifier(node.property)) {
       return t.stringLiteral(node.property.name);
     }
     return node.property;
@@ -31,6 +28,9 @@ module.exports = function ({ types: t }) {
 
         const key = getComputedKey(path);
 
+        // Ignore dinamic variables (e.g. `process.env[someVar]`) and
+        // assignment expressions (`process.env.FOO = ...`) and account for
+        // `include`/`exclude` plugin options (if any was specified)
         if (
           t.isStringLiteral(key) &&
           !isLeftSideOfAssignmentExpression(path) &&
