@@ -809,6 +809,11 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
+      enterprise: {
+        describe: 'Treat your extension as an enterprise extension',
+        type: 'boolean',
+        default: false,
+      },
       boring: {
         describe: 'Disables colorful shell output',
         type: 'boolean',
