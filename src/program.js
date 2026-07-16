@@ -24,7 +24,7 @@ import {
 const log = createLogger(import.meta.url);
 const envPrefix = 'WEB_EXT';
 // Default to "development" (the value actually assigned will be interpolated
-// by babel-plugin-transform-inline-environment-variables).
+// at build time by scripts/babel-plugin-inline-environment-variables.cjs).
 const defaultGlobalEnv = process.env.WEBEXT_BUILD_ENV || 'development';
 
 export const AMO_BASE_URL = 'https://addons.mozilla.org/api/v5/';
@@ -806,6 +806,11 @@ Example: $0 --help run.
         describe:
           'Your extension will be self-hosted. This disables messages ' +
           'related to hosting on addons.mozilla.org.',
+        type: 'boolean',
+        default: false,
+      },
+      enterprise: {
+        describe: 'Treat your extension as an enterprise extension',
         type: 'boolean',
         default: false,
       },

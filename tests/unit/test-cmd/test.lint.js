@@ -126,6 +126,7 @@ describe('lint', () => {
       output: 'json',
       boring: true,
       selfHosted: true,
+      enterprise: true,
     }).then(() => {
       sinon.assert.calledWithMatch(createLinter, {
         config: {
@@ -135,6 +136,7 @@ describe('lint', () => {
           output: 'json',
           boring: true,
           selfHosted: true,
+          enterprise: true,
           minManifestVersion: 2,
           maxManifestVersion: 3,
         },

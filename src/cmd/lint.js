@@ -11,6 +11,7 @@ export default function lint(
   {
     artifactsDir,
     boring,
+    enterprise,
     ignoreFiles,
     metadata,
     output,
@@ -39,6 +40,7 @@ export default function lint(
     output,
     boring,
     selfHosted,
+    enterprise,
     shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
     minManifestVersion: 2,
     maxManifestVersion: 3,
