@@ -57,7 +57,7 @@
   ],
   "dependencies": {
     "@babel/runtime": "8.0.0",
-    "@devicefarmer/adbkit": "3.3.8",
+    "@devicefarmer/adbkit": "3.3.9",
     "addons-linter": "10.8.0",
     "camelcase": "8.0.0",
     "chrome-launcher": "1.2.0",
