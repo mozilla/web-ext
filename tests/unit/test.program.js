@@ -672,6 +672,57 @@ describe('program.main', () => {
     assert.equal(options.selfHosted, configObject.lint.selfHosted);
   });
 
+  it('uses the configured run target when omitted from the CLI', async () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    const configFile = path.resolve('custom/web-ext-config.mjs');
+    const configObject = {
+      run: {
+        target: ['chromium'],
+      },
+    };
+
+    await execProgram(['run', '--config', configFile], {
+      commands: fakeCommands,
+      runOptions: {
+        loadJSConfigFile: makeConfigLoader({
+          configObjects: { [configFile]: configObject },
+        }),
+      },
+    });
+
+    assert.deepEqual(fakeCommands.run.firstCall.args[0].target, ['chromium']);
+  });
+
+  it('uses the CLI run target over the configured target', async () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    const configFile = path.resolve('custom/web-ext-config.mjs');
+    const configObject = {
+      run: {
+        target: ['chromium'],
+      },
+    };
+
+    await execProgram(
+      ['run', '--target', 'firefox-android', '--config', configFile],
+      {
+        commands: fakeCommands,
+        runOptions: {
+          loadJSConfigFile: makeConfigLoader({
+            configObjects: { [configFile]: configObject },
+          }),
+        },
+      },
+    );
+
+    assert.deepEqual(fakeCommands.run.firstCall.args[0].target, [
+      'firefox-android',
+    ]);
+  });
+
   it('discovers config files', async () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
