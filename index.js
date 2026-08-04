@@ -5,7 +5,6 @@
 //   disable this rule because we have automated tests (which would catch an unresolved import issue
 //   here).
 //
-// eslint-disable-next-line import/no-unresolved
 import webext from './lib/main.js';
 
 export default webext;
