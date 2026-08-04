@@ -65,7 +65,7 @@
     "decamelize": "6.0.1",
     "es6-error": "4.1.1",
     "firefox-profile": "4.7.1",
-    "fx-runner": "1.5.0",
+    "fx-runner": "1.6.0",
     "https-proxy-agent": "^7.0.0",
     "jose": "5.9.6",
     "jszip": "3.10.1",
