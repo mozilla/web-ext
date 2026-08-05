@@ -792,6 +792,11 @@ Example: $0 --help run.
         type: 'boolean',
         default: false,
       },
+      'disable-linter-rules': {
+        describe: 'Disable a comma-separated list of linter rules',
+        type: 'string',
+        requiresArg: true,
+      },
       pretty: {
         describe: 'Prettify JSON output',
         type: 'boolean',

@@ -672,6 +672,46 @@ describe('program.main', () => {
     assert.equal(options.selfHosted, configObject.lint.selfHosted);
   });
 
+  it('applies disabled linter rules from the specified config file', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const configFile = path.resolve('custom/web-ext-config.mjs');
+    const disableLinterRules = 'no-implied-eval, no-unsanitized/property';
+
+    await execProgram(['lint', '--config', configFile], {
+      commands: fakeCommands,
+      runOptions: {
+        loadJSConfigFile: makeConfigLoader({
+          configObjects: {
+            [configFile]: { lint: { disableLinterRules } },
+          },
+        }),
+      },
+    });
+
+    assert.equal(
+      fakeCommands.lint.firstCall.args[0].disableLinterRules,
+      disableLinterRules,
+    );
+  });
+
+  it('passes disabled linter rules from the CLI', async () => {
+    const fakeCommands = fake(commands, {
+      lint: () => Promise.resolve(),
+    });
+    const disableLinterRules = 'no-implied-eval,no-unsanitized/property';
+
+    await execProgram(['lint', '--disable-linter-rules', disableLinterRules], {
+      commands: fakeCommands,
+    });
+
+    assert.equal(
+      fakeCommands.lint.firstCall.args[0].disableLinterRules,
+      disableLinterRules,
+    );
+  });
+
   it('discovers config files', async () => {
     const fakeCommands = fake(commands, {
       lint: () => Promise.resolve(),
