@@ -898,6 +898,46 @@ describe('program.main', () => {
       });
     }
   });
+
+  describe('multiple --source-dir parameters', () => {
+    it('accepts multiple --source-dir in web-ext run', async () => {
+      const fakeCommands = fake(commands, {
+        run: () => Promise.resolve(),
+      });
+      const opts = { commands: fakeCommands };
+
+      await execProgram(['run', '-s', 'ext1', '-s', 'ext2'], opts);
+      sinon.assert.calledWithMatch(fakeCommands.run, {
+        sourceDir: ['ext1', 'ext2'],
+      });
+    });
+
+    it('rejects multiple --source-dir in web-ext build', () => {
+      const fakeCommands = fake(commands, {
+        build: () => Promise.resolve(),
+      });
+      const opts = { commands: fakeCommands };
+
+      return execProgram(['build', '-s', 'ext1', '-s', 'ext2'], opts)
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.match(error.message, /Multiple --source-dir are not allowed/);
+        });
+    });
+
+    it('rejects multiple --source-dir in web-ext sign', () => {
+      const fakeCommands = fake(commands, {
+        build: () => Promise.resolve(),
+      });
+      const opts = { commands: fakeCommands };
+
+      return execProgram(['sign', '-s', 'ext1', '-s', 'ext2'], opts)
+        .then(makeSureItFails())
+        .catch((error) => {
+          assert.match(error.message, /Multiple --source-dir are not allowed/);
+        });
+    });
+  });
 });
 
 describe('program.defaultVersionGetter', () => {
