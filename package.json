@@ -104,7 +104,7 @@
     "fs-extra": "11.4.0",
     "git-rev-sync": "3.0.2",
     "globals": "17.8.0",
-    "mocha": "11.7.6",
+    "mocha": "11.8.0",
     "nyc": "18.0.0",
     "prettier": "3.9.6",
     "pretty-quick": "4.2.2",
