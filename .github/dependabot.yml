@@ -11,6 +11,10 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+    groups:
+      ssdlc-actions:
+        patterns:
+          - "mozilla/ssdlc-actions/*"  
     cooldown:
       default-days: 7
     open-pull-requests-limit: 99
