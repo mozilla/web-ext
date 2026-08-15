@@ -21,7 +21,9 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
     shell.echo(`\nSetting mocha timeout from env var: ${MOCHA_TIMEOUT}\n`);
   }
 
-  const res = spawnSync(binPath, binArgs, {
+  const command = process.platform === 'win32' ? `"${binPath}"` : binPath;
+
+  const res = spawnSync(command, binArgs, {
     ...execMochaOptions,
     env: {
       ...process.env,
