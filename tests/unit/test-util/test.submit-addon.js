@@ -972,6 +972,33 @@ describe('util.submit-addon', () => {
 
         sinon.assert.notCalled(jsonSpy);
       });
+
+      it('treats 502, 503, and 504 responses as a success', async () => {
+        const client = new Client(clientDefaults);
+        const fetchStub = sinon.stub(client, 'fetch');
+
+        consoleStream.stopCapturing();
+        consoleStream.flushCapturedLogs();
+        consoleStream.startCapturing();
+
+        for (const status of [502, 503, 504]) {
+          const response = new Response('timeout', { status });
+          fetchStub.resolves(response);
+          await client.doFormDataPatch(data, addonId, versionId);
+        }
+
+        const { capturedMessages } = consoleStream;
+        consoleStream.stopCapturing();
+
+        assert.equal(
+          capturedMessages.filter((message) =>
+            message.includes(
+              'Proceeding with the assumption that the upload succeeded',
+            ),
+          ).length,
+          3,
+        );
+      });
     });
 
     describe('waitForApproval', () => {

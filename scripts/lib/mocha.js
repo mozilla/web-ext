@@ -22,8 +22,11 @@ const runMocha = (args, execMochaOptions = {}, coverageEnabled) => {
   }
 
   const command = process.platform === 'win32' ? `"${binPath}"` : binPath;
+  const formattedBinArgs = process.platform === 'win32'
+    ? binArgs.map((arg) => arg.includes(' ') ? `"${arg}"` : arg)
+    : binArgs;
 
-  const res = spawnSync(command, binArgs, {
+  const res = spawnSync(command, formattedBinArgs, {
     ...execMochaOptions,
     env: {
       ...process.env,
