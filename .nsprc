@@ -4,6 +4,11 @@
     "https://github.com/advisories/GHSA-73rr-hh4g-fpgx",
     // serialize-javascript  <=7.0.4
     "https://github.com/advisories/GHSA-5c6j-r48x-rmvq",
-    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v"
+    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v",
+    // image-size DoS (via addons-linter)
+    "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+    "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
+    // js-yaml Quadratic CPU consumption (via babel-plugin-istanbul)
+    "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj"
   ]
 }
