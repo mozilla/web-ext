@@ -244,6 +244,20 @@ export default class Client {
       }
 
       const response = await this.fetch(patchUrl, 'PATCH', formData);
+      if (
+        response.status === 502 ||
+        response.status === 503 ||
+        response.status === 504
+      ) {
+        log.warn(
+          `Upload of ${Object.keys(
+            data,
+          )} received a ${response.status} response from AMO. ` +
+            'Proceeding with the assumption that the upload succeeded.',
+        );
+        return;
+      }
+
       if (response.status < 200 || response.status >= 500) {
         throw new Error(
           `Patch request failed: ${response.statusText || response.status}.`,
