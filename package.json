@@ -103,7 +103,7 @@
     "eslint-plugin-import": "2.32.0",
     "fs-extra": "11.4.0",
     "git-rev-sync": "3.0.2",
-    "globals": "17.8.0",
+    "globals": "17.10.0",
     "mocha": "11.7.6",
     "nyc": "18.0.0",
     "prettier": "3.9.6",
