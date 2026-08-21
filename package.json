@@ -70,7 +70,7 @@
     "jose": "5.9.6",
     "jszip": "3.10.1",
     "multimatch": "6.0.0",
-    "open": "11.0.0",
+    "open": "11.0.1",
     "parse-json": "8.3.0",
     "pino": "10.3.1",
     "promise-toolbox": "0.21.0",
