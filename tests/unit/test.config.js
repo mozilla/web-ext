@@ -902,6 +902,25 @@ describe('config', () => {
   });
 
   describe('loadJSConfigFile', () => {
+    for (const extension of ['mjs', 'cjs']) {
+      it(`loads a .${extension} config with URL characters in its path`, () =>
+        withTempDir(async (tmpDir) => {
+          const configFilePath = path.join(
+            tmpDir.path(),
+            `config #1%20.${extension}`,
+          );
+          const exportStatement =
+            extension === 'mjs' ? 'export default' : 'module.exports =';
+          writeFileSync(
+            configFilePath,
+            `${exportStatement} { sourceDir: 'fake/dir' };`,
+          );
+          assert.deepEqual(await loadJSConfigFile(configFilePath), {
+            sourceDir: 'fake/dir',
+          });
+        }));
+    }
+
     it('throws an error if the config file does not exist', () => {
       return withTempDir(async (tmpDir) => {
         const promise = loadJSConfigFile(
