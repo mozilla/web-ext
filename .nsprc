@@ -1,4 +1,9 @@
 {
   "exceptions": [
+    // image-size <=2.0.2 - no fix available
+    "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
+    "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+    // adm-zip >=0.5.9 <=0.6.0 - no fix available
+    "https://github.com/advisories/GHSA-vwc7-r8mq-g2x9"
   ]
 }
