@@ -2,7 +2,7 @@ import path from 'path';
 import EventEmitter from 'events';
 
 import { assert } from 'chai';
-import { describe, it, beforeEach } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'mocha';
 import deepcopy from 'deepcopy';
 import fs from 'fs-extra';
 import * as sinon from 'sinon';
@@ -659,17 +659,61 @@ describe('util/extension-runners/chromium', async () => {
     });
   });
 
-  describe('reloadAllExtensions', () => {
+  describe('running multiple extensions', () => {
     let runnerInstance;
+    let sendCommandSpy;
 
     beforeEach(async () => {
-      const { params } = prepareExtensionRunnerParams();
+      const { params } = prepareExtensionRunnerParams({
+        params: {
+          extensions: [
+            {
+              sourceDir: '/fake/sourceDir1',
+              manifestData: deepcopy(basicManifest),
+            },
+            {
+              sourceDir: '/fake/sourceDir2',
+              manifestData: deepcopy(basicManifest),
+            },
+            {
+              sourceDir: '/fake/sourceDir3',
+              manifestData: deepcopy(basicManifest),
+            },
+          ],
+        },
+      });
       runnerInstance = new ChromiumExtensionRunner(params);
       await runnerInstance.run();
+      sendCommandSpy = sinon.spy(runnerInstance.cdp, 'sendCommand');
     });
 
-    it('resolve when not client connected', async () => {
+    afterEach(async () => {
+      sendCommandSpy.restore();
+      sendCommandSpy = null;
+      await runnerInstance.exit();
+      runnerInstance = null;
+    });
+
+    it('reloadAllExtensions() should reload them all', async () => {
       await runnerInstance.reloadAllExtensions();
+      sinon.assert.calledThrice(sendCommandSpy);
+      sinon.assert.calledWithMatch(sendCommandSpy, 'Extensions.loadUnpacked', {
+        path: '/fake/sourceDir1',
+      });
+      sinon.assert.calledWithMatch(sendCommandSpy, 'Extensions.loadUnpacked', {
+        path: '/fake/sourceDir2',
+      });
+      sinon.assert.calledWithMatch(sendCommandSpy, 'Extensions.loadUnpacked', {
+        path: '/fake/sourceDir3',
+      });
+    });
+
+    it('reloadExtensionBySourceDir() should reload one extension', async () => {
+      await runnerInstance.reloadExtensionBySourceDir('/fake/sourceDir2');
+      sinon.assert.calledOnce(sendCommandSpy);
+      sinon.assert.calledWithMatch(sendCommandSpy, 'Extensions.loadUnpacked', {
+        path: '/fake/sourceDir2',
+      });
     });
   });
 });

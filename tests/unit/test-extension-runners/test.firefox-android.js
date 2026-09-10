@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 
 import { assert } from 'chai';
-import { describe, it } from 'mocha';
+import { describe, it, beforeEach, afterEach } from 'mocha';
 import deepcopy from 'deepcopy';
 import * as sinon from 'sinon';
 
@@ -879,6 +879,72 @@ describe('util/extension-runners/firefox-android', () => {
       }
 
       consoleStream.stopCapturing();
+    });
+  });
+
+  describe('running multiple extensions', () => {
+    let runnerInstance;
+
+    beforeEach(async () => {
+      const { params } = prepareSelectedDeviceAndAPKParams({
+        fakeRemoteFirefox: {
+          installTemporaryAddon: sinon.spy(async (adbExtensionPath) => {
+            // Transforms /fake/built/fake/sourceDir1.xpi to 'id@sourceDir1'.
+            const id = `id@${adbExtensionPath.split('/').pop().split('.')[0]}`;
+            return { addon: { id } };
+          }),
+        },
+      });
+      params.extensions = [
+        {
+          sourceDir: '/fake/sourceDir1',
+          manifestData: deepcopy(basicManifest),
+        },
+        {
+          sourceDir: '/fake/sourceDir2',
+          manifestData: deepcopy(basicManifest),
+        },
+        {
+          sourceDir: '/fake/sourceDir3',
+          manifestData: deepcopy(basicManifest),
+        },
+      ];
+      params.buildSourceDir = sinon.spy(async (sourceDir) => {
+        return { extensionPath: `/fake/built/${sourceDir}.zip` };
+      });
+      runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+    });
+
+    afterEach(async () => {
+      await runnerInstance.exit();
+      runnerInstance = null;
+    });
+
+    it('reloadAllExtensions() should reload them all', async () => {
+      await runnerInstance.reloadAllExtensions();
+      sinon.assert.calledThrice(runnerInstance.remoteFirefox.reloadAddon);
+      sinon.assert.calledWithMatch(
+        runnerInstance.remoteFirefox.reloadAddon,
+        'id@sourceDir1',
+      );
+      sinon.assert.calledWithMatch(
+        runnerInstance.remoteFirefox.reloadAddon,
+        'id@sourceDir2',
+      );
+      sinon.assert.calledWithMatch(
+        runnerInstance.remoteFirefox.reloadAddon,
+        'id@sourceDir3',
+      );
+    });
+
+    it('reloadExtensionBySourceDir() should reload one extension', async () => {
+      await runnerInstance.reloadExtensionBySourceDir('/fake/sourceDir2');
+      sinon.assert.calledOnce(runnerInstance.remoteFirefox.reloadAddon);
+      sinon.assert.calledWithMatch(
+        runnerInstance.remoteFirefox.reloadAddon,
+        'id@sourceDir2',
+      );
     });
   });
 });
