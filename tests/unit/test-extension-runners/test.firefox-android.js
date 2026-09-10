@@ -13,6 +13,7 @@ import {
   createFakeStdin,
   getFakeFirefox,
   getFakeRemoteFirefox,
+  ZipFile,
 } from '../helpers.js';
 
 // Fake result for client.installTemporaryAddon().then(installResult => ...)
@@ -34,6 +35,9 @@ const fakeRDPUnixSocketFile =
 
 const fakeRDPUnixAbstractSocketFile =
   '@org.mozilla.firefox/firefox-debugger-socket';
+
+// The actual XPI, xpiFileName in src/extension-runners/firefox-android.js
+const helperXpiName = 'web-ext-internal-helper-to-open-start-urls.xpi';
 
 // Reduce the waiting time during tests.
 FirefoxAndroidExtensionRunner.unixSocketDiscoveryRetryInterval = 0;
@@ -833,6 +837,84 @@ describe('util/extension-runners/firefox-android', () => {
       sinon.assert.calledOnce(anotherCallback);
     });
 
+    it('opens a single URL when specified via --start-url', async () => {
+      const { params, fakeADBUtils } = prepareSelectedDeviceAndAPKParams();
+      params.startUrl = 'https://example.com/';
+
+      let pushedBackgroundJs;
+      fakeADBUtils.pushFile = sinon.spy(async (_, localZipPath) => {
+        if (localZipPath.includes(helperXpiName)) {
+          const zipFile = new ZipFile();
+          await zipFile.open(localZipPath);
+          pushedBackgroundJs = await zipFile.getAsText('background.js');
+          await zipFile.close();
+        }
+      });
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+
+      const { installTemporaryAddon } = runnerInstance.remoteFirefox;
+
+      sinon.assert.calledTwice(installTemporaryAddon);
+
+      sinon.assert.calledWithMatch(
+        installTemporaryAddon,
+        `${runnerInstance.selectedArtifactsDir}/${builtFileName}.xpi`,
+      );
+
+      sinon.assert.calledWithMatch(
+        installTemporaryAddon,
+        `${runnerInstance.selectedArtifactsDir}/${helperXpiName}`,
+      );
+      sinon.assert.calledWithMatch(
+        fakeADBUtils.pushFile,
+        'emulator-1',
+        sinon.match(/\bweb-ext-internal-helper-to-open-start-urls\.xpi$/),
+        `${runnerInstance.selectedArtifactsDir}/${helperXpiName}`,
+      );
+      assert.include(pushedBackgroundJs, '["https://example.com/"]');
+    });
+
+    it('opens a multiple URL when specified via --start-url', async () => {
+      const { params, fakeADBUtils } = prepareSelectedDeviceAndAPKParams();
+      params.startUrl = ['about:blank', 'http://localhost'];
+
+      let pushedBackgroundJs;
+      fakeADBUtils.pushFile = sinon.spy(async (_, localZipPath) => {
+        if (localZipPath.includes(helperXpiName)) {
+          const zipFile = new ZipFile();
+          await zipFile.open(localZipPath);
+          pushedBackgroundJs = await zipFile.getAsText('background.js');
+          await zipFile.close();
+        }
+      });
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+
+      sinon.assert.calledWithMatch(
+        fakeADBUtils.pushFile,
+        'emulator-1',
+        sinon.match(/\bweb-ext-internal-helper-to-open-start-urls\.xpi$/),
+        `${runnerInstance.selectedArtifactsDir}/${helperXpiName}`,
+      );
+      assert.include(pushedBackgroundJs, '["about:blank","http://localhost"]');
+    });
+
+    it('does not install helper extension without --start-url', async () => {
+      const { params } = prepareSelectedDeviceAndAPKParams();
+
+      const runnerInstance = new FirefoxAndroidExtensionRunner(params);
+      await runnerInstance.run();
+
+      const { installTemporaryAddon } = runnerInstance.remoteFirefox;
+      sinon.assert.calledOnce(installTemporaryAddon);
+      const seenPath = installTemporaryAddon.firstCall.args[0];
+      assert.include(seenPath, '.xpi');
+      assert.notInclude(seenPath, helperXpiName);
+    });
+
     it('logs warnings on the unsupported CLI options', async () => {
       const params = prepareSelectedDeviceAndAPKParams();
 
@@ -855,10 +937,6 @@ describe('util/extension-runners/firefox-android', () => {
         {
           params: { preInstall: true },
           expectedMessage: /Android target does not support --pre-install/,
-        },
-        {
-          params: { startUrl: 'http://fake-start-url.org' },
-          expectedMessage: /Android target does not support --start-url/,
         },
         {
           params: { args: ['-headless=false'] },
