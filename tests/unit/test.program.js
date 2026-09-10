@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 
-import { describe, it } from 'mocha';
+import { after, before, describe, it } from 'mocha';
 import git from 'git-rev-sync';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
@@ -30,6 +30,23 @@ import {
 const { spy } = sinon;
 
 describe('program.Program', () => {
+  let originalLcAll;
+
+  before(() => {
+    // yargs localizes some validation errors based on the environment locale.
+    // Keep tests that assert on these messages deterministic across systems.
+    originalLcAll = process.env.LC_ALL;
+    process.env.LC_ALL = 'en_US.UTF-8';
+  });
+
+  after(() => {
+    if (originalLcAll === undefined) {
+      delete process.env.LC_ALL;
+    } else {
+      process.env.LC_ALL = originalLcAll;
+    }
+  });
+
   function execProgram(program, options = {}) {
     const fakeProcess = createFakeProcess();
     const absolutePackageDir = path.join(
@@ -611,6 +628,27 @@ describe('program.main', () => {
       assert.isObject(pref);
       assert.equal(pref.prop, true);
       assert.equal(pref.prop2, 'value2');
+    });
+  });
+
+  it('converts chromium custom preferences into an object', () => {
+    const fakeCommands = fake(commands, {
+      run: () => Promise.resolve(),
+    });
+    return execProgram(
+      [
+        'run',
+        '--chromium-pref',
+        'extensions.ui.developer_mode=false',
+        '--chromium-pref',
+        'browser.theme.color=dark',
+      ],
+      { commands: fakeCommands },
+    ).then(() => {
+      const { chromiumPref } = fakeCommands.run.firstCall.args[0];
+      assert.isObject(chromiumPref);
+      assert.strictEqual(chromiumPref['extensions.ui.developer_mode'], false);
+      assert.strictEqual(chromiumPref['browser.theme.color'], 'dark');
     });
   });
 

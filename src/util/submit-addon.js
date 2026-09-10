@@ -244,8 +244,20 @@ export default class Client {
       }
 
       const response = await this.fetch(patchUrl, 'PATCH', formData);
+      if (response.status < 200 || response.status >= 500) {
+        throw new Error(
+          `Patch request failed: ${response.statusText || response.status}.`,
+        );
+      }
+
       if (!response.ok) {
-        throw new Error(`response status was ${response.status}`);
+        const responseData = await response.json();
+        throw new Error(
+          [
+            `Patch request failed: ${response.statusText || response.status}:\n`,
+            JSON.stringify(responseData, null, 2),
+          ].join('\n'),
+        );
       }
     } catch (error) {
       log.warn(`Upload of ${Object.keys(data)} failed: ${error}.`);

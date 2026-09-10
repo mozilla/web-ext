@@ -1,11 +1,9 @@
 {
   "exceptions": [
-    // jsdiff DoS on diff >=6.0.0 <8.0.3 (via mocha)
-    "https://github.com/advisories/GHSA-73rr-hh4g-fpgx",
-    // serialize-javascript  <=7.0.4
-    "https://github.com/advisories/GHSA-5c6j-r48x-rmvq",
-    "https://github.com/advisories/GHSA-qj8w-gfj5-8c6v",
-    // uuid < 14.0.0
-    "https://github.com/advisories/GHSA-w5hq-g745-h8pq"
+    // image-size <=2.0.2 - no fix available
+    "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
+    "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+    // adm-zip >=0.5.9 <=0.6.0 - no fix available
+    "https://github.com/advisories/GHSA-vwc7-r8mq-g2x9"
   ]
 }

@@ -6,7 +6,7 @@
 //   here).
 //
 // eslint-disable-next-line import/no-unresolved
-import webext from './lib/main.js';
+import webExt from './lib/main.js';
 
-export default webext;
-export const { cmd, main } = webext;
+export default webExt;
+export const { cmd, main } = webExt;

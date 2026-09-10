@@ -145,11 +145,6 @@ commands:
     steps:
       - run: npm run audit-deps
 
-  lint_commit_conventions:
-    description: lint commit message conventions
-    steps:
-      - run: npm run github-pr-title-lint
-
 jobs:
   build:
     <<: *defaults
@@ -210,7 +205,6 @@ jobs:
                 legacy_bundling: true
             - persist_project_repo
             - audit_deps
-            - lint_commit_conventions
 
   test-windows:
     parameters:

@@ -25,7 +25,6 @@ development more awesome by contributing to the `web-ext` tool. Here are links t
   - [Creating a pull request](#creating-a-pull-request)
     - [Checking code formatting](#checking-code-formatting)
   - [Writing commit messages](#writing-commit-messages)
-    - [Checking commit message formatting](#checking-commit-message-formatting)
   - [Creating a release](#creating-a-release)
     - [Release schedule](#release-schedule)
 - [Documentation](#documentation)
@@ -268,11 +267,6 @@ Examples:
 
 If you want to use scopes then it would look more like:
 `feat(dysfunctioner): Added --quiet option`.
-
-### Checking commit message formatting
-
-The commit message formatting described above is automatically enforced
-each time you commit to your work branch to make continuous integration smoother.
 
 ## Creating a release
 

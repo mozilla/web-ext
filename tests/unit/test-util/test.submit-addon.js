@@ -23,6 +23,7 @@ import Client, {
   signAddon,
 } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
+import { consoleStream } from '../../../src/util/logger.js';
 
 class JSONResponse extends Response {
   constructor(data, status) {
@@ -906,6 +907,70 @@ describe('util.submit-addon', () => {
           response,
           `Uploading ${dataField1}${dataField2} failed`,
         );
+      });
+
+      it('logs the response json for non ok responses', async () => {
+        const client = new Client(clientDefaults);
+        const errorData = { detail: 'some error detail' };
+        sinon.stub(client, 'fetch').resolves(new JSONResponse(errorData, 400));
+
+        consoleStream.stopCapturing();
+        consoleStream.flushCapturedLogs();
+        consoleStream.startCapturing();
+
+        await assert.isRejected(
+          client.doFormDataPatch(data, addonId, versionId),
+          `Uploading ${Object.keys(data)} failed`,
+        );
+
+        const { capturedMessages } = consoleStream;
+        consoleStream.stopCapturing();
+
+        assert.ok(
+          capturedMessages.some((message) =>
+            message.includes(JSON.stringify(errorData, null, 2)),
+          ),
+        );
+      });
+
+      it('throws without parsing the body for server errors', async () => {
+        const client = new Client(clientDefaults);
+        const response = new Response('not json', { status: 500 });
+        const jsonSpy = sinon.spy(response, 'json');
+        sinon.stub(client, 'fetch').resolves(response);
+
+        consoleStream.stopCapturing();
+        consoleStream.flushCapturedLogs();
+        consoleStream.startCapturing();
+
+        await assert.isRejected(
+          client.doFormDataPatch(data, addonId, versionId),
+          `Uploading ${Object.keys(data)} failed`,
+        );
+
+        const { capturedMessages } = consoleStream;
+        consoleStream.stopCapturing();
+
+        sinon.assert.notCalled(jsonSpy);
+        assert.ok(
+          capturedMessages.some((message) =>
+            message.includes('Patch request failed'),
+          ),
+        );
+      });
+
+      it('throws without parsing the body for statuses below 200', async () => {
+        const client = new Client(clientDefaults);
+        const response = new BadResponse('not json', 100);
+        const jsonSpy = sinon.spy(response, 'json');
+        sinon.stub(client, 'fetch').resolves(response);
+
+        await assert.isRejected(
+          client.doFormDataPatch(data, addonId, versionId),
+          `Uploading ${Object.keys(data)} failed`,
+        );
+
+        sinon.assert.notCalled(jsonSpy);
       });
     });
 

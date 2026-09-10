@@ -22,7 +22,6 @@ export default defineConfig([
     '!scripts/lib',
     '**/coverage/',
     '**/artifacts/',
-    '**/commitlint.config.cjs',
     '**/eslint.config.mjs',
   ]),
   {

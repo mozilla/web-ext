@@ -1,6 +1,7 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs/promises';
+import { pathToFileURL } from 'url';
 
 import camelCase from 'camelcase';
 import decamelize from 'decamelize';
@@ -140,7 +141,9 @@ export async function loadJSConfigFile(filePath) {
         await fs.readFile(resolvedFilePath, { encoding: 'utf-8' }),
       );
     } else {
-      configModule = await import(`file://${resolvedFilePath}?nonce=${nonce}`);
+      const configURL = pathToFileURL(resolvedFilePath);
+      configURL.searchParams.set('nonce', nonce);
+      configModule = await import(configURL.href);
     }
 
     if (configModule.default) {

@@ -1,0 +1,19 @@
+name: SSDLC Actions
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  code-security-analysis:
+    permissions:
+      security-events: write # required for uploading code scanning alerts
+    uses: mozilla/ssdlc-actions/.github/workflows/code-security-analysis-public-repo.yml@aa759c845c83060e2473fd8df60f9f408e34675d # v1.2
