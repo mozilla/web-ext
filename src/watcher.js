@@ -63,7 +63,9 @@ export default function onSourceChange({
     files: watchedFiles,
     directories: watchedDirs,
     missing: [],
-    startTime: Date.now(),
+    // startTime: Date.now(), is explicitly NOT set because it causes onChange
+    // to be emitted if the files were created shortly before now!
+    // See https://github.com/webpack/watchpack/issues/295
   });
 
   // TODO: support interrupting the watcher on Windows.
