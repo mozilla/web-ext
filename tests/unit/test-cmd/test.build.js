@@ -122,6 +122,39 @@ describe('build', () => {
     );
   });
 
+  for (const [name, expectedName] of [
+    ['Price $& Tracker', 'price_tracker'],
+    ['Edition {version}', 'edition_version_'],
+    ['Tools/Kit', 'tools_kit'],
+  ]) {
+    it(`treats localized name ${JSON.stringify(name)} as literal text`, () =>
+      withTempDir(async (tmpDir) => {
+        const sourceDir = path.join(tmpDir.path(), 'source');
+        const artifactsDir = path.join(tmpDir.path(), 'artifacts');
+        await fs.mkdir(path.join(sourceDir, '_locales', 'en'), {
+          recursive: true,
+        });
+        await fs.writeFile(
+          path.join(sourceDir, 'manifest.json'),
+          JSON.stringify({
+            ...basicManifest,
+            name: '__MSG_name__',
+            version: '1.0',
+            default_locale: 'en',
+          }),
+        );
+        await fs.writeFile(
+          path.join(sourceDir, '_locales', 'en', 'messages.json'),
+          JSON.stringify({ name: { message: name } }),
+        );
+        const result = await build({ sourceDir, artifactsDir });
+        assert.equal(
+          path.basename(result.extensionPath),
+          `${expectedName}-1.0.zip`,
+        );
+      }));
+  }
+
   it('sanitizes characters in extension name in filename from template', () => {
     return withTempDir((tmpDir) =>
       build({
