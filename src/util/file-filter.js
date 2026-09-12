@@ -6,6 +6,16 @@ import { createLogger } from './logger.js';
 
 const log = createLogger(import.meta.url);
 
+// Glob characters that minimatch would otherwise read as pattern syntax when
+// they are part of a real directory name, such as an extension living in
+// "/home/me/my ext [beta]". They are escaped as one-character classes and not
+// with a backslash, because minimatch rewrites path.sep to "/" in patterns on
+// Windows, which would destroy a backslash escape. Two characters stay
+// unhandled: a curly brace, because brace expansion runs before character
+// classes are parsed, and a literal backslash in a directory name on POSIX,
+// which minimatch reads as an escape.
+const escapeGlobChars = (filePath) => filePath.replace(/[*?[\]()]/g, '[$&]');
+
 // check if target is a sub directory of src
 export const isSubPath = (src, target) => {
   const relate = path.relative(src, target);
@@ -56,7 +66,13 @@ export class FileFilter {
         `Ignoring artifacts directory "${artifactsDir}" ` +
           'and all its subdirectories',
       );
-      this.addToIgnoreList([artifactsDir, path.join(artifactsDir, '**', '*')]);
+      // The artifacts directory is a real path and never a pattern, so it
+      // is escaped whole and pushed directly.
+      const artifactsPattern = escapeGlobChars(artifactsDir);
+      this.filesToIgnore.push(
+        artifactsPattern,
+        path.join(artifactsPattern, '**', '*'),
+      );
     }
   }
 
@@ -73,15 +89,36 @@ export class FileFilter {
   }
 
   /**
+   *  Resolve an ignore pattern to an absolute pattern, escaping the glob
+   *  characters of the sourceDir part of the path so that the directory the
+   *  extension lives in is matched literally. A pattern that resolves outside
+   *  sourceDir keeps its prefix unescaped, since there is no part of it that
+   *  is known to be a real path.
+   */
+  resolveIgnorePattern(pattern) {
+    const resolvedPath = this.resolveWithSourceDir(pattern);
+    if (
+      resolvedPath !== this.sourceDir &&
+      !resolvedPath.startsWith(`${this.sourceDir}${path.sep}`)
+    ) {
+      return resolvedPath;
+    }
+    return (
+      escapeGlobChars(this.sourceDir) +
+      resolvedPath.slice(this.sourceDir.length)
+    );
+  }
+
+  /**
    *  Insert more files into filesToIgnore array.
    */
   addToIgnoreList(files) {
     for (const file of files) {
       if (file.charAt(0) === '!') {
-        const resolvedFile = this.resolveWithSourceDir(file.substr(1));
+        const resolvedFile = this.resolveIgnorePattern(file.substr(1));
         this.filesToIgnore.push(`!${resolvedFile}`);
       } else {
-        this.filesToIgnore.push(this.resolveWithSourceDir(file));
+        this.filesToIgnore.push(this.resolveIgnorePattern(file));
       }
     }
   }
