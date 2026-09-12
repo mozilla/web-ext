@@ -92,6 +92,35 @@ describe('util/file-filter', () => {
       assert.equal(filter.wantFile('dist/file'), true);
     });
 
+    it('ignores files when sourceDir contains glob characters', () => {
+      const filter = newFileFilter({
+        sourceDir: '/src/my ext [beta]',
+        ignoreFiles: ['*.log', '!node_modules/libdweb/src/**'],
+      });
+      assert.equal(filter.wantFile('manifest.json'), true);
+      assert.equal(filter.wantFile('.git/config'), false);
+      assert.equal(filter.wantFile('node_modules/pkg/index.js'), false);
+      assert.equal(filter.wantFile('previous-build.zip'), false);
+      // The user's own patterns keep their glob meaning.
+      assert.equal(filter.wantFile('some.log'), false);
+      assert.equal(filter.wantFile('node_modules/libdweb/src/lib.js'), true);
+
+      // An extglob opener in the directory name breaks matching the same way.
+      const extglobFilter = newFileFilter({ sourceDir: '/src/build @(v2)' });
+      assert.equal(extglobFilter.wantFile('manifest.json'), true);
+      assert.equal(extglobFilter.wantFile('node_modules/pkg/index.js'), false);
+    });
+
+    it('ignores artifactsDir when sourceDir contains glob characters', () => {
+      const filter = newFileFilter({
+        sourceDir: '/src/my ext [beta]',
+        artifactsDir: '/src/my ext [beta]/out [1]',
+      });
+      assert.equal(filter.wantFile('manifest.json'), true);
+      assert.equal(filter.wantFile('out [1]'), false);
+      assert.equal(filter.wantFile('out [1]/some.js'), false);
+    });
+
     it('resolve relative path', () => {
       const filter = newFileFilter({
         sourceDir: '/src',
