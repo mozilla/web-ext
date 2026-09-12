@@ -395,7 +395,7 @@ export class ChromiumExtensionRunner {
     const runnerName = this.getName();
 
     if (this.forceUseDeprecatedLoadExtension) {
-      this.reloadAllExtensionsFallbackForChrome125andEarlier();
+      await this.reloadAllExtensionsFallbackForChrome125andEarlier();
     } else {
       for (const { sourceDir } of this.params.extensions) {
         try {
