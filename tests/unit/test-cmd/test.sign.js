@@ -115,6 +115,17 @@ describe('sign', () => {
       },
     ));
 
+  it('defaults the AMO base URL when it is not passed in', () =>
+    withTempDir(async (tmpDir) => {
+      const stubs = getStubs();
+      const signingConfig = { ...stubs.signingConfig };
+      delete signingConfig.amoBaseUrl;
+      await sign(tmpDir, { ...stubs, signingConfig });
+      sinon.assert.calledWithMatch(stubs.signingOptions.submitAddon, {
+        amoBaseUrl: AMO_BASE_URL,
+      });
+    }));
+
   it('requires a channel for submission API', () =>
     withTempDir(async (tmpDir) => {
       const stubs = getStubs();
