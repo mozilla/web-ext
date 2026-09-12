@@ -3,6 +3,7 @@ import path from 'path';
 import defaultBuilder from './build.js';
 import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
 import { prepareArtifactsDir } from '../util/artifacts.js';
+import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
 import { createLogger } from '../util/logger.js';
 import getValidatedManifest, { getManifestId } from '../util/manifest.js';
 import {
@@ -36,6 +37,7 @@ export default function sign(
   },
   {
     build = defaultBuilder,
+    createFileFilter = defaultFileFilterCreator,
     preValidatedManifest,
     submitAddon = defaultSubmitAddonSigner,
     asyncFsReadFile = defaultAsyncFsReadFile,
@@ -54,10 +56,18 @@ export default function sign(
       manifestData = await getValidatedManifest(sourceDir);
     }
 
+    // The package is built into a temporary directory, so the filter has to
+    // be built here, where the real artifacts directory is known.
+    const fileFilter = createFileFilter({
+      sourceDir,
+      ignoreFiles,
+      artifactsDir,
+    });
+
     const [buildResult, idFromSourceDir] = await Promise.all([
       build(
         { sourceDir, ignoreFiles, artifactsDir: tmpDir.path() },
-        { manifestData, showReadyMessage: false },
+        { manifestData, showReadyMessage: false, fileFilter },
       ),
       getIdFromFile(savedIdPath),
     ]);
