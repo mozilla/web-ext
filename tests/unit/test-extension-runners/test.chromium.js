@@ -624,6 +624,39 @@ describe('util/extension-runners/chromium', async () => {
     sinon.assert.calledOnce(fakeChromeInstance.kill);
   });
 
+  it('rejects when reloading fails (old Chrome)', async () => {
+    const { params } = prepareExtensionRunnerParams(
+      {},
+      { loadUnpackedUnsupported: true },
+    );
+    const runnerInstance = new ChromiumExtensionRunner(params);
+
+    await runnerInstance.run();
+    assert.isTrue(runnerInstance.forceUseDeprecatedLoadExtension);
+
+    sinon
+      .stub(runnerInstance.cdp, 'sendCommand')
+      .rejects(new Error('CDP failure'));
+    const stdoutSpy = sinon.spy(process.stdout, 'write');
+
+    try {
+      await assert.isRejected(
+        runnerInstance.reloadAllExtensions(),
+        /CDP failure/,
+      );
+      assert.isFalse(
+        stdoutSpy.getCalls().some((call) => {
+          return String(call.args[0]).includes('Last extension reload');
+        }),
+        'expected no reload success message when the reload failed',
+      );
+    } finally {
+      stdoutSpy.restore();
+    }
+
+    await runnerInstance.exit();
+  });
+
   describe('getPrefs', () => {
     it('merges default and custom preferences from an object and passes them to the launcher', async () => {
       const { params } = prepareExtensionRunnerParams({
