@@ -1,4 +1,5 @@
 import { existsSync, lstatSync } from 'fs';
+import path from 'path';
 
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
@@ -34,8 +35,23 @@ export default function onSourceChange({
   const executeImmediately = false;
   onChange = debounce(onChange, debounceTime, executeImmediately);
 
+  // A file listed in --watch-file was named by the user, so changes to it are
+  // always relevant and must not be dropped by shouldWatchFile (the file
+  // filter ignores hidden files, archives and node_modules by default).
+  // Exclusions that apply at the watcher level, like --watch-ignored, are
+  // unaffected because such paths are never watched in the first place.
+  const explicitlyWatchedFiles = new Set(
+    (watchFile || []).map((file) => path.resolve(file)),
+  );
+
   watcher.on('change', (filePath) => {
-    proxyFileChanges({ artifactsDir, onChange, filePath, shouldWatchFile });
+    proxyFileChanges({
+      artifactsDir,
+      onChange,
+      filePath,
+      shouldWatchFile: (file) =>
+        explicitlyWatchedFiles.has(path.resolve(file)) || shouldWatchFile(file),
+    });
   });
 
   log.debug(
