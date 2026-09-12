@@ -583,7 +583,6 @@ Example: $0 --help run.
         describe:
           'The extensions runners to enable. Specify this option ' +
           'multiple times to run against multiple targets.',
-        default: 'firefox-desktop',
         demandOption: false,
         type: 'array',
         choices: ['firefox-desktop', 'firefox-android', 'chromium'],
