@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions: {}
+
+jobs:
+  draft-release:
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'releases/')
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to create the draft release.
+      contents: write
+      # Required to comment the draft release on the pull request.
+      pull-requests: write
+
+    steps:
+      # Ideally, we'd also update the link pointing to our process docs in the
+      # README.md file when this version changes.
+      - uses: mozilla/addons/.github/actions/release@442a70320c838d93bd0c34708471b8c5ca7ce86f # 1.1
+        with:
+          repo: ${{ github.repository }}
+          sha: ${{ github.event.pull_request.merge_commit_sha }}
+          pr: ${{ github.event.pull_request.number }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
