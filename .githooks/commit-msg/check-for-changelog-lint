@@ -1,8 +1,0 @@
-#!/bin/bash
-# This git-hook is not used anymore, and so we warn the user that it can be removed.
-
-echo "--------------------------------------------------------------------"
-echo "This git-hook is not used anymore and you can now remove it from"
-echo "your local git hooks dir (.git/hooks/commit-msg)"
-echo "--------------------------------------------------------------------"
-echo
