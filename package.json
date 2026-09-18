@@ -87,7 +87,7 @@
     "@babel/cli": "8.0.4",
     "@babel/core": "8.0.5",
     "@babel/eslint-parser": "8.0.1",
-    "@babel/preset-env": "8.0.2",
+    "@babel/preset-env": "8.0.5",
     "@babel/register": "8.0.1",
     "@eslint/compat": "2.1.1",
     "@eslint/eslintrc": "3.3.7",
