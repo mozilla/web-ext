@@ -152,7 +152,9 @@ export async function defaultPackageCreator(
       manifestData,
     });
     // allow for a localized `{name}`, without mutating `manifestData`
-    filenameTemplate = filenameTemplate.replace(/{name}/g, extensionName);
+    filenameTemplate = filenameTemplate.replace(/{name}/g, () =>
+      safeFileName(extensionName),
+    );
   }
 
   const packageName = safeFileName(
