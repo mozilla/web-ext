@@ -15,7 +15,7 @@ import completeSignCommand, {
   extensionIdFile,
   getIdFromFile,
 } from '../../../src/cmd/sign.js';
-import { basicManifest, fixturePath } from '../helpers.js';
+import { basicManifest, fixturePath, ZipFile } from '../helpers.js';
 
 describe('sign', () => {
   function getStubs() {
@@ -114,6 +114,65 @@ describe('sign', () => {
           });
       },
     ));
+
+  it('does not include the artifacts directory in the signed package', () =>
+    withTempDir(async (tmpDir) => {
+      const stubs = getStubs();
+      const sourceDir = path.join(tmpDir.path(), 'source-dir');
+      const artifactsDir = path.join(sourceDir, 'web-ext-artifacts');
+      await promisify(copyDir)(fixturePath('minimal-web-ext'), sourceDir);
+      await fs.mkdir(artifactsDir, { recursive: true });
+      await fs.writeFile(
+        path.join(artifactsDir, 'previous-build.crx'),
+        'previous build',
+      );
+
+      // The built package is read here because sign() removes its temporary
+      // directory as soon as it returns.
+      let fileNames;
+      const submitAddon = async ({ xpiPath }) => {
+        const zipFile = new ZipFile();
+        await zipFile.open(xpiPath);
+        fileNames = await zipFile.extractFilenames();
+        await zipFile.close();
+        return stubs.signingResult;
+      };
+
+      await completeSignCommand(
+        {
+          sourceDir,
+          artifactsDir,
+          channel: 'listed',
+          ...stubs.signingConfig,
+        },
+        { submitAddon },
+      );
+
+      assert.include(fileNames, 'manifest.json');
+      assert.notInclude(fileNames, 'web-ext-artifacts/previous-build.crx');
+    }));
+
+  it('creates the file filter from the real artifacts directory', () =>
+    withTempDir(async (tmpDir) => {
+      const stubs = getStubs();
+      const fileFilter = { wantFile: () => true };
+      const createFileFilter = sinon.spy(() => fileFilter);
+      const params = {
+        sourceDir: tmpDir.path(),
+        artifactsDir: path.join(tmpDir.path(), 'artifacts-dir'),
+        ignoreFiles: ['**/*.log'],
+      };
+      await sign(tmpDir, stubs, {
+        extraArgs: params,
+        extraOptions: { createFileFilter },
+      });
+      sinon.assert.calledWithMatch(createFileFilter, params);
+      sinon.assert.calledWithMatch(
+        stubs.signingOptions.build,
+        sinon.match.any,
+        { fileFilter },
+      );
+    }));
 
   it('requires a channel for submission API', () =>
     withTempDir(async (tmpDir) => {
