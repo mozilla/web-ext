@@ -93,6 +93,29 @@ describe('lint', () => {
     });
   });
 
+  it('passes disableLinterRules to the linter', () => {
+    const { lint, createLinter } = setUp();
+    const disableLinterRules = 'no-implied-eval, no-unsanitized/property';
+    return lint({ disableLinterRules }).then(() => {
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          disableLinterRules,
+        },
+      });
+    });
+  });
+
+  it('passes disableLinterRules undefined to the linter', () => {
+    const { lint, createLinter } = setUp();
+    return lint().then(() => {
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          disableLinterRules: undefined,
+        },
+      });
+    });
+  });
+
   it('configures the linter when verbose', () => {
     const { lint, createLinter } = setUp();
     return lint({ verbose: true }).then(() => {
