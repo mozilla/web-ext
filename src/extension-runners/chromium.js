@@ -550,13 +550,42 @@ export class ChromiumExtensionRunner {
    * Reloads a single extension, collect any reload error and resolves to
    * an array composed by a single ExtensionRunnerReloadResult object.
    */
-  async reloadExtensionBySourceDir(
-    extensionSourceDir, // eslint-disable-line no-unused-vars
-  ) {
-    // TODO(rpl): detect the extension ids assigned to the
-    // target extensions and map it to the extensions source dir
-    // (https://github.com/mozilla/web-ext/issues/1687).
-    return this.reloadAllExtensions();
+  async reloadExtensionBySourceDir(extensionSourceDir) {
+    if (
+      // For a long time we simply reloaded all extensions without checking the
+      // directory. Perhaps we can drop this check?
+      this.params.extensions.length === 1 ||
+      // Support for old Chrome (<125) is on a best effort basis, and we simply
+      // reload them all instead of a specific one. If anyone ever wants to
+      // implement this, see https://github.com/mozilla/web-ext/issues/1687.
+      this.forceUseDeprecatedLoadExtension
+    ) {
+      // Common simple case, only one extension. For a long time this logic
+      // only worked with one (https://github.com/mozilla/web-ext/issues/1687).
+      return this.reloadAllExtensions();
+    }
+    if (
+      this.params.extensions.some((x) => x.sourceDir === extensionSourceDir)
+    ) {
+      try {
+        await this.cdp.sendCommand('Extensions.loadUnpacked', {
+          path: extensionSourceDir,
+        });
+      } catch (e) {
+        log.error(
+          `Failed to load extension at ${extensionSourceDir}: ${e.message}`,
+        );
+      }
+    } else {
+      log.error(`Unrecognized extensionSourceDir: ${extensionSourceDir}`);
+    }
+
+    process.stdout.write(
+      `\rLast extension reload: ${new Date().toTimeString()}`,
+    );
+    log.debug('\n');
+
+    return [{ runnerName: this.getName() }];
   }
 
   /**

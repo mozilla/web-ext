@@ -602,5 +602,83 @@ describe('util/extension-runners', () => {
         exitKeypressLoop(fakeStdin);
       }
     });
+
+    describe('running multiple extensions', () => {
+      const sourceDir1 = '/fake/sourceDir1';
+      const sourceDir2 = '/fake/sourceDir2';
+      const sourceDir3 = '/fake/sourceDir3';
+
+      it('creates multiple watchers for each sourceDir', async () => {
+        const {
+          // createWatcher mock returns same watcher for each test. We only
+          // validate the parameters so it does not matter that the watchers
+          // are shared.
+          watcher,
+          createWatcher,
+          extensionRunner,
+          reloadStrategy,
+        } = prepare({
+          stubExtensionRunner: {
+            registerCleanup() {},
+          },
+        });
+        reloadStrategy({
+          sourceDir: [sourceDir1, sourceDir2, sourceDir3],
+          watchFile: null, // sourceDir ignored if watchFile is set.
+        });
+        sinon.assert.calledThrice(createWatcher);
+        sinon.assert.calledWithMatch(createWatcher, { sourceDir: sourceDir1 });
+        sinon.assert.calledWithMatch(createWatcher, { sourceDir: sourceDir2 });
+        sinon.assert.calledWithMatch(createWatcher, { sourceDir: sourceDir3 });
+
+        const { registerCleanup } = extensionRunner;
+
+        sinon.assert.calledOnce(registerCleanup);
+        const registeredCb = registerCleanup.firstCall.args[0];
+        registeredCb();
+
+        sinon.assert.calledThrice(watcher.close);
+      });
+
+      it('creates one watcher when --watch-file is specified', async () => {
+        const { createWatcher, reloadStrategy } = prepare();
+        // watchFile is specified by prepare().
+        reloadStrategy({ sourceDir: [sourceDir1, sourceDir2, sourceDir3] });
+        sinon.assert.calledOnce(createWatcher);
+        sinon.assert.calledWithMatch(createWatcher, { sourceDir: sourceDir1 });
+      });
+
+      it('reloads one extension when a change is detected', async () => {
+        const { extensionRunner, reloadStrategy } = prepare({
+          stubExtensionRunner: {
+            reloadExtensionBySourceDir() {},
+          },
+        });
+        const onSourceChange = sinon.spy(() => {});
+        const createWatcher = sinon.spy((opts) =>
+          defaultWatcherCreator({ ...opts, onSourceChange }),
+        );
+
+        reloadStrategy(
+          {
+            sourceDir: [sourceDir1, sourceDir2, sourceDir3],
+            watchFile: null, // sourceDir ignored if watchFile is set.
+          },
+          { createWatcher },
+        );
+
+        sinon.assert.calledThrice(createWatcher);
+        sinon.assert.calledThrice(onSourceChange);
+        onSourceChange.secondCall.args[0].onChange();
+
+        const { reloadExtensionBySourceDir } = extensionRunner;
+
+        sinon.assert.calledOnce(reloadExtensionBySourceDir);
+        sinon.assert.calledWithMatch(
+          reloadExtensionBySourceDir,
+          sinon.match(sourceDir2),
+        );
+      });
+    });
   });
 });

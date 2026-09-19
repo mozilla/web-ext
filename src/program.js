@@ -416,11 +416,19 @@ Example: $0 --help run.
   program.setGlobalOptions({
     'source-dir': {
       alias: 's',
-      describe: 'Web extension source directory.',
+      describe:
+        'Web extension source directory. The "run" command accepts multiple ' +
+        'directories, the "build" and "sign" commands accept only one.',
       default: process.cwd(),
       requiresArg: true,
       type: 'string',
-      coerce: (arg) => arg ?? undefined,
+      coerce: (arg) => {
+        arg = arg ?? undefined;
+        if (Array.isArray(arg) && !program.programArgv.includes('run')) {
+          throw new UsageError('Multiple --source-dir are not allowed.');
+        }
+        return arg;
+      },
     },
     'artifacts-dir': {
       alias: 'a',
