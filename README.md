@@ -288,5 +288,5 @@ Here is a partial list of examples:
 This project follows the [semantic versioning](https://semver.org/) specification. To release a new version of this library on npmjs.org, please see [our release process][].
 
 [dynamic-imports]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#dynamic_imports
-[our release process]: https://github.com/mozilla/addons/tree/1.1/.github/actions/release#release-process
+[our release process]: https://github.com/mozilla/addons/tree/1.2/.github/actions/release#release-process
 [web-ext-user-docs]: https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/
