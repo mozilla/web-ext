@@ -7,6 +7,10 @@ updates:
     open-pull-requests-limit: 99
     cooldown:
       default-days: 7
+    groups:
+      babel:
+        patterns:
+          - "@babel/*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
