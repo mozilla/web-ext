@@ -84,11 +84,11 @@
     "zip-dir": "2.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "8.0.5",
-    "@babel/core": "8.0.5",
-    "@babel/eslint-parser": "8.0.5",
-    "@babel/preset-env": "8.0.5",
-    "@babel/register": "8.0.5",
+    "@babel/cli": "8.0.6",
+    "@babel/core": "8.0.6",
+    "@babel/eslint-parser": "8.0.6",
+    "@babel/preset-env": "8.0.6",
+    "@babel/register": "8.0.6",
     "@eslint/compat": "2.1.1",
     "@eslint/eslintrc": "3.3.7",
     "@eslint/js": "9.39.2",
