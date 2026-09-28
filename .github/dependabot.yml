@@ -11,6 +11,11 @@ updates:
       babel:
         patterns:
           - "@babel/*"
+    ignore:
+      # https://github.com/mozilla/web-ext/issues/3872
+      - dependency-name: eslint
+        versions:
+          - ">= 10"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
