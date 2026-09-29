@@ -11,6 +11,7 @@ export default function lint(
   {
     artifactsDir,
     boring,
+    disableLinterRules,
     enterprise,
     ignoreFiles,
     metadata,
@@ -39,6 +40,7 @@ export default function lint(
     metadata,
     output,
     boring,
+    disableLinterRules,
     selfHosted,
     enterprise,
     shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
