@@ -1,4 +1,5 @@
 import { existsSync, lstatSync } from 'fs';
+import path from 'path';
 
 import Watchpack from 'watchpack';
 import debounce from 'debounce';
@@ -34,8 +35,19 @@ export default function onSourceChange({
   const executeImmediately = false;
   onChange = debounce(onChange, debounceTime, executeImmediately);
 
+  // --watch-file takes precedence over ignores by shouldWatchFile.
+  const explicitlyWatchedFiles = new Set(
+    (watchFile || []).map((file) => path.resolve(file)),
+  );
+
   watcher.on('change', (filePath) => {
-    proxyFileChanges({ artifactsDir, onChange, filePath, shouldWatchFile });
+    proxyFileChanges({
+      artifactsDir,
+      onChange,
+      filePath,
+      shouldWatchFile: (file) =>
+        explicitlyWatchedFiles.has(path.resolve(file)) || shouldWatchFile(file),
+    });
   });
 
   log.debug(

@@ -10,11 +10,16 @@ import {
   default as onSourceChange,
   proxyFileChanges,
 } from '../../src/watcher.js';
+import { createFileFilter } from '../../src/util/file-filter.js';
 import { withTempDir } from '../../src/util/temp-dir.js';
 import { makeSureItFails } from './helpers.js';
 
 describe('watcher', () => {
-  const watchChange = ({ watchFile, touchedFile } = {}) =>
+  const watchChange = ({
+    watchFile,
+    touchedFile,
+    createShouldWatchFile = () => () => true,
+  } = {}) =>
     withTempDir(async (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
       const someFile = path.join(tmpDir.path(), touchedFile);
@@ -37,7 +42,7 @@ describe('watcher', () => {
         watchFile,
         artifactsDir,
         onChange,
-        shouldWatchFile: () => true,
+        shouldWatchFile: createShouldWatchFile(tmpDir.path()),
       });
 
       const { fileWatchers, directoryWatchers } = watcher;
@@ -109,6 +114,33 @@ describe('watcher', () => {
       sinon.assert.calledOnce(onChange);
       assert.isUndefined(watchedDirPath);
       assert.equal(watchedFilePath, path.join(tmpDirPath, 'foo.txt'));
+    });
+
+    it('changes if a watched hidden file is touched', async () => {
+      const { onChange, watchedFilePath, tmpDirPath } = await watchChange({
+        watchFile: ['.build-finished'],
+        touchedFile: '.build-finished',
+        createShouldWatchFile: (sourceDir) => {
+          const fileFilter = createFileFilter({ sourceDir });
+          return (file) => fileFilter.wantFile(file);
+        },
+      });
+
+      sinon.assert.calledOnce(onChange);
+      assert.equal(watchedFilePath, path.join(tmpDirPath, '.build-finished'));
+    });
+
+    it('changes if a watched zip file is touched', async () => {
+      const { onChange } = await watchChange({
+        watchFile: ['build.zip'],
+        touchedFile: 'build.zip',
+        createShouldWatchFile: (sourceDir) => {
+          const fileFilter = createFileFilter({ sourceDir });
+          return (file) => fileFilter.wantFile(file);
+        },
+      });
+
+      sinon.assert.calledOnce(onChange);
     });
 
     it('does not change if watched file is not touched (await)', async () => {
