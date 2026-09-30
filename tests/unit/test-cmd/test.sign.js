@@ -152,11 +152,9 @@ describe('sign', () => {
       assert.notInclude(fileNames, 'web-ext-artifacts/previous-build.crx');
     }));
 
-  it('creates the file filter from the real artifacts directory', () =>
+  it('passes the real artifacts directory to build for filtering', () =>
     withTempDir(async (tmpDir) => {
       const stubs = getStubs();
-      const fileFilter = { wantFile: () => true };
-      const createFileFilter = sinon.spy(() => fileFilter);
       const params = {
         sourceDir: tmpDir.path(),
         artifactsDir: path.join(tmpDir.path(), 'artifacts-dir'),
@@ -164,13 +162,11 @@ describe('sign', () => {
       };
       await sign(tmpDir, stubs, {
         extraArgs: params,
-        extraOptions: { createFileFilter },
       });
-      sinon.assert.calledWithMatch(createFileFilter, params);
       sinon.assert.calledWithMatch(
         stubs.signingOptions.build,
         sinon.match.any,
-        { fileFilter },
+        { artifactsDirToIgnore: params.artifactsDir },
       );
     }));
 
