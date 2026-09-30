@@ -207,9 +207,10 @@ export default async function build(
   {
     manifestData,
     createFileFilter = defaultFileFilterCreator,
+    artifactsDirToIgnore = artifactsDir,
     fileFilter = createFileFilter({
       sourceDir,
-      artifactsDir,
+      artifactsDir: artifactsDirToIgnore,
       ignoreFiles,
     }),
     onSourceChange = defaultSourceWatcher,

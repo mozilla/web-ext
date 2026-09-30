@@ -57,7 +57,11 @@ export default function sign(
     const [buildResult, idFromSourceDir] = await Promise.all([
       build(
         { sourceDir, ignoreFiles, artifactsDir: tmpDir.path() },
-        { manifestData, showReadyMessage: false },
+        {
+          manifestData,
+          showReadyMessage: false,
+          artifactsDirToIgnore: artifactsDir,
+        },
       ),
       getIdFromFile(savedIdPath),
     ]);

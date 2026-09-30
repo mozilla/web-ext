@@ -77,6 +77,32 @@ describe('build', () => {
     });
   });
 
+  it('filters the source artifacts directory when output goes elsewhere', () =>
+    withTempDir(async (tmpDir) => {
+      const sourceDir = path.join(tmpDir.path(), 'source');
+      const artifactsDir = path.join(sourceDir, 'web-ext-artifacts');
+      const outputDir = path.join(tmpDir.path(), 'output');
+      const createFileFilter = sinon.spy(() => ({ wantFile: () => true }));
+      const packageCreator = sinon.spy(() => ({
+        extensionPath: 'extension/path',
+      }));
+
+      await build(
+        { sourceDir, artifactsDir: outputDir },
+        {
+          artifactsDirToIgnore: artifactsDir,
+          createFileFilter,
+          packageCreator,
+        },
+      );
+
+      sinon.assert.calledWithMatch(createFileFilter, {
+        sourceDir,
+        artifactsDir,
+        ignoreFiles: [],
+      });
+    }));
+
   it('throws on missing manifest properties in filename template', () => {
     return withTempDir((tmpDir) =>
       build({
