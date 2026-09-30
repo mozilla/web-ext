@@ -22,7 +22,7 @@ jobs:
     steps:
       # Ideally, we'd also update the link pointing to our process docs in the
       # README.md file when this version changes.
-      - uses: mozilla/addons/.github/actions/release@c6d2e382284c1504d2733f4d38f5a9cb09715fb3 # 1.2
+      - uses: mozilla/addons/.github/actions/release@c2dc2fd5862487f41add188a13243c2e71fdaa42 # 1.3
         with:
           repo: ${{ github.repository }}
           sha: ${{ github.event.pull_request.merge_commit_sha }}
