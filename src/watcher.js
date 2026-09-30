@@ -35,11 +35,7 @@ export default function onSourceChange({
   const executeImmediately = false;
   onChange = debounce(onChange, debounceTime, executeImmediately);
 
-  // A file listed in --watch-file was named by the user, so changes to it are
-  // always relevant and must not be dropped by shouldWatchFile (the file
-  // filter ignores hidden files, archives and node_modules by default).
-  // Exclusions that apply at the watcher level, like --watch-ignored, are
-  // unaffected because such paths are never watched in the first place.
+  // --watch-file takes precedence over ignores by shouldWatchFile.
   const explicitlyWatchedFiles = new Set(
     (watchFile || []).map((file) => path.resolve(file)),
   );
