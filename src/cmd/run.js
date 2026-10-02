@@ -6,7 +6,9 @@ import defaultBuildExtension from './build.js';
 import * as defaultFirefoxApp from '../firefox/index.js';
 import { connectWithMaxRetries as defaultFirefoxClient } from '../firefox/remote.js';
 import { createLogger } from '../util/logger.js';
-import defaultGetValidatedManifest from '../util/manifest.js';
+import defaultGetValidatedManifest, {
+  getManifestId,
+} from '../util/manifest.js';
 import { UsageError } from '../errors.js';
 import {
   createExtensionRunner,
@@ -109,6 +111,7 @@ export default async function run(
   }
 
   const runners = [];
+  let hasFirefoxRunner = false;
 
   const commonRunnerParams = {
     // Common options.
@@ -140,6 +143,7 @@ export default async function run(
       params: firefoxDesktopRunnerParams,
     });
     runners.push(firefoxDesktopRunner);
+    hasFirefoxRunner = true;
   }
 
   if (target && target.includes('firefox-android')) {
@@ -186,6 +190,7 @@ export default async function run(
       params: firefoxAndroidRunnerParams,
     });
     runners.push(firefoxAndroidRunner);
+    hasFirefoxRunner = true;
   }
 
   if (target && target.includes('chromium')) {
@@ -202,6 +207,14 @@ export default async function run(
       params: chromiumRunnerParams,
     });
     runners.push(chromiumRunner);
+  }
+
+  if (hasFirefoxRunner && !getManifestId(manifestData)) {
+    log.warn(
+      'No explicit extension ID found in manifest.json. ' +
+        'Add browser_specific_settings.gecko.id: temporary loading can succeed ' +
+        'without an ID, but permanent installation or signing may require one.',
+    );
   }
 
   const extensionRunner = new MultiExtensionRunner({
