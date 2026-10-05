@@ -1,4 +1,6 @@
 {
   "exceptions": [
+    // node-forge <=1.4.0 via @devicefarmer/adbkit
+    "https://github.com/advisories/GHSA-86w9-cpqp-85rv"
   ]
 }
