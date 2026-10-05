@@ -16,6 +16,13 @@ updates:
       - dependency-name: eslint
         versions:
           - ">= 10"
+      - dependency-name: "@eslint/js"
+        versions:
+          - ">= 10"
+      # https://github.com/mozilla/web-ext/issues/3883
+      - dependency-name: yargs
+        versions:
+          - ">= 18"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -23,7 +30,7 @@ updates:
     groups:
       ssdlc-actions:
         patterns:
-          - "mozilla/ssdlc-actions/*"  
+          - "mozilla/ssdlc-actions/*"
     cooldown:
       default-days: 7
     open-pull-requests-limit: 99
