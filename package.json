@@ -91,7 +91,7 @@
     "@babel/register": "8.0.6",
     "@eslint/compat": "2.1.1",
     "@eslint/eslintrc": "3.3.7",
-    "@eslint/js": "9.39.2",
+    "@eslint/js": "9.39.5",
     "babel-plugin-istanbul": "8.0.0",
     "chai": "6.2.2",
     "chai-as-promised": "8.0.2",
