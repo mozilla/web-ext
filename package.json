@@ -93,7 +93,7 @@
     "@eslint/eslintrc": "3.3.7",
     "@eslint/js": "9.39.5",
     "babel-plugin-istanbul": "8.0.0",
-    "chai": "6.2.2",
+    "chai": "6.3.0",
     "chai-as-promised": "8.0.2",
     "copy-dir": "1.3.0",
     "crc-32": "1.2.2",
