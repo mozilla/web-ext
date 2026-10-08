@@ -7,6 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import {
+  basicManifest,
   fixturePath,
   FakeExtensionRunner,
   getFakeFirefox,
@@ -129,7 +130,7 @@ describe('run', () => {
   });
 
   it('turns sourceDir into an absolute path', async () => {
-    const getFakeManifest = sinon.spy();
+    const getFakeManifest = sinon.stub().resolves(basicManifest);
     const cmd = await prepareRun();
 
     await cmd.run(
@@ -252,10 +253,142 @@ describe('run', () => {
 
   it('allows to replace manifest parser', async () => {
     const cmd = await prepareRun();
-    const getFakeManifest = sinon.spy();
+    const getFakeManifest = sinon.stub().resolves(basicManifest);
 
     await cmd.run({}, { getValidatedManifest: getFakeManifest });
     assert.equal(getFakeManifest.called, true);
+  });
+
+  describe('missing Firefox extension ID warning', () => {
+    let writeStub;
+    let runSpy;
+
+    beforeEach(async () => {
+      const { consoleStream } = await import('../../../src/util/logger.js');
+      writeStub = sinon.stub(consoleStream, 'write');
+      runSpy = sinon.spy(FakeExtensionRunner.prototype, 'run');
+    });
+
+    afterEach(() => {
+      writeStub.restore();
+      runSpy.restore();
+    });
+
+    function warnings() {
+      return writeStub
+        .getCalls()
+        .map(({ args }) => JSON.parse(args[0]))
+        .filter(({ level }) => level === 40);
+    }
+
+    async function runWithManifest(target, manifestProperties = {}) {
+      const cmd = await prepareRun();
+      return cmd.run(
+        { target },
+        {
+          getValidatedManifest: sinon.stub().resolves({
+            name: 'Test extension',
+            version: '1.0',
+            manifest_version: 2,
+            ...manifestProperties,
+          }),
+        },
+      );
+    }
+
+    const firefoxTargets = [
+      ['the default target', undefined],
+      ['an empty target array', []],
+      ['Firefox Desktop', ['firefox-desktop']],
+      ['Firefox Android', ['firefox-android']],
+      ['both Firefox targets', ['firefox-desktop', 'firefox-android']],
+      ['Firefox Desktop and Chromium', ['firefox-desktop', 'chromium']],
+      ['Firefox Android and Chromium', ['firefox-android', 'chromium']],
+      ['all targets', ['firefox-desktop', 'firefox-android', 'chromium']],
+    ];
+
+    for (const [description, target] of firefoxTargets) {
+      it(`warns once and continues running with ${description}`, async () => {
+        const runner = await runWithManifest(target);
+
+        const messages = warnings();
+        assert.lengthOf(messages, 1);
+        assert.include(messages[0].msg, 'browser_specific_settings.gecko.id');
+        assert.include(messages[0].msg, 'manifest.json');
+        assert.include(messages[0].msg, 'temporary');
+        sinon.assert.calledOnce(runSpy);
+        const warningCall = writeStub
+          .getCalls()
+          .find(({ args }) => JSON.parse(args[0]).level === 40);
+        assert.isBelow(warningCall.callId, runSpy.firstCall.callId);
+        assert.instanceOf(runner, FakeExtensionRunner);
+      });
+    }
+
+    it('does not warn for Chromium-only runs without an ID', async () => {
+      await runWithManifest(['chromium']);
+
+      assert.lengthOf(warnings(), 0);
+      sinon.assert.calledOnce(runSpy);
+    });
+
+    it('also warns for Manifest V3 without an ID', async () => {
+      await runWithManifest(['firefox-desktop'], { manifest_version: 3 });
+
+      assert.lengthOf(warnings(), 1);
+      sinon.assert.calledOnce(runSpy);
+    });
+
+    it('preserves manifest validation failures without warning or starting', async () => {
+      const cmd = await prepareRun();
+      const error = new Error('Invalid manifest');
+
+      const rejection = await assert.isRejected(
+        cmd.run({}, { getValidatedManifest: sinon.stub().rejects(error) }),
+      );
+
+      assert.strictEqual(rejection, error);
+      assert.lengthOf(warnings(), 0);
+      sinon.assert.notCalled(runSpy);
+    });
+
+    for (const property of ['browser_specific_settings', 'applications']) {
+      it(`does not warn when ${property}.gecko.id is present`, async () => {
+        await runWithManifest(['firefox-desktop', 'firefox-android'], {
+          [property]: { gecko: { id: 'test@example.com' } },
+        });
+
+        assert.lengthOf(warnings(), 0);
+        sinon.assert.calledOnce(runSpy);
+      });
+    }
+
+    it('warns when browser_specific_settings.gecko overrides a legacy ID', async () => {
+      await runWithManifest(['firefox-desktop'], {
+        browser_specific_settings: { gecko: {} },
+        applications: { gecko: { id: 'legacy@example.com' } },
+      });
+
+      assert.lengthOf(warnings(), 1);
+      sinon.assert.calledOnce(runSpy);
+    });
+
+    it('does not warn when applications provides the only gecko section', async () => {
+      await runWithManifest(['firefox-desktop'], {
+        browser_specific_settings: {},
+        applications: { gecko: { id: 'legacy@example.com' } },
+      });
+
+      assert.lengthOf(warnings(), 0);
+    });
+
+    it('warns when the explicit ID is empty', async () => {
+      await runWithManifest(['firefox-desktop'], {
+        browser_specific_settings: { gecko: { id: '' } },
+      });
+
+      assert.lengthOf(warnings(), 1);
+    });
   });
 
   it('returns ExtensonRunner', async () => {
