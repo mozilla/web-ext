@@ -87,19 +87,19 @@ describe('run', () => {
     );
     chromiumRunnerStub = sinon.stub(chromiumModule, 'ChromiumExtensionRunner');
 
-    mockModule({
+    await mockModule({
       moduleURL: '../../../src/extension-runners/firefox-android.js',
       importerModuleURL: import.meta.url,
       namedExports: firefoxAndroidModule,
     });
 
-    mockModule({
+    await mockModule({
       moduleURL: '../../../src/extension-runners/firefox-desktop.js',
       importerModuleURL: import.meta.url,
       namedExports: firefoxDesktopModule,
     });
 
-    mockModule({
+    await mockModule({
       moduleURL: '../../../src/extension-runners/chromium.js',
       importerModuleURL: import.meta.url,
       namedExports: chromiumModule,
