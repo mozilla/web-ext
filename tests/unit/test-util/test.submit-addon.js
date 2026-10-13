@@ -11,6 +11,7 @@ import { File } from 'node:buffer';
 import CRC32 from 'crc-32';
 import { assert, expect } from 'chai';
 import JSZip from 'jszip';
+import { ProxyAgent } from 'undici';
 import { afterEach, before, beforeEach, describe, it } from 'mocha';
 import * as sinon from 'sinon';
 
@@ -1364,10 +1365,9 @@ describe('util.submit-addon', () => {
 
         await client.fetch(baseUrl, 'POST');
 
-        assert.equal(
-          nodeFetchStub.firstCall.args[1].agent.proxy.host,
-          apiProxyHost,
-        );
+        const { dispatcher } = nodeFetchStub.firstCall.args[1];
+        assert.instanceOf(dispatcher, ProxyAgent);
+        await dispatcher.close();
         sinon.assert.calledOnce(nodeFetchStub);
       });
     });
