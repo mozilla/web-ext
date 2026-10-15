@@ -5,7 +5,7 @@ import { promises as streamPromises } from 'stream';
 
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
-import { HttpsProxyAgent } from 'https-proxy-agent';
+import { ProxyAgent } from 'undici';
 
 import { isErrorWithCode } from '../errors.js';
 import { createLogger } from './../util/logger.js';
@@ -110,8 +110,18 @@ export default class Client {
     return new File([fileData], basename(filePath));
   }
 
-  nodeFetch(url, { method, headers, body, agent }) {
-    return fetch(url, { method, headers, body, agent });
+  async nodeFetch(url, { method, headers, body, dispatcher }) {
+    try {
+      return await fetch(url, { method, headers, body, dispatcher });
+    } finally {
+      // Close gracefully after the response body has been consumed. Awaiting
+      // close here would prevent the caller from receiving and reading it.
+      if (dispatcher) {
+        dispatcher.close().catch((error) => {
+          log.debug(`Closing proxy dispatcher failed: ${error}`);
+        });
+      }
+    }
   }
 
   async doUploadSubmit(xpiPath, channel) {
@@ -339,11 +349,11 @@ export default class Client {
         'Content-Type': 'application/json',
       };
     }
-    let agent;
+    let dispatcher;
     if (this.apiProxy) {
-      agent = new HttpsProxyAgent(this.apiProxy);
+      dispatcher = new ProxyAgent(this.apiProxy);
     }
-    return this.nodeFetch(url, { method, body, headers, agent });
+    return this.nodeFetch(url, { method, body, headers, dispatcher });
   }
 
   returnResult(addonId, downloadedFiles) {
