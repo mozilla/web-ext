@@ -14,6 +14,14 @@ const log = createLogger(import.meta.url);
 
 export const defaultAsyncFsReadFile = fsPromises.readFile;
 
+// Appended to client errors (4xx) from submission requests, which are usually
+// caused by missing or invalid metadata (e.g. no license for listed versions).
+export const SUBMISSION_ERROR_HINT =
+  'The add-on metadata may be missing a required field or contain an invalid value. ' +
+  'Pass metadata with --amo-metadata, see ' +
+  'https://mozilla.github.io/addons-server/topics/api/addons.html#version-create ' +
+  'and https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/#sign-and-submit-for-publication';
+
 export class JwtApiAuth {
   #apiKey;
   #apiSecret;
@@ -215,6 +223,7 @@ export default class Client {
       'POST',
       JSON.stringify(jsonData),
       'Submission failed (1)',
+      SUBMISSION_ERROR_HINT,
     );
   }
 
@@ -229,6 +238,7 @@ export default class Client {
       'PUT',
       JSON.stringify(jsonData),
       'Submission failed (2)',
+      SUBMISSION_ERROR_HINT,
     );
   }
 
@@ -306,7 +316,13 @@ export default class Client {
     );
   }
 
-  async fetchJson(url, method = 'GET', body, errorMsg = 'Bad Request') {
+  async fetchJson(
+    url,
+    method = 'GET',
+    body,
+    errorMsg = 'Bad Request',
+    errorHint,
+  ) {
     const response = await this.fetch(url, method, body);
     if (response.status < 200 || response.status >= 500) {
       throw new Error(
@@ -320,6 +336,7 @@ export default class Client {
         [
           `${errorMsg}: ${response.statusText || response.status}`,
           JSON.stringify(data, null, 2),
+          ...(errorHint ? [errorHint] : []),
         ].join('\n'),
       );
     }
