@@ -3,6 +3,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 
 import defaultLintCommand from '../../../src/cmd/lint.js';
+import { consoleStream } from '../../../src/util/logger.js';
 
 describe('lint', () => {
   function setUp({ createLinter, createFileFilter } = {}) {
@@ -88,6 +89,53 @@ describe('lint', () => {
       sinon.assert.calledWithMatch(createLinter, {
         config: {
           warningsAsErrors: undefined,
+        },
+      });
+    });
+  });
+
+  it('passes disableLinterRules to the linter', () => {
+    const { lint, createLinter } = setUp();
+    const disableLinterRules = 'no-implied-eval, no-unsanitized/property';
+    return lint({ disableLinterRules }).then(() => {
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          disableLinterRules,
+        },
+      });
+    });
+  });
+
+  it('warns when disableLinterRules is set', async () => {
+    const { lint } = setUp();
+    consoleStream.flushCapturedLogs();
+    await lint({ disableLinterRules: 'no-implied-eval' });
+    assert.ok(
+      consoleStream.capturedMessages.some(
+        (msg) =>
+          msg.includes('[warn]') &&
+          msg.includes('--disable-linter-rules: no-implied-eval'),
+      ),
+    );
+  });
+
+  it('does not warn when disableLinterRules is not set', async () => {
+    const { lint } = setUp();
+    consoleStream.flushCapturedLogs();
+    await lint();
+    assert.notOk(
+      consoleStream.capturedMessages.some((msg) =>
+        msg.includes('--disable-linter-rules'),
+      ),
+    );
+  });
+
+  it('passes disableLinterRules undefined to the linter', () => {
+    const { lint, createLinter } = setUp();
+    return lint().then(() => {
+      sinon.assert.calledWithMatch(createLinter, {
+        config: {
+          disableLinterRules: undefined,
         },
       });
     });

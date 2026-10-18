@@ -11,6 +11,7 @@ export default function lint(
   {
     artifactsDir,
     boring,
+    disableLinterRules,
     enterprise,
     ignoreFiles,
     metadata,
@@ -39,6 +40,7 @@ export default function lint(
     metadata,
     output,
     boring,
+    disableLinterRules,
     selfHosted,
     enterprise,
     shouldScanFile: (fileName) => fileFilter.wantFile(fileName),
@@ -49,6 +51,14 @@ export default function lint(
     // the directory to the extension.
     _: [sourceDir],
   };
+
+  if (disableLinterRules) {
+    log.warn(
+      `Linter rules disabled via --disable-linter-rules: ${disableLinterRules}. ` +
+        'These rules are still applied when the extension is submitted to ' +
+        'addons.mozilla.org, so its results may differ.',
+    );
+  }
 
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({ config, runAsBinary: shouldExitProgram });
