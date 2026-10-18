@@ -52,6 +52,14 @@ export default function lint(
     _: [sourceDir],
   };
 
+  if (disableLinterRules) {
+    log.warn(
+      `Linter rules disabled via --disable-linter-rules: ${disableLinterRules}. ` +
+        'These rules are still applied when the extension is submitted to ' +
+        'addons.mozilla.org, so its results may differ.',
+    );
+  }
+
   log.debug(`Running addons-linter on ${sourceDir}`);
   const linter = createLinter({ config, runAsBinary: shouldExitProgram });
   return linter.run();
