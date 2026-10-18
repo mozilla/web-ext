@@ -271,6 +271,13 @@ describe('run', () => {
     sinon.assert.calledOnce(desktopRunnerStub);
   });
 
+  it('creates a Firefox Desktop runner if target is undefined', async () => {
+    const cmd = await prepareRun();
+    await cmd.run({ target: undefined });
+    sinon.assert.notCalled(androidRunnerStub);
+    sinon.assert.calledOnce(desktopRunnerStub);
+  });
+
   it('creates a Firefox Desktop runner if "firefox-desktop" is in target', async () => {
     const cmd = await prepareRun();
     await cmd.run({ target: ['firefox-desktop'] });

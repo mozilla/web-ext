@@ -582,9 +582,8 @@ Example: $0 --help run.
       target: {
         alias: 't',
         describe:
-          'The extensions runners to enable. Specify this option ' +
-          'multiple times to run against multiple targets.',
-        default: 'firefox-desktop',
+          'The extensions runners to enable (default: firefox-desktop). ' +
+          'Specify this option multiple times to run against multiple targets.',
         demandOption: false,
         type: 'array',
         choices: ['firefox-desktop', 'firefox-android', 'chromium'],
