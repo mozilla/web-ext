@@ -224,7 +224,6 @@ webExt.cmd.sign({
   userAgentString: 'YOUR-CUSTOM-USERAGENT',
   apiKey,
   apiSecret,
-  amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
   sourceDir: ...,
   channel: 'unlisted',
   ...

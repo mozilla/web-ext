@@ -20,6 +20,7 @@ import {
   loadJSConfigFile as defaultLoadJSConfigFile,
   applyConfigToArgv as defaultApplyConfigToArgv,
 } from './config.js';
+import { AMO_BASE_URL } from './util/constants.js';
 
 const log = createLogger(import.meta.url);
 const envPrefix = 'WEB_EXT';
@@ -27,7 +28,7 @@ const envPrefix = 'WEB_EXT';
 // at build time by scripts/babel-plugin-inline-environment-variables.cjs).
 const defaultGlobalEnv = process.env.WEBEXT_BUILD_ENV || 'development';
 
-export const AMO_BASE_URL = 'https://addons.mozilla.org/api/v5/';
+export { AMO_BASE_URL };
 
 /*
  * The command line program.
