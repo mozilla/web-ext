@@ -56,8 +56,10 @@ export default function sign(
       manifestData = await getValidatedManifest(sourceDir);
     }
 
-    // The package is built into a temporary directory, so the filter has to
-    // be built here, where the real artifacts directory is known.
+    // build() is passed a custom artifactsDir, set to a temporary directory
+    // to avoid conflicts when attempting to write the unsigned zip file
+    // there. But fileFilter needs to be passed the original artifactsDir to
+    // make sure that ignoring still works.
     const fileFilter = createFileFilter({
       sourceDir,
       ignoreFiles,
