@@ -76,8 +76,10 @@ export class MultiExtensionRunner {
     const promises = [];
     for (const runner of this.extensionRunners) {
       const reloadPromise = runner.reloadAllExtensions().then(
-        () => {
-          return { runnerName: runner.getName() };
+        // Runners resolve with an array composed by a single
+        // ExtensionRunnerReloadResult object, which carries any reload error.
+        ([result] = []) => {
+          return { ...result, runnerName: runner.getName() };
         },
         (error) => {
           return {
@@ -109,8 +111,10 @@ export class MultiExtensionRunner {
     const promises = [];
     for (const runner of this.extensionRunners) {
       const reloadPromise = runner.reloadExtensionBySourceDir(sourceDir).then(
-        () => {
-          return { runnerName: runner.getName(), sourceDir };
+        // Runners resolve with an array composed by a single
+        // ExtensionRunnerReloadResult object, which carries any reload error.
+        ([result] = []) => {
+          return { ...result, runnerName: runner.getName(), sourceDir };
         },
         (error) => {
           return {
@@ -172,10 +176,10 @@ export class MultiExtensionRunner {
       if (reloadError instanceof Error) {
         let message = 'Error occurred while reloading';
         if (sourceDir) {
-          message += ` "${sourceDir}" `;
+          message += ` "${sourceDir}"`;
         }
 
-        message += `on "${runnerName}" - ${reloadError.message}`;
+        message += ` on "${runnerName}" - ${reloadError.message}`;
 
         log.error(`\n${message}`);
         log.debug(reloadError.stack);
