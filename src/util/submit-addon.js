@@ -14,6 +14,10 @@ const log = createLogger(import.meta.url);
 
 export const defaultAsyncFsReadFile = fsPromises.readFile;
 
+// Statuses returned by the proxies in front of AMO when a request takes too
+// long or the server is briefly unavailable.
+const GATEWAY_ERROR_STATUSES = [502, 503, 504];
+
 export class JwtApiAuth {
   #apiKey;
   #apiSecret;
@@ -56,6 +60,8 @@ export default class Client {
   validationCheckTimeout;
   approvalCheckInterval;
   approvalCheckTimeout;
+  sourceCheckInterval;
+  sourceCheckTimeout;
   downloadDir;
   userAgentString;
 
@@ -67,6 +73,8 @@ export default class Client {
     validationCheckTimeout = 300000, // 5 minutes.
     approvalCheckInterval = 1000,
     approvalCheckTimeout = 900000, // 15 minutes.
+    sourceCheckInterval = 2000,
+    sourceCheckTimeout = 60000, // 1 minute.
     downloadDir = process.cwd(),
     userAgentString = 'web-ext-lib',
   }) {
@@ -83,6 +91,8 @@ export default class Client {
     this.validationCheckTimeout = validationCheckTimeout;
     this.approvalCheckInterval = approvalCheckInterval;
     this.approvalCheckTimeout = approvalCheckTimeout;
+    this.sourceCheckInterval = sourceCheckInterval;
+    this.sourceCheckTimeout = sourceCheckTimeout;
     this.downloadDir = downloadDir;
     this.userAgentString = userAgentString;
   }
@@ -244,6 +254,18 @@ export default class Client {
       }
 
       const response = await this.fetch(patchUrl, 'PATCH', formData);
+      if (
+        'source' in data &&
+        GATEWAY_ERROR_STATUSES.includes(response.status) &&
+        (await this.isSourceAttached(patchUrl))
+      ) {
+        log.warn(
+          `AMO responded with ${response.status} to the source upload, ` +
+            'but the source is attached to the version, so continuing.',
+        );
+        return;
+      }
+
       if (response.status < 200 || response.status >= 500) {
         throw new Error(
           `Patch request failed: ${response.statusText || response.status}.`,
@@ -262,6 +284,24 @@ export default class Client {
     } catch (error) {
       log.warn(`Upload of ${Object.keys(data)} failed: ${error}.`);
       throw new Error(`Uploading ${Object.keys(data)} failed`);
+    }
+  }
+
+  // A gateway error doesn't always mean the upload failed: AMO can finish
+  // processing it after the proxy in front of it gave up. Check the version
+  // for a while instead of assuming either way.
+  async isSourceAttached(versionUrl) {
+    try {
+      return await this.waitRetry(
+        (detailResponseData) => Boolean(detailResponseData.source),
+        versionUrl,
+        this.sourceCheckInterval,
+        this.sourceCheckTimeout,
+        'Source check',
+      );
+    } catch (error) {
+      log.debug(`Checking for the uploaded source failed: ${error}`);
+      return false;
     }
   }
 
