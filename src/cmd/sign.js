@@ -3,6 +3,7 @@ import path from 'path';
 import defaultBuilder from './build.js';
 import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
 import { prepareArtifactsDir } from '../util/artifacts.js';
+import { AMO_BASE_URL } from '../util/constants.js';
 import { createLogger } from '../util/logger.js';
 import getValidatedManifest, { getManifestId } from '../util/manifest.js';
 import {
@@ -20,7 +21,7 @@ export const uploadUuidFile = '.amo-upload-uuid';
 
 export default function sign(
   {
-    amoBaseUrl,
+    amoBaseUrl = AMO_BASE_URL,
     apiKey,
     apiProxy,
     apiSecret,
