@@ -330,7 +330,9 @@ export function mockModule({
     path.resolve(path.join(baseDir, moduleURL)),
   ).href;
 
-  td.replaceEsm(fullModuleURL, namedExports, defaultExport);
+  // The returned promise resolves once the mock is registered: modules
+  // imported before that are not guaranteed to get the mocked module.
+  return td.replaceEsm(fullModuleURL, namedExports, defaultExport);
 }
 
 export function resetMockModules() {

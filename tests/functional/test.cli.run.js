@@ -1,5 +1,5 @@
 import path from 'path';
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 import { describe, it } from 'mocha';
 import { assert } from 'chai';
@@ -15,6 +15,36 @@ import {
 const EXPECTED_MESSAGE = 'Fake Firefox binary executed correctly.';
 
 describe('web-ext run', () => {
+  it('warns without verbose mode and still temporarily installs an extension without an ID', () =>
+    withTempAddonDir({ addonPath: minimalAddonPath }, async (srcDir) => {
+      const manifestPath = path.join(srcDir, 'manifest.json');
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      delete manifest.applications.gecko.id;
+      writeFileSync(manifestPath, JSON.stringify(manifest));
+
+      const { exitCode, stdout, stderr } = await execWebExt(
+        [
+          'run',
+          '--no-reload',
+          '--source-dir',
+          srcDir,
+          '--firefox',
+          fakeFirefoxPath,
+        ],
+        { env: { EXPECTED_MESSAGE, addonPath: srcDir } },
+      ).waitForExit;
+
+      assert.equal(exitCode, 0, stderr);
+      assert.include(stderr, 'browser_specific_settings.gecko.id');
+      assert.include(
+        stderr,
+        'permanent installation or signing may require one',
+      );
+      assert.lengthOf(stderr.match(/No explicit extension ID/g), 1);
+      assert.notInclude(stdout, 'No explicit extension ID');
+      assert.include(stdout, 'Installed');
+    }));
+
   it(
     'accepts: --no-reload --watch-file --watch-files --source-dir ' +
       'SRCDIR --firefox FXPATH --watch-ignored',
