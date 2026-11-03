@@ -74,6 +74,23 @@ describe('firefox/preferences', () => {
       assert.equal(prefs['valid.preference'], '4.55');
     });
 
+    it('does not convert the "NaN" string into a number', () => {
+      const prefs = coerceCLICustomPreference(['valid.preference=NaN']);
+      assert.isString(prefs['valid.preference']);
+      assert.equal(prefs['valid.preference'], 'NaN');
+    });
+
+    it('does not convert non-numeric strings into a number', () => {
+      const prefs = coerceCLICustomPreference([
+        'valid.preference=Infinity',
+        'valid.preference2=0x1f',
+        'valid.preference3=1e3',
+      ]);
+      assert.equal(prefs['valid.preference'], 'Infinity');
+      assert.equal(prefs['valid.preference2'], '0x1f');
+      assert.equal(prefs['valid.preference3'], '1e3');
+    });
+
     it('supports string values with "=" chars', () => {
       const prefs = coerceCLICustomPreference([
         'valid.preference=value=withequals=chars',
