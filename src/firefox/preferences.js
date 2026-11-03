@@ -140,8 +140,12 @@ export function coerceCLICustomPreference(cliPrefs) {
       throw new UsageError(`Invalid custom preference name: ${key}`);
     }
 
-    if (value === `${parseInt(value)}`) {
-      value = parseInt(value, 10);
+    // `parseInt('NaN')` is NaN and `${NaN}` is the string "NaN", so the
+    // round-trip check alone turns the literal "NaN" into the number NaN,
+    // which cannot be written to a Firefox profile at all.
+    const intValue = parseInt(value, 10);
+    if (!Number.isNaN(intValue) && value === `${intValue}`) {
+      value = intValue;
     } else if (value === 'true' || value === 'false') {
       value = value === 'true';
     }
