@@ -4,6 +4,7 @@ import defaultBuilder from './build.js';
 import { isErrorWithCode, UsageError, WebExtError } from '../errors.js';
 import { prepareArtifactsDir } from '../util/artifacts.js';
 import { AMO_BASE_URL } from '../util/constants.js';
+import { createFileFilter as defaultFileFilterCreator } from '../util/file-filter.js';
 import { createLogger } from '../util/logger.js';
 import getValidatedManifest, { getManifestId } from '../util/manifest.js';
 import {
@@ -37,6 +38,7 @@ export default function sign(
   },
   {
     build = defaultBuilder,
+    createFileFilter = defaultFileFilterCreator,
     preValidatedManifest,
     submitAddon = defaultSubmitAddonSigner,
     asyncFsReadFile = defaultAsyncFsReadFile,
@@ -55,10 +57,20 @@ export default function sign(
       manifestData = await getValidatedManifest(sourceDir);
     }
 
+    // build() is passed a custom artifactsDir, set to a temporary directory
+    // to avoid conflicts when attempting to write the unsigned zip file
+    // there. But fileFilter needs to be passed the original artifactsDir to
+    // make sure that ignoring still works.
+    const fileFilter = createFileFilter({
+      sourceDir,
+      ignoreFiles,
+      artifactsDir,
+    });
+
     const [buildResult, idFromSourceDir] = await Promise.all([
       build(
         { sourceDir, ignoreFiles, artifactsDir: tmpDir.path() },
-        { manifestData, showReadyMessage: false },
+        { manifestData, showReadyMessage: false, fileFilter },
       ),
       getIdFromFile(savedIdPath),
     ]);
