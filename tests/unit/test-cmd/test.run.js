@@ -463,4 +463,30 @@ describe('run', () => {
       );
     });
   });
+
+  describe('multiple sourceDir parameters', () => {
+    it('passes multiple --source-dir parameters to runner', async () => {
+      const cmd = await prepareRun();
+      const { reloadStrategy } = cmd.options;
+
+      const sourceDir1 = fixturePath('minimal-web-ext');
+      const sourceDir2 = fixturePath('minimal-localizable-web-ext');
+      await cmd.run({ sourceDir: [sourceDir1, sourceDir2], noReload: false });
+
+      sinon.assert.calledOnce(desktopRunnerStub);
+      const { extensions } = desktopRunnerStub.firstCall.args[0];
+      assert.equal(extensions.length, 2);
+      assert.equal(extensions[0].sourceDir, sourceDir1);
+      assert.equal(extensions[0].manifestData.name, 'Minimal Extension');
+      assert.equal(extensions[1].sourceDir, sourceDir2);
+      assert.equal(extensions[1].manifestData.name, '__MSG_extensionName__');
+
+      sinon.assert.calledOnce(reloadStrategy);
+      sinon.assert.calledWithMatch(reloadStrategy, {
+        sourceDir: [sourceDir1, sourceDir2],
+      });
+      // tests/unit/test-extension-runners/test.extension-runners.js verifies
+      // that multiple watchers are created for each sourceDir.
+    });
+  });
 });
