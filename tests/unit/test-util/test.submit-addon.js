@@ -21,6 +21,7 @@ import Client, {
   saveIdToFile,
   saveUploadUuidToFile,
   signAddon,
+  SUBMISSION_ERROR_HINT,
 } from '../../../src/util/submit-addon.js';
 import { withTempDir } from '../../../src/util/temp-dir.js';
 import { consoleStream } from '../../../src/util/logger.js';
@@ -819,6 +820,33 @@ describe('util.submit-addon', () => {
           sinon.match({ method: 'POST', body }),
         );
       });
+
+      it('includes a metadata hint when the submission is rejected', async () => {
+        const client = new Client(clientDefaults);
+        const errorBody = {
+          version: {
+            license: [
+              'This field, or custom_license, is required for listed versions.',
+            ],
+          },
+        };
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          new URL('addons/addon/', baseUrl),
+          'POST',
+          [{ body: errorBody, status: 400 }],
+        );
+
+        const clientPromise = client.doNewAddonSubmit('some-uuid', {});
+        await assert.isRejected(
+          clientPromise,
+          [
+            'Submission failed (1): 400',
+            JSON.stringify(errorBody, null, 2),
+            SUBMISSION_ERROR_HINT,
+          ].join('\n'),
+        );
+      });
     });
 
     describe('doNewAddonOrVersionSubmit', () => {
@@ -871,6 +899,44 @@ describe('util.submit-addon', () => {
           sinon.match.instanceOf(URL),
           sinon.match({ method: 'PUT', body }),
         );
+      });
+
+      it('includes a metadata hint when the submission is rejected', async () => {
+        const client = new Client(clientDefaults);
+        const guid = '@some-addon-guid';
+        const errorBody = { version: { license: ['Invalid value.'] } };
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          new URL(`addons/addon/${guid}/`, baseUrl),
+          'PUT',
+          [{ body: errorBody, status: 400 }],
+        );
+
+        const clientPromise = client.doNewAddonOrVersionSubmit(
+          guid,
+          'some-uuid',
+          {},
+        );
+        await assert.isRejected(clientPromise, SUBMISSION_ERROR_HINT);
+      });
+
+      it('does not include the metadata hint on server errors', async () => {
+        const client = new Client(clientDefaults);
+        const guid = '@some-addon-guid';
+        mockNodeFetch(
+          sinon.stub(client, 'nodeFetch'),
+          new URL(`addons/addon/${guid}/`, baseUrl),
+          'PUT',
+          [{ body: {}, status: 500 }],
+        );
+
+        const clientPromise = client.doNewAddonOrVersionSubmit(
+          guid,
+          'some-uuid',
+          {},
+        );
+        const error = await clientPromise.catch((err) => err);
+        expect(error.message).to.equal('Submission failed (2): 500.');
       });
     });
 
@@ -1247,6 +1313,23 @@ describe('util.submit-addon', () => {
         ]);
         const clientPromise = client.fetchJson(baseUrl);
         await assert.isRejected(clientPromise, 'Bad Request: 400\n{}');
+      });
+
+      it('appends the error hint on not ok responses', async () => {
+        mockNodeFetch(nodeFetchStub, baseUrl, 'GET', [
+          { body: {}, status: 400 },
+        ]);
+        const clientPromise = client.fetchJson(
+          baseUrl,
+          'GET',
+          undefined,
+          'Bad Request',
+          'Some hint',
+        );
+        await assert.isRejected(
+          clientPromise,
+          'Bad Request: 400\n{}\nSome hint',
+        );
       });
 
       it('rejects with a promise on < 100 responses', async () => {
