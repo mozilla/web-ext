@@ -625,7 +625,11 @@ Example: $0 --help run.
           'Launch chromium with a custom preference ' +
           '(example: --chromium-pref=browser.theme.follows_system_colors=false). ' +
           'You can repeat this option to set more than one ' +
-          'preference.',
+          'preference.' +
+          'Note: extensions.ui.developer_mode is enabled via ' +
+          'chrome://extensions after launch. ' +
+          'Other preferences protected by Chrome ' +
+          '(e.g. homepage, session.startup_urls) cannot be set.',
         demandOption: false,
         requiresArg: true,
         type: 'array',
