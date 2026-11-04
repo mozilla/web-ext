@@ -5,6 +5,7 @@ import { createLogger } from '../util/logger.js';
 import packageIdentifiers, {
   defaultApkComponents,
 } from '../firefox/package-identifiers.js';
+import FirefoxRDPClient from '../firefox/rdp-client.js';
 
 export const DEVICE_DIR_BASE = '/data/local/tmp/';
 export const ARTIFACTS_DIR_PREFIX = 'web-ext-artifacts-';
@@ -305,6 +306,54 @@ export default class ADBUtils {
 
   setUserAbortDiscovery(value) {
     this.userAbortDiscovery = value;
+  }
+
+  async isSocketResponsive(tcpPort, { maxDiscoveryTime, retryInterval } = {}) {
+    const timeoutMsPerAttempt = 1000;
+    const discoveryStartedAt = Date.now();
+
+    while (true) {
+      if (this.userAbortDiscovery) {
+        throw new UsageError(
+          'Exiting Firefox Remote Debugging socket discovery on user request',
+        );
+      }
+
+      if (Date.now() - discoveryStartedAt > maxDiscoveryTime) {
+        throw new WebExtError(
+          'Timeout while waiting for the Android Firefox Debugger socket to respond',
+        );
+      }
+
+      const client = new FirefoxRDPClient();
+
+      try {
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => {
+            client.disconnect();
+            reject(new Error('Timeout waiting for RDP root packet'));
+          }, timeoutMsPerAttempt);
+
+          client
+            .connect(tcpPort)
+            .then(() => {
+              clearTimeout(timer);
+              resolve();
+            })
+            .catch((err) => {
+              clearTimeout(timer);
+              reject(err);
+            });
+        });
+
+        client.disconnect();
+        return true;
+      } catch {
+        client.disconnect();
+        log.info(`RDP socket not responding yet on port ${tcpPort}.`);
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
+      }
+    }
   }
 
   async discoverRDPUnixSocket(
