@@ -19,8 +19,10 @@ export function applyConfigToArgv({
   configObject,
   options,
   configFileName,
+  applyGlobalOptions = true,
 }) {
   let newArgv = { ...argv };
+  const subCommands = [];
 
   for (const option of Object.keys(configObject)) {
     if (camelCase(option) !== option) {
@@ -37,14 +39,9 @@ export function applyConfigToArgv({
       typeof options[option] === 'object' &&
       typeof configObject[option] === 'object'
     ) {
-      // Descend into the nested configuration for a sub-command.
-      newArgv = applyConfigToArgv({
-        argv: newArgv,
-        argvFromCLI,
-        configObject: configObject[option],
-        options: options[option],
-        configFileName,
-      });
+      // The nested configuration for a sub-command is applied after the
+      // other options, so that it takes precedence over them.
+      subCommands.push(option);
       continue;
     }
 
@@ -87,6 +84,12 @@ export function applyConfigToArgv({
       }
     }
 
+    if (options[decamelizedOptName].global && !applyGlobalOptions) {
+      // A global option configured for another sub-command is checked
+      // above, but does not apply to the sub-command that is running.
+      continue;
+    }
+
     // This is our best effort (without patching yargs) to detect
     // if a value was set on the CLI instead of in the config.
     // It looks for a default value and if the argv value is
@@ -114,6 +117,28 @@ export function applyConfigToArgv({
 
     newArgv[decamelizedOptName] = newArgv[option];
   }
+
+  if (subCommands.length) {
+    // Global options can also be configured for a single sub-command.
+    const globalOptions = Object.fromEntries(
+      Object.entries(options).filter(([, value]) => value?.global),
+    );
+    const command = argv._?.[0];
+    const currentCommand =
+      command === undefined ? undefined : camelCase(String(command));
+
+    for (const subCommand of subCommands) {
+      newArgv = applyConfigToArgv({
+        argv: newArgv,
+        argvFromCLI,
+        configObject: configObject[subCommand],
+        options: { ...globalOptions, ...options[subCommand] },
+        configFileName,
+        applyGlobalOptions: subCommand === currentCommand,
+      });
+    }
+  }
+
   return newArgv;
 }
 
