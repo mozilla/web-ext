@@ -215,6 +215,101 @@ describe('util/extension-runners', () => {
       );
     });
 
+    it('logs errors resolved by the runners while reloading all extensions', async () => {
+      const params = prepareExtensionRunnerParams();
+      // Like the Firefox runners, resolve with the reload error instead of
+      // rejecting.
+      const fakeExtensionRunner = createFakeExtensionRunner({
+        overriddenMethods: {
+          getName: () => 'fakeExtensionRunner',
+          reloadAllExtensions: () =>
+            Promise.resolve([
+              {
+                runnerName: 'fakeExtensionRunner',
+                reloadError: new Error('reload error 1'),
+              },
+            ]),
+        },
+      });
+      const anotherFakeExtensionRunner = createFakeExtensionRunner({
+        overriddenMethods: {
+          getName: () => 'anotherFakeExtensionRunner',
+          reloadAllExtensions: () =>
+            Promise.resolve([{ runnerName: 'anotherFakeExtensionRunner' }]),
+        },
+      });
+
+      params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
+      const runnerInstance = new MultiExtensionRunner(params);
+
+      consoleStream.flushCapturedLogs();
+      const res = await runnerInstance.reloadAllExtensions();
+      const { capturedMessages } = consoleStream;
+      const errors = res.filter((r) => r.reloadError);
+
+      assert.equal(res.length, 2);
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].runnerName, 'fakeExtensionRunner');
+
+      assert.ok(
+        capturedMessages.some(
+          (msg) =>
+            msg.includes('[error]') &&
+            msg.includes('reloading on "fakeExtensionRunner"') &&
+            msg.includes('reload error 1'),
+        ),
+      );
+    });
+
+    it('collects reload errors resolved by the runners when reloading an extension', async () => {
+      const params = prepareExtensionRunnerParams();
+      const sourceDir = '/fake/sourceDir';
+      // Like the Firefox runners, resolve with the reload error instead of
+      // rejecting.
+      const fakeExtensionRunner = createFakeExtensionRunner({
+        overriddenMethods: {
+          getName: () => 'fakeExtensionRunner',
+          reloadExtensionBySourceDir: () =>
+            Promise.resolve([
+              {
+                runnerName: 'fakeExtensionRunner',
+                reloadError: new Error('reload error 1'),
+                sourceDir,
+              },
+            ]),
+        },
+      });
+      const anotherFakeExtensionRunner = createFakeExtensionRunner({
+        overriddenMethods: {
+          getName: () => 'anotherFakeExtensionRunner',
+          reloadExtensionBySourceDir: () =>
+            Promise.resolve([
+              { runnerName: 'anotherFakeExtensionRunner', sourceDir },
+            ]),
+        },
+      });
+
+      params.runners = [fakeExtensionRunner, anotherFakeExtensionRunner];
+
+      const runnerInstance = new MultiExtensionRunner(params);
+
+      consoleStream.flushCapturedLogs();
+      const res = await runnerInstance.reloadExtensionBySourceDir(sourceDir);
+      const { capturedMessages } = consoleStream;
+      const errors = res.filter((r) => r.reloadError);
+
+      assert.equal(res.length, 2);
+      assert.equal(errors.length, 1);
+      assert.equal(errors[0].runnerName, 'fakeExtensionRunner');
+      assert.equal(errors[0].sourceDir, sourceDir);
+
+      assert.ok(
+        capturedMessages.some(
+          (msg) => msg.includes('[error]') && msg.includes('reload error 1'),
+        ),
+      );
+    });
+
     describe('registerCleanup', () => {
       it('calls its callbacks once all the runner callbacks have been called', async () => {
         const params = prepareExtensionRunnerParams();
