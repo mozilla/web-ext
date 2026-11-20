@@ -3,14 +3,6 @@
     // glob >=9.0.0 <=14.0.1 via @babel/cli, @babel/register, babel-plugin-istanbul, mocha, nyc, shelljs
     "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4",
     // minimatch >=7.0.0 <11.0.1 via @babel/cli, @eslint/eslintrc, addons-linter, babel-plugin-istanbul, eslint-plugin-import, eslint, mocha, multimatch, nyc, shelljs
-    "https://github.com/advisories/GHSA-g3hv-75wg-m249",
-    // node-forge <=1.4.2 via @devicefarmer/adbkit
-    "https://github.com/advisories/GHSA-6889-vf6x-f3g5",
-    // node-forge <=1.4.2 via @devicefarmer/adbkit
-    "https://github.com/advisories/GHSA-w4xr-hqv8-ch44",
-    // node-forge >=0.1.2 <=1.4.2 via @devicefarmer/adbkit
-    "https://github.com/advisories/GHSA-6cv4-p8m7-4r25",
-    // node-forge <=1.4.2 via @devicefarmer/adbkit
-    "https://github.com/advisories/GHSA-j8rw-jp99-435v"
+    "https://github.com/advisories/GHSA-g3hv-75wg-m249"
   ]
 }
