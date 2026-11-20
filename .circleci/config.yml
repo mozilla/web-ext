@@ -28,7 +28,7 @@ references:
   # See https://nodejs.org/en/about/previous-releases for updates to nodejs versions.
   nodejs_versions:
     # nvm-windows wants a full Node version, not just `<major>.<minor>`.
-    - &nodejs_current "22.22"
+    - &nodejs_current "22.23.5" # Fix (windows worker hits nvm index out of range panic while trying to discover the last patch version).
     - &nodejs_next "24.14"
     - &nodejs_experimental "25.7"
 
