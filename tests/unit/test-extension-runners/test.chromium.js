@@ -692,6 +692,85 @@ describe('util/extension-runners/chromium', async () => {
     });
   });
 
+  describe('enableDeveloperMode', () => {
+    function setup(customChromiumPrefs) {
+      const { params } = prepareExtensionRunnerParams({
+        params: { customChromiumPrefs },
+      });
+      const runnerInstance = new ChromiumExtensionRunner(params);
+      const sendCommand = sinon.stub();
+      runnerInstance.cdp = { sendCommand };
+      return { runnerInstance, sendCommand };
+    }
+
+    it('skips when developer_mode is false', async () => {
+      const { runnerInstance, sendCommand } = setup({
+        'extensions.ui.developer_mode': false,
+      });
+      await runnerInstance.enableDeveloperMode();
+      sinon.assert.notCalled(sendCommand);
+    });
+
+    it('enables developer mode via chrome://extensions', async () => {
+      const { runnerInstance, sendCommand } = setup({
+        'extensions.ui.developer_mode': true,
+      });
+      sendCommand.withArgs('Target.createTarget').resolves({ targetId: 't1' });
+      sendCommand
+        .withArgs('Target.attachToTarget')
+        .resolves({ sessionId: 's1' });
+      sendCommand.withArgs('Runtime.evaluate').resolves({
+        result: { value: true },
+      });
+      sendCommand.withArgs('Target.closeTarget').resolves({});
+
+      await runnerInstance.enableDeveloperMode();
+
+      assert.deepEqual(
+        sendCommand.getCalls().map((c) => c.args[0]),
+        [
+          'Target.createTarget',
+          'Target.attachToTarget',
+          'Runtime.evaluate',
+          'Target.closeTarget',
+        ],
+      );
+      sinon.assert.calledWithMatch(sendCommand.thirdCall, 'Runtime.evaluate', {
+        expression: sinon.match('inDeveloperMode: true'),
+      });
+      assert.equal(sendCommand.thirdCall.args[2], 's1');
+      sinon.assert.calledWith(sendCommand.lastCall, 'Target.closeTarget', {
+        targetId: 't1',
+      });
+    });
+
+    it('does not throw and still closes the target on failure', async () => {
+      const { runnerInstance, sendCommand } = setup({
+        'extensions.ui.developer_mode': true,
+      });
+      sendCommand.withArgs('Target.createTarget').resolves({ targetId: 't1' });
+      sendCommand
+        .withArgs('Target.attachToTarget')
+        .rejects(new Error('attach failed'));
+      sendCommand.withArgs('Target.closeTarget').resolves({});
+
+      await runnerInstance.enableDeveloperMode();
+
+      sinon.assert.calledWith(sendCommand, 'Target.closeTarget', {
+        targetId: 't1',
+      });
+    });
+
+    it('does not throw when createTarget fails', async () => {
+      const { runnerInstance, sendCommand } = setup({
+        'extensions.ui.developer_mode': true,
+      });
+      sendCommand.rejects(new Error('boom'));
+      await runnerInstance.enableDeveloperMode();
+      sinon.assert.calledOnce(sendCommand);
+    });
+  });
+
   describe('reloadAllExtensions', () => {
     let runnerInstance;
 

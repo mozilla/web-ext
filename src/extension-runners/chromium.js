@@ -385,6 +385,8 @@ export class ChromiumExtensionRunner {
         return this.setupInstance();
       }
     }
+
+    await this.enableDeveloperMode();
   }
 
   /**
@@ -612,5 +614,48 @@ export class ChromiumExtensionRunner {
       ...DEFAULT_PREFS,
       ...this.params.customChromiumPrefs,
     });
+  }
+
+  /**
+   * Chrome protects `extensions.ui.developer_mode` with a MAC in
+   * "Secure Preferences", so a value written to the profile before startup is
+   * reset when Chrome launches. Enable it through chrome://extensions instead.
+   */
+  async enableDeveloperMode() {
+    if (this.getPrefs().extensions?.ui?.developer_mode !== true) {
+      return;
+    }
+    let targetId;
+    try {
+      ({ targetId } = await this.cdp.sendCommand('Target.createTarget', {
+        url: 'chrome://extensions',
+      }));
+      const { sessionId } = await this.cdp.sendCommand(
+        'Target.attachToTarget',
+        { targetId, flatten: true },
+      );
+      const res = await this.cdp.sendCommand(
+        'Runtime.evaluate',
+        {
+          expression:
+            'chrome.developerPrivate.updateProfileConfiguration(' +
+            '{inDeveloperMode: true}).then(() => true)',
+          awaitPromise: true,
+          returnByValue: true,
+        },
+        sessionId,
+      );
+      if (res.exceptionDetails || res.result?.value !== true) {
+        log.warn('Could not enable developer mode');
+      }
+    } catch (e) {
+      log.warn(`Could not enable developer mode: ${e.message}`);
+    } finally {
+      if (targetId) {
+        await this.cdp
+          .sendCommand('Target.closeTarget', { targetId })
+          .catch(() => {});
+      }
+    }
   }
 }
