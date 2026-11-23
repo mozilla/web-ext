@@ -109,7 +109,7 @@
     "prettier": "3.10.1",
     "pretty-quick": "4.2.2",
     "prettyjson": "1.2.5",
-    "shelljs": "0.8.5",
+    "shelljs": "0.10.0",
     "sinon": "22.1.0",
     "testdouble": "4.0.0",
     "yauzl": "2.10.0"
