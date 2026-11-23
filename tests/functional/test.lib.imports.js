@@ -1,4 +1,5 @@
 import { execFileSync } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -35,7 +36,9 @@ describe('web-ext imported as a library', () => {
         // See: https://nodejs.org/api/child_process.html#spawning-bat-and-cmd-files-on-windows
         shell: process.platform === 'win32',
       });
-      shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
+      // Copy the directory contents without relying on shelljs glob expansion
+      // (fast-glob treats Windows path separators as escape characters).
+      fs.cpSync(fixturesUseAsLibrary, tmpDir.path(), { recursive: true });
       execFileSync(node, ['--experimental-modules', 'test-import.mjs'], {
         cwd: tmpDir.path(),
       });
@@ -49,7 +52,9 @@ describe('web-ext imported as a library', () => {
         // See: https://nodejs.org/api/child_process.html#spawning-bat-and-cmd-files-on-windows
         shell: process.platform === 'win32',
       });
-      shell.cp('-rf', `${fixturesUseAsLibrary}/*`, tmpDir.path());
+      // Copy the directory contents without relying on shelljs glob expansion
+      // (fast-glob treats Windows path separators as escape characters).
+      fs.cpSync(fixturesUseAsLibrary, tmpDir.path(), { recursive: true });
       execFileSync(node, ['--experimental-modules', 'test-require.js'], {
         cwd: tmpDir.path(),
       });
