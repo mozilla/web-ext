@@ -32,7 +32,9 @@ export default function onSourceChange({
 
   // Allow multiple files to be changed before reloading the extension
   const executeImmediately = false;
-  onChange = debounce(onChange, debounceTime, executeImmediately);
+  onChange = debounce(onChange, debounceTime, {
+    immediate: executeImmediately,
+  });
 
   watcher.on('change', (filePath) => {
     proxyFileChanges({ artifactsDir, onChange, filePath, shouldWatchFile });
