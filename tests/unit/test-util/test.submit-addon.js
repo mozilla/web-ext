@@ -972,6 +972,126 @@ describe('util.submit-addon', () => {
 
         sinon.assert.notCalled(jsonSpy);
       });
+
+      describe('gateway errors while uploading the source', () => {
+        const sourceData = { source: 'source-file' };
+
+        const createClient = (sourceCheckTimeout = 50) =>
+          new Client({
+            ...clientDefaults,
+            sourceCheckInterval: 0,
+            sourceCheckTimeout,
+          });
+
+        const stubFetch = (client, patchStatus, versionDetails) => {
+          const fetchStub = sinon.stub(client, 'fetch');
+          fetchStub
+            .withArgs(sinon.match.any, 'PATCH')
+            .callsFake(async () => new Response('', { status: patchStatus }));
+          const getStub = fetchStub.withArgs(sinon.match.any, 'GET');
+          versionDetails.forEach((details, index) => {
+            getStub
+              .onCall(index)
+              .callsFake(async () => new JSONResponse(details, 200));
+          });
+          return { fetchStub, getStub };
+        };
+
+        for (const status of [502, 503, 504]) {
+          it(`continues on a ${status} when the source is attached`, async () => {
+            const client = createClient();
+            const { fetchStub } = stubFetch(client, status, [
+              { source: 'https://example.com/source.zip' },
+            ]);
+
+            consoleStream.stopCapturing();
+            consoleStream.flushCapturedLogs();
+            consoleStream.startCapturing();
+
+            await client.doFormDataPatch(sourceData, addonId, versionId);
+
+            const { capturedMessages } = consoleStream;
+            consoleStream.stopCapturing();
+
+            sinon.assert.calledWith(
+              fetchStub,
+              new URL(`addon/${addonId}/versions/${versionId}/`, client.apiUrl),
+              'GET',
+            );
+            assert.ok(
+              capturedMessages.some((message) =>
+                message.includes(`AMO responded with ${status}`),
+              ),
+            );
+          });
+        }
+
+        it('keeps checking until the source shows up', async () => {
+          const client = createClient(1000);
+          const { getStub } = stubFetch(client, 504, [
+            { source: null },
+            { source: 'https://example.com/source.zip' },
+          ]);
+
+          await client.doFormDataPatch(sourceData, addonId, versionId);
+
+          sinon.assert.calledTwice(getStub);
+        });
+
+        it('fails when the source never shows up', async () => {
+          const client = createClient();
+          const fetchStub = sinon.stub(client, 'fetch');
+          fetchStub
+            .withArgs(sinon.match.any, 'PATCH')
+            .resolves(new Response('', { status: 503 }));
+          fetchStub
+            .withArgs(sinon.match.any, 'GET')
+            .callsFake(async () => new JSONResponse({ source: null }, 200));
+
+          await assert.isRejected(
+            client.doFormDataPatch(sourceData, addonId, versionId),
+            'Uploading source failed',
+          );
+        });
+
+        it('fails when the version details can not be loaded', async () => {
+          const client = createClient();
+          const fetchStub = sinon.stub(client, 'fetch');
+          fetchStub
+            .withArgs(sinon.match.any, 'PATCH')
+            .resolves(new Response('', { status: 502 }));
+          fetchStub
+            .withArgs(sinon.match.any, 'GET')
+            .resolves(new Response('', { status: 500 }));
+
+          await assert.isRejected(
+            client.doFormDataPatch(sourceData, addonId, versionId),
+            'Uploading source failed',
+          );
+        });
+
+        it('does not check the version for other server errors', async () => {
+          const client = createClient();
+          const { getStub } = stubFetch(client, 500, []);
+
+          await assert.isRejected(
+            client.doFormDataPatch(sourceData, addonId, versionId),
+            'Uploading source failed',
+          );
+          sinon.assert.notCalled(getStub);
+        });
+
+        it('does not check the version when no source is uploaded', async () => {
+          const client = createClient();
+          const { getStub } = stubFetch(client, 503, []);
+
+          await assert.isRejected(
+            client.doFormDataPatch(data, addonId, versionId),
+            `Uploading ${Object.keys(data)} failed`,
+          );
+          sinon.assert.notCalled(getStub);
+        });
+      });
     });
 
     describe('waitForApproval', () => {
