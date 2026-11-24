@@ -686,6 +686,97 @@ describe('config', () => {
       assert.strictEqual(newArgv.sourceDir, sourceDir);
     });
 
+    describe('global options configured for a sub-command', () => {
+      function makeProgramArgv(userCmd) {
+        const program = new Program(userCmd);
+        program.setGlobalOptions({
+          'source-dir': {
+            requiresArg: true,
+            type: 'string',
+            demandOption: false,
+            default: 'default/source/dir',
+          },
+          'ignore-files': {
+            type: 'array',
+            demandOption: false,
+          },
+        });
+        program.command('run', 'this is a fake command', sinon.stub(), {
+          'start-url': {
+            type: 'array',
+            demandOption: false,
+          },
+        });
+        program.command('lint', 'this is a fake command', sinon.stub(), {});
+        const argv = program.yargs.exitProcess(false).argv;
+        return { argv, argvFromCLI: argv, options: program.options };
+      }
+
+      const configObject = {
+        sourceDir: 'configured/source/dir',
+        run: {
+          sourceDir: 'dist',
+          startUrl: ['https://example.com'],
+        },
+        lint: {
+          ignoreFiles: ['dist/**'],
+        },
+      };
+
+      it('uses them for that sub-command', () => {
+        const newArgv = applyConf({
+          ...makeProgramArgv(['run']),
+          configObject,
+        });
+        assert.strictEqual(newArgv.sourceDir, 'dist');
+        assert.strictEqual(newArgv['source-dir'], 'dist');
+        assert.deepEqual(newArgv.startUrl, ['https://example.com']);
+        assert.strictEqual(newArgv.ignoreFiles, undefined);
+      });
+
+      it('uses them over the same option configured globally', () => {
+        const newArgv = applyConf({
+          ...makeProgramArgv(['run']),
+          configObject: {
+            run: { sourceDir: 'dist' },
+            sourceDir: 'configured/source/dir',
+          },
+        });
+        assert.strictEqual(newArgv.sourceDir, 'dist');
+      });
+
+      it('does not use them for other sub-commands', () => {
+        const newArgv = applyConf({
+          ...makeProgramArgv(['lint']),
+          configObject,
+        });
+        assert.strictEqual(newArgv.sourceDir, 'configured/source/dir');
+        assert.deepEqual(newArgv.ignoreFiles, ['dist/**']);
+      });
+
+      it('preserves a CLI value over them', () => {
+        const newArgv = applyConf({
+          ...makeProgramArgv(['run', '--source-dir', 'cli/source/dir']),
+          configObject,
+        });
+        assert.strictEqual(newArgv.sourceDir, 'cli/source/dir');
+      });
+
+      it('throws an error when their type is invalid', () => {
+        assert.throws(
+          () =>
+            applyConf({
+              ...makeProgramArgv(['lint']),
+              configObject: { run: { sourceDir: 2 } },
+            }),
+          UsageError,
+          'The config file at some/path/to/config.mjs ' +
+            'specified the type of "sourceDir" incorrectly as "number"' +
+            ' (expected type "string")',
+        );
+      });
+    });
+
     it('handles camel case sub-commands', () => {
       const params = makeArgv({
         userCmd: ['sign-extension'],
