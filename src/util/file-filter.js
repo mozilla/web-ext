@@ -9,8 +9,9 @@ const log = createLogger(import.meta.url);
 // Glob characters that minimatch would otherwise read as pattern syntax when
 // they are part of a real directory name, such as an extension living in
 // "/home/me/my ext [beta]". They are escaped as one-character classes and not
-// with a backslash, because minimatch rewrites path.sep to "/" in patterns on
-// Windows, which would destroy a backslash escape. Two characters stay
+// with a backslash, because on Windows minimatch is called with
+// windowsPathsNoEscape, which rewrites backslashes to "/" in patterns and
+// would destroy a backslash escape. Two characters stay
 // unhandled: a curly brace, because brace expansion runs before character
 // classes are parsed, and a literal backslash in a directory name on POSIX,
 // which minimatch reads as an escape.
@@ -135,7 +136,12 @@ export class FileFilter {
    */
   wantFile(filePath) {
     const resolvedPath = this.resolveWithSourceDir(filePath);
-    const matches = multimatch(resolvedPath, this.filesToIgnore);
+    const matches = multimatch(resolvedPath, this.filesToIgnore, {
+      // minimatch >= 4 no longer converts the backslashes of Windows paths
+      // into slashes in patterns, unless this option is set. On POSIX
+      // a backslash must stay an escape character.
+      windowsPathsNoEscape: process.platform === 'win32',
+    });
     if (matches.length > 0) {
       log.debug(`FileFilter: ignoring file ${resolvedPath}`);
       return false;
