@@ -1,6 +1,7 @@
 import path from 'path';
 import EventEmitter from 'events';
 import stream from 'stream';
+import streamConsumers from 'stream/consumers';
 import { promisify } from 'util';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -26,14 +27,15 @@ export class ZipFile {
   constructor() {
     this._zip = null;
     this._close = null;
+    this._entries = null;
   }
 
   /*
    * Open a zip file and return a promise that resolves to a yauzl
    * zipfile object.
    */
-  open(...args) {
-    return promisify(yauzl.open)(...args).then((zip) => {
+  open(zippath) {
+    return promisify(yauzl.open)(zippath, { autoClose: false }).then((zip) => {
       this._zip = zip;
       this._close = new Promise((resolve) => {
         zip.once('close', resolve);
@@ -62,8 +64,13 @@ export class ZipFile {
           'Cannot operate on a falsey zip file. Call open() first.',
         );
       }
+      if (this._entries) {
+        throw new Error('readEach can be called only once');
+      }
+      this._entries = new Map();
 
       this._zip.on('entry', (entry) => {
+        this._entries.set(entry.fileName, entry);
         onRead(entry);
       });
 
@@ -92,6 +99,32 @@ export class ZipFile {
         .catch((error) => {
           reject(error);
         });
+    });
+  }
+
+  async getEntryByFileName(fileName) {
+    if (!this._entries) {
+      await this.readEach(() => {});
+    }
+    return this._entries.get(fileName);
+  }
+
+  /**
+   * Resolve a promise with the content of the entry as a string.
+   */
+  async getAsText(fileName) {
+    const entry = await this.getEntryByFileName(fileName);
+    if (!entry) {
+      throw new Error(`Entry not found in zip file: ${fileName}`);
+    }
+    return new Promise((resolve, reject) => {
+      this._zip.openReadStream(entry, (err, readStream) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(streamConsumers.text(readStream));
+        }
+      });
     });
   }
 }
