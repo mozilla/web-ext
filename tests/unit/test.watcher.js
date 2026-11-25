@@ -14,6 +14,37 @@ import { withTempDir } from '../../src/util/temp-dir.js';
 import { makeSureItFails } from './helpers.js';
 
 describe('watcher', () => {
+  // Watchpack watch initial scan is asynchronous and there is no public "ready" event,
+  // and so a touch that lands before its async initial scan completes becomes part of
+  // the baseline and is never reported as a detected change.
+  // This issue was a source of intermittent failure (e.g. the "changes if the watched
+  // file is touched" test case was failing intermittently due to this kind of race).
+  const waitForInitialScan = async (watcher) => {
+    try {
+      const internalDirectoryWatchers = [
+        ...watcher.fileWatchers.values(),
+        ...watcher.directoryWatchers.values(),
+      ].map((w) => w.watcher?.directoryWatcher);
+
+      // Sanity checks.
+      assert.isAbove(internalDirectoryWatchers.length, 0);
+      for (const dw of internalDirectoryWatchers) {
+        // Guard against upstream Watchpack internals changing.
+        assert.isBoolean(dw?.initialScan, 'Watchpack internals changed');
+      }
+
+      // Wait for the directory watchers to have completed their initial scan.
+      while (internalDirectoryWatchers.some((dw) => dw.initialScan)) {
+        await new Promise((resolve) => setImmediate(resolve));
+      }
+    } catch (error) {
+      // Prevent the watcher from leaking in case of unexpected failure
+      // (it would keep the mocha process alive).
+      watcher.close();
+      throw error;
+    }
+  };
+
   const watchChange = ({ watchFile, touchedFile } = {}) =>
     withTempDir(async (tmpDir) => {
       const artifactsDir = path.join(tmpDir.path(), 'web-ext-artifacts');
@@ -51,6 +82,8 @@ describe('watcher', () => {
       if (directoryWatchers?.size > 0) {
         watchedDirPath = Array.from(directoryWatchers.keys())[0];
       }
+
+      await waitForInitialScan(watcher);
 
       await fs.utimes(someFile, Date.now() / 1000, Date.now() / 1000);
       const assertParams = {
