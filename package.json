@@ -59,7 +59,7 @@
     "@babel/runtime": "8.1.2",
     "@devicefarmer/adbkit": "4.2.0",
     "addons-linter": "10.15.0",
-    "camelcase": "8.0.0",
+    "camelcase": "10.0.0",
     "chrome-launcher": "1.2.3",
     "debounce": "1.2.1",
     "decamelize": "6.0.1",

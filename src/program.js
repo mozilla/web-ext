@@ -218,8 +218,12 @@ export class Program {
   cleanupProcessEnvConfigs(systemProcess) {
     const cmd = yargsParser(this.programArgv)._[0];
     const env = systemProcess.env || {};
+    // Strip the leading "_" left after removing the prefix, because
+    // camelcase 10 preserves leading underscores (e.g. "_RUN_OPTION").
     const toOptionKey = (k) =>
-      decamelize(camelCase(k.replace(envPrefix, '')), { separator: '-' });
+      decamelize(camelCase(k.replace(envPrefix, '').replace(/^_+/, '')), {
+        separator: '-',
+      });
 
     if (cmd) {
       Object.keys(env)
