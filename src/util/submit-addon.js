@@ -5,6 +5,11 @@ import { promises as streamPromises } from 'stream';
 
 import { SignJWT } from 'jose';
 import JSZip from 'jszip';
+// eslint-plugin-import doesn't recognize the `exports` package.json
+// property that have replaced in https-proxy-agent v9.1.0 the `"main"`
+// property that https-proxy-agent v7.0.6 was originally using.
+//
+// eslint-disable-next-line import/no-unresolved
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 import { isErrorWithCode } from '../errors.js';
