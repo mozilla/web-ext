@@ -137,14 +137,23 @@ describe('web-ext run -t chromium', () => {
       // web-ext watches for changes in the source directory, and auto-reloads
       // the extension unless --no-reload is passed to web-ext run.
       const watchedFile = path.join(srcDir, 'watchedFile.txt');
-      await writeFile(watchedFile, 'Touched content', 'utf-8');
-
       if (expectReload) {
-        if (testServer.requestCount === 1) {
-          await testServer.waitForHelloFromExtension();
+        // Sanity check.
+        assert.equal(
+          testServer.requestCount,
+          1,
+          'No reload before file change',
+        );
+        // Changes made before the watcher's initial async scan completes are
+        // never reported, so keep touching the file until the reload happens.
+        // 600ms interval (slightly higher than the 500ms debounce in watcher.js).
+        for (let i = 0; testServer.requestCount < 2; i++) {
+          await writeFile(watchedFile, `Touched content ${i}`, 'utf-8');
+          await new Promise((resolve) => setTimeout(resolve, 600));
         }
         assert.equal(testServer.requestCount, 2, 'Extension reloaded');
       } else {
+        await writeFile(watchedFile, 'Touched content', 'utf-8');
         assert.equal(testServer.requestCount, 1, 'No reload with --no-reload');
       }
 
