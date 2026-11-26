@@ -30,9 +30,10 @@ export default function onSourceChange({
   // TODO: For network disks, we would need to add {poll: true}.
   const watcher = ignored ? new Watchpack({ ignored }) : new Watchpack();
 
-  // Allow multiple files to be changed before reloading the extension
-  const executeImmediately = false;
-  onChange = debounce(onChange, debounceTime, executeImmediately);
+  onChange = debounce(onChange, debounceTime, {
+    // Allow multiple files to be changed before reloading the extension.
+    immediate: false,
+  });
 
   watcher.on('change', (filePath) => {
     proxyFileChanges({ artifactsDir, onChange, filePath, shouldWatchFile });
