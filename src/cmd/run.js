@@ -62,8 +62,13 @@ export default async function run(
     getValidatedManifest = defaultGetValidatedManifest,
   } = {},
 ) {
-  sourceDir = path.resolve(sourceDir);
-  log.info(`Running web extension from ${sourceDir}`);
+  // Most sourceDir values across the codebase accept only one string, here we
+  // may accept multiple.
+  if (!Array.isArray(sourceDir)) {
+    sourceDir = [sourceDir];
+  }
+  sourceDir = sourceDir.map((s) => path.resolve(s));
+  log.info(`Running web extension from ${sourceDir.join(', ')}`);
   if (preInstall) {
     log.info(
       "Disabled auto-reloading because it's not possible with " +
@@ -88,8 +93,6 @@ export default async function run(
   // object containing one or more preferences.
   const customChromiumPrefs = chromiumPref;
 
-  const manifestData = await getValidatedManifest(sourceDir);
-
   const profileDir = firefoxProfile || chromiumProfile;
 
   if (profileCreateIfMissing) {
@@ -112,11 +115,17 @@ export default async function run(
 
   const commonRunnerParams = {
     // Common options.
-    extensions: [{ sourceDir, manifestData }],
+    extensions: [], // Populated below from sourceDir (--source-dir)
     keepProfileChanges,
     startUrl,
     args,
   };
+  for (const sourceDirPath of sourceDir) {
+    commonRunnerParams.extensions.push({
+      sourceDir: sourceDirPath,
+      manifestData: await getValidatedManifest(sourceDirPath),
+    });
+  }
 
   if (!target || target.length === 0 || target.includes('firefox-desktop')) {
     const firefoxDesktopRunnerParams = {
